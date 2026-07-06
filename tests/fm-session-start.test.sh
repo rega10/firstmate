@@ -191,6 +191,16 @@ SH
   chmod +x "$fakebin/ps"
 }
 
+make_fake_ps_denied() {
+  local fakebin=$1
+  cat > "$fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' 'ps: operation not permitted' >&2
+exit 1
+SH
+  chmod +x "$fakebin/ps"
+}
+
 # make_fake_tmux <fakebin> <live-target>: display-message succeeds only for
 # the given "session:window" target - the exact primitive
 # fm_backend_target_exists uses for a tmux endpoint liveness read.
@@ -603,6 +613,27 @@ EOF
   pass "fm-session-start.sh composes the real fm-lock.sh, fm-bootstrap.sh, and fm-wake-drain.sh output verbatim"
 }
 
+test_codex_ps_denied_lock_owner_survives_session_start() {
+  local rec root home fakebin out owner status
+  rec=$(new_world codex-lock-owner)
+  IFS='|' read -r root home fakebin <<EOF
+$rec
+EOF
+  make_fake_toolchain "$fakebin"
+  make_fake_ps_denied "$fakebin"
+
+  out=$(CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt run_session_start "$home" "$root" "$fakebin:$BASE_PATH")
+  assert_contains "$out" "lock acquired: harness codex:test-thread" "session start did not acquire through Codex fallback"
+
+  owner=$(cat "$home/state/.lock")
+  [ "$owner" = "codex:test-thread" ] || fail "session-start lock owner was '$owner', expected Codex thread token"
+
+  status=$(FM_HOME="$home" CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt PATH="$fakebin:$BASE_PATH" "$ROOT/bin/fm-lock.sh" status)
+  assert_contains "$status" "lock: held by live harness codex:test-thread" "session-start lock owner was stale after the subprocess exited"
+
+  pass "fm-session-start uses a stable Codex thread lock owner when ps is denied"
+}
+
 # --- fleet-state digest: compact backlog rendering --------------------------
 
 write_long_body_backlog() {
@@ -912,6 +943,7 @@ test_orphan_status_logs_are_printed
 test_endpoint_liveness_tmux
 test_endpoint_liveness_herdr
 test_composition_invokes_real_scripts
+test_codex_ps_denied_lock_owner_survives_session_start
 test_backlog_compact_tasks_axi_omits_bodies_and_keeps_metadata
 test_backlog_compact_manual_backend_skips_indented_bodies
 test_backlog_compact_tasks_axi_unavailable_uses_manual_fallback
