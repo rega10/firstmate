@@ -99,7 +99,7 @@ test_codex_thread_holder_cannot_be_stolen_when_old() {
   touch -t 200001010000 "$home/state/.lock" 2>/dev/null || true
 
   status=0
-  out=$(FM_HOME="$home" FM_CODEX_LOCK_STALE_AFTER=0 CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt PATH="$fakebin:$PATH" "$LOCK" 2>&1) || status=$?
+  out=$(FM_HOME="$home" CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt PATH="$fakebin:$PATH" "$LOCK" 2>&1) || status=$?
   [ "$status" -ne 0 ] || fail "fm-lock allowed an old different Codex thread to steal the lock: $out"
   assert_contains "$out" "hosted Codex session codex:other-thread" "acquire did not identify the different Codex owner"
 
