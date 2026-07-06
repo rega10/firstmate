@@ -15,18 +15,10 @@ FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 LOCK="$STATE/.lock"
 mkdir -p "$STATE"
-CODEX_LOCK_STALE_AFTER="${FM_CODEX_LOCK_STALE_AFTER:-3600}"
 
 # Known harness command names; extend when a new adapter is verified.
 HARNESS_RE='claude|codex|opencode|grok|^pi$'
-
-path_age() {
-  local path=$1 now mtime
-  [ -e "$path" ] || { echo 999999999; return; }
-  now=$(date +%s)
-  mtime=$(stat -f %m "$path" 2>/dev/null || stat -c %Y "$path" 2>/dev/null || echo "$now")
-  echo $((now - mtime))
-}
+HOLDER_LIVE_KIND=
 
 codex_owner_token() {
   [ -n "${CODEX_THREAD_ID:-}" ] || return 1
@@ -58,29 +50,53 @@ harness_pid() {
 
 holder_alive() {  # true if $1 is a live process that looks like a harness
   local pid=$1 comm
+  HOLDER_LIVE_KIND=
   case "$pid" in
     codex:*)
-      [ "$pid" = "codex:${CODEX_THREAD_ID:-}" ] && return 0
-      [ "$(path_age "$LOCK")" -lt "$CODEX_LOCK_STALE_AFTER" ]
-      return
+      HOLDER_LIVE_KIND=codex
+      return 0
       ;;
   esac
   kill -0 "$pid" 2>/dev/null || return 1
   comm=$(ps -o comm= -p "$pid" 2>/dev/null) || {
-    [ -n "${CODEX_THREAD_ID:-}" ] && [ "${CODEX_SANDBOX:-}" = seatbelt ]
-    return
+    if [ -n "${CODEX_THREAD_ID:-}" ] && [ "${CODEX_SANDBOX:-}" = seatbelt ]; then
+      HOLDER_LIVE_KIND=uninspectable_pid
+      return 0
+    fi
+    return 1
   }
-  printf '%s' "$(basename "$comm") $(ps -o args= -p "$pid" 2>/dev/null)" | grep -qE "$HARNESS_RE"
+  if printf '%s' "$(basename "$comm") $(ps -o args= -p "$pid" 2>/dev/null)" | grep -qE "$HARNESS_RE"; then
+    HOLDER_LIVE_KIND=harness_pid
+    return 0
+  fi
+  return 1
+}
+
+holder_description() {
+  local owner=$1
+  case "$HOLDER_LIVE_KIND" in
+    codex) printf 'hosted Codex session %s\n' "$owner" ;;
+    uninspectable_pid) printf 'uninspectable live holder pid %s\n' "$owner" ;;
+    harness_pid) printf 'live harness pid %s\n' "$owner" ;;
+    *) printf 'live holder %s\n' "$owner" ;;
+  esac
+}
+
+lock_error_owner() {
+  local owner=$1
+  case "$HOLDER_LIVE_KIND" in
+    codex) printf 'hosted Codex session %s\n' "$owner" ;;
+    uninspectable_pid) printf 'uninspectable live holder pid %s\n' "$owner" ;;
+    harness_pid) printf 'pid %s\n' "$owner" ;;
+    *) printf 'owner %s\n' "$owner" ;;
+  esac
 }
 
 if [ "${1:-}" = "status" ]; then
   if [ ! -f "$LOCK" ]; then echo "lock: free"; exit 0; fi
   old=$(cat "$LOCK")
   if holder_alive "$old"; then
-    case "$old" in
-      codex:*) echo "lock: held by live harness $old" ;;
-      *) echo "lock: held by live harness pid $old" ;;
-    esac
+    echo "lock: held by $(holder_description "$old")"
   else
     echo "lock: stale ($old dead or not a harness)"
   fi
@@ -91,7 +107,7 @@ me=$(harness_pid) || { echo "error: cannot locate harness process in ancestry" >
 if [ -f "$LOCK" ]; then
   old=$(cat "$LOCK")
   if [ "$old" != "$me" ] && holder_alive "$old"; then
-    echo "error: another live firstmate session holds the lock (pid $old); operate read-only until resolved" >&2
+    echo "error: another live firstmate session holds the lock ($(lock_error_owner "$old")); operate read-only until resolved" >&2
     exit 1
   fi
 fi

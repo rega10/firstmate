@@ -629,7 +629,7 @@ EOF
   [ "$owner" = "codex:test-thread" ] || fail "session-start lock owner was '$owner', expected Codex thread token"
 
   status=$(FM_HOME="$home" CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt PATH="$fakebin:$BASE_PATH" "$ROOT/bin/fm-lock.sh" status)
-  assert_contains "$status" "lock: held by live harness codex:test-thread" "session-start lock owner was stale after the subprocess exited"
+  assert_contains "$status" "lock: held by hosted Codex session codex:test-thread" "session-start lock owner was stale after the subprocess exited"
 
   pass "fm-session-start uses a stable Codex thread lock owner when ps is denied"
 }

@@ -47,7 +47,7 @@ test_codex_thread_fallback_acquires_when_ps_is_denied() {
   [ "$owner" = "codex:test-thread" ] || fail "lock owner was '$owner', expected codex thread token"
 
   out=$(FM_HOME="$home" CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt PATH="$fakebin:$PATH" "$LOCK" status)
-  assert_contains "$out" "lock: held by live harness codex:test-thread" "status did not preserve the current Codex fallback lock"
+  assert_contains "$out" "lock: held by hosted Codex session codex:test-thread" "status did not preserve the current Codex fallback lock"
 
   pass "fm-lock acquires with the hosted Codex thread fallback when ps is denied"
 }
@@ -88,22 +88,25 @@ test_codex_thread_holder_cannot_be_stolen_while_fresh() {
   pass "fm-lock preserves a fresh Codex token lock owned by another thread"
 }
 
-test_codex_thread_holder_can_be_reclaimed_when_stale() {
-  local home fakebin out owner
-  home="$TMP_ROOT/codex-other-thread-stale"
-  fakebin=$(fm_fakebin "$TMP_ROOT/codex-other-thread-stale")
+test_codex_thread_holder_cannot_be_stolen_when_old() {
+  local home fakebin out owner status
+  home="$TMP_ROOT/codex-other-thread-old"
+  fakebin=$(fm_fakebin "$TMP_ROOT/codex-other-thread-old")
   mkdir -p "$home/state"
   make_fake_ps_denied "$fakebin"
   printf '%s\n' codex:other-thread > "$home/state/.lock"
 
-  out=$(FM_HOME="$home" FM_CODEX_LOCK_STALE_AFTER=0 CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt PATH="$fakebin:$PATH" "$LOCK") \
-    || fail "fm-lock did not reclaim stale Codex token lock: $out"
-  assert_contains "$out" "lock acquired: harness codex:test-thread" "stale reclaim did not acquire with current Codex token"
+  touch -t 200001010000 "$home/state/.lock" 2>/dev/null || true
+
+  status=0
+  out=$(FM_HOME="$home" FM_CODEX_LOCK_STALE_AFTER=0 CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt PATH="$fakebin:$PATH" "$LOCK" 2>&1) || status=$?
+  [ "$status" -ne 0 ] || fail "fm-lock allowed an old different Codex thread to steal the lock: $out"
+  assert_contains "$out" "hosted Codex session codex:other-thread" "acquire did not identify the different Codex owner"
 
   owner=$(cat "$home/state/.lock")
-  [ "$owner" = "codex:test-thread" ] || fail "lock owner was '$owner', expected current Codex token"
+  [ "$owner" = "codex:other-thread" ] || fail "lock owner was overwritten with '$owner'"
 
-  pass "fm-lock reclaims a stale Codex token lock owned by another thread"
+  pass "fm-lock preserves an old Codex token lock owned by another thread"
 }
 
 test_codex_ps_denied_preserves_live_holder() {
@@ -121,7 +124,7 @@ test_codex_ps_denied_preserves_live_holder() {
   kill "$live" 2>/dev/null || true
   wait "$live" 2>/dev/null || true
 
-  assert_contains "$out" "lock: held by live harness pid $live" "ps-denied live holder was misclassified as stale"
+  assert_contains "$out" "lock: held by uninspectable live holder pid $live" "ps-denied live holder was misclassified"
   pass "fm-lock preserves a live holder when Codex seatbelt denies process inspection"
 }
 
@@ -142,6 +145,6 @@ test_codex_ps_denied_still_reports_dead_holder_stale() {
 test_codex_thread_fallback_acquires_when_ps_is_denied
 test_codex_thread_fallback_acquires_when_parent_lookup_fails
 test_codex_thread_holder_cannot_be_stolen_while_fresh
-test_codex_thread_holder_can_be_reclaimed_when_stale
+test_codex_thread_holder_cannot_be_stolen_when_old
 test_codex_ps_denied_preserves_live_holder
 test_codex_ps_denied_still_reports_dead_holder_stale
