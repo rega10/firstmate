@@ -937,7 +937,11 @@ test_codex_hook_uses_process_pwd_when_payload_cwd_is_outside_root
 test_codex_hook_ignores_nested_git_root_guard
 test_opencode_plugin_forces_followup
 test_opencode_plugin_anchors_guard_to_worktree
-test_pi_extension_forces_followup
-test_pi_extension_injects_once_per_logical_agent_run
-test_pi_extension_retries_after_followup_delivery_failure
+if [ "$(node -p 'Number(process.versions.node.split(".")[0])')" -ge 22 ]; then
+  test_pi_extension_forces_followup
+  test_pi_extension_injects_once_per_logical_agent_run
+  test_pi_extension_retries_after_followup_delivery_failure
+else
+  printf 'skip: Node.js 22+ is required for direct TypeScript extension runtime tests\n'
+fi
 test_grok_hook_invokes_adapter
