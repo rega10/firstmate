@@ -382,9 +382,11 @@ Route each piece of durable knowledge to its most specific home:
 | Knowledge generalizable to every firstmate user | the shared `AGENTS.md`, shipped via PR through the pipeline |
 | Task-scoped notes | backlog item notes (`tasks-axi update <id> --append "<note>"`, or hand-edit per the active backend) |
 | Investigation findings | scout reports at `data/<id>/report.md` |
+| Current agreed implementation plans and progress | `data/plans/<project>.md`, managed through `/plan-board` |
 
 When the captain invokes `/stow`, load the `stow` skill.
 It sweeps the current session for uncaptured durable knowledge, routes findings with this table, files undone next steps to the backlog, and reports whether the session is safe to reset.
+When the captain invokes `/plan-board`, load the `plan-board` skill.
 
 **Delivery mode (choose at add).** `<mode>` is how a finished change reaches `main`, picked per project when you add it and recorded in the registry line (`fm-project-mode.sh` parses it; `fm-spawn` records it into each task's meta):
 
