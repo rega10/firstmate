@@ -37,14 +37,15 @@
 # Orca tasks use the same safety checks, then close the recorded terminal and
 # remove the recorded worktree through `orca worktree rm`; teardown never guesses
 # an Orca target from ambient CLI state.
-# A Herdr presentation journal never authorizes cleanup. Teardown still closes
-# only the exact task pane from ordinary endpoint metadata and never calls
-# `workspace close`. It retires the non-authoritative journal only when a
-# read-only token correlation agrees with that endpoint and pane closure is
-# confirmed. Otherwise the journal stays quarantined for manual inspection.
-# Projected closes share the presentation-order lock, refuse to close the
-# captain's active tab, and restore the exact response-derived pre-close tab
-# if Herdr's last-pane cleanup focuses an unrelated neighboring workspace.
+# Herdr teardown closes the recorded pane and then requires `pane get` to report
+# `pane_not_found` before deleting authoritative task metadata or status. A failed
+# close or any other follow-up response refuses loudly with the recorded endpoint
+# and preserves those state files even under --force. A Herdr presentation journal
+# never authorizes cleanup. Projected closes additionally share the presentation-
+# order lock, refuse to close the captain's active tab, restore the exact response-
+# derived pre-close tab after focus drift, and retire the non-authoritative journal
+# only after confirming pane absence. Endpoint cleanup remains best-effort for tmux
+# and every other non-Herdr backend.
 # Secondmates (kind=secondmate in meta) are retired explicitly. Normal
 # teardown refuses while their home has in-flight crewmate meta files; --force
 # is the approved discard path that prevalidates child removal targets, discards
