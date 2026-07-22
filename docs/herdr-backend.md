@@ -193,6 +193,7 @@ If the projection pane belongs to the active tab, cleanup refuses the close beca
 If the lock, snapshot, or exact pane verification is ambiguous, cleanup refuses teardown and preserves both authoritative task state and the quarantined journal.
 If exact-tab restoration fails after the pane close has already succeeded, cleanup warns, and the ordinary exact-pane confirmation still decides whether to retire the journal.
 The journal is retired only when one exact token-bearing workspace correlates with the recorded endpoint before close and the exact pane is confirmed gone afterward.
+If retiring that journal fails after pane absence is confirmed, teardown refuses and preserves authoritative task metadata and status.
 An unconfirmed close refuses teardown and preserves authoritative task state, while a renamed label, duplicate token, flat fallback, or unreadable journal retains the journal and attempts no workspace cleanup.
 
 Recovery is deliberately conservative and presentation-only.
