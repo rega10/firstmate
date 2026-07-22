@@ -1276,7 +1276,8 @@ SH
 }
 
 configure_herdr_projection_teardown_case() {  # <case-dir> [state-dir] [task-id]
-  local case_dir=$1 state_dir=${2:-$case_dir/state} id=${3:-task-x1} token=AbCdEfGhIjKlMnOpQrStUv
+  local case_dir=$1
+  local state_dir=${2:-$case_dir/state} id=${3:-task-x1} token=AbCdEfGhIjKlMnOpQrStUv
   sed -i.bak 's/^window=.*/window=fmtest:w1:p2/' "$state_dir/$id.meta"
   rm -f "$state_dir/$id.meta.bak"
   printf '%s\n' \
@@ -1558,7 +1559,8 @@ SH
 }
 
 configure_forced_secondmate_case() {  # <case-dir>
-  local case_dir=$1 home="$case_dir/secondmate-home"
+  local case_dir=$1
+  local home="$case_dir/secondmate-home"
   mkdir -p "$home/state" "$home/data" "$home/config" "$home/projects"
   printf '%s\n' 'task-x1' > "$home/.fm-secondmate-home"
   fm_write_meta "$case_dir/state/task-x1.meta" \
