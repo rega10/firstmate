@@ -1376,6 +1376,46 @@ test_herdr_projection_teardown_retires_journal_only_after_confirmed_close() {
   pass "herdr projection teardown retires its journal only after confirming the exact recorded pane is gone"
 }
 
+test_herdr_projection_teardown_preserves_state_when_journal_removal_fails() {
+  local case_dir log closed restored rc real_rm
+  case_dir=$(make_case herdr-projection-journal-removal-failure)
+  write_meta "$case_dir" local-only ship
+  configure_herdr_projection_teardown_case "$case_dir"
+  printf '%s\n' 'working: endpoint still owned' > "$case_dir/state/task-x1.status"
+  log="$case_dir/herdr.log"; closed="$case_dir/closed"; restored="$case_dir/restored"; : > "$log"
+  real_rm=$(command -v rm)
+  cat > "$case_dir/fakebin/rm" <<'SH'
+#!/usr/bin/env bash
+for arg in "$@"; do
+  if [ "$arg" = "${FM_FAKE_RM_REFUSE:?}" ]; then
+    exit 1
+  fi
+done
+exec "${REAL_RM_FOR_TEST:?}" "$@"
+SH
+  chmod +x "$case_dir/fakebin/rm"
+
+  set +e
+  REAL_RM_FOR_TEST="$real_rm" FM_FAKE_RM_REFUSE="$case_dir/state/task-x1.herdr-presentation" \
+  FM_FAKE_HERDR_LOG="$log" FM_FAKE_HERDR_CLOSED="$closed" FM_FAKE_HERDR_RESTORED="$restored" \
+    run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "herdr-projection-journal-removal-failure: teardown must refuse when journal retirement fails"
+  [ -f "$case_dir/state/task-x1.herdr-presentation" ] \
+    || fail "herdr-projection-journal-removal-failure: failing rm unexpectedly removed the journal"
+  [ -f "$case_dir/state/task-x1.meta" ] \
+    || fail "herdr-projection-journal-removal-failure: authoritative metadata was deleted"
+  [ -f "$case_dir/state/task-x1.status" ] \
+    || fail "herdr-projection-journal-removal-failure: authoritative status was deleted"
+  assert_grep "REFUSED: Herdr presentation journal $case_dir/state/task-x1.herdr-presentation could not be retired; preserving task state." "$case_dir/stderr" \
+    "herdr-projection-journal-removal-failure: refusal did not identify the retained journal"
+  assert_not_contains "$(cat "$log")" "workspace close" \
+    "herdr-projection-journal-removal-failure: teardown issued a workspace lifecycle command"
+  pass "herdr projection teardown preserves task state when journal retirement fails"
+}
+
 test_herdr_projection_teardown_uses_single_absence_confirmation() {
   local case_dir log closed restored count
   case_dir=$(make_case herdr-projection-single-confirmation)
@@ -1602,6 +1642,7 @@ test_no_mistakes_truly_unpushed_refuses
 test_local_only_force_overrides_unpushed
 test_herdr_teardown_clears_escalation_marker
 test_herdr_projection_teardown_retires_journal_only_after_confirmed_close
+test_herdr_projection_teardown_preserves_state_when_journal_removal_fails
 test_herdr_projection_teardown_uses_single_absence_confirmation
 test_herdr_projection_teardown_retains_journal_when_close_unconfirmed
 test_herdr_projection_teardown_refuses_when_pane_remains_readable

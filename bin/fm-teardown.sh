@@ -994,7 +994,10 @@ herdr_teardown_close() {
       [ "$close_status" -eq 0 ] || herdr_teardown_refuse "$target" || return 1
       pane_state=$(fm_backend_herdr_pane_agent_state "$session" "$pane") || pane_state=unknown
       [ "$pane_state" = dead ] || herdr_teardown_refuse "$target" || return 1
-      rm -f "$journal"
+      if ! rm -f "$journal"; then
+        echo "REFUSED: Herdr presentation journal $journal could not be retired; preserving task state." >&2
+        return 1
+      fi
       return 0
     fi
   fi
