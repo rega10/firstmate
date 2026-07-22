@@ -177,4 +177,5 @@ If `treehouse return` fails for a leased home, teardown stops with state intact 
 
 With `--force`, teardown is the explicit discard path.
 It kills recorded child runtime endpoints, discards child work and state inside the secondmate home, removes the route, releases the lease, and removes the retired secondmate home.
+Herdr children retain their authoritative metadata and status unless the recorded pane is positively confirmed absent, and a correlated presentation journal requires the same focus-preserving locked close as a direct teardown.
 Never use `--force` unless the captain explicitly said to discard the work.

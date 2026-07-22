@@ -950,6 +950,60 @@ validate_firstmate_home_children_removal() {
   done
 }
 
+herdr_teardown_refuse() {
+  local target=${1:-<missing>}
+  echo "REFUSED: Herdr endpoint $target could not be confirmed closed; preserving task state." >&2
+  return 1
+}
+
+herdr_teardown_close() {
+  local state_dir=$1 meta=$2 id=$3 target=$4 journal session workspace pane lock lock_held attempt close_status pane_state
+  [ -n "$target" ] || herdr_teardown_refuse "$target" || return 1
+  fm_backend_source herdr || herdr_teardown_refuse "$target" || return 1
+  journal="$state_dir/$id.herdr-presentation"
+  if [ -e "$journal" ] || [ -L "$journal" ]; then
+    session=$(meta_value "$meta" herdr_session)
+    workspace=$(meta_value "$meta" herdr_workspace_id)
+    pane=$(meta_value "$meta" herdr_pane_id)
+    if [ -n "$session" ] \
+       && [ -n "$workspace" ] \
+       && [ -n "$pane" ] \
+       && [ "$target" = "$session:$pane" ] \
+       && fm_backend_herdr_projection_endpoint_matches_journal \
+         "$session" "$workspace" "$journal" "$id"; then
+      # shellcheck source=bin/fm-wake-lib.sh
+      . "$SCRIPT_DIR/fm-wake-lib.sh"
+      lock="$state_dir/.herdr-presentation-order.lock"
+      lock_held=0
+      attempt=0
+      while [ "$attempt" -lt 50 ]; do
+        if fm_lock_try_acquire "$lock"; then
+          lock_held=1
+          break
+        fi
+        sleep 0.1
+        attempt=$((attempt + 1))
+      done
+      [ "$lock_held" = 1 ] || herdr_teardown_refuse "$target" || return 1
+      if fm_backend_herdr_projection_close_pane_focus_preserving "$session" "$pane" 2>/dev/null; then
+        close_status=0
+      else
+        close_status=$?
+      fi
+      fm_lock_release "$lock" || true
+      [ "$close_status" -eq 0 ] || herdr_teardown_refuse "$target" || return 1
+      pane_state=$(fm_backend_herdr_pane_agent_state "$session" "$pane") || pane_state=unknown
+      [ "$pane_state" = dead ] || herdr_teardown_refuse "$target" || return 1
+      rm -f "$journal"
+      return 0
+    fi
+  fi
+  fm_backend_teardown_kill herdr "$target" || herdr_teardown_refuse "$target" || return 1
+  if [ -e "$journal" ] || [ -L "$journal" ]; then
+    echo "warning: herdr presentation journal for $id remains quarantined; no workspace cleanup was attempted" >&2
+  fi
+}
+
 cleanup_firstmate_home_children() {
   local home=$1 sub_state child_meta child_id child_t child_wt child_proj child_kind child_home child_backend child_orca_worktree_id child_return_rc
   sub_state="$home/state"
@@ -965,7 +1019,7 @@ cleanup_firstmate_home_children() {
     if [ "$child_backend" = orca ]; then
       child_t=$(meta_value "$child_meta" terminal)
     else
-      child_t=$(fm_backend_target_of_meta "$child_meta")
+      child_t=$(fm_backend_target_of_meta "$child_meta" || true)
     fi
     if [ "$child_backend" = orca ] && [ "$child_kind" != secondmate ]; then
       child_orca_worktree_id=$(require_orca_worktree_id "$child_meta") || return 1
@@ -973,16 +1027,15 @@ cleanup_firstmate_home_children() {
         validate_child_worktree_for_removal "$child_wt" "$child_proj" >/dev/null || return 1
       fi
     fi
-    if [ -n "$child_t" ]; then
+    if [ "$child_backend" = herdr ]; then
+      herdr_teardown_close "$sub_state" "$child_meta" "$child_id" "$child_t" || return 1
+    elif [ -n "$child_t" ]; then
       if [ "$child_backend" = zellij ]; then
         # Zellij titles are scoped by the owning home tag, so forced secondmate
         # cleanup must verify child tabs as that child home, not the parent.
         ( unset FM_ROOT_OVERRIDE; FM_HOME=$home FM_ROOT=$home fm_backend_kill "$child_backend" "$child_t" "$(meta_value "$child_meta" zellij_tab_id)" "fm-$child_id" ) 2>/dev/null || true
       else
-        if ! fm_backend_teardown_kill "$child_backend" "$child_t" "$(meta_value "$child_meta" zellij_tab_id)" "fm-$child_id" 2>/dev/null; then
-          echo "REFUSED: Herdr endpoint $child_t could not be confirmed closed; preserving task state." >&2
-          return 1
-        fi
+        fm_backend_teardown_kill "$child_backend" "$child_t" "$(meta_value "$child_meta" zellij_tab_id)" "fm-$child_id" 2>/dev/null || true
       fi
     fi
     if [ "$child_kind" = secondmate ]; then
@@ -1134,74 +1187,10 @@ elif [ -d "$WT" ] && [ "$KIND" != secondmate ]; then
   }
 fi
 
-HERDR_PRESENTATION_JOURNAL="$STATE/$ID.herdr-presentation"
-HERDR_PRESENTATION_RETIRE_CANDIDATE=0
-HERDR_PRESENTATION_SESSION=
-HERDR_PRESENTATION_PANE=
-if [ "$BACKEND" = herdr ] \
-   && { [ -e "$HERDR_PRESENTATION_JOURNAL" ] || [ -L "$HERDR_PRESENTATION_JOURNAL" ]; }; then
-  fm_backend_source herdr || true
-  HERDR_PRESENTATION_SESSION=$(meta_value "$META" herdr_session)
-  HERDR_PRESENTATION_WORKSPACE=$(meta_value "$META" herdr_workspace_id)
-  HERDR_PRESENTATION_PANE=$(meta_value "$META" herdr_pane_id)
-  if [ -n "$HERDR_PRESENTATION_SESSION" ] \
-     && [ -n "$HERDR_PRESENTATION_WORKSPACE" ] \
-     && [ -n "$HERDR_PRESENTATION_PANE" ] \
-     && [ "$T" = "$HERDR_PRESENTATION_SESSION:$HERDR_PRESENTATION_PANE" ] \
-     && fm_backend_herdr_projection_endpoint_matches_journal \
-       "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_WORKSPACE" \
-       "$HERDR_PRESENTATION_JOURNAL" "$ID"; then
-    HERDR_PRESENTATION_RETIRE_CANDIDATE=1
-  fi
-fi
-
-if [ "$HERDR_PRESENTATION_RETIRE_CANDIDATE" = 1 ]; then
-  # shellcheck source=bin/fm-wake-lib.sh
-  . "$SCRIPT_DIR/fm-wake-lib.sh"
-  HERDR_PRESENTATION_FOCUS_LOCK="$STATE/.herdr-presentation-order.lock"
-  HERDR_PRESENTATION_FOCUS_LOCK_HELD=0
-  HERDR_PRESENTATION_FOCUS_LOCK_ATTEMPT=0
-  while [ "$HERDR_PRESENTATION_FOCUS_LOCK_ATTEMPT" -lt 50 ]; do
-    if fm_lock_try_acquire "$HERDR_PRESENTATION_FOCUS_LOCK"; then
-      HERDR_PRESENTATION_FOCUS_LOCK_HELD=1
-      break
-    fi
-    sleep 0.1
-    HERDR_PRESENTATION_FOCUS_LOCK_ATTEMPT=$((HERDR_PRESENTATION_FOCUS_LOCK_ATTEMPT + 1))
-  done
-  if [ "$HERDR_PRESENTATION_FOCUS_LOCK_HELD" = 1 ]; then
-    if ! fm_backend_herdr_projection_close_pane_focus_preserving \
-      "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE" 2>/dev/null; then
-      HERDR_PRESENTATION_FOCUS_LOCK_HELD=0
-      fm_lock_release "$HERDR_PRESENTATION_FOCUS_LOCK" || true
-      echo "REFUSED: Herdr endpoint $T could not be confirmed closed; preserving task state." >&2
-      exit 1
-    fi
-    HERDR_PRESENTATION_FOCUS_LOCK_HELD=0
-    fm_lock_release "$HERDR_PRESENTATION_FOCUS_LOCK" || true
-  else
-    echo "REFUSED: Herdr endpoint $T could not be confirmed closed; preserving task state." >&2
-    exit 1
-  fi
-  if [ "$(fm_backend_herdr_pane_agent_state "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE")" != dead ]; then
-    echo "REFUSED: Herdr endpoint $T could not be confirmed closed; preserving task state." >&2
-    exit 1
-  fi
+if [ "$BACKEND" = herdr ]; then
+  herdr_teardown_close "$STATE" "$META" "$ID" "$T" || exit 1
 elif [ "$BACKEND" != orca ]; then
-  if ! fm_backend_teardown_kill "$BACKEND" "$T" "$(meta_value "$META" zellij_tab_id)" "fm-$ID" 2>/dev/null; then
-    echo "REFUSED: Herdr endpoint $T could not be confirmed closed; preserving task state." >&2
-    exit 1
-  fi
-fi
-if [ "$HERDR_PRESENTATION_RETIRE_CANDIDATE" = 1 ]; then
-  if [ "$(fm_backend_herdr_pane_agent_state "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE")" = dead ]; then
-    rm -f "$HERDR_PRESENTATION_JOURNAL"
-  else
-    echo "warning: exact herdr task-pane close could not be confirmed for $ID; retaining the presentation journal and attempting no workspace cleanup" >&2
-  fi
-elif [ "$BACKEND" = herdr ] \
-     && { [ -e "$HERDR_PRESENTATION_JOURNAL" ] || [ -L "$HERDR_PRESENTATION_JOURNAL" ]; }; then
-  echo "warning: herdr presentation journal for $ID remains quarantined; no workspace cleanup was attempted" >&2
+  fm_backend_teardown_kill "$BACKEND" "$T" "$(meta_value "$META" zellij_tab_id)" "fm-$ID" 2>/dev/null || true
 fi
 if [ "$KIND" = secondmate ]; then
   [ -n "$HOME_PATH" ] || HOME_PATH=$WT

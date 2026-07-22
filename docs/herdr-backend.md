@@ -135,6 +135,7 @@ Each home's own workspace (`firstmate` for the primary, `2ndmate-<secondmate-id>
 Teardown (`fm_backend_herdr_teardown_kill`) closes only the task's pane/tab, never the workspace, and requires a follow-up pane read to classify it as `pane_not_found` before authoritative task metadata or status can be deleted.
 A failed close or any readable or ambiguous follow-up response makes teardown refuse with the recorded endpoint and preserve those state files for a safe retry.
 `--force` does not bypass this endpoint-confirmation gate.
+Forced secondmate retirement applies the same gate to every Herdr child, refuses a missing recorded target, and routes a correlated child presentation journal through the same locked focus-preserving close.
 The close-command failure and readable-after-close branches for both default and projected task panes are covered with a stubbed Herdr CLI in `tests/fm-teardown.test.sh`; no live Herdr lifecycle operation is used for those regression cases.
 
 ## Optional disposable single-task presentation spaces
