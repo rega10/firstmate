@@ -581,6 +581,20 @@ fm_backend_kill() {  # <backend> <target>
   esac
 }
 
+# fm_backend_teardown_kill: preserve the general best-effort kill semantics for
+# every backend except Herdr, whose pane must be confirmed closed before
+# teardown may delete its authoritative task state.
+fm_backend_teardown_kill() {  # <backend> <target>
+  local backend=$1
+  shift
+  if [ "$backend" != herdr ]; then
+    fm_backend_kill "$backend" "$@" || true
+    return 0
+  fi
+  fm_backend_source herdr || return 1
+  fm_backend_herdr_teardown_kill "$@"
+}
+
 fm_backend_remove_worktree() {  # <backend> <worktree-id>
   local backend=$1
   shift

@@ -978,7 +978,10 @@ cleanup_firstmate_home_children() {
         # cleanup must verify child tabs as that child home, not the parent.
         ( unset FM_ROOT_OVERRIDE; FM_HOME=$home FM_ROOT=$home fm_backend_kill "$child_backend" "$child_t" "$(meta_value "$child_meta" zellij_tab_id)" "fm-$child_id" ) 2>/dev/null || true
       else
-        fm_backend_kill "$child_backend" "$child_t" "$(meta_value "$child_meta" zellij_tab_id)" "fm-$child_id" 2>/dev/null || true
+        if ! fm_backend_teardown_kill "$child_backend" "$child_t" "$(meta_value "$child_meta" zellij_tab_id)" "fm-$child_id" 2>/dev/null; then
+          echo "REFUSED: Herdr endpoint $child_t could not be confirmed closed; preserving task state." >&2
+          return 1
+        fi
       fi
     fi
     if [ "$child_kind" = secondmate ]; then
@@ -1166,15 +1169,28 @@ if [ "$HERDR_PRESENTATION_RETIRE_CANDIDATE" = 1 ]; then
     HERDR_PRESENTATION_FOCUS_LOCK_ATTEMPT=$((HERDR_PRESENTATION_FOCUS_LOCK_ATTEMPT + 1))
   done
   if [ "$HERDR_PRESENTATION_FOCUS_LOCK_HELD" = 1 ]; then
-    fm_backend_herdr_projection_close_pane_focus_preserving \
-      "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE" 2>/dev/null || true
+    if ! fm_backend_herdr_projection_close_pane_focus_preserving \
+      "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE" 2>/dev/null; then
+      HERDR_PRESENTATION_FOCUS_LOCK_HELD=0
+      fm_lock_release "$HERDR_PRESENTATION_FOCUS_LOCK" || true
+      echo "REFUSED: Herdr endpoint $T could not be confirmed closed; preserving task state." >&2
+      exit 1
+    fi
     HERDR_PRESENTATION_FOCUS_LOCK_HELD=0
     fm_lock_release "$HERDR_PRESENTATION_FOCUS_LOCK" || true
   else
-    echo "warning: herdr presentation focus lock stayed busy; refusing a concurrent focus-unsafe pane close" >&2
+    echo "REFUSED: Herdr endpoint $T could not be confirmed closed; preserving task state." >&2
+    exit 1
+  fi
+  if [ "$(fm_backend_herdr_pane_agent_state "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE")" != dead ]; then
+    echo "REFUSED: Herdr endpoint $T could not be confirmed closed; preserving task state." >&2
+    exit 1
   fi
 elif [ "$BACKEND" != orca ]; then
-  fm_backend_kill "$BACKEND" "$T" "$(meta_value "$META" zellij_tab_id)" "fm-$ID" 2>/dev/null || true
+  if ! fm_backend_teardown_kill "$BACKEND" "$T" "$(meta_value "$META" zellij_tab_id)" "fm-$ID" 2>/dev/null; then
+    echo "REFUSED: Herdr endpoint $T could not be confirmed closed; preserving task state." >&2
+    exit 1
+  fi
 fi
 if [ "$HERDR_PRESENTATION_RETIRE_CANDIDATE" = 1 ]; then
   if [ "$(fm_backend_herdr_pane_agent_state "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE")" = dead ]; then
