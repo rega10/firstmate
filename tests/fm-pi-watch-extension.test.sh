@@ -1826,22 +1826,6 @@ EOF
 
 test_tracked_extension_present_and_self_hashing
 test_spawn_template_mentions_pi_watch_placeholder
-if [ "$(node -p 'Number(process.versions.node.split(".")[0])')" -lt 22 ]; then
-  printf 'skip: Node.js 22+ is required for direct TypeScript extension runtime tests\n'
-  exit 0
-fi
-test_pi_extension_reports_external_healthy_watcher
-test_pi_tool_returns_agent_tool_result
-test_pi_actionable_close_starts_single_successor_before_delivery
-test_pi_hung_successor_falls_back_to_typed_wake
-test_pi_unretired_successor_falls_back_without_retry
-test_pi_late_unretired_close_resumes_supervision
-test_pi_empty_close_retries_instead_of_disappearing
-test_pi_established_empty_close_honors_retry_limit
-test_pi_actionable_close_rechecks_session_lock
-test_pi_arm_distinguishes_session_lock_ownership
-test_pi_process_exit_cleanup_listener_lifecycle
-test_pi_process_exit_cleanup_stops_arm_child
 test_opencode_primary_watch_plugin_static_wiring
 test_opencode_plugin_package_boundary_is_explicit_esm
 test_opencode_primary_watch_plugin_uses_effective_state_home
@@ -1858,3 +1842,19 @@ test_opencode_established_empty_close_honors_retry_limit
 test_opencode_actionable_close_rechecks_session_lock
 test_opencode_watch_arm_coordinates_with_turnend_guard
 test_opencode_healthy_arm_output_does_not_suppress_guard
+if [ "$(node -p 'Number(process.versions.node.split(".")[0])')" -lt 22 ]; then
+  printf 'skip: Node.js 22+ is required for direct TypeScript extension runtime tests\n'
+  exit 0
+fi
+test_pi_extension_reports_external_healthy_watcher
+test_pi_tool_returns_agent_tool_result
+test_pi_actionable_close_starts_single_successor_before_delivery
+test_pi_hung_successor_falls_back_to_typed_wake
+test_pi_unretired_successor_falls_back_without_retry
+test_pi_late_unretired_close_resumes_supervision
+test_pi_empty_close_retries_instead_of_disappearing
+test_pi_established_empty_close_honors_retry_limit
+test_pi_actionable_close_rechecks_session_lock
+test_pi_arm_distinguishes_session_lock_ownership
+test_pi_process_exit_cleanup_listener_lifecycle
+test_pi_process_exit_cleanup_stops_arm_child
