@@ -7,7 +7,7 @@
 # and GitHub reports a PR head that contains the current local work, or its content
 # is already in the up-to-date default branch.
 #
-# Covers three fixes:
+# Covers four fixes:
 #   - local-only fork-remote: a fork IS a remote, so fork-pushed upstream-
 #     contribution PRs are teardown-eligible (the pre-fix code false-refused them).
 #   - squash-merge-then-delete-branch: the branch's own commits live nowhere on a
@@ -19,6 +19,8 @@
 #     git index.lock that blocks teardown. The return path retries on the lock
 #     error signature (even if the lock self-clears mid-check), then only removes a
 #     provably stale lock before re-running safety checks.
+#   - Herdr endpoint confirmation: a failed close or a pane that remains readable
+#     after close refuses teardown and preserves authoritative metadata and status.
 #
 # Matrix:
 #   (a) local-only + HEAD on a fork remote-tracking branch     -> ALLOW  (fork fix)
@@ -72,7 +74,7 @@ make_case() {
   local name=$1 case_dir fakebin
   case_dir="$TMP_ROOT/$name"
   fakebin="$case_dir/fakebin"
-  mkdir -p "$case_dir/state" "$case_dir/config" "$fakebin"
+  mkdir -p "$case_dir/state" "$case_dir/data" "$case_dir/config" "$fakebin"
 
   # Mocks for the post-check teardown steps. Refuse logic exits before these
   # run; the ALLOW cases need them so the script can complete cleanly.
@@ -492,6 +494,7 @@ run_teardown() {
   local case_dir=$1; shift
   FM_ROOT_OVERRIDE="$ROOT" \
   FM_STATE_OVERRIDE="$case_dir/state" \
+  FM_DATA_OVERRIDE="$case_dir/data" \
   FM_CONFIG_OVERRIDE="$case_dir/config" \
   PATH="$case_dir/fakebin:$PATH" \
     "$TEARDOWN" task-x1 "$@"
@@ -1251,32 +1254,42 @@ test_herdr_teardown_clears_escalation_marker() {
   printf '%s\n' 'backend=herdr' >> "$case_dir/state/task-x1.meta"
   cat > "$case_dir/fakebin/herdr" <<'SH'
 #!/usr/bin/env bash
-exit 0
+case "${1:-} ${2:-}" in
+  "pane close") : > "${FM_TEST_HERDR_CLOSED:?}"; exit 0 ;;
+  "pane get")
+    [ -e "${FM_TEST_HERDR_CLOSED:?}" ] || exit 1
+    printf '%s\n' '{"error":{"code":"pane_not_found"}}' >&2
+    exit 1
+    ;;
+esac
+exit 1
 SH
   chmod +x "$case_dir/fakebin/herdr"
   marker="$case_dir/state/.herdr-escalated-default_wG_pQ"
   : > "$marker"
 
-  run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr" \
+  FM_TEST_HERDR_CLOSED="$case_dir/herdr-closed" \
+    run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr" \
     || fail "herdr-marker-cleanup: forced teardown failed"
   [ ! -e "$marker" ] || fail "herdr-marker-cleanup: teardown left the pane's escalation marker behind"
   pass "herdr teardown removes pane-owned escalation dedupe state"
 }
 
-configure_herdr_projection_teardown_case() {  # <case-dir>
-  local case_dir=$1 token=AbCdEfGhIjKlMnOpQrStUv
-  sed -i.bak 's/^window=.*/window=fmtest:w1:p2/' "$case_dir/state/task-x1.meta"
-  rm -f "$case_dir/state/task-x1.meta.bak"
+configure_herdr_projection_teardown_case() {  # <case-dir> [state-dir] [task-id]
+  local case_dir=$1
+  local state_dir=${2:-$case_dir/state} id=${3:-task-x1} token=AbCdEfGhIjKlMnOpQrStUv
+  sed -i.bak 's/^window=.*/window=fmtest:w1:p2/' "$state_dir/$id.meta"
+  rm -f "$state_dir/$id.meta.bak"
   printf '%s\n' \
     'backend=herdr' \
     'herdr_session=fmtest' \
     'herdr_workspace_id=w1' \
     'herdr_tab_id=w1:t2' \
-    'herdr_pane_id=w1:p2' >> "$case_dir/state/task-x1.meta"
+    'herdr_pane_id=w1:p2' >> "$state_dir/$id.meta"
   printf '%s\n' \
     'version=1' \
-    'task_id=task-x1' \
-    "projection_id=$token" > "$case_dir/state/task-x1.herdr-presentation"
+    "task_id=$id" \
+    "projection_id=$token" > "$state_dir/$id.herdr-presentation"
   cat > "$case_dir/fakebin/herdr" <<'SH'
 #!/usr/bin/env bash
 set -u
@@ -1305,10 +1318,25 @@ case "${1:-} ${2:-}" in
     if [ "${FM_FAKE_HERDR_CLOSE_FAIL:-0}" = 1 ]; then
       exit 1
     fi
-    : > "${FM_FAKE_HERDR_CLOSED:?}"
+    if [ "${FM_FAKE_HERDR_KEEP_READABLE:-0}" != 1 ]; then
+      : > "${FM_FAKE_HERDR_CLOSED:?}"
+    fi
     ;;
   "pane get")
     if [ -e "${FM_FAKE_HERDR_CLOSED:?}" ]; then
+      if [ -n "${FM_FAKE_HERDR_PANE_GET_COUNT:-}" ]; then
+        count=$(cat "$FM_FAKE_HERDR_PANE_GET_COUNT" 2>/dev/null || printf '0')
+        count=$((count + 1))
+        printf '%s\n' "$count" > "$FM_FAKE_HERDR_PANE_GET_COUNT"
+        if [ "${FM_FAKE_HERDR_AMBIGUOUS_AFTER_CONFIRM:-0}" = 1 ] && [ "$count" -gt 1 ]; then
+          printf '%s\n' '{"result":{"pane":{"pane_id":"w1:p2","tab_id":"w1:t2","workspace_id":"w1"}}}'
+          exit 0
+        fi
+      fi
+      if [ "${FM_FAKE_HERDR_POST_CLOSE_AMBIGUOUS:-0}" = 1 ]; then
+        printf '%s\n' '{"result":{"pane":{"pane_id":"w1:p2","tab_id":"w1:t2","workspace_id":"w1"}}}'
+        exit 0
+      fi
       printf '%s\n' '{"error":{"code":"pane_not_found"}}' >&2
       exit 1
     fi
@@ -1349,23 +1377,261 @@ test_herdr_projection_teardown_retires_journal_only_after_confirmed_close() {
   pass "herdr projection teardown retires its journal only after confirming the exact recorded pane is gone"
 }
 
+test_herdr_projection_teardown_preserves_state_when_journal_removal_fails() {
+  local case_dir log closed restored rc real_rm
+  case_dir=$(make_case herdr-projection-journal-removal-failure)
+  write_meta "$case_dir" local-only ship
+  configure_herdr_projection_teardown_case "$case_dir"
+  printf '%s\n' 'working: endpoint still owned' > "$case_dir/state/task-x1.status"
+  log="$case_dir/herdr.log"; closed="$case_dir/closed"; restored="$case_dir/restored"; : > "$log"
+  real_rm=$(command -v rm)
+  cat > "$case_dir/fakebin/rm" <<'SH'
+#!/usr/bin/env bash
+for arg in "$@"; do
+  if [ "$arg" = "${FM_FAKE_RM_REFUSE:?}" ]; then
+    exit 1
+  fi
+done
+exec "${REAL_RM_FOR_TEST:?}" "$@"
+SH
+  chmod +x "$case_dir/fakebin/rm"
+
+  set +e
+  REAL_RM_FOR_TEST="$real_rm" FM_FAKE_RM_REFUSE="$case_dir/state/task-x1.herdr-presentation" \
+  FM_FAKE_HERDR_LOG="$log" FM_FAKE_HERDR_CLOSED="$closed" FM_FAKE_HERDR_RESTORED="$restored" \
+    run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "herdr-projection-journal-removal-failure: teardown must refuse when journal retirement fails"
+  [ -f "$case_dir/state/task-x1.herdr-presentation" ] \
+    || fail "herdr-projection-journal-removal-failure: failing rm unexpectedly removed the journal"
+  [ -f "$case_dir/state/task-x1.meta" ] \
+    || fail "herdr-projection-journal-removal-failure: authoritative metadata was deleted"
+  [ -f "$case_dir/state/task-x1.status" ] \
+    || fail "herdr-projection-journal-removal-failure: authoritative status was deleted"
+  assert_grep "REFUSED: Herdr presentation journal $case_dir/state/task-x1.herdr-presentation could not be retired; preserving task state." "$case_dir/stderr" \
+    "herdr-projection-journal-removal-failure: refusal did not identify the retained journal"
+  assert_not_contains "$(cat "$log")" "workspace close" \
+    "herdr-projection-journal-removal-failure: teardown issued a workspace lifecycle command"
+  pass "herdr projection teardown preserves task state when journal retirement fails"
+}
+
+test_herdr_projection_teardown_uses_single_absence_confirmation() {
+  local case_dir log closed restored count
+  case_dir=$(make_case herdr-projection-single-confirmation)
+  write_meta "$case_dir" local-only ship
+  configure_herdr_projection_teardown_case "$case_dir"
+  log="$case_dir/herdr.log"; closed="$case_dir/closed"; restored="$case_dir/restored"; count="$case_dir/pane-get-count"; : > "$log"
+
+  FM_FAKE_HERDR_LOG="$log" FM_FAKE_HERDR_CLOSED="$closed" FM_FAKE_HERDR_RESTORED="$restored" \
+  FM_FAKE_HERDR_PANE_GET_COUNT="$count" FM_FAKE_HERDR_AMBIGUOUS_AFTER_CONFIRM=1 \
+    run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr" \
+    || fail "herdr-projection-single-confirmation: forced teardown failed after positive absence confirmation"
+  [ "$(cat "$count")" = 1 ] \
+    || fail "projected teardown re-read pane state after positive absence confirmation"
+  [ ! -e "$case_dir/state/task-x1.herdr-presentation" ] \
+    || fail "single positive absence confirmation did not retire the presentation journal"
+  pass "herdr projection teardown reuses one positive pane-absence result"
+}
+
 test_herdr_projection_teardown_retains_journal_when_close_unconfirmed() {
-  local case_dir log closed restored
+  local case_dir log closed restored rc
   case_dir=$(make_case herdr-projection-unconfirmed-close)
   write_meta "$case_dir" local-only ship
   configure_herdr_projection_teardown_case "$case_dir"
+  printf '%s\n' 'working: endpoint still owned' > "$case_dir/state/task-x1.status"
   log="$case_dir/herdr.log"; closed="$case_dir/closed"; restored="$case_dir/restored"; : > "$log"
 
+  set +e
   FM_FAKE_HERDR_LOG="$log" FM_FAKE_HERDR_CLOSED="$closed" FM_FAKE_HERDR_RESTORED="$restored" FM_FAKE_HERDR_CLOSE_FAIL=1 \
-    run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr" \
-    || fail "herdr-projection-unconfirmed-close: teardown should preserve best-effort endpoint semantics"
+    run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "herdr-projection-unconfirmed-close: teardown must refuse when exact-pane close fails"
   [ -e "$case_dir/state/task-x1.herdr-presentation" ] \
     || fail "unconfirmed task-pane close incorrectly retired the presentation journal"
-  assert_grep "close could not be confirmed" "$case_dir/stderr" \
-    "unconfirmed projected close did not explain why the journal was retained"
+  [ -f "$case_dir/state/task-x1.meta" ] \
+    || fail "unconfirmed projected close deleted authoritative metadata"
+  [ -f "$case_dir/state/task-x1.status" ] \
+    || fail "unconfirmed projected close deleted authoritative status"
+  assert_grep "REFUSED: Herdr endpoint fmtest:w1:p2 could not be confirmed closed; preserving task state." "$case_dir/stderr" \
+    "unconfirmed projected close did not refuse with the exact endpoint"
   assert_not_contains "$(cat "$log")" "workspace close" \
     "unconfirmed projected close must not escalate to workspace cleanup"
-  pass "herdr projection teardown retains the stale journal and attempts no workspace cleanup when exact-pane close is unconfirmed"
+  pass "herdr projection teardown refuses and preserves state when exact-pane close is unconfirmed"
+}
+
+test_herdr_projection_teardown_refuses_when_pane_remains_readable() {
+  local case_dir log closed restored rc
+  case_dir=$(make_case herdr-projection-readable-after-close)
+  write_meta "$case_dir" local-only ship
+  configure_herdr_projection_teardown_case "$case_dir"
+  printf '%s\n' 'working: endpoint still owned' > "$case_dir/state/task-x1.status"
+  log="$case_dir/herdr.log"; closed="$case_dir/closed"; restored="$case_dir/restored"; : > "$log"
+
+  set +e
+  FM_FAKE_HERDR_LOG="$log" FM_FAKE_HERDR_CLOSED="$closed" FM_FAKE_HERDR_RESTORED="$restored" FM_FAKE_HERDR_KEEP_READABLE=1 \
+    run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "herdr-projection-readable-after-close: teardown must refuse while the pane remains readable"
+  [ -e "$case_dir/state/task-x1.herdr-presentation" ] \
+    || fail "readable projected pane incorrectly retired the presentation journal"
+  [ -f "$case_dir/state/task-x1.meta" ] \
+    || fail "readable projected pane deleted authoritative metadata"
+  [ -f "$case_dir/state/task-x1.status" ] \
+    || fail "readable projected pane deleted authoritative status"
+  assert_grep "REFUSED: Herdr endpoint fmtest:w1:p2 could not be confirmed closed; preserving task state." "$case_dir/stderr" \
+    "readable projected pane did not refuse with the exact endpoint"
+  assert_not_contains "$(cat "$log")" "workspace close" \
+    "readable projected pane must not escalate to workspace cleanup"
+  pass "herdr projection teardown refuses and preserves state while the exact pane remains readable"
+}
+
+test_herdr_failed_close_preserves_task_state() {
+  local case_dir rc
+  case_dir=$(make_case herdr-failed-close)
+  write_meta "$case_dir" local-only ship
+  sed -i.bak 's/^window=.*/window=default:wG:pQ/' "$case_dir/state/task-x1.meta"
+  rm -f "$case_dir/state/task-x1.meta.bak"
+  printf '%s\n' 'backend=herdr' >> "$case_dir/state/task-x1.meta"
+  printf '%s\n' 'working: endpoint still owned' > "$case_dir/state/task-x1.status"
+  cat > "$case_dir/fakebin/herdr" <<'SH'
+#!/usr/bin/env bash
+case "${1:-} ${2:-}" in
+  "pane close") exit 1 ;;
+  "pane get") exit 0 ;;
+esac
+exit 1
+SH
+  chmod +x "$case_dir/fakebin/herdr"
+
+  set +e
+  run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "herdr-failed-close: teardown must refuse when pane close fails"
+  assert_grep "REFUSED: Herdr endpoint default:wG:pQ could not be confirmed closed; preserving task state." "$case_dir/stderr" \
+    "herdr-failed-close: refusal did not name the orphan-risk endpoint"
+  [ -f "$case_dir/state/task-x1.meta" ] \
+    || fail "herdr-failed-close: teardown deleted authoritative metadata after close failure"
+  [ -f "$case_dir/state/task-x1.status" ] \
+    || fail "herdr-failed-close: teardown deleted authoritative status after close failure"
+  pass "herdr close failure refuses teardown and preserves authoritative task state"
+}
+
+test_herdr_unconfirmed_close_preserves_task_state() {
+  local case_dir rc
+  case_dir=$(make_case herdr-unconfirmed-close)
+  write_meta "$case_dir" local-only ship
+  sed -i.bak 's/^window=.*/window=default:wG:pQ/' "$case_dir/state/task-x1.meta"
+  rm -f "$case_dir/state/task-x1.meta.bak"
+  printf '%s\n' 'backend=herdr' >> "$case_dir/state/task-x1.meta"
+  printf '%s\n' 'working: endpoint still owned' > "$case_dir/state/task-x1.status"
+  cat > "$case_dir/fakebin/herdr" <<'SH'
+#!/usr/bin/env bash
+case "${1:-} ${2:-}" in
+  "pane close") exit 0 ;;
+  "pane get") printf '%s\n' '{"result":{"pane":{"pane_id":"wG:pQ"}}}'; exit 0 ;;
+  "agent get") printf '%s\n' '{"error":{"code":"agent_not_found"}}' >&2; exit 1 ;;
+esac
+exit 1
+SH
+  chmod +x "$case_dir/fakebin/herdr"
+
+  set +e
+  run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "herdr-unconfirmed-close: teardown must refuse while the pane remains readable"
+  assert_grep "REFUSED: Herdr endpoint default:wG:pQ could not be confirmed closed; preserving task state." "$case_dir/stderr" \
+    "herdr-unconfirmed-close: refusal did not name the still-live endpoint"
+  [ -f "$case_dir/state/task-x1.meta" ] \
+    || fail "herdr-unconfirmed-close: teardown deleted authoritative metadata for a readable pane"
+  [ -f "$case_dir/state/task-x1.status" ] \
+    || fail "herdr-unconfirmed-close: teardown deleted authoritative status for a readable pane"
+  pass "herdr readable-after-close endpoint refuses teardown and preserves authoritative task state"
+}
+
+configure_forced_secondmate_case() {  # <case-dir>
+  local case_dir=$1
+  local home="$case_dir/secondmate-home"
+  mkdir -p "$home/state" "$home/data" "$home/config" "$home/projects"
+  printf '%s\n' 'task-x1' > "$home/.fm-secondmate-home"
+  fm_write_meta "$case_dir/state/task-x1.meta" \
+    'window=fm-task-x1' \
+    "worktree=$home" \
+    "project=$case_dir/project" \
+    'kind=secondmate' \
+    'mode=local-only' \
+    "home=$home"
+  printf '%s\n' "- task-x1 - test secondmate (home: $home; scope: tests; projects: none; added 2026-07-22)" \
+    > "$case_dir/data/secondmates.md"
+  printf '%s\n' "$home"
+}
+
+test_forced_secondmate_refuses_herdr_child_without_target() {
+  local case_dir home rc
+  case_dir=$(make_case herdr-child-missing-target)
+  home=$(configure_forced_secondmate_case "$case_dir")
+  fm_write_meta "$home/state/child-x1.meta" \
+    'window=' \
+    "worktree=$case_dir/missing-child-worktree" \
+    "project=$case_dir/project" \
+    'kind=ship' \
+    'mode=no-mistakes' \
+    'backend=herdr'
+  printf '%s\n' 'working: endpoint still owned' > "$home/state/child-x1.status"
+
+  set +e
+  run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "herdr-child-missing-target: forced cleanup must refuse without a recorded endpoint"
+  assert_grep "REFUSED: Herdr endpoint <missing> could not be confirmed closed; preserving task state." "$case_dir/stderr" \
+    "herdr-child-missing-target: refusal did not identify the missing endpoint"
+  [ -f "$home/state/child-x1.meta" ] || fail "herdr-child-missing-target: child metadata was deleted"
+  [ -f "$home/state/child-x1.status" ] || fail "herdr-child-missing-target: child status was deleted"
+  [ -f "$case_dir/state/task-x1.meta" ] || fail "herdr-child-missing-target: parent metadata was deleted"
+  pass "forced secondmate cleanup preserves Herdr child state when its target is missing"
+}
+
+test_forced_secondmate_projected_child_uses_focus_safe_close() {
+  local case_dir home log closed restored rc
+  case_dir=$(make_case herdr-projected-child)
+  home=$(configure_forced_secondmate_case "$case_dir")
+  fm_write_meta "$home/state/child-x1.meta" \
+    'window=fmtest:w1:p2' \
+    "worktree=$case_dir/missing-child-worktree" \
+    "project=$case_dir/project" \
+    'kind=ship' \
+    'mode=no-mistakes'
+  configure_herdr_projection_teardown_case "$case_dir" "$home/state" child-x1
+  printf '%s\n' 'working: endpoint still owned' > "$home/state/child-x1.status"
+  log="$case_dir/herdr.log"; closed="$case_dir/closed"; restored="$case_dir/restored"; : > "$log"
+
+  set +e
+  FM_FAKE_HERDR_LOG="$log" FM_FAKE_HERDR_CLOSED="$closed" FM_FAKE_HERDR_RESTORED="$restored" \
+  FM_FAKE_HERDR_POST_CLOSE_AMBIGUOUS=1 \
+    run_teardown "$case_dir" --force > "$case_dir/stdout" 2> "$case_dir/stderr"
+  rc=$?
+  set -e
+
+  expect_code 1 "$rc" "herdr-projected-child: ambiguous pane absence must refuse forced cleanup"
+  [ -f "$home/state/child-x1.meta" ] || fail "herdr-projected-child: child metadata was deleted"
+  [ -f "$home/state/child-x1.status" ] || fail "herdr-projected-child: child status was deleted"
+  [ -f "$home/state/child-x1.herdr-presentation" ] || fail "herdr-projected-child: journal was retired without confirmed pane absence"
+  assert_contains "$(cat "$log")" "tab focus w2:t2" \
+    "herdr-projected-child: projected child close did not restore the exact prior tab"
+  assert_not_contains "$(cat "$log")" "workspace close" \
+    "herdr-projected-child: forced cleanup issued a workspace lifecycle command"
+  pass "forced secondmate projected-child cleanup preserves focus and fails closed"
 }
 
 test_local_only_fork_remote_allows
@@ -1378,7 +1644,14 @@ test_no_mistakes_truly_unpushed_refuses
 test_local_only_force_overrides_unpushed
 test_herdr_teardown_clears_escalation_marker
 test_herdr_projection_teardown_retires_journal_only_after_confirmed_close
+test_herdr_projection_teardown_preserves_state_when_journal_removal_fails
+test_herdr_projection_teardown_uses_single_absence_confirmation
 test_herdr_projection_teardown_retains_journal_when_close_unconfirmed
+test_herdr_projection_teardown_refuses_when_pane_remains_readable
+test_herdr_failed_close_preserves_task_state
+test_herdr_unconfirmed_close_preserves_task_state
+test_forced_secondmate_refuses_herdr_child_without_target
+test_forced_secondmate_projected_child_uses_focus_safe_close
 test_squash_merged_branch_deleted_allows
 test_squash_merged_pr_allows_when_head_ancestor_of_pr_head
 test_no_pr_recorded_discovers_merged_pr_by_branch_allows

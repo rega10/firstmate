@@ -1562,6 +1562,20 @@ fm_backend_herdr_kill() {  # <target>
   fm_backend_herdr_cli "$FM_BACKEND_HERDR_SESSION" pane close "$FM_BACKEND_HERDR_PANE" >/dev/null 2>&1 || true
 }
 
+# fm_backend_herdr_teardown_kill: close a task pane with the stronger
+# confirmation contract required before teardown may delete authoritative task
+# state. Unlike the general best-effort kill above, a close failure or a pane
+# that remains readable after a successful close is a hard failure. Parse the
+# recorded target without server_ensure so teardown never creates or restarts a
+# Herdr session merely to clean up a task.
+fm_backend_herdr_teardown_kill() {  # <target>
+  local state
+  fm_backend_herdr_parse_target "$1" || return 1
+  fm_backend_herdr_cli "$FM_BACKEND_HERDR_SESSION" pane close "$FM_BACKEND_HERDR_PANE" >/dev/null 2>&1 || return 1
+  state=$(fm_backend_herdr_pane_agent_state "$FM_BACKEND_HERDR_SESSION" "$FM_BACKEND_HERDR_PANE") || return 1
+  [ "$state" = dead ]
+}
+
 # fm_backend_herdr_classify_agent_status: map a raw `agent get` agent_status
 # value to the adapter's watcher busy|idle|unknown vocabulary. working ->
 # busy (actively generating); idle/done -> idle; blocked -> idle (a blocked
