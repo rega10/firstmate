@@ -19,7 +19,7 @@ set -u
 TMP_ROOT=$(fm_test_tmproot fm-turnend-guard)
 fm_git_identity fmtest fmtest@example.invalid
 
-REQUIRED_REASON='resume supervision with bin/fm-watch-arm.sh as its own Claude Code background task'
+REQUIRED_REASON='repair missing watcher supervision with bin/fm-watch-arm.sh as its own Claude Code background task'
 
 # --- PREDICATE: bin/fm-supervision-lib.sh -----------------------------------
 
@@ -90,6 +90,7 @@ install_guard_scripts() {
   cp "$ROOT/bin/fm-turnend-guard-grok.sh" "$dir/bin/fm-turnend-guard-grok.sh"
   cp "$ROOT/bin/fm-supervision-instructions.sh" "$dir/bin/fm-supervision-instructions.sh"
   cp "$ROOT/bin/fm-harness.sh" "$dir/bin/fm-harness.sh"
+  cp "$ROOT/bin/fm-primary-scope-lib.sh" "$dir/bin/fm-primary-scope-lib.sh"
   cp "$ROOT/bin/fm-supervision-lib.sh" "$dir/bin/fm-supervision-lib.sh"
   cp "$ROOT/bin/fm-wake-lib.sh" "$dir/bin/fm-wake-lib.sh"
   mkdir -p "$dir/docs"
@@ -694,6 +695,9 @@ test_opencode_plugin_forces_followup() {
   assert_contains "$content" 'promptAsync' "OpenCode plugin must force a follow-up turn"
   assert_contains "$content" 'skipNextIdle' "OpenCode plugin must carry a loop guard"
   assert_contains "$content" 'worktree' "OpenCode plugin must anchor the guard from the git worktree path"
+  assert_contains "$content" 'watcher cycle is missing, failed, or unhealthy' "OpenCode plugin must identify a blind turn as watcher recovery"
+  assert_contains "$content" 'harness recovery instruction below' "OpenCode plugin must delegate recovery action to the shared guard line"
+  assert_not_contains "$content" 'Resume supervision according to the session-start operating block' "OpenCode plugin must not route a blind turn through ordinary continuity"
   pass ".opencode primary plugin: session.idle forces one follow-up through the shared guard"
 }
 
@@ -714,7 +718,7 @@ exit 2
 EOF
   chmod +x "$worktree_dir/bin/fm-turnend-guard.sh"
   # Runtime module-format warnings are host noise; this assertion owns plugin output only.
-  out=$(NODE_NO_WARNINGS=1 PLUGIN="$plugin" DIRECTORY="$wrong_dir" WORKTREE="$worktree_dir" node 2>&1 <<'EOF'
+  out=$(NODE_NO_WARNINGS=1 PLUGIN="$plugin" DIRECTORY="$wrong_dir" WORKTREE="$worktree_dir" node --input-type=module 2>&1 <<'EOF'
 import { pathToFileURL } from "node:url";
 
 const mod = await import(pathToFileURL(process.env.PLUGIN).href);
@@ -736,6 +740,14 @@ if (!promptBody.includes("guard-fired")) {
   console.error(`missing prompt body: ${promptBody}`);
   process.exit(1);
 }
+if (!promptBody.includes("watcher cycle is missing, failed, or unhealthy")) {
+  console.error(`missing recovery-only preamble: ${promptBody}`);
+  process.exit(1);
+}
+if (promptBody.includes("Resume supervision according to the session-start operating block")) {
+  console.error(`ordinary continuity leaked into guard follow-up: ${promptBody}`);
+  process.exit(1);
+}
 EOF
 )
   status=$?
@@ -755,7 +767,9 @@ test_pi_extension_forces_followup() {
   assert_contains "$content" 'deliverAs: "followUp"' "pi extension must queue the follow-up safely"
   assert_contains "$content" 'guardFollowupActive' "pi extension must carry a logical-run loop guard"
   assert_not_contains "$content" 'skipNextTurnEnd' "pi extension kept the internal-turn loop guard"
-  assert_contains "$content" 'session-start operating block' "pi extension must use harness-neutral repair wording"
+  assert_contains "$content" 'watcher cycle is missing, failed, or unhealthy' "pi extension must identify a blind turn as watcher recovery"
+  assert_contains "$content" 'harness recovery instruction below' "pi extension must delegate recovery action to the shared guard line"
+  assert_not_contains "$content" 'Resume supervision according to the session-start operating block' "pi extension must not route a blind turn through ordinary continuity"
   assert_contains "$content" '.pi-turnend-extension-loaded' "pi extension must write its loaded marker for session-start diagnostics"
   assert_contains "$content" 'lockOwnership' "pi extension loaded marker must respect the session lock"
   assert_contains "$content" 'const command = String((event.input as { command?: unknown })?.command ?? "")' "pi extension changed bash command extraction for the PreToolUse contract"
@@ -798,6 +812,8 @@ const pi = {
   async sendUserMessage(message, options) {
     prompts += 1;
     if (!message.includes("TURN WOULD END BLIND")) throw new Error(`unexpected prompt: ${message}`);
+    if (!message.includes("watcher cycle is missing, failed, or unhealthy")) throw new Error(`guard prompt omitted recovery-only state: ${message}`);
+    if (message.includes("Resume supervision according to the session-start operating block")) throw new Error(`guard prompt used ordinary continuity: ${message}`);
     if (options?.deliverAs !== "followUp") throw new Error("guard prompt was not a follow-up");
     await handlers.get("agent_settled")?.({ type: "agent_settled" }, {});
   },
@@ -921,7 +937,11 @@ test_codex_hook_uses_process_pwd_when_payload_cwd_is_outside_root
 test_codex_hook_ignores_nested_git_root_guard
 test_opencode_plugin_forces_followup
 test_opencode_plugin_anchors_guard_to_worktree
-test_pi_extension_forces_followup
-test_pi_extension_injects_once_per_logical_agent_run
-test_pi_extension_retries_after_followup_delivery_failure
+if [ "$(node -p 'Number(process.versions.node.split(".")[0])')" -ge 22 ]; then
+  test_pi_extension_forces_followup
+  test_pi_extension_injects_once_per_logical_agent_run
+  test_pi_extension_retries_after_followup_delivery_failure
+else
+  printf 'skip: Node.js 22+ is required for direct TypeScript extension runtime tests\n'
+fi
 test_grok_hook_invokes_adapter
