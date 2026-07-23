@@ -110,10 +110,15 @@ Fake-Orca tests cover:
 - rejection of undocumented terminal-handle result shapes;
 - runtime readiness gating through `orca status --json`;
 - `fm-spawn.sh --backend orca` metadata creation and harness launch;
+- failed metadata publication aborting the spawn and releasing its Orca terminal and worktree;
 - `fm-peek.sh`, `fm-send.sh`, and `fm-crew-state.sh` routing through recorded Orca metadata;
 - slash-command popup placeholder handling that requires a second Enter before `fm-send.sh` reports submission;
 - scout teardown releasing an Orca worktree through `orca worktree rm`;
 - ship teardown failing closed when the recorded Orca worktree id is missing, cannot resolve to a path, or resolves to a different path than `worktree=`.
+
+On 2026-07-23, metadata publication failure handling was verified on macOS Darwin 25.5.0 with stock GNU bash 3.2.57 and a worktree-local GNU bash 5.2.0 build.
+Before the fix, `/bin/bash tests/fm-backend-orca.test.sh` exited 1 at `not ok - Orca spawn should fail when metadata cannot be written`, while `PATH="$PWD/.tasktmp/bash-check/install/bin:$PATH" .tasktmp/bash-check/install/bin/bash tests/fm-backend-orca.test.sh` exited 0.
+After the explicit metadata-write status check, both commands exited 0 and printed `ok - fm-spawn.sh --backend orca: releases terminal and worktree on later aborts`.
 
 Run the focused suite with:
 
