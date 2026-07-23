@@ -1243,9 +1243,11 @@ META_WINDOW=$T
     echo "home=$PROJ_ABS"
     echo "projects=$SECONDMATE_PROJECTS"
   fi
-# Bash 3.2 does not honor errexit for this compound-command redirection failure.
-# Check it explicitly so a spawn never continues without durable metadata.
-} > "$STATE/$ID.meta" || exit 1
+} > "$STATE/$ID.meta"
+META_WRITE_STATUS=$?
+if [ "$META_WRITE_STATUS" -ne 0 ]; then
+  exit "$META_WRITE_STATUS"
+fi
 [ "$BACKEND" = orca ] && ORCA_ABORT_CLEANUP=0
 
 sq_brief=$(shell_quote "$BRIEF")
