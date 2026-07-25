@@ -966,7 +966,27 @@ twice (once per needle).
 Redirected stderr hid the message; a PTY (live watcher output) did not.
 The gate still returned capable (`rc=0`) because the pipeline status was `grep`'s success, so the noise trained operators to ignore real errors on the same stream.
 Fix: in-process `case "$schema" in *'needle'*)` substring matches - no pipe, no early-exit consumer, no SIGPIPE.
-Verified before/after in an isolated `fm-lab-*` session via `bin/fm-herdr-lab.sh` (default session tripwire identical); unit coverage in `tests/fm-backend-herdr.test.sh` (`test_events_capable_*`).
+The before/after check used the same Herdr 0.7.4 schema from a guarded isolated session and forced the capability probe through a PTY:
+
+```sh
+$ SESSION=$(bin/fm-herdr-lab.sh name events-cap)
+$ bin/fm-herdr-lab.sh provision "$SESSION"
+$ HERDR_SESSION="$SESSION" script -q /dev/null /bin/bash -c \
+    '. bin/backends/herdr.sh; fm_backend_herdr_events_capable "$HERDR_SESSION"; printf "rc=%s\\n" "$?"'
+$ bin/fm-herdr-lab.sh teardown "$SESSION"
+```
+
+Before the fix, the PTY transcript was:
+
+```text
+bin/backends/herdr.sh: line 1816: printf: write error: Broken pipe
+bin/backends/herdr.sh: line 1817: printf: write error: Broken pipe
+rc=0
+```
+
+After the fix, the transcript contained only `rc=0`.
+Teardown accepted the fleet-state tripwire, confirming the captain's default session was byte-identical before and after.
+Deterministic regression coverage is in `tests/fm-backend-herdr.test.sh` (`test_events_capable_*`).
 
 ## Away-mode daemon terminal launch (2026-07-12, herdr 0.7.3, protocol 16, macOS aarch64)
 
