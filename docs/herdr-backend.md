@@ -954,6 +954,20 @@ ok - real herdr: the watcher fast-path enqueues a stale wake naming the task win
 The subscriber returned the `blocked` transition in **0.129s** and the watcher fast-path enqueued a durable `stale` wake naming the task window - versus up to `FM_POLL` (15s) plus `FM_STALE_ESCALATE_SECS` (240s) on the poll path this shortcuts.
 Dedupe (one wake per `->blocked` edge, marker cleared when the pane returns to `working`), subscribe-then-reconcile ordering (an already-blocked pane enqueued exactly once while newer edges buffer in the active stream), the `kind=secondmate`/`paused:` exemptions, and the three fail-closed fallbacks are covered by the fake-CLI unit tests in `tests/fm-backend-herdr.test.sh` (the `wait_transition`/`apply_transition` cases), `tests/fm-transition-lib.test.sh`, and `tests/fm-supervision-events.test.sh`.
 
+**Capability-gate broken-pipe noise (fixed 2026-07-24, herdr 0.7.4, protocol 16, macOS aarch64, stock `/bin/bash` 3.2.57).**
+`fm_backend_herdr_events_capable` used to check the ~220KB `herdr api schema --json` payload with `printf '%s' "$schema" | grep -Fq ...`.
+`grep -Fq` exits on the first match and closes the pipe while `printf` is still writing, so every TTY-attached probe printed:
+
+```
+bin/backends/herdr.sh: line N: printf: write error: Broken pipe
+```
+
+twice (once per needle).
+Redirected stderr hid the message; a PTY (live watcher output) did not.
+The gate still returned capable (`rc=0`) because the pipeline status was `grep`'s success, so the noise trained operators to ignore real errors on the same stream.
+Fix: in-process `case "$schema" in *'needle'*)` substring matches - no pipe, no early-exit consumer, no SIGPIPE.
+Verified before/after in an isolated `fm-lab-*` session via `bin/fm-herdr-lab.sh` (default session tripwire identical); unit coverage in `tests/fm-backend-herdr.test.sh` (`test_events_capable_*`).
+
 ## Away-mode daemon terminal launch (2026-07-12, herdr 0.7.3, protocol 16, macOS aarch64)
 
 `bin/fm-afk-start.sh` execs the supervise daemon in the FOREGROUND of whatever terminal it is already in.
