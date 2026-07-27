@@ -992,7 +992,8 @@ herdr_teardown_close() {
          "$session" "$workspace" "$journal" "$id"; then
       # shellcheck source=bin/fm-wake-lib.sh
       . "$SCRIPT_DIR/fm-wake-lib.sh"
-      lock="$state_dir/.herdr-presentation-order.lock"
+      lock=$(fm_backend_herdr_presentation_session_lock_path "$session" 2>/dev/null) \
+        || herdr_teardown_refuse "$target" || return 1
       lock_held=0
       attempt=0
       while [ "$attempt" -lt 50 ]; do
