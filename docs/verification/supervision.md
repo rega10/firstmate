@@ -145,7 +145,7 @@ Comparison under a polluted parent identity (`CLAUDE_CODE_CHILD_SESSION=1`, pare
 
 | Launch environment | Transcript-saving warning | Saved independent transcript | Notes |
 | --- | --- | --- | --- |
-| Inherited child marker pack (current pre-fix template only set prompt-suggestion) | Yes: `Transcript saving is off — inherited CLAUDE_CODE_CHILD_SESSION marker` | No | Reproduces the catalog secondmate defect. |
+| Inherited child marker pack (pre-fix template only set prompt-suggestion) | Yes: `Transcript saving is off — inherited CLAUDE_CODE_CHILD_SESSION marker` | No | Reproduces the inherited-marker defect. |
 | CLI-suggested `CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1` with child marker kept | No | Yes, new session id | Re-enables saving while leaving child-session semantics. |
 | Unset `CLAUDE_CODE_CHILD_SESSION` only | No | Yes, new session id | Root cause clear. |
 | Chosen contract: unset child + session id + `CLAUDE_PID` + `CLAUDE_JOB_DIR` | No | Yes, new session id | Independent top-level session; parent transcript not written. |
