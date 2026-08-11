@@ -101,6 +101,7 @@ test_ci_still_runs_broad_behavior_suite() {
     || fail "CI must invoke portable parallel shard 1 through fm-test-run.sh"
   grep -Fq 'bin/fm-test-run.sh --lane portable-parallel-2' "$CI" \
     || fail "CI must invoke portable parallel shard 2 through fm-test-run.sh"
+  # shellcheck disable=SC2016 # Ruby compares literal workflow expressions.
   ruby -ryaml -rshellwords -e '
     workflow = YAML.safe_load(File.read(ARGV.fetch(0)))
     job = workflow.fetch("jobs").fetch("tests-portable-serial")

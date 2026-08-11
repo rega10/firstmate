@@ -86,6 +86,7 @@ test_ci_wires_installers_and_required_lane() {
     "portable CI must run parallel shard 1"
   assert_grep 'lane portable-parallel-2' "$CI" \
     "portable CI must run parallel shard 2"
+  # shellcheck disable=SC2016 # Ruby compares literal workflow expressions.
   ruby -ryaml -rshellwords -e '
     workflow = YAML.safe_load(File.read(ARGV.fetch(0)))
     job = workflow.fetch("jobs").fetch("tests-portable-serial")
