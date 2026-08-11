@@ -957,6 +957,16 @@ SH
     "the stale worker did not report the refused handoff sweep"
   assert_contains "$out" "changed before project clone refresh" \
     "the stale worker did not report the refused clone refresh"
+
+  rm -f "$marker"
+  printf 'codex:bootstrap-network-test\n' > "$case_dir/home/state/.lock"
+  out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$fake_root" \
+    FM_FAKE_TREEHOUSE_LEASE_HELP=1 FM_BOOTSTRAP_NETWORK=only \
+    FM_BOOTSTRAP_NETWORK_LOCK_PID=codex:bootstrap-network-test \
+    FM_FAKE_FLEET_SYNC_STARTED_MARKER="$marker" "$ROOT/bin/fm-bootstrap.sh")
+  assert_present "$marker" "a matching hosted Codex lock owner was denied project clone refresh"
+  assert_not_contains "$out" "fleet lock ownership changed" \
+    "matching hosted Codex lock ownership was treated as stale"
   pass "bootstrap: every deferred mutating sweep rechecks fleet-lock ownership"
 }
 

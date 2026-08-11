@@ -126,7 +126,8 @@ test_missing_state_is_silent() {
 test_owned_lock_is_silent() {
   local root="$TMP_ROOT/already-ran"
   make_primary "$root"
-  printf '%s\n' "$$" > "$root/state/.lock"
+  FM_ROOT_OVERRIDE="$root" FM_HOME="$root" "$ROOT/bin/fm-lock.sh" >/dev/null \
+    || fail "the fixture harness could not acquire the fleet lock"
   expect_silent_zero "owned lock nudge" run_nudge "$root"
   pass "fm-sessionstart-nudge: a lock holder in process ancestry is already run"
 }
@@ -266,6 +267,39 @@ test_run_clear_rejects_previous_owner_completion() {
   pass "run wrapper: clear accepts completion only from the current harness"
 }
 
+test_hosted_codex_owner_completes_reuses_and_suppresses_resume_nudge() {
+  local root="$TMP_ROOT/run-hosted-codex" fakebin out status=0
+  fakebin="$root/fakebin"
+  make_run_primary "$root"
+  mkdir -p "$fakebin"
+  printf '#!/usr/bin/env bash\nexit 1\n' > "$fakebin/ps"
+  chmod +x "$fakebin/ps"
+
+  out=$(CODEX_THREAD_ID=hosted-session-test CODEX_SANDBOX=seatbelt \
+    PATH="$fakebin:$RUN_PATH" FM_GATE_REFUSE_BYPASS=0 \
+    FM_ROOT_OVERRIDE="$root" FM_HOME="$root" \
+    "$RUN" --source startup </dev/null) || status=$?
+  expect_code 0 "$status" "hosted Codex startup"
+  [ "$(cat "$root/state/.lock")" = "codex:hosted-session-test" ] \
+    || fail "hosted Codex startup did not retain its opaque lock owner"
+  [ "$(cat "$root/state/.session-start-complete")" = "codex:hosted-session-test" ] \
+    || fail "hosted Codex startup did not publish completion for its lock owner"
+
+  out=$(CODEX_THREAD_ID=hosted-session-test CODEX_SANDBOX=seatbelt \
+    PATH="$fakebin:$RUN_PATH" FM_GATE_REFUSE_BYPASS=0 \
+    FM_ROOT_OVERRIDE="$root" FM_HOME="$root" \
+    "$RUN" --source clear </dev/null) || status=$?
+  expect_code 0 "$status" "hosted Codex clear"
+  assert_contains "$out" "$REEMIT_BANNER$root" \
+    "hosted Codex clear did not reuse its completed startup"
+
+  expect_silent_zero "hosted Codex resume nudge" env \
+    CODEX_THREAD_ID=hosted-session-test CODEX_SANDBOX=seatbelt \
+    PATH="$fakebin:$RUN_PATH" FM_GATE_REFUSE_BYPASS=0 \
+    FM_ROOT_OVERRIDE="$root" FM_HOME="$root" "$NUDGE"
+  pass "hosted Codex owner records completion, reuses it, and suppresses resume nudging"
+}
+
 test_pi_large_sessionstart_digest_is_delivered_loudly() {
   local fixture out status=0
   command -v node >/dev/null 2>&1 || {
@@ -403,6 +437,7 @@ test_run_startup_runs_the_full_digest
 test_run_clear_and_compact_reemit
 test_run_clear_without_completion_finishes_startup
 test_run_clear_rejects_previous_owner_completion
+test_hosted_codex_owner_completes_reuses_and_suppresses_resume_nudge
 test_run_resume_delegates_to_the_nudge
 test_run_reads_source_from_the_hook_payload
 test_run_unknown_source_takes_the_helm

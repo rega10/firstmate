@@ -291,6 +291,26 @@ EOF
   pass "fm-startup-network: manual callers cannot forge mutation authority"
 }
 
+test_hosted_codex_owner_keeps_mutating_sweeps_authorized() {
+  local rec home root log status
+  rec=$(new_world hosted-codex-owner)
+  IFS='|' read -r home root log <<EOF
+$rec
+EOF
+  printf 'codex:startup-network-test\n' > "$home/state/.lock"
+
+  CODEX_THREAD_ID=startup-network-test CODEX_SANDBOX=seatbelt \
+    FM_FAKE_BOOTSTRAP_LOG="$log" run_stage "$home" "$root" run --locked 1
+  status=$(cat "$home/state/.startup-network.status")
+  assert_contains "$status" "lock_pid=codex:startup-network-test" \
+    "the hosted Codex owner was not preserved in deferred-network state"
+  assert_contains "$status" "phases=probe,sweeps" \
+    "the hosted Codex owner was downgraded to probe-only"
+  assert_grep 'network=only detect_only=0' "$log" \
+    "the hosted Codex owner did not run the mutating network sweeps"
+  pass "fm-startup-network: a hosted Codex owner retains mutating sweep authority"
+}
+
 # The unbounded per-call network work is exactly what could wedge a startup. The
 # stage carries one aggregate bound, and hitting it is an actionable line.
 test_the_stage_bound_is_reported_not_swallowed() {
@@ -617,6 +637,7 @@ test_harvest_acknowledgement_suppresses_the_wake_and_no_claim_produces_it
 test_a_claimant_crash_after_publish_still_queues_the_wake
 test_a_report_publication_failure_is_failed_and_still_wakes
 test_mutating_sweeps_are_refused_when_the_lock_changed_hands
+test_hosted_codex_owner_keeps_mutating_sweeps_authorized
 test_the_stage_bound_is_reported_not_swallowed
 test_an_abandoned_run_reads_as_needing_a_rerun
 test_start_is_single_flight

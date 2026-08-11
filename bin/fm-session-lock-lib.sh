@@ -144,6 +144,33 @@ EOF
   fm_codex_owner_token
 }
 
+fm_session_lock_owner_valid() {  # <owner>
+  local owner=$1
+  case "$owner" in
+    codex:?*) return 0 ;;
+    ''|*[!0-9]*) return 1 ;;
+  esac
+  [ "$owner" -gt 1 ]
+}
+
+fm_session_lock_owner_read() {  # <state-dir>
+  local state=$1 owner
+  [ -f "$state/.lock" ] && [ ! -L "$state/.lock" ] || return 1
+  {
+    IFS= read -r owner || return 1
+    if IFS= read -r _; then return 1; fi
+  } < "$state/.lock" 2>/dev/null || return 1
+  fm_session_lock_owner_valid "$owner" || return 1
+  printf '%s' "$owner"
+}
+
+fm_session_lock_owner_matches() {  # <state-dir> <expected-owner>
+  local state=$1 expected=$2 current
+  fm_session_lock_owner_valid "$expected" || return 1
+  current=$(fm_session_lock_owner_read "$state") || return 1
+  [ "$current" = "$expected" ]
+}
+
 # True if $1 is a live process that looks like a verified harness, or a hosted
 # Codex owner token. Sets FM_HARNESS_LIVE_KIND for callers that need to describe
 # the owner (codex, uninspectable_pid, or harness_pid).
@@ -156,6 +183,7 @@ FM_HARNESS_LIVE_KIND=
 fm_harness_pid_alive() {
   local pid=$1 comm args
   FM_HARNESS_LIVE_KIND=
+  fm_session_lock_owner_valid "$pid" || return 1
   case "$pid" in
     codex:*)
       FM_HARNESS_LIVE_KIND=codex
@@ -190,13 +218,12 @@ fm_harness_pid_alive() {
 # owned by self only when it matches this same hosted Codex thread's own token.
 fm_session_lock_owned_by_self() {
   local state=$1 lock_pid pids pid
-  lock_pid=$(cat "$state/.lock" 2>/dev/null || true)
+  lock_pid=$(fm_session_lock_owner_read "$state") || return 1
   case "$lock_pid" in
     codex:*)
       [ "$lock_pid" = "$(fm_codex_owner_token 2>/dev/null)" ]
       return
       ;;
-    ''|*[!0-9]*) return 1 ;;
   esac
   pids=$(fm_harness_ancestry_pids) || return 1
   while IFS= read -r pid; do
