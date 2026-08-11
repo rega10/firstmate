@@ -2449,6 +2449,7 @@ fi
 
 HERDR_PRESENTATION_JOURNAL="$STATE/$ID.herdr-presentation"
 HERDR_PRESENTATION_RETIRE_CANDIDATE=0
+HERDR_ENDPOINT_CONFIRMED_GONE=0
 HERDR_PRESENTATION_SESSION=
 HERDR_PRESENTATION_PANE=
 if [ "$BACKEND" = herdr ] \
@@ -2480,8 +2481,10 @@ if [ "$HERDR_PRESENTATION_RETIRE_CANDIDATE" = 1 ]; then
     # Swallowing them left a wrong active workspace with no operator-visible
     # signal at all. The close stays non-fatal exactly as before: the presence
     # gate below is what decides whether any durable record may be removed.
-    fm_backend_herdr_projection_close_pane_focus_preserving \
-      "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE" || true
+    if fm_backend_herdr_projection_close_pane_focus_preserving \
+      "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE"; then
+      HERDR_ENDPOINT_CONFIRMED_GONE=1
+    fi
   else
     echo "warning: herdr presentation focus lock unavailable; refusing a concurrent focus-unsafe pane close" >&2
   fi
@@ -2495,8 +2498,13 @@ elif [ "$BACKEND" != orca ]; then
   fm_backend_teardown_kill "$BACKEND" "$T" "$(meta_value "$META" zellij_tab_id)" "fm-$ID" 2>/dev/null || true
 fi
 if [ "$HERDR_PRESENTATION_RETIRE_CANDIDATE" = 1 ]; then
-  if [ "$(fm_backend_herdr_pane_agent_state "$HERDR_PRESENTATION_SESSION" "$HERDR_PRESENTATION_PANE")" = dead ]; then
-    rm -f "$HERDR_PRESENTATION_JOURNAL"
+  if [ "$HERDR_ENDPOINT_CONFIRMED_GONE" = 1 ] \
+     || fm_backend_herdr_endpoint_confirmed_gone "$T"; then
+    HERDR_ENDPOINT_CONFIRMED_GONE=1
+    if ! rm -f "$HERDR_PRESENTATION_JOURNAL"; then
+      echo "REFUSED: Herdr presentation journal $HERDR_PRESENTATION_JOURNAL could not be retired; preserving task state." >&2
+      exit 1
+    fi
   else
     echo "warning: exact herdr task-pane close could not be confirmed for $ID; retaining the presentation journal and attempting no workspace cleanup" >&2
   fi
@@ -2516,7 +2524,8 @@ if [ "$BACKEND" = herdr ]; then
     echo "error: herdr endpoint confirmation is unavailable for $ID; retaining every durable task record" >&2
     exit 1
   fi
-  if ! fm_backend_herdr_endpoint_confirmed_gone "$T"; then
+  if [ "$HERDR_ENDPOINT_CONFIRMED_GONE" != 1 ] \
+     && ! fm_backend_herdr_endpoint_confirmed_gone "$T"; then
     echo "error: herdr pane $T for $ID is not confirmed gone after its close was refused, skipped, or failed; retaining every durable task record - rerun teardown once the close can run under the session lock" >&2
     exit 1
   fi

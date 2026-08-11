@@ -1918,6 +1918,16 @@ case "${1:-} ${2:-}" in
     ;;
   "pane get")
     if [ -e "${FM_FAKE_HERDR_CLOSED:?}" ]; then
+      if [ -n "${FM_FAKE_HERDR_PANE_GET_COUNT:-}" ]; then
+        count=0
+        [ ! -f "$FM_FAKE_HERDR_PANE_GET_COUNT" ] || count=$(cat "$FM_FAKE_HERDR_PANE_GET_COUNT")
+        count=$((count + 1))
+        printf '%s\n' "$count" > "$FM_FAKE_HERDR_PANE_GET_COUNT"
+        if [ "${FM_FAKE_HERDR_AMBIGUOUS_AFTER_CONFIRM:-0}" = 1 ] && [ "$count" -gt 1 ]; then
+          printf '%s\n' '{"error":{"code":"internal"}}' >&2
+          exit 1
+        fi
+      fi
       if [ "${FM_FAKE_HERDR_PRESENCE_UNKNOWN:-0}" = 1 ]; then
         printf '%s\n' '{"error":{"code":"internal"}}' >&2
         exit 1
