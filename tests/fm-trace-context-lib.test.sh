@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # tests/fm-trace-context-lib.test.sh - unit tests for the native, default-off
-# W3C trace-context library (bin/fm-trace-context-lib.sh) plus structural checks
-# that bin/fm-spawn.sh wires it in at the pre-launch injection seam and that the
-# capability is inherited into secondmate homes. Pure functions, no backend and
-# no live spawn required.
+# W3C trace-context library (bin/fm-trace-context-lib.sh) plus the declared
+# inheritance contract that keeps the capability available in secondmate homes.
+# Pure functions, no backend and no live spawn required.
 set -u
 
 # shellcheck source=tests/lib.sh
