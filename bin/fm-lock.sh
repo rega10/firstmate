@@ -51,8 +51,8 @@ lock_acquired_line() {  # <owner>
 
 if [ "${1:-}" = "status" ]; then
   if [ ! -f "$LOCK" ]; then echo "lock: free"; exit 0; fi
-  old=$(cat "$LOCK" 2>/dev/null) || {
-    echo "lock: unreadable"
+  old=$(fm_session_lock_owner_read "$STATE") || {
+    echo "lock: stale (malformed or invalid owner)"
     exit 0
   }
   if fm_harness_pid_alive "$old"; then
@@ -86,7 +86,7 @@ trap release_claim_lock EXIT
 trap 'exit 1' HUP INT TERM
 
 if [ -f "$LOCK" ] && [ ! -L "$LOCK" ]; then
-  old=$(cat "$LOCK" 2>/dev/null || true)
+  old=$(fm_session_lock_owner_read "$STATE" || true)
   if [ "$old" = "$me" ]; then
     lock_acquired_line "$me"
     exit 0
@@ -112,10 +112,7 @@ if [ -e "$LOCK" ] || [ -L "$LOCK" ]; then
     echo "error: session lock is not a regular file; operate read-only until resolved" >&2
     exit 1
   fi
-  old=$(cat "$LOCK" 2>/dev/null) || {
-    echo "error: session lock is unreadable; operate read-only until resolved" >&2
-    exit 1
-  }
+  old=$(fm_session_lock_owner_read "$STATE" || true)
   if [ "$old" != "$me" ] && fm_harness_pid_alive "$old"; then
     echo "error: another live firstmate session holds the lock ($(lock_holder_error_description "$old")); operate read-only until resolved" >&2
     exit 1
@@ -125,7 +122,7 @@ if ! { printf '%s\n' "$me" > "$LOCK"; } 2>/dev/null; then
   echo "error: cannot write session lock; operate read-only until resolved" >&2
   exit 1
 fi
-written=$(cat "$LOCK" 2>/dev/null) || {
+written=$(fm_session_lock_owner_read "$STATE") || {
   echo "error: cannot verify session lock ownership; operate read-only until resolved" >&2
   exit 1
 }
