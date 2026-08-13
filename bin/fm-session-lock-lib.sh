@@ -154,11 +154,12 @@ fm_session_lock_owner_valid() {  # <owner>
 }
 
 fm_session_lock_owner_read() {  # <state-dir>
-  local state=$1 owner
+  local state=$1 owner trailing=''
   [ -f "$state/.lock" ] && [ ! -L "$state/.lock" ] || return 1
   {
     IFS= read -r owner || return 1
-    if IFS= read -r _; then return 1; fi
+    if IFS= read -r trailing; then return 1; fi
+    [ -z "$trailing" ] || return 1
   } < "$state/.lock" 2>/dev/null || return 1
   fm_session_lock_owner_valid "$owner" || return 1
   printf '%s' "$owner"
