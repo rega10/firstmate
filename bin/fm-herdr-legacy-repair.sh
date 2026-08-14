@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # bin/fm-herdr-legacy-repair.sh - the one guarded repair path for a legacy
 # primary-home Herdr task record that predates endpoint_task_id= and therefore
-# can never pass fm_backend_validate_task_endpoint (bin/fm-backend.sh), so
-# ordinary teardown and control refuse it forever while the watcher keeps
-# alerting on its finished endpoint.
+# cannot pass fm_backend_validate_task_endpoint (bin/fm-backend.sh) until
+# repaired, so ordinary teardown and control refuse it and a finished endpoint
+# can keep producing watcher alerts.
 #
 # The repair BINDS: after every independent evidence check below agrees, it
 # rewrites the task's metadata with the single missing endpoint_task_id=<id>

@@ -202,7 +202,7 @@ Workspace and tab ids support verification and cleanup but are not inferred from
 
 ## Legacy record repair
 
-A Herdr task record written before `endpoint_task_id=` existed can never pass the shared endpoint-identity validation, so teardown and control refuse it forever while the watcher keeps alerting on its finished endpoint.
+A Herdr task record written before `endpoint_task_id=` existed cannot pass the shared endpoint-identity validation until repaired, so teardown and control refuse it and a finished endpoint can keep producing watcher alerts.
 `bin/fm-herdr-legacy-repair.sh <task-id>` is the one guarded path that restores that binding, and only for a legacy primary-home Herdr record whose independent evidence all agrees; its header and `--help` own the exact evidence conjunction, refusal behavior, and idempotence contract.
 It binds only - it never closes a pane, deletes a record, or issues a mutating Herdr command - and cleanup afterwards remains ordinary `bin/fm-teardown.sh`, which re-runs its own complete landed-work and confirmed-close safety against the repaired record.
 Ordinary cleanup and control keep refusing unbound records implicitly; nothing repairs a binding as a side effect.
