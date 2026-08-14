@@ -272,6 +272,13 @@ test_missing_and_ambiguous_fields_refuse() {
     "herdr_tab_id=$TABID" "herdr_pane_id=$PANEID"
   assert_refused_unchanged "$dir" dupkind-task "kind= records" "duplicate kind"
 
+  dir=$(make_case duplicate-pr)
+  write_legacy_meta "$dir" duppr-task \
+    "pr=https://github.com/example/project/pull/1" \
+    "pr=https://github.com/example/project/pull/2"
+  FAKE_PANE_GET='{"error":{"code":"pane_not_found"}}' \
+    assert_refused_unchanged "$dir" duppr-task "pr= records" "duplicate PR"
+
   dir=$(make_case no-meta)
   local rc=0
   run_repair "$dir" ghost-task || rc=$?

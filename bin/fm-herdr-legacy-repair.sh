@@ -195,7 +195,14 @@ SESSION=$(fm_backend_meta_exact_value "$META" herdr_session) || refuse "task $ID
 WORKSPACE=$(fm_backend_meta_exact_value "$META" herdr_workspace_id) || refuse "task $ID herdr_workspace_id became unreadable."
 TAB=$(fm_backend_meta_exact_value "$META" herdr_tab_id) || refuse "task $ID herdr_tab_id became unreadable."
 PANE=$(fm_backend_meta_exact_value "$META" herdr_pane_id) || refuse "task $ID herdr_pane_id became unreadable."
-PR_URL=$(grep '^pr=' "$META" | tail -1 | cut -d= -f2- || true)
+PR_COUNT=$(grep -c '^pr=' "$META" 2>/dev/null || true)
+[ "$PR_COUNT" -le 1 ] \
+  || refuse "task $ID has $PR_COUNT pr= records; ambiguous landed-work evidence is preserved for inspection."
+PR_URL=
+if [ "$PR_COUNT" -eq 1 ]; then
+  PR_URL=$(fm_backend_meta_exact_value "$META" pr) \
+    || refuse "task $ID has an empty PR identity; landed-work evidence is preserved for inspection."
+fi
 
 canonical_dir() {
   local target=$1
