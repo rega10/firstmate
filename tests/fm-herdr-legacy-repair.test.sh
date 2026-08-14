@@ -105,6 +105,28 @@ assert_refused_unchanged() {  # <case-dir> <task-id> <needle> <description>
   assert_no_lifecycle_mutation "$dir" "$description"
 }
 
+test_help_and_missing_state_preserve_home() {
+  local dir="$TMP_ROOT/no-state" rc=0
+  mkdir -p "$dir/home"
+  FM_HOME="$dir/home" FM_ROOT_OVERRIDE="$ROOT" \
+    "$REPAIR" --help > "$dir/help.out" 2> "$dir/help.err" || rc=$?
+  expect_code 0 "$rc" "help should succeed"
+  assert_grep "Usage: fm-herdr-legacy-repair.sh <task-id>" "$dir/help.out" \
+    "help should expose usage"
+  assert_grep "Independent evidence" "$dir/help.out" \
+    "help should expose evidence mechanics"
+  assert_grep "atomic" "$dir/help.out" \
+    "help should expose mutation and locking mechanics"
+  [ ! -e "$dir/home/state" ] || fail "help created a state directory"
+
+  rc=0
+  run_repair "$dir" ghost-task || rc=$?
+  [ "$rc" -ne 0 ] || fail "missing state should refuse"
+  assert_grep "state directory" "$dir/stderr" "missing state diagnostic"
+  [ ! -e "$dir/home/state" ] || fail "missing-state refusal created durable state"
+  pass "help exposes mechanics and preflight refusals preserve a missing state directory"
+}
+
 pane_present_json() {  # <tab-id> <foreground-cwd>
   printf '{"result":{"pane":{"pane_id":"%s","tab_id":"%s","foreground_cwd":"%s"}}}' \
     "$PANEID" "$1" "$2"
@@ -317,6 +339,12 @@ test_scope_refusals() {
   write_legacy_meta "$dir" home-task
   printf 'sm\n' > "$dir/home/.fm-secondmate-home"
   assert_refused_unchanged "$dir" home-task "secondmate home" "secondmate home"
+
+  dir=$(make_case dangling-secondmate-home)
+  write_legacy_meta "$dir" dangling-home-task
+  ln -s "$dir/missing-secondmate-marker-target" "$dir/home/.fm-secondmate-home"
+  assert_refused_unchanged "$dir" dangling-home-task "secondmate home" \
+    "dangling secondmate home marker"
   pass "tmux, other opaque backends, secondmates, and remote routes refuse by name"
 }
 
@@ -350,6 +378,14 @@ test_worktree_project_mismatches_refuse() {
 
 test_live_topology_mismatches_refuse() {
   local dir
+  dir=$(make_case live-pane-mismatch)
+  write_legacy_meta "$dir" pm-task
+  FAKE_PANE_GET="{\"result\":{\"pane\":{\"pane_id\":\"wG:p99\",\"tab_id\":\"$TABID\",\"foreground_cwd\":\"$dir/worktree\"}}}" \
+    FAKE_AGENT_GET='{"result":{"agent":{"agent":"claude","agent_status":"idle"}}}' \
+    FAKE_TAB_LIST="{\"result\":{\"tabs\":[{\"tab_id\":\"$TABID\",\"label\":\"fm-pm-task\"}]}}" \
+    assert_refused_unchanged "$dir" pm-task "unreadable or the session is unreachable" \
+      "live pane mismatch"
+
   dir=$(make_case live-tab-mismatch)
   write_legacy_meta "$dir" tm-task
   FAKE_PANE_GET=$(pane_present_json "wG:t99" "$dir/worktree") \
@@ -463,6 +499,7 @@ test_lock_contention_refuses() {
   pass "a concurrent lifecycle action refuses the repair before any change"
 }
 
+test_help_and_missing_state_preserve_home
 test_modern_bound_record_untouched
 test_legacy_landed_gone_pane_repaired_once_and_idempotent
 test_legacy_landed_idle_agent_and_husk_repair

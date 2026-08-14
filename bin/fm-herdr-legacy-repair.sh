@@ -64,19 +64,8 @@ FM_ROOT="${FM_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 FM_HOME="${FM_HOME:-${FM_ROOT_OVERRIDE:-$FM_ROOT}}"
 STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 
-# shellcheck source=bin/fm-pr-lib.sh
-. "$SCRIPT_DIR/fm-pr-lib.sh"
-# shellcheck source=bin/fm-wake-lib.sh
-. "$SCRIPT_DIR/fm-wake-lib.sh"
-# shellcheck source=bin/fm-gate-refuse-lib.sh
-. "$SCRIPT_DIR/fm-gate-refuse-lib.sh"
-# shellcheck source=bin/fm-backend.sh
-. "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-landed-lib.sh
-. "$SCRIPT_DIR/fm-landed-lib.sh"
-
 usage() {
-  sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,/^set -u$/ { /^set -u$/d; s/^# \{0,1\}//; p; }' "$0"
 }
 
 case "${1:-}" in
@@ -85,6 +74,11 @@ case "${1:-}" in
     exit 0
     ;;
 esac
+
+# shellcheck source=bin/fm-pr-lib.sh
+. "$SCRIPT_DIR/fm-pr-lib.sh"
+# shellcheck source=bin/fm-gate-refuse-lib.sh
+. "$SCRIPT_DIR/fm-gate-refuse-lib.sh"
 if [ "$#" -ne 1 ] || ! fm_task_id_path_safe "$1"; then
   echo "error: usage: fm-herdr-legacy-repair.sh <task-id>" >&2
   exit 2
@@ -98,7 +92,20 @@ refuse() {
 
 fm_refuse_if_gate_agent
 
+[ ! -e "$FM_HOME/.fm-secondmate-home" ] && [ ! -L "$FM_HOME/.fm-secondmate-home" ] \
+  || refuse "this is a secondmate home; the legacy repair path covers only primary-home records."
+[ -d "$STATE" ] \
+  || refuse "state directory $STATE does not exist; nothing to repair."
 META="$STATE/$ID.meta"
+[ -f "$META" ] || refuse "task $ID has no metadata at $META; nothing to repair."
+
+# shellcheck source=bin/fm-wake-lib.sh
+. "$SCRIPT_DIR/fm-wake-lib.sh"
+# shellcheck source=bin/fm-backend.sh
+. "$SCRIPT_DIR/fm-backend.sh"
+# shellcheck source=bin/fm-landed-lib.sh
+. "$SCRIPT_DIR/fm-landed-lib.sh"
+
 CONTROL_LOCK="$STATE/.control-$ID.lock"
 CONTROL_LOCK_HELD=0
 META_LOCK=
@@ -120,14 +127,10 @@ repair_cleanup() {
 trap repair_cleanup EXIT
 trap 'exit 1' HUP INT TERM
 
-[ ! -e "$FM_HOME/.fm-secondmate-home" ] \
-  || refuse "this is a secondmate home; the legacy repair path covers only primary-home records."
-
 fm_lock_try_acquire "$CONTROL_LOCK" \
   || refuse "another lifecycle action is already running for task $ID; nothing was changed."
 CONTROL_LOCK_HELD=1
 
-[ -f "$META" ] || refuse "task $ID has no metadata at $META; nothing to repair."
 META_LOCK=$(fm_meta_lock_path "$META") || refuse "task $ID has no resolvable metadata lock."
 fm_lock_acquire_wait "$META_LOCK"
 META_LOCK_HELD=1
@@ -274,6 +277,9 @@ case "$PRESENCE" in
   present)
     PANE_INFO=$(fm_backend_herdr_cli "$SESSION" pane get "$PANE" 2>/dev/null) \
       || refuse "recorded pane $PANE became unreadable in session $SESSION."
+    LIVE_PANE=$(printf '%s' "$PANE_INFO" | jq -r '.result.pane.pane_id // empty' 2>/dev/null)
+    [ "$LIVE_PANE" = "$PANE" ] \
+      || refuse "live pane identity ${LIVE_PANE:-<unreadable>} is not the recorded pane $PANE; the record does not match the live endpoint."
     LIVE_TAB=$(printf '%s' "$PANE_INFO" | jq -r '.result.pane.tab_id // empty' 2>/dev/null)
     [ "$LIVE_TAB" = "$TAB" ] \
       || refuse "live pane $PANE sits in tab ${LIVE_TAB:-<unreadable>}, not the recorded tab $TAB; the record does not match the live endpoint."
