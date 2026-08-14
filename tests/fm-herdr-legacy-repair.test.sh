@@ -234,6 +234,7 @@ test_missing_and_ambiguous_fields_refuse() {
   dir=$(make_case missing-pane-field)
   fm_write_meta "$dir/home/state/broken-task.meta" \
     "window=$SESSION:$PANEID" "worktree=$dir/worktree" "project=$dir/project" \
+    "kind=ship" \
     "backend=herdr" "herdr_session=$SESSION" "herdr_workspace_id=$WSID" \
     "herdr_tab_id=$TABID"
   assert_refused_unchanged "$dir" broken-task "malformed or inconsistent" "missing herdr_pane_id"
@@ -242,6 +243,7 @@ test_missing_and_ambiguous_fields_refuse() {
   write_legacy_meta "$dir" window-task
   fm_write_meta "$dir/home/state/window-task.meta" \
     "window=other-session:$PANEID" "worktree=$dir/worktree" "project=$dir/project" \
+    "kind=ship" \
     "backend=herdr" "herdr_session=$SESSION" "herdr_workspace_id=$WSID" \
     "herdr_tab_id=$TABID" "herdr_pane_id=$PANEID"
   assert_refused_unchanged "$dir" window-task "malformed or inconsistent" "window/session mismatch"
@@ -262,6 +264,14 @@ test_missing_and_ambiguous_fields_refuse() {
   write_legacy_meta "$dir" dupback-task "backend=herdr"
   assert_refused_unchanged "$dir" dupback-task "backend= records" "duplicate backend"
 
+  dir=$(make_case duplicate-kind)
+  fm_write_meta "$dir/home/state/dupkind-task.meta" \
+    "window=$SESSION:$PANEID" "worktree=$dir/worktree" "project=$dir/project" \
+    "kind=secondmate" "kind=ship" \
+    "backend=herdr" "herdr_session=$SESSION" "herdr_workspace_id=$WSID" \
+    "herdr_tab_id=$TABID" "herdr_pane_id=$PANEID"
+  assert_refused_unchanged "$dir" dupkind-task "kind= records" "duplicate kind"
+
   dir=$(make_case no-meta)
   local rc=0
   run_repair "$dir" ghost-task || rc=$?
@@ -275,17 +285,21 @@ test_scope_refusals() {
   dir=$(make_case tmux-record)
   fm_write_meta "$dir/home/state/tmux-task.meta" \
     "window=iso:fm-tmux-task" "worktree=$dir/worktree" "project=$dir/project" \
-    "backend=tmux" "endpoint_task_id=tmux-task"
+    "kind=ship" "backend=tmux" "endpoint_task_id=tmux-task"
   assert_refused_unchanged "$dir" tmux-task "covers only Herdr records" "tmux record"
 
   dir=$(make_case zellij-record)
   fm_write_meta "$dir/home/state/z-task.meta" \
     "window=zses:1" "worktree=$dir/worktree" "project=$dir/project" \
-    "backend=zellij"
+    "kind=ship" "backend=zellij"
   assert_refused_unchanged "$dir" z-task "covers only Herdr records" "zellij record"
 
   dir=$(make_case secondmate-kind)
-  write_legacy_meta "$dir" sm-task "kind=secondmate"
+  fm_write_meta "$dir/home/state/sm-task.meta" \
+    "window=$SESSION:$PANEID" "worktree=$dir/worktree" "project=$dir/project" \
+    "kind=secondmate" \
+    "backend=herdr" "herdr_session=$SESSION" "herdr_workspace_id=$WSID" \
+    "herdr_tab_id=$TABID" "herdr_pane_id=$PANEID"
   assert_refused_unchanged "$dir" sm-task "never touches secondmates" "secondmate record"
 
   dir=$(make_case remote-route)
@@ -320,6 +334,7 @@ test_worktree_project_mismatches_refuse() {
   write_legacy_meta "$dir" wp-task
   fm_write_meta "$dir/home/state/wp-task.meta" \
     "window=$SESSION:$PANEID" "worktree=$dir/project" "project=$dir/project" \
+    "kind=ship" \
     "backend=herdr" "herdr_session=$SESSION" "herdr_workspace_id=$WSID" \
     "herdr_tab_id=$TABID" "herdr_pane_id=$PANEID"
   assert_refused_unchanged "$dir" wp-task "isolated copy" "worktree equals project"

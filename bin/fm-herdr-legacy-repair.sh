@@ -139,9 +139,20 @@ STATE_DEVICE=$(fm_pr_file_device "$STATE") || refuse "state directory device is 
 [ "$META_DEVICE" = "$STATE_DEVICE" ] \
   || refuse "task $ID metadata is not on the state directory's device."
 
-KIND=$(grep '^kind=' "$META" | tail -1 | cut -d= -f2- || true)
-[ "$KIND" != secondmate ] \
-  || refuse "task $ID is a secondmate record; the legacy repair path never touches secondmates."
+KIND_COUNT=$(grep -c '^kind=' "$META" 2>/dev/null || true)
+[ "$KIND_COUNT" -eq 1 ] \
+  || refuse "task $ID has $KIND_COUNT kind= records; a missing or ambiguous task kind is not a repair candidate."
+KIND=$(fm_backend_meta_exact_value "$META" kind) \
+  || refuse "task $ID has an empty task kind; preserved for inspection."
+case "$KIND" in
+  ship|scout) ;;
+  secondmate)
+    refuse "task $ID is a secondmate record; the legacy repair path never touches secondmates."
+    ;;
+  *)
+    refuse "task $ID records kind=$KIND; the legacy repair path covers only primary ship and scout tasks."
+    ;;
+esac
 [ "$(grep -c '^remote_host=' "$META" 2>/dev/null || true)" -eq 0 ] \
   || refuse "task $ID has a remote route; the legacy repair path covers only local primary-home records."
 
