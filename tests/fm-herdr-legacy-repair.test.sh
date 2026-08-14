@@ -214,7 +214,15 @@ test_active_and_nonterminal_agents_refuse() {
     FAKE_AGENT_GET='not json at all' \
     FAKE_TAB_LIST="{\"result\":{\"tabs\":[{\"tab_id\":\"$TABID\",\"label\":\"fm-active-task\"}]}}" \
     assert_refused_unchanged "$dir" active-task "agent state" "unreadable agent"
-  pass "working, blocked, and unreadable agents refuse and preserve everything"
+
+  dir=$(make_case agent-missing-identity)
+  write_legacy_meta "$dir" missing-agent-task
+  FAKE_PANE_GET=$(pane_present_json "$TABID" "$dir/worktree") \
+    FAKE_AGENT_GET='{"result":{"agent":{"agent_status":"idle"}}}' \
+    FAKE_TAB_LIST="{\"result\":{\"tabs\":[{\"tab_id\":\"$TABID\",\"label\":\"fm-missing-agent-task\"}]}}" \
+    assert_refused_unchanged "$dir" missing-agent-task "agent identity is unreadable" \
+      "missing agent identity"
+  pass "working, blocked, and malformed agents refuse and preserve everything"
 }
 
 test_dirty_and_unlanded_work_refuse() {

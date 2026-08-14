@@ -299,7 +299,17 @@ case "$PRESENCE" in
       live)
         AGENT_RAW=$(fm_backend_herdr_agent_identity_raw "$SESSION" "$PANE") \
           || refuse "registered agent state for pane $PANE became unreadable."
-        AGENT_STATUS=${AGENT_RAW#*$'\t'}
+        case "$AGENT_RAW" in
+          *$'\t'*)
+            AGENT_NAME=${AGENT_RAW%%$'\t'*}
+            AGENT_STATUS=${AGENT_RAW#*$'\t'}
+            ;;
+          *)
+            refuse "the recorded endpoint's registered agent identity is unreadable; preserved for inspection."
+            ;;
+        esac
+        [ -n "$AGENT_NAME" ] \
+          || refuse "the recorded endpoint's registered agent identity is unreadable; preserved for inspection."
         case "$AGENT_STATUS" in
           idle|done)
             ENDPOINT_EVIDENCE="finished agent ($AGENT_STATUS) at the recorded endpoint"
