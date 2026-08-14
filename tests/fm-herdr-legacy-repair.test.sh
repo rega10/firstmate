@@ -47,10 +47,14 @@ make_case() {  # <name>
   : > "$dir/herdr.log"
   git init -q --bare "$dir/origin.git"
   git clone -q "$dir/origin.git" "$dir/project" 2>/dev/null
-  ( cd "$dir/project" \
-    && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init \
-    && git push -q origin HEAD:main \
-    && git checkout -q main 2>/dev/null || git checkout -q -b main ) 2>/dev/null
+  (
+    cd "$dir/project" || exit 1
+    git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init
+    git push -q origin HEAD:main
+    if ! git checkout -q main 2>/dev/null; then
+      git checkout -q -b main
+    fi
+  ) 2>/dev/null
   git clone -q "$dir/origin.git" "$dir/worktree" 2>/dev/null
   ( cd "$dir/worktree" && git checkout -q main ) 2>/dev/null
   printf '%s\n' "$dir"
