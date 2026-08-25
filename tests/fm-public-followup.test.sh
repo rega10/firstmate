@@ -1466,7 +1466,12 @@ SH
   ')
   assert_contains "$command" "--outcome-text" \
     "the exact rechain command must remain continuous through outcome text"
-  command=${command/"$ROOT/bin/fm-public-followup-emit.sh"/"$parent/fakebin/record-emit"}
+  # Bash 3.2 splits an inline-quoted pattern at its first slash; substitute
+  # through variables so stock macOS Bash performs the same replacement.
+  local real_emit fake_emit
+  real_emit="$ROOT/bin/fm-public-followup-emit.sh"
+  fake_emit="$parent/fakebin/record-emit"
+  command=${command/"$real_emit"/$fake_emit}
   command=${command//<value>/https://github.com/example/repo/pull/99}
   RECORD_ARGS="$command_log" bash -c "$command" \
     || fail "the exact rechain command must execute after filling its deliverable value"
