@@ -108,7 +108,11 @@ test_ci_still_runs_broad_behavior_suite() {
     lint_job = jobs.values.find do |candidate|
       candidate.fetch("steps", []).any? do |step|
         run = step["run"]
-        run.is_a?(String) && Shellwords.shellsplit(run).include?("bin/fm-lint.sh")
+        run.is_a?(String) && run.lines.any? do |line|
+          tokens = Shellwords.shellsplit(line)
+          tokens.shift while tokens.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
+          tokens.first&.delete_prefix("./") == "bin/fm-lint.sh"
+        end
       end
     end
     abort "lint job running bin/fm-lint.sh is missing" unless lint_job
