@@ -104,7 +104,15 @@ test_ci_still_runs_broad_behavior_suite() {
   # shellcheck disable=SC2016 # Ruby compares literal workflow expressions.
   ruby -ryaml -rshellwords -e '
     workflow = YAML.safe_load(File.read(ARGV.fetch(0)))
-    job = workflow.fetch("jobs").fetch("tests-portable-serial")
+    jobs = workflow.fetch("jobs")
+    lint_job = jobs.values.find do |candidate|
+      candidate.fetch("steps", []).any? do |step|
+        run = step["run"]
+        run.is_a?(String) && Shellwords.shellsplit(run).include?("bin/fm-lint.sh")
+      end
+    end
+    abort "lint job running bin/fm-lint.sh is missing" unless lint_job
+    job = jobs.fetch("tests-portable-serial")
     abort "serial shard matrix is not 1..4" unless job.dig("strategy", "matrix", "shard") == [1, 2, 3, 4]
     step = job.fetch("steps").find { |candidate| candidate["name"].to_s.start_with?("Run portable serial shard") }
     abort "serial shard runner step is missing" unless step
@@ -121,8 +129,6 @@ test_ci_still_runs_broad_behavior_suite() {
     fail "CI Behavior must not re-spell an inline tests/*.test.sh loop; use fm-test-run.sh"
   fi
   # Preserve other CI lanes this task must not shrink.
-  grep -Eq 'name:[[:space:]]*Lint( shell scripts)?$' "$CI" \
-    || fail "CI must retain the lint job"
   grep -Eq 'name:[[:space:]]*Stock macOS Bash snapshot compatibility' "$CI" \
     || fail "CI must retain the macOS stock Bash compatibility job"
   grep -Eq 'name:[[:space:]]*Repo invariants' "$CI" \
