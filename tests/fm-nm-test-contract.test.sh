@@ -76,7 +76,11 @@ test_yaml_contracts() {
       end
     end
 
-    lint_job = jobs.values.find { |job| direct_command.call(job, "bin/fm-lint.sh") }
+    lint_job = jobs.values.find do |job|
+      step_commands.call(job).any? do |tokens|
+        tokens.length == 1 && tokens.first.delete_prefix("./") == "bin/fm-lint.sh"
+      end
+    end
     abort "lint job running bin/fm-lint.sh is missing" unless lint_job
 
     coverage_job = jobs.fetch("test-coverage")
