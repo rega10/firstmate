@@ -1,0 +1,14 @@
+^Dfixed | baseline | expected=accepted observed=accepted
+ok - no-mistakes stays targeted and CI owns broad behavior coverage
+predecessor | step-shell | expected=accepted observed=accepted
+ok - no-mistakes stays targeted and CI owns broad behavior coverage
+fixed | step-shell | expected=rejected observed=rejected
+not ok - no-mistakes and CI YAML contracts must remain intact
+predecessor | job-shell | expected=accepted observed=accepted
+ok - no-mistakes stays targeted and CI owns broad behavior coverage
+fixed | job-shell | expected=rejected observed=rejected
+not ok - no-mistakes and CI YAML contracts must remain intact
+predecessor | workflow-shell | expected=accepted observed=accepted
+ok - no-mistakes stays targeted and CI owns broad behavior coverage
+fixed | workflow-shell | expected=rejected observed=rejected
+not ok - no-mistakes and CI YAML contracts must remain intact

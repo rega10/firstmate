@@ -1,0 +1,3 @@
+{"seq":1,"epoch":1787725828,"task":"quiet-heartbeat","wake":"heartbeat","verdict":"routine","summary":"No captain-facing change","silent":true}
+{"seq":2,"epoch":1787725829,"task":"routine-steer","wake":"task-end","verdict":"routine","summary":"Worker steer delivered","silent":false}
+{"seq":3,"epoch":1787725829,"task":"captain-call","wake":"milestone","verdict":"captain","summary":"Captain decision required","silent":false}

@@ -1,0 +1,7 @@
+Persistent Pi supervision outcome replay
+Persisted outcomes before replay: 3
+BRANCH OUTCOMES (handled by the supervision branch, not yet seen by this session):
+{"seq":2,"epoch":1787725829,"task":"routine-steer","wake":"task-end","verdict":"routine","summary":"Worker steer delivered","silent":false}
+{"seq":3,"epoch":1787725829,"task":"captain-call","wake":"milestone","verdict":"captain","summary":"Captain decision required","silent":false}
+Unread outcomes after replay: 0
+Replay cursor: 3
