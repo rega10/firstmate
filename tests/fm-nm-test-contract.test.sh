@@ -20,129 +20,118 @@ test_nm_yaml_tracked() {
   pass ".no-mistakes.yaml is present and tracked"
 }
 
-test_nm_keeps_lint_pin() {
-  grep -Fqx "  lint: 'bin/fm-lint.sh'" "$NM" \
-    || fail "commands.lint must remain exactly bin/fm-lint.sh"
-  pass "commands.lint stays pinned to bin/fm-lint.sh"
-}
-
-# True when the YAML maps a non-empty commands.test (string or mapping value).
-# Empty / null / absent is the intended targeted-Test posture.
-nm_commands_test_value() {
-  if command -v python3 >/dev/null 2>&1 && python3 -c 'import yaml' >/dev/null 2>&1; then
-    python3 -c '
-import yaml, sys
-doc = yaml.safe_load(open(sys.argv[1])) or {}
-cmds = doc.get("commands") or {}
-val = cmds.get("test") if isinstance(cmds, dict) else None
-if val is None or val is False:
-    print("")
-elif isinstance(val, str):
-    print(val)
-else:
-    print(repr(val))
-' "$NM"
-    return
-  fi
-  if command -v ruby >/dev/null 2>&1; then
-    ruby -ryaml -e '
-doc = YAML.safe_load(File.read(ARGV[0])) || {}
-cmds = doc["commands"] || {}
-val = cmds.is_a?(Hash) ? cmds["test"] : nil
-if val.nil? || val == false
-  puts ""
-elsif val.is_a?(String)
-  puts val
-else
-  puts val.inspect
-end
-' "$NM"
-    return
-  fi
-  # Structural fallback: any commands.test line under the commands block.
-  awk '
-    /^commands:[[:space:]]*$/ { in_cmds=1; next }
-    in_cmds && /^[^[:space:]#]/ { in_cmds=0 }
-    in_cmds && /^[[:space:]]+test:[[:space:]]*/ {
-      sub(/^[[:space:]]+test:[[:space:]]*/, "")
-      gsub(/^['\''"]|['\''"]$/, "")
-      print
-      exit
-    }
-  ' "$NM"
-}
-
-test_nm_has_no_complete_local_test_command() {
-  local val
-  val=$(nm_commands_test_value) || fail "failed to read commands.test from .no-mistakes.yaml"
-  if [ -n "$val" ]; then
-    case "$val" in
-      *'tests/*.test.sh'*|*'tests/'*'.test.sh'*)
-        fail "commands.test must not walk the complete tests/*.test.sh suite; got: $val"
-        ;;
-      *)
-        # Any non-empty override still steers Test away from intent-targeted default.
-        fail "commands.test must be absent or empty so Test stays intent-targeted; got: $val"
-        ;;
-    esac
-  fi
-  # Also refuse a commented-out full-suite remnant that could be re-enabled by habit.
-  if grep -E '^[[:space:]]*#?[[:space:]]*test:[[:space:]].*tests/\*\.test\.sh' "$NM" >/dev/null 2>&1; then
-    fail ".no-mistakes.yaml still documents a full-suite commands.test line (active or comment)"
-  fi
-  pass "no-mistakes does not configure a complete local Test command"
-}
-
-test_ci_still_runs_broad_behavior_suite() {
+test_yaml_contracts() {
   assert_present "$CI" "ci.yml is missing"
-  # Portable shards and the serial remainder cover every portable behavior
-  # script through the one owner, with a deterministic inventory guard.
-  grep -Fq 'bin/fm-test-run.sh --lane portable-parallel-1' "$CI" \
-    || fail "CI must invoke portable parallel shard 1 through fm-test-run.sh"
-  grep -Fq 'bin/fm-test-run.sh --lane portable-parallel-2' "$CI" \
-    || fail "CI must invoke portable parallel shard 2 through fm-test-run.sh"
-  # shellcheck disable=SC2016 # Ruby compares literal workflow expressions.
   ruby -ryaml -rshellwords -e '
-    workflow = YAML.safe_load(File.read(ARGV.fetch(0)))
+    nm = YAML.safe_load(File.read(ARGV.fetch(0))) || {}
+    commands = nm.fetch("commands", {})
+    abort "commands must be a mapping" unless commands.is_a?(Hash)
+    abort "commands.lint must remain exactly bin/fm-lint.sh" unless commands["lint"] == "bin/fm-lint.sh"
+    test_command = commands["test"]
+    unless test_command.nil? || test_command == false || test_command == ""
+      abort "commands.test must be absent or empty so Test stays intent-targeted"
+    end
+
+    workflow = YAML.safe_load(File.read(ARGV.fetch(1))) || {}
     jobs = workflow.fetch("jobs")
-    lint_job = jobs.values.find do |candidate|
-      candidate.fetch("steps", []).any? do |step|
-        run = step["run"]
-        run.is_a?(String) && run.lines.any? do |line|
-          tokens = Shellwords.shellsplit(line)
-          tokens.shift while tokens.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
-          tokens.first&.delete_prefix("./") == "bin/fm-lint.sh"
+    abort "jobs must be a mapping" unless jobs.is_a?(Hash)
+
+    logical_commands = lambda do |run|
+      commands = []
+      pending = ""
+      run.to_s.each_line do |line|
+        stripped = line.strip
+        next if pending.empty? && (stripped.empty? || line.match?(/\A[[:space:]]/))
+        if stripped.end_with?("\\")
+          pending << stripped.delete_suffix("\\") << " "
+          next
         end
+        pending << stripped
+        unless pending.empty?
+          begin
+            tokens = Shellwords.shellsplit(pending)
+          rescue ArgumentError
+            pending = ""
+            next
+          end
+          tokens.shift while tokens.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
+          commands << tokens unless tokens.empty?
+        end
+        pending = ""
+      end
+      abort "workflow run block ends with a continuation" unless pending.empty?
+      commands
+    end
+
+    step_commands = lambda do |job|
+      job.fetch("steps", []).flat_map do |step|
+        run = step["run"]
+        run.is_a?(String) ? logical_commands.call(run) : []
       end
     end
+
+    direct_command = lambda do |job, executable, arguments = []|
+      step_commands.call(job).any? do |tokens|
+        tokens.first&.delete_prefix("./") == executable && tokens.drop(1).first(arguments.length) == arguments
+      end
+    end
+
+    lint_job = jobs.values.find { |job| direct_command.call(job, "bin/fm-lint.sh") }
     abort "lint job running bin/fm-lint.sh is missing" unless lint_job
-    job = jobs.fetch("tests-portable-serial")
-    abort "serial shard matrix is not 1..4" unless job.dig("strategy", "matrix", "shard") == [1, 2, 3, 4]
-    step = job.fetch("steps").find { |candidate| candidate["name"].to_s.start_with?("Run portable serial shard") }
-    abort "serial shard runner step is missing" unless step
+
+    coverage_job = jobs.fetch("test-coverage")
+    unless direct_command.call(coverage_job, "bin/fm-test-run.sh", ["--check-coverage"])
+      abort "coverage job does not directly invoke fm-test-run.sh --check-coverage"
+    end
+
+    [1, 2].each do |shard|
+      job = jobs.fetch("tests-portable-parallel-#{shard}")
+      lane = "portable-parallel-#{shard}"
+      unless direct_command.call(job, "bin/fm-test-run.sh", ["--lane", lane])
+        abort "portable parallel shard #{shard} does not directly invoke its lane"
+      end
+    end
+
+    serial_job = jobs.fetch("tests-portable-serial")
+    unless serial_job.dig("strategy", "matrix", "shard") == [1, 2, 3, 4]
+      abort "serial shard matrix is not 1..4"
+    end
     expected_lane = "portable-serial-${{ matrix.shard }}of${{ strategy.job-total }}"
-    abort "serial shard lane does not derive from matrix cardinality" unless step.fetch("env").fetch("FM_SERIAL_LANE") == expected_lane
-    tokens = Shellwords.shellsplit(step.fetch("run"))
-    invocation = ["bin/fm-test-run.sh", "--lane", "$FM_SERIAL_LANE"]
-    abort "serial shard does not invoke fm-test-run.sh with its derived lane" unless tokens.each_cons(invocation.length).any? { |slice| slice == invocation }
-  ' "$CI" || fail "CI must invoke every portable serial shard through fm-test-run.sh"
-  grep -Fq 'bin/fm-test-run.sh --check-coverage' "$CI" \
-    || fail "CI must prove complete lane coverage through fm-test-run.sh"
-  # Guard against regression to an uninstrumented inline loop that drops timing.
-  if grep -Eq 'for test_script in tests/\*\.test\.sh' "$CI"; then
-    fail "CI Behavior must not re-spell an inline tests/*.test.sh loop; use fm-test-run.sh"
-  fi
-  # Preserve other CI lanes this task must not shrink.
-  grep -Eq 'name:[[:space:]]*Stock macOS Bash snapshot compatibility' "$CI" \
-    || fail "CI must retain the macOS stock Bash compatibility job"
-  grep -Eq 'name:[[:space:]]*Repo invariants' "$CI" \
-    || fail "CI must retain the repo invariants job"
-  grep -Fq 'tests-herdr:' "$CI" \
-    || fail "CI must retain the required Herdr Behavior job"
-  pass "CI still owns partitioned broad behavior coverage and companion jobs"
+    serial_step = serial_job.fetch("steps").find do |step|
+      step.dig("env", "FM_SERIAL_LANE") == expected_lane &&
+        step["run"].is_a?(String) &&
+        logical_commands.call(step["run"]).any? do |tokens|
+          tokens.first&.delete_prefix("./") == "bin/fm-test-run.sh" &&
+            tokens.drop(1).first(2) == ["--lane", "$FM_SERIAL_LANE"]
+        end
+    end
+    abort "serial shards do not directly invoke their derived lane" unless serial_step
+
+    herdr_job = jobs.fetch("tests-herdr")
+    herdr_arguments = ["--family", "real-herdr-gated", "--fail-on-gate-skip", "herdr not found"]
+    unless direct_command.call(herdr_job, "bin/fm-test-run.sh", herdr_arguments)
+      abort "Herdr job does not directly invoke the required real-Herdr family"
+    end
+
+    macos_job = jobs.fetch("macos-stock-bash")
+    abort "stock Bash job must run on macos-latest" unless macos_job["runs-on"] == "macos-latest"
+    stock_bash_step = macos_job.fetch("steps").find do |step|
+      step["shell"] == "/bin/bash {0}" &&
+        step["run"].is_a?(String) &&
+        logical_commands.call(step["run"]).any? do |tokens|
+          tokens.first&.delete_prefix("./") == "bin/fm-lint.sh" && tokens.drop(1).first == "--list-files"
+        end
+    end
+    abort "stock Bash job lacks its /bin/bash parse-sweep step" unless stock_bash_step
+
+    invariants_job = jobs.fetch("invariants")
+    invariant_steps = invariants_job.fetch("steps")
+    has_checkout = invariant_steps.any? { |step| step["uses"].to_s.start_with?("actions/checkout@") }
+    has_behavior = direct_command.call(invariants_job, "cmp", ["-s", "CLAUDE.md", "$tmp"])
+    abort "invariants job lacks checkout or executable behavior" unless has_checkout && has_behavior
+  ' "$NM" "$CI" || fail "no-mistakes and CI YAML contracts must remain intact"
+  pass "no-mistakes stays targeted and CI owns broad behavior coverage"
 }
 
 test_nm_yaml_tracked
-test_nm_keeps_lint_pin
-test_nm_has_no_complete_local_test_command
-test_ci_still_runs_broad_behavior_suite
+test_yaml_contracts
