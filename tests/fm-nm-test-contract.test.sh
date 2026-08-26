@@ -41,22 +41,20 @@ test_yaml_contracts() {
       pending = ""
       run.to_s.each_line do |line|
         stripped = line.strip
-        next if pending.empty? && (stripped.empty? || line.match?(/\A[[:space:]]/))
+        next if pending.empty? && (stripped.empty? || stripped.start_with?("#"))
+        pending << " " unless pending.empty?
         if stripped.end_with?("\\")
-          pending << stripped.delete_suffix("\\") << " "
+          pending << stripped.delete_suffix("\\")
           next
         end
         pending << stripped
-        unless pending.empty?
-          begin
-            tokens = Shellwords.shellsplit(pending)
-          rescue ArgumentError
-            pending = ""
-            next
-          end
-          tokens.shift while tokens.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
-          commands << tokens unless tokens.empty?
+        begin
+          tokens = Shellwords.shellsplit(pending)
+        rescue ArgumentError
+          next
         end
+        tokens.shift while tokens.first&.match?(/\A[A-Za-z_][A-Za-z0-9_]*=/)
+        commands << tokens unless tokens.empty?
         pending = ""
       end
       abort "workflow run block ends with a continuation" unless pending.empty?
@@ -71,55 +69,101 @@ test_yaml_contracts() {
       end
     end
 
-    step_commands = lambda do |job|
-      job.fetch("steps", []).flat_map do |step|
+    expected_sequences = {
+      lint: normalized_commands.call(%q~bin/fm-lint.sh~),
+      coverage: normalized_commands.call(%q~bin/fm-test-run.sh --check-coverage~),
+      parallel: {
+        1 => normalized_commands.call(%q~
+set -eu
+mkdir -p "$RUNNER_TEMP/fm-test"
+bin/fm-test-run.sh --lane portable-parallel-1 \
+  --json "$RUNNER_TEMP/fm-test/fm-test-timing-portable-parallel-1.json"
+~),
+        2 => normalized_commands.call(%q~
+set -eu
+mkdir -p "$RUNNER_TEMP/fm-test"
+bin/fm-test-run.sh --lane portable-parallel-2 \
+  --json "$RUNNER_TEMP/fm-test/fm-test-timing-portable-parallel-2.json"
+~)
+      },
+      serial: normalized_commands.call(%q~
+set -eu
+mkdir -p "$RUNNER_TEMP/fm-test"
+bin/fm-test-run.sh --lane "$FM_SERIAL_LANE" \
+  --json "$RUNNER_TEMP/fm-test/fm-test-timing-portable-serial-${FM_SERIAL_SHARD}.json"
+~),
+      herdr: normalized_commands.call(%q~
+set -eu
+mkdir -p "$RUNNER_TEMP/fm-test"
+bin/fm-test-run.sh --family real-herdr-gated \
+  --fail-on-gate-skip "herdr not found" \
+  --json "$RUNNER_TEMP/fm-test/fm-test-timing-herdr.json"
+~),
+      stock: normalized_commands.call(%q~
+set -eu
+case "$BASH_VERSION" in
+  3.2.57*) ;;
+  *) echo "::error::expected stock macOS Bash 3.2.57, got $BASH_VERSION"; exit 1 ;;
+esac
+/bin/bash --version | head -1
+command -v jq >/dev/null || { echo "::error::jq is required"; exit 1; }
+
+shell_inventory="$RUNNER_TEMP/fm-shell-inventory"
+bin/fm-lint.sh --list-files > "$shell_inventory"
+parse_fail=0
+while IFS= read -r f; do
+  /bin/bash -n "$f" || { echo "::error::stock macOS Bash 3.2 failed to parse $f"; parse_fail=1; }
+done < "$shell_inventory"
+[ "$parse_fail" -eq 0 ] || { echo "::error::stock macOS Bash 3.2 parse sweep failed"; exit 1; }
+
+snapshot_output=$(/bin/bash tests/fm-fleet-snapshot-view.test.sh)
+printf "%s\n" "$snapshot_output"
+snapshot_count=$(printf "%s\n" "$snapshot_output" | grep -c "^ok - ")
+[ "$snapshot_count" -eq 15 ] || {
+  echo "::error::expected 15 snapshot/fleet-view tests, got $snapshot_count"
+  exit 1
+}
+
+bearings_output=$(/bin/bash tests/fm-bearings-snapshot.test.sh)
+printf "%s\n" "$bearings_output"
+bearings_count=$(printf "%s\n" "$bearings_output" | grep -c "^ok - ")
+[ "$bearings_count" -eq 42 ] || {
+  echo "::error::expected 42 Bearings tests, got $bearings_count"
+  exit 1
+}
+~),
+      invariant: normalized_commands.call(%q~
+set -eu
+[ ! -L CLAUDE.md ] || { echo "::error::CLAUDE.md must be a real @AGENTS.md pointer file, not a symlink"; exit 1; }
+tmp=$(mktemp)
+trap "rm -f \"$tmp\"" EXIT
+printf "%s\n" \
+  "<!-- Points Claude at AGENTS.md via import; edit AGENTS.md, not this file. -->" \
+  "@AGENTS.md" >"$tmp"
+cmp -s CLAUDE.md "$tmp" || { echo "::error::CLAUDE.md must be the canonical @AGENTS.md pointer"; exit 1; }
+[ "$(readlink .claude/skills)" = "../.agents/skills" ] || { echo "::error::.claude/skills must be a symlink to ../.agents/skills"; exit 1; }
+~)
+    }
+
+    step_sequences = lambda do |job|
+      job.fetch("steps", []).each_with_object([]) do |step, sequences|
         run = step["run"]
-        run.is_a?(String) ? normalized_commands.call(run) : []
+        sequences << normalized_commands.call(run) if run.is_a?(String)
       end
     end
 
-    commands_by_job = jobs.each_with_object({}) do |(job_id, job), inventory|
-      inventory[job_id] = step_commands.call(job)
-    end
-
-    expected_commands = {
-      lint: ["bin/fm-lint.sh"],
-      coverage: ["bin/fm-test-run.sh", "--check-coverage"],
-      parallel: {
-        1 => [
-          "bin/fm-test-run.sh", "--lane", "portable-parallel-1", "--json",
-          "$RUNNER_TEMP/fm-test/fm-test-timing-portable-parallel-1.json"
-        ],
-        2 => [
-          "bin/fm-test-run.sh", "--lane", "portable-parallel-2", "--json",
-          "$RUNNER_TEMP/fm-test/fm-test-timing-portable-parallel-2.json"
-        ]
-      },
-      serial: [
-        "bin/fm-test-run.sh", "--lane", "$FM_SERIAL_LANE", "--json",
-        "$RUNNER_TEMP/fm-test/fm-test-timing-portable-serial-${FM_SERIAL_SHARD}.json"
-      ],
-      herdr: [
-        "bin/fm-test-run.sh", "--family", "real-herdr-gated",
-        "--fail-on-gate-skip", "herdr not found", "--json",
-        "$RUNNER_TEMP/fm-test/fm-test-timing-herdr.json"
-      ],
-      stock_parse: ["bin/fm-lint.sh", "--list-files", ">", "$shell_inventory"],
-      invariant: Shellwords.shellsplit(%q{cmp -s CLAUDE.md "$tmp" || { echo "::error::CLAUDE.md must be the canonical @AGENTS.md pointer"; exit 1; }})
-    }
-
-    lint_job = commands_by_job.values.find do |commands_for_job|
-      commands_for_job.include?(expected_commands.fetch(:lint))
+    lint_job = jobs.values.find do |job|
+      step_sequences.call(job).include?(expected_sequences.fetch(:lint))
     end
     abort "lint job running bin/fm-lint.sh is missing" unless lint_job
 
-    unless commands_by_job.fetch("test-coverage").include?(expected_commands.fetch(:coverage))
+    unless step_sequences.call(jobs.fetch("test-coverage")).include?(expected_sequences.fetch(:coverage))
       abort "coverage job does not directly invoke fm-test-run.sh --check-coverage"
     end
 
     [1, 2].each do |shard|
-      expected = expected_commands.fetch(:parallel).fetch(shard)
-      unless commands_by_job.fetch("tests-portable-parallel-#{shard}").include?(expected)
+      expected = expected_sequences.fetch(:parallel).fetch(shard)
+      unless step_sequences.call(jobs.fetch("tests-portable-parallel-#{shard}")).include?(expected)
         abort "portable parallel shard #{shard} does not directly invoke its lane"
       end
     end
@@ -132,11 +176,11 @@ test_yaml_contracts() {
     serial_step = serial_job.fetch("steps").find do |step|
       step.dig("env", "FM_SERIAL_LANE") == expected_lane &&
         step["run"].is_a?(String) &&
-        normalized_commands.call(step["run"]).include?(expected_commands.fetch(:serial))
+        normalized_commands.call(step["run"]) == expected_sequences.fetch(:serial)
     end
     abort "serial shards do not directly invoke their derived lane" unless serial_step
 
-    unless commands_by_job.fetch("tests-herdr").include?(expected_commands.fetch(:herdr))
+    unless step_sequences.call(jobs.fetch("tests-herdr")).include?(expected_sequences.fetch(:herdr))
       abort "Herdr job does not directly invoke the required real-Herdr family"
     end
 
@@ -145,14 +189,14 @@ test_yaml_contracts() {
     stock_bash_step = macos_job.fetch("steps").find do |step|
       step["shell"] == "/bin/bash {0}" &&
         step["run"].is_a?(String) &&
-        normalized_commands.call(step["run"]).include?(expected_commands.fetch(:stock_parse))
+        normalized_commands.call(step["run"]) == expected_sequences.fetch(:stock)
     end
     abort "stock Bash job lacks its /bin/bash parse-sweep step" unless stock_bash_step
 
     invariants_job = jobs.fetch("invariants")
     invariant_steps = invariants_job.fetch("steps")
     has_checkout = invariant_steps.any? { |step| step["uses"].to_s.start_with?("actions/checkout@") }
-    has_behavior = commands_by_job.fetch("invariants").include?(expected_commands.fetch(:invariant))
+    has_behavior = step_sequences.call(invariants_job).include?(expected_sequences.fetch(:invariant))
     abort "invariants job lacks checkout or executable behavior" unless has_checkout && has_behavior
   ' "$NM" "$CI" || fail "no-mistakes and CI YAML contracts must remain intact"
   pass "no-mistakes stays targeted and CI owns broad behavior coverage"
