@@ -22,6 +22,7 @@ test_nm_yaml_tracked() {
 
 test_yaml_contracts() {
   assert_present "$CI" "ci.yml is missing"
+  # shellcheck disable=SC2016
   ruby -ryaml -rshellwords -e '
     nm = YAML.safe_load(File.read(ARGV.fetch(0))) || {}
     commands = nm.fetch("commands", {})
