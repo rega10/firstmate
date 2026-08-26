@@ -162,22 +162,37 @@ cmp -s CLAUDE.md "$tmp" || { echo "::error::CLAUDE.md must be the canonical @AGE
       setting.nil? || setting == false
     end
 
-    required_lint_step = lambda do |job, step|
+    default_shell = lambda do |node|
+      node.dig("defaults", "run", "shell")
+    end
+
+    standard_shell = lambda do |workflow_node, job, step|
+      step["shell"].nil? && default_shell.call(job).nil? && default_shell.call(workflow_node).nil?
+    end
+
+    required_lint_step = lambda do |workflow_node, job, step|
       run = step["run"]
       enabled.call(job) && enabled.call(step) && failure_propagating.call(step) &&
+        standard_shell.call(workflow_node, job, step) &&
         run.is_a?(String) && normalized_commands.call(run) == expected_sequences.fetch(:lint)
     end
 
     lint_fixture = { "run" => "bin/fm-lint.sh" }
-    abort "enabled lint metadata fixture was rejected" unless required_lint_step.call({}, lint_fixture)
-    abort "disabled lint job metadata was accepted" if required_lint_step.call({ "if" => false }, lint_fixture)
-    abort "disabled lint step metadata was accepted" if required_lint_step.call({}, lint_fixture.merge("if" => false))
-    if required_lint_step.call({}, lint_fixture.merge("continue-on-error" => true))
+    no_op_defaults = { "defaults" => { "run" => { "shell" => "true {0}" } } }
+    abort "enabled lint metadata fixture was rejected" unless required_lint_step.call({}, {}, lint_fixture)
+    abort "disabled lint job metadata was accepted" if required_lint_step.call({}, { "if" => false }, lint_fixture)
+    abort "disabled lint step metadata was accepted" if required_lint_step.call({}, {}, lint_fixture.merge("if" => false))
+    if required_lint_step.call({}, {}, lint_fixture.merge("continue-on-error" => true))
       abort "non-propagating lint step metadata was accepted"
     end
+    if required_lint_step.call({}, {}, lint_fixture.merge("shell" => "true {0}"))
+      abort "no-op lint step shell was accepted"
+    end
+    abort "no-op lint job shell was accepted" if required_lint_step.call({}, no_op_defaults, lint_fixture)
+    abort "no-op lint workflow shell was accepted" if required_lint_step.call(no_op_defaults, {}, lint_fixture)
 
     lint_job = jobs.values.find do |job|
-      job.fetch("steps", []).any? { |step| required_lint_step.call(job, step) }
+      job.fetch("steps", []).any? { |step| required_lint_step.call(workflow, job, step) }
     end
     abort "lint job running bin/fm-lint.sh is missing" unless lint_job
 
