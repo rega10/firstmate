@@ -63,35 +63,63 @@ test_yaml_contracts() {
       commands
     end
 
+    normalized_commands = lambda do |run|
+      logical_commands.call(run).map do |tokens|
+        normalized = tokens.dup
+        normalized[0] = normalized.first.delete_prefix("./")
+        normalized
+      end
+    end
+
     step_commands = lambda do |job|
       job.fetch("steps", []).flat_map do |step|
         run = step["run"]
-        run.is_a?(String) ? logical_commands.call(run) : []
+        run.is_a?(String) ? normalized_commands.call(run) : []
       end
     end
 
-    direct_command = lambda do |job, executable, arguments = []|
-      step_commands.call(job).any? do |tokens|
-        tokens.first&.delete_prefix("./") == executable && tokens.drop(1).first(arguments.length) == arguments
-      end
+    commands_by_job = jobs.each_with_object({}) do |(job_id, job), inventory|
+      inventory[job_id] = step_commands.call(job)
     end
 
-    lint_job = jobs.values.find do |job|
-      step_commands.call(job).any? do |tokens|
-        tokens.length == 1 && tokens.first.delete_prefix("./") == "bin/fm-lint.sh"
-      end
+    expected_commands = {
+      lint: ["bin/fm-lint.sh"],
+      coverage: ["bin/fm-test-run.sh", "--check-coverage"],
+      parallel: {
+        1 => [
+          "bin/fm-test-run.sh", "--lane", "portable-parallel-1", "--json",
+          "$RUNNER_TEMP/fm-test/fm-test-timing-portable-parallel-1.json"
+        ],
+        2 => [
+          "bin/fm-test-run.sh", "--lane", "portable-parallel-2", "--json",
+          "$RUNNER_TEMP/fm-test/fm-test-timing-portable-parallel-2.json"
+        ]
+      },
+      serial: [
+        "bin/fm-test-run.sh", "--lane", "$FM_SERIAL_LANE", "--json",
+        "$RUNNER_TEMP/fm-test/fm-test-timing-portable-serial-${FM_SERIAL_SHARD}.json"
+      ],
+      herdr: [
+        "bin/fm-test-run.sh", "--family", "real-herdr-gated",
+        "--fail-on-gate-skip", "herdr not found", "--json",
+        "$RUNNER_TEMP/fm-test/fm-test-timing-herdr.json"
+      ],
+      stock_parse: ["bin/fm-lint.sh", "--list-files", ">", "$shell_inventory"],
+      invariant: Shellwords.shellsplit(%q{cmp -s CLAUDE.md "$tmp" || { echo "::error::CLAUDE.md must be the canonical @AGENTS.md pointer"; exit 1; }})
+    }
+
+    lint_job = commands_by_job.values.find do |commands_for_job|
+      commands_for_job.include?(expected_commands.fetch(:lint))
     end
     abort "lint job running bin/fm-lint.sh is missing" unless lint_job
 
-    coverage_job = jobs.fetch("test-coverage")
-    unless direct_command.call(coverage_job, "bin/fm-test-run.sh", ["--check-coverage"])
+    unless commands_by_job.fetch("test-coverage").include?(expected_commands.fetch(:coverage))
       abort "coverage job does not directly invoke fm-test-run.sh --check-coverage"
     end
 
     [1, 2].each do |shard|
-      job = jobs.fetch("tests-portable-parallel-#{shard}")
-      lane = "portable-parallel-#{shard}"
-      unless direct_command.call(job, "bin/fm-test-run.sh", ["--lane", lane])
+      expected = expected_commands.fetch(:parallel).fetch(shard)
+      unless commands_by_job.fetch("tests-portable-parallel-#{shard}").include?(expected)
         abort "portable parallel shard #{shard} does not directly invoke its lane"
       end
     end
@@ -104,16 +132,11 @@ test_yaml_contracts() {
     serial_step = serial_job.fetch("steps").find do |step|
       step.dig("env", "FM_SERIAL_LANE") == expected_lane &&
         step["run"].is_a?(String) &&
-        logical_commands.call(step["run"]).any? do |tokens|
-          tokens.first&.delete_prefix("./") == "bin/fm-test-run.sh" &&
-            tokens.drop(1).first(2) == ["--lane", "$FM_SERIAL_LANE"]
-        end
+        normalized_commands.call(step["run"]).include?(expected_commands.fetch(:serial))
     end
     abort "serial shards do not directly invoke their derived lane" unless serial_step
 
-    herdr_job = jobs.fetch("tests-herdr")
-    herdr_arguments = ["--family", "real-herdr-gated", "--fail-on-gate-skip", "herdr not found"]
-    unless direct_command.call(herdr_job, "bin/fm-test-run.sh", herdr_arguments)
+    unless commands_by_job.fetch("tests-herdr").include?(expected_commands.fetch(:herdr))
       abort "Herdr job does not directly invoke the required real-Herdr family"
     end
 
@@ -122,16 +145,14 @@ test_yaml_contracts() {
     stock_bash_step = macos_job.fetch("steps").find do |step|
       step["shell"] == "/bin/bash {0}" &&
         step["run"].is_a?(String) &&
-        logical_commands.call(step["run"]).any? do |tokens|
-          tokens.first&.delete_prefix("./") == "bin/fm-lint.sh" && tokens.drop(1).first == "--list-files"
-        end
+        normalized_commands.call(step["run"]).include?(expected_commands.fetch(:stock_parse))
     end
     abort "stock Bash job lacks its /bin/bash parse-sweep step" unless stock_bash_step
 
     invariants_job = jobs.fetch("invariants")
     invariant_steps = invariants_job.fetch("steps")
     has_checkout = invariant_steps.any? { |step| step["uses"].to_s.start_with?("actions/checkout@") }
-    has_behavior = direct_command.call(invariants_job, "cmp", ["-s", "CLAUDE.md", "$tmp"])
+    has_behavior = commands_by_job.fetch("invariants").include?(expected_commands.fetch(:invariant))
     abort "invariants job lacks checkout or executable behavior" unless has_checkout && has_behavior
   ' "$NM" "$CI" || fail "no-mistakes and CI YAML contracts must remain intact"
   pass "no-mistakes stays targeted and CI owns broad behavior coverage"
