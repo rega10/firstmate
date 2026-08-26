@@ -152,8 +152,32 @@ cmp -s CLAUDE.md "$tmp" || { echo "::error::CLAUDE.md must be the canonical @AGE
       end
     end
 
+    enabled = lambda do |node|
+      condition = node["if"]
+      condition.nil? || condition == true
+    end
+
+    failure_propagating = lambda do |step|
+      setting = step["continue-on-error"]
+      setting.nil? || setting == false
+    end
+
+    required_lint_step = lambda do |job, step|
+      run = step["run"]
+      enabled.call(job) && enabled.call(step) && failure_propagating.call(step) &&
+        run.is_a?(String) && normalized_commands.call(run) == expected_sequences.fetch(:lint)
+    end
+
+    lint_fixture = { "run" => "bin/fm-lint.sh" }
+    abort "enabled lint metadata fixture was rejected" unless required_lint_step.call({}, lint_fixture)
+    abort "disabled lint job metadata was accepted" if required_lint_step.call({ "if" => false }, lint_fixture)
+    abort "disabled lint step metadata was accepted" if required_lint_step.call({}, lint_fixture.merge("if" => false))
+    if required_lint_step.call({}, lint_fixture.merge("continue-on-error" => true))
+      abort "non-propagating lint step metadata was accepted"
+    end
+
     lint_job = jobs.values.find do |job|
-      step_sequences.call(job).include?(expected_sequences.fetch(:lint))
+      job.fetch("steps", []).any? { |step| required_lint_step.call(job, step) }
     end
     abort "lint job running bin/fm-lint.sh is missing" unless lint_job
 
