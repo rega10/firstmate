@@ -1,0 +1,66 @@
+$ fm-project-dashboard.sh --help
+fm-project-dashboard.sh - build and serve the read-only fleet project dashboard.
+
+Usage:
+  fm-project-dashboard.sh [refresh] [--select <project>]
+  fm-project-dashboard.sh build <data.json>
+  fm-project-dashboard.sh path
+
+refresh is the default command.
+It takes a fresh fm-project-dashboard.v1 snapshot, replaces the stable board
+at $FM_HOME/.lavish/project-dashboard.html, and opens or resumes its Lavish
+session.
+build validates and publishes a supplied snapshot before serving it.
+path prints the stable home-scoped board path.
+
+The board's recently-resolved captain decisions cover main-home work only.
+The canonical secondmate home summary omits a secondmate's completed
+captain-held rows, and this board does not widen that contract, so the board
+states that limitation once, globally.
+
+This board is read-only.
+It never binds captain answers, registers a process-event source, polls
+Lavish, merges, dispatches, archives, or mutates fleet records.
+Re-run refresh whenever current data is wanted.
+
+FM_PROJECT_DASHBOARD_TEMPLATE overrides the shipped template in tests only.
+
+# fleet state before the on-demand refresh (read-only contract)
+$ find "$FM_HOME/state" -type f | sort | xargs shasum | shasum
+81e227d0c3eac66b22f6c7a88f05248be0197c96  -
+
+$ fm-project-dashboard.sh refresh --select firstmate
+board: /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T//fm-dash-evidence.FufDfo/.lavish/project-dashboard.html
+lavish-axi (stub): would open review session for /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T//fm-dash-evidence.FufDfo/.lavish/project-dashboard.html
+served: /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T//fm-dash-evidence.FufDfo/.lavish/project-dashboard.html
+
+# fleet state after the refresh
+81e227d0c3eac66b22f6c7a88f05248be0197c96  -
+=> unchanged: the board never mutates fleet records
+
+$ fm-project-dashboard-snapshot.sh --json --select firstmate | jq (per-project rollup)
+stale_after_days=8  selected_project=firstmate
+project                                         status           stale  age_d  next step
+firstmate                                       needs_attention  false  0      Choose the board refresh route: On-demand refresh only, or a background poller?
+herdr                                           active           false  1      Wiring the fan-out scheduler
+lavish                                          waiting          false  2      Blocked on the vendor export release
+catalog                                         idle_queued      false  3      Re-render the topology page
+bearings                                        idle_queued      true   78     No work queued
+
+# stale-risk overlay is strictly older than 8 days (bearings, last activity 2026-06-10)
+now=2026-06-18T00:00:00Z  age=691200s  status=idle_queued  stale_risk=false
+now=2026-06-18T00:00:01Z  age=691201s  status=idle_queued  stale_risk=true
+
+# stale is an overlay, never applied to active or needs-attention projects
+now is 400 days later:
+  firstmate             status=needs_attention  stale_risk=false
+  herdr                 status=active           stale_risk=false
+  lavish                status=waiting          stale_risk=true
+  catalog               status=idle_queued      stale_risk=true
+  bearings              status=idle_queued      stale_risk=true
+
+# an append-only status log is never read as current truth
+$ cat >> "$FM_HOME/state/lavish-vendor.status"   # append a stale, contradicting entry
+2026-08-27T05:00:00Z state=working detail="Actually shipping the export pipeline now"
+lavish -> status=waiting  next_step="Blocked on the vendor export release"  waiting=["lavish-vendor"]
+=> the card still reads the canonical snapshot state, not the log text
