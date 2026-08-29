@@ -100,6 +100,51 @@ else
   printf 'skip - stock Bash 3.2 is unavailable\n'
 fi
 
+INIT_DATE_BIN="$TMP_ROOT/init-date-bin"
+mkdir -p "$INIT_DATE_BIN"
+{
+  printf '%s\n' '#!/usr/bin/env bash'
+  printf '%s\n' 'count=0'
+  printf '%s\n' '[ -z "${FM_INIT_DATE_COUNT:-}" ] || { [ ! -f "$FM_INIT_DATE_COUNT" ] || count=$(cat "$FM_INIT_DATE_COUNT"); count=$((count + 1)); printf "%s\n" "$count" > "$FM_INIT_DATE_COUNT"; }'
+  printf '%s\n' 'case ${FM_INIT_DATE_MODE:-value} in'
+  printf '%s\n' '  failure) exit 9 ;;'
+  printf '%s\n' '  empty) exit 0 ;;'
+  printf '%s\n' "  nonascii) printf '2026-08-\\303\\251\\n' ;;"
+  printf '%s\n' '  *) printf "%s\n" "$FM_INIT_DATE_VALUE" ;;'
+  printf '%s\n' 'esac'
+} > "$INIT_DATE_BIN/date"
+chmod +x "$INIT_DATE_BIN/date"
+
+for date_case in malformed impossible nonascii empty failure; do
+  date_data="$TMP_ROOT/init-date-$date_case-data"
+  case $date_case in
+    malformed) date_mode=value; date_value=not-a-date ;;
+    impossible) date_mode=value; date_value=2026-02-30 ;;
+    nonascii) date_mode=nonascii; date_value=unused ;;
+    empty) date_mode=empty; date_value=unused ;;
+    failure) date_mode=failure; date_value=unused ;;
+  esac
+  rc=0
+  OUT=$(PATH="$INIT_DATE_BIN:$PATH" FM_INIT_DATE_MODE="$date_mode" FM_INIT_DATE_VALUE="$date_value" \
+    FM_DATA_OVERRIDE="$date_data" "$CEREMONY" init "init-date-$date_case" 2>&1) || rc=$?
+  [ "$rc" -ne 0 ] || fail "init accepted the $date_case UTC date provider sample"
+  assert_contains "$OUT" 'refused' "init reports the $date_case UTC date provider refusal"
+  [ ! -e "$date_data" ] || fail "the $date_case UTC date provider refusal created a ceremony artifact"
+done
+
+single_date_data="$TMP_ROOT/init-date-single-data"
+OUT=$(PATH="$INIT_DATE_BIN:$PATH" FM_INIT_DATE_MODE=value FM_INIT_DATE_VALUE=2024-02-29 \
+  FM_INIT_DATE_COUNT="$TMP_ROOT/init-date-single-count" FM_DATA_OVERRIDE="$single_date_data" \
+  "$CEREMONY" init init-date-single 2>&1) || fail 'init refused a valid single UTC date sample'
+[ "$(cat "$TMP_ROOT/init-date-single-count")" = 1 ] || fail 'init sampled the UTC date provider more than once'
+assert_contains "$OUT" 'initialized (2024-02-29)' 'init reports the exact captured UTC date sample'
+grep -q '^created: 2024-02-29$' "$single_date_data/bitwarden/init-date-single.ceremony" || fail 'init persisted a date other than the captured sample'
+OUT=$(PATH="$INIT_DATE_BIN:$PATH" FM_INIT_DATE_MODE=value FM_INIT_DATE_VALUE=2024-02-29 \
+  FM_INIT_DATE_COUNT="$TMP_ROOT/init-date-single-count" FM_DATA_OVERRIDE="$single_date_data" \
+  "$CEREMONY" init init-date-single 2>&1) || fail 'repeat init refused the valid UTC date sample'
+[ "$(cat "$TMP_ROOT/init-date-single-count")" = 2 ] || fail 'repeat init sampled the UTC date provider more than once'
+assert_contains "$OUT" 'already initialized' 'repeat init remains an idempotent no-op with one date sample'
+
 # --- record paths never follow symbolic links -------------------------------
 
 SYMLINK_ROOT="$TMP_ROOT/symlink-paths"
@@ -177,6 +222,32 @@ SECRETS=(
   'p4ssw0rd with spaces'
   'has"quote'
 )
+
+run 1 'duplicate --owner is refused' add-item batch-a duplicate-owner --owner ops --owner other --collection team
+assert_contains "$OUT" 'duplicate --owner' 'duplicate owner refusal names the option'
+run 1 'duplicate --collection is refused' add-item batch-a duplicate-collection --owner ops --collection team --collection other
+assert_contains "$OUT" 'duplicate --collection' 'duplicate collection refusal names the option'
+run 1 'duplicate --approved-by is refused' mark batch-a approval --approved-by captain --approved-by other
+assert_contains "$OUT" 'duplicate --approved-by' 'duplicate approver refusal names the option'
+
+DUPLICATE_SECRET='ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+assert_duplicate_secret_refused() {
+  local label=$1 rc=0
+  shift
+  OUT=$("$CEREMONY" "$@" 2>&1) || rc=$?
+  [ "$rc" -ne 0 ] || fail "$label accepted a duplicate option carrying secret-shaped input"
+  assert_contains "$OUT" 'refused' "$label reports a refusal"
+  assert_not_contains "$OUT" 'ghp_' "$label echoed the secret-shaped option value"
+}
+assert_duplicate_secret_refused 'secret first --owner' add-item batch-a duplicate-owner-first --owner "$DUPLICATE_SECRET" --owner ops --collection team
+assert_duplicate_secret_refused 'secret second --owner' add-item batch-a duplicate-owner-second --owner ops --owner "$DUPLICATE_SECRET" --collection team
+assert_duplicate_secret_refused 'secret first --collection' add-item batch-a duplicate-collection-first --owner ops --collection "$DUPLICATE_SECRET" --collection team
+assert_duplicate_secret_refused 'secret second --collection' add-item batch-a duplicate-collection-second --owner ops --collection team --collection "$DUPLICATE_SECRET"
+assert_duplicate_secret_refused 'secret first --approved-by' mark batch-a approval --approved-by "$DUPLICATE_SECRET" --approved-by captain
+assert_duplicate_secret_refused 'secret second --approved-by' mark batch-a approval --approved-by captain --approved-by "$DUPLICATE_SECRET"
+! grep -Fq "$DUPLICATE_SECRET" "$RECORDS/batch-a.ceremony" || fail 'a duplicate option persisted secret-shaped input'
+! grep -q '^item: duplicate-' "$RECORDS/batch-a.ceremony" || fail 'a refused duplicate option persisted an item'
+
 for secret in "${SECRETS[@]}"; do
   rc=0
   OUT=$("$CEREMONY" add-item batch-a item-x --owner "$secret" --collection team 2>&1) || rc=$?

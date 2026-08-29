@@ -85,6 +85,7 @@ RECORD_DIR="$DATA/bitwarden"
 IO_HELPER="$SELF_DIR/fm-bitwarden-record-io.py"
 SELF_PATH="$SELF_DIR/fm-bitwarden-ceremony.sh"
 IO_ACTIVE=0
+FM_BITWARDEN_PARSE_DATE=''
 
 STEPS="preflight approval moved verified retired"
 
@@ -225,7 +226,7 @@ atomic_append_line() {  # <batch> <line>
   python3 "$IO_HELPER" append "$batch" "$PARSED_RECORD_HASH" "$line"
 }
 
-today() { date -u +%Y-%m-%d; }
+today() { date -u +%Y-%m-%d 2>/dev/null; }
 
 # Parse and validate a record. Populates:
 #   PARSED_ITEMS   - newline list of item labels
@@ -246,7 +247,11 @@ parse_record() {
   local fields owner collection date_value approver='' defect
   local seen_batch=0 seen_created=0 in_body=0 moved_seen=0 unterminated=0
   local created_date='' prev_step_date='' today_date
-  today_date=$(today)
+  if [ -n "$FM_BITWARDEN_PARSE_DATE" ]; then
+    today_date=$FM_BITWARDEN_PARSE_DATE
+  else
+    today_date=$(today)
+  fi
   PARSED_ITEMS=""
   PARSED_ITEM_COUNT=0
   PARSED_ITEM_LINES=""
@@ -377,19 +382,24 @@ report_next() {
 }
 
 cmd_init() {
-  local batch=$1 path stamp rc=0
+  local batch=$1 stamp=${2:-} path rc=0
   require_batch_id "$batch"
   if [ "$IO_ACTIVE" != 1 ]; then
-    run_record_command "$batch" 1 1 __io-init "$batch"
+    if ! stamp=$(today); then
+      die 'refused: could not read the current UTC date'
+    fi
+    is_date "$stamp" || die 'refused: current UTC date is not a YYYY-MM-DD calendar date'
+    run_record_command "$batch" 1 1 __io-init "$batch" "$stamp"
     return
   fi
+  is_date "$stamp" || die 'refused: current UTC date is not a YYYY-MM-DD calendar date'
+  FM_BITWARDEN_PARSE_DATE=$stamp
   path=$(record_path "$batch")
   if [ "${FM_BITWARDEN_RECORD_PRESENT:-0}" = 1 ]; then
     load_record "$batch"
     note "batch '$batch' already initialized; nothing to do"
     return 0
   fi
-  stamp=$(today)
   {
     printf 'fm-bitwarden-ceremony v1\n'
     printf 'batch: %s\n' "$batch"
@@ -399,16 +409,30 @@ cmd_init() {
     die "batch '$batch': ceremony record changed during initialization; retry"
   fi
   [ "$rc" -eq 0 ] || return "$rc"
-  note "batch '$batch' initialized at ${FM_BITWARDEN_RECORD_DISPLAY:-$path}"
+  note "batch '$batch' initialized ($stamp) at ${FM_BITWARDEN_RECORD_DISPLAY:-$path}"
 }
 
 cmd_add_item() {
-  local batch=$1 label=$2 owner='' collection=''
+  local batch=$1 label=$2 owner='' collection='' owner_seen=0 collection_seen=0
   shift 2
   while [ $# -gt 0 ]; do
     case $1 in
-      --owner) owner=${2:?}; shift 2 ;;
-      --collection) collection=${2:?}; shift 2 ;;
+      --owner)
+        [ $# -ge 2 ] || die 'usage: add-item requires a value for --owner'
+        require_label '--owner' "$2"
+        [ "$owner_seen" -eq 0 ] || die 'refused: duplicate --owner option'
+        owner=$2
+        owner_seen=1
+        shift 2
+        ;;
+      --collection)
+        [ $# -ge 2 ] || die 'usage: add-item requires a value for --collection'
+        require_label '--collection' "$2"
+        [ "$collection_seen" -eq 0 ] || die 'refused: duplicate --collection option'
+        collection=$2
+        collection_seen=1
+        shift 2
+        ;;
       *) die "unknown add-item argument (see --help)" ;;
     esac
   done
@@ -437,11 +461,18 @@ cmd_add_item() {
 }
 
 cmd_mark() {
-  local batch=$1 step=$2 approved_by='' expected stamp
+  local batch=$1 step=$2 approved_by='' approved_by_seen=0 expected stamp
   shift 2
   while [ $# -gt 0 ]; do
     case $1 in
-      --approved-by) approved_by=${2:?}; shift 2 ;;
+      --approved-by)
+        [ $# -ge 2 ] || die 'usage: mark requires a value for --approved-by'
+        require_label '--approved-by' "$2"
+        [ "$approved_by_seen" -eq 0 ] || die 'refused: duplicate --approved-by option'
+        approved_by=$2
+        approved_by_seen=1
+        shift 2
+        ;;
       *) die "unknown mark argument (see --help)" ;;
     esac
   done
@@ -449,7 +480,6 @@ cmd_mark() {
   is_step "$step" || die "unknown step; steps in order are: $STEPS"
   if [ "$step" = approval ]; then
     [ -n "$approved_by" ] || die "refused: approval requires --approved-by with the captain's recorded identity label"
-    require_label '--approved-by' "$approved_by"
   else
     [ -z "$approved_by" ] || die "--approved-by is only valid for the approval step"
   fi
@@ -531,7 +561,7 @@ case ${1:-} in
   mark) [ $# -ge 3 ] || die "usage: mark <batch-id> <step> [--approved-by <label>]"; shift; cmd_mark "$@" ;;
   status) [ $# -eq 2 ] || die "usage: status <batch-id>"; cmd_status "$2" ;;
   check) [ $# -eq 2 ] || die "usage: check <batch-id>"; cmd_check "$2" ;;
-  __io-init) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -eq 2 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; cmd_init "$2" ;;
+  __io-init) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -eq 3 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; cmd_init "$2" "$3" ;;
   __io-add-item) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -ge 3 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; shift; cmd_add_item "$@" ;;
   __io-mark) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -ge 3 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; shift; cmd_mark "$@" ;;
   __io-status) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -eq 2 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; cmd_status "$2" ;;
