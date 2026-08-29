@@ -249,7 +249,8 @@ write_record tamper-approver \
   'step: verified date=2026-01-01'
 run 1 'check refuses an approval with an empty approver' check tamper-approver
 assert_contains "$OUT" 'empty approved-by' 'empty-approver refusal names the reason'
-run 1 'retirement cannot be recorded against an empty approver' mark tamper-approver retired
+run 1 'mark refuses to append to a record whose approval has no approver' mark tamper-approver retired
+assert_contains "$OUT" 'empty approved-by' 'the empty-approver record is refused when read, before any gate on the step itself'
 ! grep -q '^step: retired' "$RECORDS/tamper-approver.ceremony" || fail 'retirement was recorded against an empty approver'
 
 # A hand-edited duplicate item line would double-count the auditable evidence.
@@ -283,6 +284,80 @@ run 0 'the corrected record accepts the next real step' mark tamper-fixed moved
 } > "$RECORDS/tamper-secret.ceremony"
 run 1 'a tampered record holding secret material is refused' check tamper-secret
 assert_not_contains "$OUT" 'ghp_' 'refusal echoed secret-shaped record content'
+
+# --- a record is evidence for exactly one batch ------------------------------
+
+# Completing a batch and copying its record to another batch id is an ordinary
+# operator slip; the copy must not be certified as the second batch's evidence.
+run 0 'source batch for the copy initializes' init copy-src
+run 0 'source batch item' add-item copy-src prod-db --owner ops-team --collection prod-infra
+run 0 'source batch preflight' mark copy-src preflight
+run 0 'source batch approval' mark copy-src approval --approved-by captain
+run 0 'source batch moved' mark copy-src moved
+run 0 'source batch verified' mark copy-src verified
+run 0 'source batch retired' mark copy-src retired
+cp "$RECORDS/copy-src.ceremony" "$RECORDS/copy-dst.ceremony"
+for cmd in init check status; do
+  run 1 "$cmd refuses a record copied from another batch" "$cmd" copy-dst
+  assert_contains "$OUT" 'names a different batch' 'wrong-batch refusal names the reason'
+  assert_contains "$OUT" 'corrupt at line 2' 'wrong-batch record is reported by line number'
+  assert_not_contains "$OUT" 'copy-src' 'wrong-batch refusal echoed the record content'
+  assert_not_contains "$OUT" 'next:' "$cmd reported progress from another batch's record"
+done
+run 1 'mark refuses a record copied from another batch' mark copy-dst preflight
+[ "$(grep -c '^step: ' "$RECORDS/copy-dst.ceremony")" = 5 ] || fail 'a wrong-batch record was appended to'
+run 0 'the source batch is unaffected' check copy-src
+assert_contains "$OUT" 'next: complete' 'the original record still reports its own completion'
+
+# Conflicting or repeated headers leave the record ambiguous about what it is.
+printf 'fm-bitwarden-ceremony v1\nbatch: hdr-dup\nbatch: hdr-dup\ncreated: 2026-01-01\n' > "$RECORDS/hdr-dup.ceremony"
+run 1 'check refuses a repeated batch header' check hdr-dup
+assert_contains "$OUT" 'corrupt at line 3' 'repeated batch header is reported by line number'
+printf 'fm-bitwarden-ceremony v1\nbatch: hdr-created\ncreated: 2026-01-01\ncreated: 2030-01-01\n' > "$RECORDS/hdr-created.ceremony"
+run 1 'check refuses a repeated created header' check hdr-created
+assert_contains "$OUT" 'corrupt at line 4' 'repeated created header is reported by line number'
+printf 'fm-bitwarden-ceremony v1\ncreated: 2026-01-01\nitem: db owner=ops collection=prod\n' > "$RECORDS/hdr-none.ceremony"
+run 1 'check refuses a record with no batch header' check hdr-none
+assert_contains "$OUT" 'no batch header' 'missing batch header names the reason'
+printf 'fm-bitwarden-ceremony v1\nbatch: hdr-late\ncreated: 2026-01-01\nitem: db owner=ops collection=prod\nbatch: hdr-late\n' > "$RECORDS/hdr-late.ceremony"
+run 1 'check refuses a header line after the record body' check hdr-late
+assert_contains "$OUT" 'corrupt at line 5' 'misplaced header is reported by line number'
+
+# --- items may not be registered after the credential has moved --------------
+
+# add-item refuses this on the write path; a hand-edited record must not make
+# a post-move registration look like a pre-move ownership target.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: item-late\n'
+  printf 'created: 2026-01-01\n'
+  printf 'item: prod-db owner=ops-team collection=prod-infra\n'
+  printf 'step: preflight date=2026-01-01\n'
+  printf 'step: approval date=2026-01-01 approved-by=captain\n'
+  printf 'step: moved date=2026-01-01\n'
+  printf 'item: added-after-move owner=ops collection=prod-infra\n'
+} > "$RECORDS/item-late.ceremony"
+for cmd in check status; do
+  run 1 "$cmd refuses an item registered after the move" "$cmd" item-late
+  assert_contains "$OUT" 'corrupt at line 8' 'post-move item is reported by line number'
+  assert_contains "$OUT" 'after the batch was marked moved' 'post-move item refusal names the reason'
+  assert_not_contains "$OUT" 'added-after-move' 'post-move refusal echoed record content'
+done
+run 1 'mark refuses to advance a record with a post-move item' mark item-late verified
+! grep -q '^step: verified' "$RECORDS/item-late.ceremony" || fail 'a record with a post-move item was appended to'
+
+# Registering an item after an earlier step is still legitimate, so the rule
+# must not break the flow add-item actually permits.
+run 0 'batch for a mid-ceremony item initializes' init item-mid
+run 0 'mid-ceremony preflight' mark item-mid preflight
+run 0 'an item may still be registered before the move' add-item item-mid late-but-legal --owner ops --collection prod-infra
+run 0 'the record with a post-preflight item stays readable' status item-mid
+assert_contains "$OUT" 'items: 1' 'a pre-move item registered after preflight is counted'
+
+# --- a step argument is matched as a whole word ------------------------------
+
+run 1 'a multi-word step argument is not a step' mark item-mid 'preflight approval'
+assert_contains "$OUT" 'unknown step' 'a run of step names is refused as a step name'
 
 # --- corrupt records are reported by line number, content withheld ----------
 

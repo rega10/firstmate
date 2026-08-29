@@ -32,6 +32,11 @@
 #   created: <YYYY-MM-DD>
 #   item: <label> owner=<label> collection=<label>
 #   step: <name> date=<YYYY-MM-DD> [approved-by=<label>]
+# The batch and created headers appear exactly once each, before any item or
+# step line, and the batch header must name the batch being read - a record
+# copied or renamed to another batch id is refused rather than reported as that
+# batch's evidence. An item may not be registered after the moved step, the
+# same rule `add-item` applies when it writes.
 #
 # Steps are batch-level and strictly ordered:
 #   preflight -> approval -> moved -> verified -> retired
@@ -63,6 +68,14 @@ DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 RECORD_DIR="$DATA/bitwarden"
 
 STEPS="preflight approval moved verified retired"
+
+is_step() {  # <name> - exact whole-word membership in $STEPS
+  local s
+  for s in $STEPS; do
+    if [ "$s" = "$1" ]; then return 0; fi
+  done
+  return 1
+}
 
 die() { printf 'fm-bitwarden-ceremony: %s\n' "$*" >&2; exit 1; }
 note() { printf 'fm-bitwarden-ceremony: %s\n' "$*"; }
@@ -127,12 +140,15 @@ today() { date -u +%Y-%m-%d; }
 #   PARSED_ITEMS   - newline list of item labels
 #   PARSED_STEPS   - space list of recorded step names, record order
 #   PARSED_APPROVED_BY - approver label when the approval step is recorded
-# Recorded steps must form an ordered prefix of $STEPS with no repeat, gap, or
-# trailing step, and each item label may appear once, so every reader refuses a
-# tampered history rather than reporting progress from it.
+# The record must name the batch being read, carry each header exactly once
+# ahead of the body, register no item after the moved step, and record steps as
+# an ordered prefix of $STEPS with no repeat, gap, or trailing step, so every
+# reader refuses a tampered or misfiled record rather than reporting progress
+# from it.
 # Dies with a line NUMBER (never content) on any malformed line.
 parse_record() {
   local path=$1 batch=$2 lineno=0 line rest name pending=$STEPS expected
+  local seen_batch=0 seen_created=0 in_body=0 moved_seen=0
   PARSED_ITEMS=""
   PARSED_STEPS=""
   PARSED_APPROVED_BY=""
@@ -144,8 +160,20 @@ parse_record() {
       continue
     fi
     case $line in
-      'batch: '*|'created: '*) ;;
+      'batch: '*)
+        [ "$in_body" -eq 0 ] || corrupt "$batch" "$lineno" 'batch header after the record body'
+        [ "$seen_batch" -eq 0 ] || corrupt "$batch" "$lineno" 'repeated batch header'
+        seen_batch=1
+        [ "${line#batch: }" = "$batch" ] || corrupt "$batch" "$lineno" "batch header names a different batch, so this record is not evidence for '$batch'"
+        ;;
+      'created: '*)
+        [ "$in_body" -eq 0 ] || corrupt "$batch" "$lineno" 'created header after the record body'
+        [ "$seen_created" -eq 0 ] || corrupt "$batch" "$lineno" 'repeated created header'
+        seen_created=1
+        ;;
       'item: '*)
+        in_body=1
+        [ "$moved_seen" -eq 0 ] || corrupt "$batch" "$lineno" 'item registered after the batch was marked moved'
         rest=${line#item: }
         case $rest in
           *' owner='*' collection='*) ;;
@@ -158,12 +186,10 @@ parse_record() {
         PARSED_ITEMS="$PARSED_ITEMS$name"$'\n'
         ;;
       'step: '*)
+        in_body=1
         rest=${line#step: }
         name=${rest%% *}
-        case " $STEPS " in
-          *" $name "*) ;;
-          *) corrupt "$batch" "$lineno" 'unknown step' ;;
-        esac
+        is_step "$name" || corrupt "$batch" "$lineno" 'unknown step'
         case $rest in
           *' date='*) ;;
           *) corrupt "$batch" "$lineno" 'step line has no date' ;;
@@ -182,11 +208,14 @@ parse_record() {
           esac
           [ -n "$PARSED_APPROVED_BY" ] || corrupt "$batch" "$lineno" 'approval step has an empty approved-by'
         fi
+        if [ "$name" = moved ]; then moved_seen=1; fi
         PARSED_STEPS="$PARSED_STEPS$name "
         ;;
       *) corrupt "$batch" "$lineno" 'unrecognized line' ;;
     esac
   done < "$path"
+  [ "$seen_batch" -eq 1 ] || die "record for batch '$batch' has no batch header naming the batch it is evidence for; $RECOVERY_HINT"
+  [ "$seen_created" -eq 1 ] || die "record for batch '$batch' has no created header; $RECOVERY_HINT"
 }
 
 step_recorded() {  # <step> - against PARSED_STEPS
@@ -202,6 +231,11 @@ next_step() {  # first unrecorded step in order, or nothing when complete
     if ! step_recorded "$s"; then printf '%s' "$s"; return 0; fi
   done
   return 1
+}
+
+report_next() {
+  local n
+  if n=$(next_step); then printf 'next: %s\n' "$n"; else printf 'next: complete\n'; fi
 }
 
 cmd_init() {
@@ -263,10 +297,7 @@ cmd_mark() {
     esac
   done
   require_batch_id "$batch"
-  case " $STEPS " in
-    *" $step "*) ;;
-    *) die "unknown step; steps in order are: $STEPS" ;;
-  esac
+  is_step "$step" || die "unknown step; steps in order are: $STEPS"
   path=$(record_path "$batch")
   parse_record "$path" "$batch"
   if step_recorded "$step"; then
@@ -279,7 +310,7 @@ cmd_mark() {
   else
     [ -z "$approved_by" ] || die "--approved-by is only valid for the approval step"
   fi
-  if [ "$step" = moved ] && [ -z "$(printf '%s' "$PARSED_ITEMS")" ]; then
+  if [ "$step" = moved ] && [ -z "$PARSED_ITEMS" ]; then
     die "batch '$batch': refused to mark moved with no registered items; every moved credential needs a recorded owner/collection target"
   fi
   if [ "$step" = retired ]; then
@@ -308,22 +339,14 @@ cmd_status() {
     if step_recorded "$s"; then marker='x'; else marker=' '; fi
     printf '  [%s] %s\n' "$marker" "$s"
   done
-  if next_step >/dev/null; then
-    printf 'next: %s\n' "$(next_step)"
-  else
-    printf 'next: complete\n'
-  fi
+  report_next
 }
 
 cmd_check() {
   local batch=$1
   require_batch_id "$batch"
   parse_record "$(record_path "$batch")" "$batch"
-  if next_step >/dev/null; then
-    printf 'next: %s\n' "$(next_step)"
-  else
-    printf 'next: complete\n'
-  fi
+  report_next
 }
 
 case ${1:-} in
