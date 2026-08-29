@@ -1,0 +1,286 @@
+
+=== 0. The record-format + gate contract the operator reads (--help) ===
+
+$ fm-bitwarden-ceremony --help
+fm-bitwarden-ceremony.sh - structure/status validator for Bitwarden migration
+ceremony records (docs/bitwarden-rollout.md owns the ceremony itself).
+
+Usage:
+  bin/fm-bitwarden-ceremony.sh init <batch-id>
+  bin/fm-bitwarden-ceremony.sh add-item <batch-id> <item-label> --owner <label> --collection <label>
+  bin/fm-bitwarden-ceremony.sh mark <batch-id> <step> [--approved-by <label>]
+  bin/fm-bitwarden-ceremony.sh status <batch-id>
+  bin/fm-bitwarden-ceremony.sh check <batch-id>
+  bin/fm-bitwarden-ceremony.sh --help
+
+One record per migration batch at $FM_HOME/data/bitwarden/<batch-id>.ceremony
+(FM_HOME defaults to the repo root; FM_DATA_OVERRIDE overrides the data root
+for tests). The record is the auditable no-secret completion evidence for one
+batch of the phased migration ceremony in docs/bitwarden-rollout.md.
+
+HARD SAFETY CONTRACT - this tool never touches secrets:
+  - It never reads from, writes to, or talks to Bitwarden, Automic Vault, or
+    any credential store. It validates a local text record, nothing else.
+  - Every free-text argument is a short reference LABEL (an item name, a
+    person, a collection). Values that look like secret material - wrong
+    charset, excessive length, long hex runs, or well-known token prefixes -
+    are refused, and the refusal message never echoes the offending value,
+    so a mistakenly pasted secret is neither persisted nor logged.
+  - A structurally invalid record line is reported by line number only,
+    never by content, for the same reason.
+
+Record format (v1, line-based, append-only):
+  fm-bitwarden-ceremony v1
+  batch: <batch-id>
+  created: <YYYY-MM-DD>
+  item: <label> owner=<label> collection=<label>
+  step: <name> date=<YYYY-MM-DD> [approved-by=<label>]
+The batch and created headers appear exactly once each, before any item or
+step line, and the batch header must name the batch being read - a record
+copied or renamed to another batch id is refused rather than reported as that
+batch's evidence. Every line must carry exactly the fields shown above, every
+label value must be a valid reference label, and every date must be a real
+YYYY-MM-DD calendar date that is not in the future, no earlier than the
+created header, and no earlier than the previous step's date, so the record
+cannot certify a history the ceremony could not have produced. The accepted
+dates are exactly the ones this tool can stamp, so it never appends a line
+its own readers would then refuse. Every line ends with a newline; a record
+whose final line does not is treated as truncated and refused, because
+appending to it would fuse two record lines into one. An item may not be
+registered after the moved step, and the moved step requires at least one
+item already registered - the same rules `add-item` and `mark` apply when
+they write.
+
+Steps are batch-level and strictly ordered:
+  preflight -> approval -> moved -> verified -> retired
+Every command that reads a record requires its recorded steps to be exactly
+that order with nothing skipped, repeated, or added after `retired`, so a
+hand-edited or tampered history is refused by `check` and `status` instead of
+being reported as progress. A refused record is corrected back to its last
+valid prefix, or quarantined and replaced by a new batch, per the recovery
+procedure in docs/bitwarden-rollout.md; this tool never normalizes one.
+Further gates on `mark`:
+  - approval requires --approved-by (the captain's recorded identity label);
+    no other step accepts it.
+  - moved requires at least one registered item, so a batch cannot be
+    "moved" with no recorded per-item ownership/collection target.
+  - retired is the destructive gate: it is refused unless verified is marked
+    AND an approval line with approved-by exists, so old-custody retirement
+    can never be recorded before post-move verification and captain approval.
+Every command is idempotent: re-running init on an initialized batch,
+re-adding an identical item, or re-marking a recorded step is a no-op
+success, so an interrupted ceremony can be resumed by replaying commands.
+`check` re-validates any partial record and prints the next required step,
+which is the recovery entry point after an interruption.
+[exit 0]
+
+=== 1. Operator refuses to be tricked: malicious and secret-shaped batch ids ===
+
+$ fm-bitwarden-ceremony init ../../etc/evil
+fm-bitwarden-ceremony: refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)
+[exit 1]
+
+$ fm-bitwarden-ceremony init a b
+fm-bitwarden-ceremony: refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)
+[exit 1]
+
+$ fm-bitwarden-ceremony init ghp_AAAABBBBCCCCDDDDEEEEFFFF
+fm-bitwarden-ceremony: refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)
+[exit 1]
+
+$ fm-bitwarden-ceremony init deadbeefdeadbeefdeadbeefdeadbeef
+fm-bitwarden-ceremony: refused: value for batch id contains a long hexadecimal run; secret values must never be passed to this tool
+[exit 1]
+
+files created anywhere under the data root by those attempts:
+(none above = nothing escaped or was persisted)
+
+=== 2. Phase 2 pilot batch: init ===
+
+$ fm-bitwarden-ceremony init pilot-shared-team
+fm-bitwarden-ceremony: batch 'pilot-shared-team' initialized at <tmp-data-root>/data/bitwarden/pilot-shared-team.ceremony
+[exit 0]
+
+--- record on disk (pilot-shared-team.ceremony) ---
+fm-bitwarden-ceremony v1
+batch: pilot-shared-team
+created: 2026-08-29
+--- end record (70 bytes, ends with newline: \n) ---
+
+=== 3. Register per-item ownership/collection targets (labels only, never values) ===
+
+$ fm-bitwarden-ceremony add-item pilot-shared-team status-page-shared --owner ops-captain --collection team-ops
+fm-bitwarden-ceremony: batch 'pilot-shared-team': item 'status-page-shared' registered (owner=ops-captain collection=team-ops)
+[exit 0]
+
+$ fm-bitwarden-ceremony add-item pilot-shared-team monitoring-shared --owner ops-captain --collection team-ops
+fm-bitwarden-ceremony: batch 'pilot-shared-team': item 'monitoring-shared' registered (owner=ops-captain collection=team-ops)
+[exit 0]
+
+=== 3b. A pasted secret value is refused, redacted, and never persisted ===
+
+$ fm-bitwarden-ceremony add-item pilot-shared-team billing-login --owner ops-captain --collection ghp_ZZZZYYYYXXXXWWWWVVVVUUUU
+fm-bitwarden-ceremony: refused: value for --collection matches a well-known credential shape; secret values must never be passed to this tool
+[exit 1]
+
+$ fm-bitwarden-ceremony add-item pilot-shared-team billing-login --owner ops-captain --collection a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+fm-bitwarden-ceremony: refused: value for --collection contains a long hexadecimal run; secret values must never be passed to this tool
+[exit 1]
+
+grep the whole data root for those pasted values:
+(no match - the secret-shaped value was neither logged nor persisted)
+
+=== 4. Destructive gate: retirement is refused before verification and approval ===
+
+$ fm-bitwarden-ceremony mark pilot-shared-team preflight
+fm-bitwarden-ceremony: batch 'pilot-shared-team': step 'preflight' recorded (2026-08-29)
+[exit 0]
+
+$ fm-bitwarden-ceremony mark pilot-shared-team retired
+fm-bitwarden-ceremony: batch 'pilot-shared-team': refused to record retirement before post-move verification
+[exit 1]
+
+$ fm-bitwarden-ceremony status pilot-shared-team
+batch: pilot-shared-team
+record: <tmp-data-root>/data/bitwarden/pilot-shared-team.ceremony
+items: 2
+  [x] preflight
+  [ ] approval
+  [ ] moved
+  [ ] verified
+  [ ] retired
+next: approval
+[exit 0]
+
+(the recovery entry point after an interruption: `check` re-validates the partial record and names the next required step)
+
+$ fm-bitwarden-ceremony check pilot-shared-team
+next: approval
+[exit 0]
+
+=== 4b. A batch with no registered item cannot be marked moved ===
+
+$ fm-bitwarden-ceremony init empty-batch
+fm-bitwarden-ceremony: batch 'empty-batch' initialized at <tmp-data-root>/data/bitwarden/empty-batch.ceremony
+[exit 0]
+
+$ fm-bitwarden-ceremony mark empty-batch preflight
+fm-bitwarden-ceremony: batch 'empty-batch': step 'preflight' recorded (2026-08-29)
+[exit 0]
+
+$ fm-bitwarden-ceremony mark empty-batch approval --approved-by captain-rega
+fm-bitwarden-ceremony: batch 'empty-batch': step 'approval' recorded (2026-08-29)
+[exit 0]
+
+$ fm-bitwarden-ceremony mark empty-batch moved
+fm-bitwarden-ceremony: batch 'empty-batch': refused to mark moved with no registered items; every moved credential needs a recorded owner/collection target
+[exit 1]
+
+=== 5. Out-of-order and unapproved moves are refused ===
+
+$ fm-bitwarden-ceremony mark pilot-shared-team moved
+fm-bitwarden-ceremony: batch 'pilot-shared-team': next required step is 'approval', not 'moved' (steps in order are: preflight approval moved verified retired)
+[exit 1]
+
+$ fm-bitwarden-ceremony mark pilot-shared-team approval
+fm-bitwarden-ceremony: refused: approval requires --approved-by with the captain's recorded identity label
+[exit 1]
+
+$ fm-bitwarden-ceremony mark pilot-shared-team approval --approved-by captain-rega
+fm-bitwarden-ceremony: batch 'pilot-shared-team': step 'approval' recorded (2026-08-29)
+[exit 0]
+
+=== 5b. Interrupted ceremony resumed by replay (idempotent), but a conflicting replay is refused ===
+
+$ fm-bitwarden-ceremony mark pilot-shared-team approval --approved-by captain-rega
+fm-bitwarden-ceremony: batch 'pilot-shared-team': step 'approval' already recorded; nothing to do
+[exit 0]
+
+$ fm-bitwarden-ceremony mark pilot-shared-team approval --approved-by mallory
+fm-bitwarden-ceremony: batch 'pilot-shared-team': approval is already recorded for a different approver; resolve the conflict in the record before continuing
+[exit 1]
+
+approver still recorded as:
+step: approval date=2026-08-29 approved-by=captain-rega
+
+=== 6. Finish the batch: moved -> verified -> retired ===
+
+$ fm-bitwarden-ceremony mark pilot-shared-team moved
+fm-bitwarden-ceremony: batch 'pilot-shared-team': step 'moved' recorded (2026-08-29)
+[exit 0]
+
+$ fm-bitwarden-ceremony mark pilot-shared-team verified
+fm-bitwarden-ceremony: batch 'pilot-shared-team': step 'verified' recorded (2026-08-29)
+[exit 0]
+
+$ fm-bitwarden-ceremony mark pilot-shared-team retired
+fm-bitwarden-ceremony: batch 'pilot-shared-team': step 'retired' recorded (2026-08-29)
+[exit 0]
+
+$ fm-bitwarden-ceremony status pilot-shared-team
+batch: pilot-shared-team
+record: <tmp-data-root>/data/bitwarden/pilot-shared-team.ceremony
+items: 2
+  [x] preflight
+  [x] approval
+  [x] moved
+  [x] verified
+  [x] retired
+next: complete
+[exit 0]
+
+=== 7. The auditable, no-secret completion record ===
+
+--- record on disk (pilot-shared-team.ceremony) ---
+fm-bitwarden-ceremony v1
+batch: pilot-shared-team
+created: 2026-08-29
+item: status-page-shared owner=ops-captain collection=team-ops
+item: monitoring-shared owner=ops-captain collection=team-ops
+step: preflight date=2026-08-29
+step: approval date=2026-08-29 approved-by=captain-rega
+step: moved date=2026-08-29
+step: verified date=2026-08-29
+step: retired date=2026-08-29
+--- end record (372 bytes, ends with newline: \n) ---
+
+=== 8. A tampered record is refused by line number, content withheld ===
+
+$ fm-bitwarden-ceremony check pilot-shared-team
+fm-bitwarden-ceremony: record for batch 'pilot-shared-team' is corrupt at line 9 (step date is in the future, so the ceremony cannot have reached it; content withheld in case it holds secret material); correct the record back to its last valid prefix, or quarantine it and start a new batch (see docs/bitwarden-rollout.md); this tool never repairs a record for you
+[exit 1]
+
+$ fm-bitwarden-ceremony status pilot-shared-team
+fm-bitwarden-ceremony: record for batch 'pilot-shared-team' is corrupt at line 7 (steps out of order, expected 'approval' at this point; content withheld in case it holds secret material); correct the record back to its last valid prefix, or quarantine it and start a new batch (see docs/bitwarden-rollout.md); this tool never repairs a record for you
+[exit 1]
+
+(truncating the record: stripping only the final newline byte)
+last byte is now: 9
+
+$ fm-bitwarden-ceremony check pilot-shared-team
+fm-bitwarden-ceremony: record for batch 'pilot-shared-team' is corrupt at line 10 (final line has no terminating newline, so the record is truncated; content withheld in case it holds secret material); correct the record back to its last valid prefix, or quarantine it and start a new batch (see docs/bitwarden-rollout.md); this tool never repairs a record for you
+[exit 1]
+
+=== 9. Misfiled evidence: a record copied under another batch id is refused ===
+
+$ fm-bitwarden-ceremony status prod-break-glass
+fm-bitwarden-ceremony: record for batch 'prod-break-glass' is corrupt at line 2 (batch header names a different batch, so this record is not evidence for 'prod-break-glass'; content withheld in case it holds secret material); correct the record back to its last valid prefix, or quarantine it and start a new batch (see docs/bitwarden-rollout.md); this tool never repairs a record for you
+[exit 1]
+
+=== 10. Proof the tool never reaches a credential store: no network/vault calls in a full run ===
+
+$ (PATH shimmed so curl/wget/bw/op/nc/ssh/security abort loudly) full ceremony replay
+  batch: pilot-shared-team
+  record: <tmp-data-root>/data/bitwarden/pilot-shared-team.ceremony
+  items: 2
+    [x] preflight
+    [x] approval
+    [x] moved
+    [x] verified
+    [x] retired
+  next: complete
+  fm-bitwarden-ceremony: batch 'drill-batch' initialized at <tmp-data-root>/data/bitwarden/drill-batch.ceremony
+  fm-bitwarden-ceremony: batch 'drill-batch': item 'drill-item' registered (owner=ops-captain collection=team-ops)
+(no FORBIDDEN CALL lines above = no credential store or network binary was invoked)
+
+=== walkthrough complete ===
