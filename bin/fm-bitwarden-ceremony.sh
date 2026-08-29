@@ -36,10 +36,15 @@
 # step line, and the batch header must name the batch being read - a record
 # copied or renamed to another batch id is refused rather than reported as that
 # batch's evidence. Every line must carry exactly the fields shown above, every
-# label value must be a valid reference label, and every date must be a
-# YYYY-MM-DD date. An item may not be registered after the moved step, and the
-# moved step requires at least one item already registered - the same rules
-# `add-item` and `mark` apply when they write.
+# label value must be a valid reference label, and every date must be a real
+# YYYY-MM-DD calendar date no earlier than the created header and no earlier
+# than the previous step's date, so the record cannot certify a history the
+# ceremony could not have produced. Every line ends with a newline; a record
+# whose final line does not is treated as truncated and refused, because
+# appending to it would fuse two record lines into one. An item may not be
+# registered after the moved step, and the moved step requires at least one
+# item already registered - the same rules `add-item` and `mark` apply when
+# they write.
 #
 # Steps are batch-level and strictly ordered:
 #   preflight -> approval -> moved -> verified -> retired
@@ -125,11 +130,23 @@ label_defect() {
   secret_shape_defect "$1"
 }
 
-is_date() {  # <value> - the YYYY-MM-DD shape every record date uses
+is_date() {  # <value> - a YYYY-MM-DD date with in-range fields
   case $1 in
-    [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) return 0 ;;
+    [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
+    *) return 1 ;;
   esac
-  return 1
+  case ${1:0:4} in
+    0000) return 1 ;;
+  esac
+  case ${1:5:2} in
+    0[1-9]|1[0-2]) ;;
+    *) return 1 ;;
+  esac
+  case ${1:8:2} in
+    0[1-9]|[12][0-9]|3[01]) ;;
+    *) return 1 ;;
+  esac
+  return 0
 }
 
 # Secret-shape refusals shared by every free-text argument. $1=field-name
@@ -173,6 +190,7 @@ today() { date -u +%Y-%m-%d; }
 
 # Parse and validate a record. Populates:
 #   PARSED_ITEMS   - newline list of item labels
+#   PARSED_ITEM_COUNT - how many item labels that list holds
 #   PARSED_STEPS   - space list of recorded step names, record order
 #   PARSED_APPROVED_BY - approver label when the approval step is recorded
 # The record must name the batch being read, carry each header exactly once
@@ -184,13 +202,16 @@ today() { date -u +%Y-%m-%d; }
 parse_record() {
   local path=$1 batch=$2 lineno=0 line rest name pending=$STEPS expected
   local fields owner collection date_value approver='' defect
-  local seen_batch=0 seen_created=0 in_body=0 moved_seen=0
+  local seen_batch=0 seen_created=0 in_body=0 moved_seen=0 unterminated=0
+  local created_date='' prev_step_date=''
   PARSED_ITEMS=""
+  PARSED_ITEM_COUNT=0
   PARSED_STEPS=""
   PARSED_APPROVED_BY=""
   [ -f "$path" ] || die "no ceremony record for batch '$batch'; run init first"
-  while IFS= read -r line || [ -n "$line" ]; do
+  while IFS= read -r line || { [ -n "$line" ] && unterminated=1; }; do
     lineno=$((lineno + 1))
+    [ "$unterminated" -eq 0 ] || corrupt "$batch" "$lineno" 'final line has no terminating newline, so the record is truncated'
     if [ "$lineno" -eq 1 ]; then
       [ "$line" = 'fm-bitwarden-ceremony v1' ] || die "record for batch '$batch' is not a v1 ceremony record (line 1); $RECOVERY_HINT"
       continue
@@ -206,7 +227,8 @@ parse_record() {
         [ "$in_body" -eq 0 ] || corrupt "$batch" "$lineno" 'created header after the record body'
         [ "$seen_created" -eq 0 ] || corrupt "$batch" "$lineno" 'repeated created header'
         seen_created=1
-        is_date "${line#created: }" || corrupt "$batch" "$lineno" 'created header is not a YYYY-MM-DD date'
+        created_date=${line#created: }
+        is_date "$created_date" || corrupt "$batch" "$lineno" 'created header is not a YYYY-MM-DD calendar date'
         ;;
       'item: '*)
         in_body=1
@@ -225,6 +247,7 @@ parse_record() {
           *$'\n'"$name"$'\n'*) corrupt "$batch" "$lineno" 'item label already registered on an earlier line' ;;
         esac
         PARSED_ITEMS="$PARSED_ITEMS$name"$'\n'
+        PARSED_ITEM_COUNT=$((PARSED_ITEM_COUNT + 1))
         ;;
       'step: '*)
         in_body=1
@@ -240,7 +263,14 @@ parse_record() {
         else
           [ "$line" = "step: $name date=$date_value" ] || corrupt "$batch" "$lineno" 'malformed step line'
         fi
-        is_date "$date_value" || corrupt "$batch" "$lineno" 'step date is not a YYYY-MM-DD date'
+        is_date "$date_value" || corrupt "$batch" "$lineno" 'step date is not a YYYY-MM-DD calendar date'
+        if [[ $date_value < $created_date ]]; then
+          corrupt "$batch" "$lineno" 'step date is earlier than the created header, so the step predates the batch'
+        fi
+        if [ -n "$prev_step_date" ] && [[ $date_value < $prev_step_date ]]; then
+          corrupt "$batch" "$lineno" 'step date is earlier than the previous step, so the recorded history runs backwards'
+        fi
+        prev_step_date=$date_value
         expected=${pending%% *}
         [ -n "$expected" ] || corrupt "$batch" "$lineno" 'step recorded after the ceremony is already complete'
         [ "$name" = "$expected" ] || corrupt "$batch" "$lineno" "steps out of order, expected '$expected' at this point"
@@ -253,7 +283,7 @@ parse_record() {
           PARSED_APPROVED_BY=$approver
         fi
         if [ "$name" = moved ]; then
-          [ -n "$PARSED_ITEMS" ] || corrupt "$batch" "$lineno" 'batch marked moved with no registered item, so the record names no ownership or collection target'
+          [ "$PARSED_ITEM_COUNT" -gt 0 ] || corrupt "$batch" "$lineno" 'batch marked moved with no registered item, so the record names no ownership or collection target'
           moved_seen=1
         fi
         PARSED_STEPS="$PARSED_STEPS$name "
@@ -357,7 +387,7 @@ cmd_mark() {
   else
     [ -z "$approved_by" ] || die "--approved-by is only valid for the approval step"
   fi
-  if [ "$step" = moved ] && [ -z "$PARSED_ITEMS" ]; then
+  if [ "$step" = moved ] && [ "$PARSED_ITEM_COUNT" -eq 0 ]; then
     die "batch '$batch': refused to mark moved with no registered items; every moved credential needs a recorded owner/collection target"
   fi
   if [ "$step" = retired ]; then
@@ -381,7 +411,7 @@ cmd_status() {
   parse_record "$path" "$batch"
   printf 'batch: %s\n' "$batch"
   printf 'record: %s\n' "$path"
-  printf 'items: %s\n' "$(printf '%s' "$PARSED_ITEMS" | grep -c -- . || true)"
+  printf 'items: %s\n' "$PARSED_ITEM_COUNT"
   for s in $STEPS; do
     if step_recorded "$s"; then marker='x'; else marker=' '; fi
     printf '  [%s] %s\n' "$marker" "$s"

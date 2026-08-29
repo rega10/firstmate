@@ -429,7 +429,7 @@ assert_contains "$OUT" 'malformed item line' 'unknown item field is refused as m
 # Dates are the record's own evidence of when each gate was passed.
 printf 'fm-bitwarden-ceremony v1\nbatch: no-date\ncreated: 2026-01-01\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=\n' > "$RECORDS/no-date.ceremony"
 run 1 'check refuses a step with an empty date' check no-date
-assert_contains "$OUT" 'not a YYYY-MM-DD date' 'empty step date refusal names the expected shape'
+assert_contains "$OUT" 'not a YYYY-MM-DD calendar date' 'empty step date refusal names the expected shape'
 printf 'fm-bitwarden-ceremony v1\nbatch: bad-created\ncreated: sometime\n' > "$RECORDS/bad-created.ceremony"
 run 1 'check refuses a created header that is not a date' check bad-created
 assert_contains "$OUT" 'corrupt at line 3' 'malformed created header is reported by line number'
@@ -443,6 +443,82 @@ run 0 'a tool-written move records' mark fields-ok moved
 run 0 'a tool-written record still reads back' status fields-ok
 assert_contains "$OUT" 'items: 1' 'the tool-written record reports its registered item'
 assert_contains "$OUT" 'next: verified' 'the tool-written record reports its true resume point'
+
+# --- a record with no final newline is truncated, not appendable -------------
+
+# The record is an append-only line-based file (see the script's --help), so a
+# final line with no newline means the last line may be incomplete; appending
+# to it would fuse two record lines into one.
+printf 'fm-bitwarden-ceremony v1\nbatch: no-newline\ncreated: 2026-01-01\nitem: prod-db owner=ops-team collection=prod-infra' > "$RECORDS/no-newline.ceremony"
+before=$(cat "$RECORDS/no-newline.ceremony")
+for cmd in check status; do
+  run 1 "$cmd refuses a record with no final newline" "$cmd" no-newline
+  assert_contains "$OUT" 'corrupt at line 4' 'truncated record is reported by line number'
+  assert_contains "$OUT" 'no terminating newline' 'truncated record refusal names the reason'
+  assert_not_contains "$OUT" 'next:' "$cmd reported progress from a truncated record"
+done
+run 1 'mark refuses to append to a record with no final newline' mark no-newline preflight
+run 1 'add-item refuses to append to a record with no final newline' add-item no-newline web --owner ops-team --collection prod-infra
+[ "$(cat "$RECORDS/no-newline.ceremony")" = "$before" ] || fail 'a truncated record was modified instead of refused'
+grep -q 'collection=prod-infra$' "$RECORDS/no-newline.ceremony" || fail 'the truncated record lost its recorded collection target'
+
+# --- recorded dates must be real and must not run backwards ------------------
+
+printf 'fm-bitwarden-ceremony v1\nbatch: date-range\ncreated: 9999-99-99\n' > "$RECORDS/date-range.ceremony"
+run 1 'check refuses an out-of-range created date' check date-range
+assert_contains "$OUT" 'corrupt at line 3' 'out-of-range created date is reported by line number'
+printf 'fm-bitwarden-ceremony v1\nbatch: step-range\ncreated: 2026-01-01\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=0000-00-00\n' > "$RECORDS/step-range.ceremony"
+run 1 'check refuses an out-of-range step date' check step-range
+assert_contains "$OUT" 'not a YYYY-MM-DD calendar date' 'out-of-range step date names the expected shape'
+
+# A step cannot have happened before the batch it belongs to was created.
+printf 'fm-bitwarden-ceremony v1\nbatch: date-early\ncreated: 2030-01-01\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=2026-12-31\n' > "$RECORDS/date-early.ceremony"
+run 1 'check refuses a step dated before the batch was created' check date-early
+assert_contains "$OUT" 'earlier than the created header' 'pre-creation step refusal names the reason'
+
+# Each gate is passed after the one before it, so the dates cannot decrease.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: date-back\n'
+  printf 'created: 2026-01-01\n'
+  printf 'item: prod-db owner=ops-team collection=prod-infra\n'
+  printf 'step: preflight date=2026-12-31\n'
+  printf 'step: approval date=2026-06-01 approved-by=captain\n'
+} > "$RECORDS/date-back.ceremony"
+for cmd in check status; do
+  run 1 "$cmd refuses a history whose dates run backwards" "$cmd" date-back
+  assert_contains "$OUT" 'corrupt at line 6' 'backwards date is reported by line number'
+  assert_contains "$OUT" 'runs backwards' 'backwards date refusal names the reason'
+  assert_not_contains "$OUT" 'next:' "$cmd reported progress from a backwards history"
+done
+run 1 'mark refuses to advance a backwards history' mark date-back moved
+! grep -q '^step: moved' "$RECORDS/date-back.ceremony" || fail 'a backwards-dated record was appended to'
+
+# Repeated dates are legitimate: a whole batch can run within one day.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: date-same\n'
+  printf 'created: 2026-01-01\n'
+  printf 'item: prod-db owner=ops-team collection=prod-infra\n'
+  printf 'step: preflight date=2026-01-01\n'
+  printf 'step: approval date=2026-01-01 approved-by=captain\n'
+  printf 'step: moved date=2026-01-01\n'
+} > "$RECORDS/date-same.ceremony"
+run 0 'a same-day ceremony is valid' check date-same
+assert_contains "$OUT" 'next: verified' 'the same-day record reports its true resume point'
+run 0 'a same-day ceremony still advances' mark date-same verified
+
+# --- the item count is the number of registered items ------------------------
+
+run 0 'multi-item batch initializes' init count-many
+run 0 'first item registers' add-item count-many prod-db --owner ops-team --collection prod-infra
+run 0 'second item registers' add-item count-many prod-cache --owner ops-team --collection prod-infra
+run 0 'third item registers' add-item count-many prod-queue --owner ops-team --collection prod-infra
+run 0 'multi-item status reports the count' status count-many
+assert_contains "$OUT" 'items: 3' 'every registered item is counted'
+run 0 'an itemless batch initializes' init count-zero
+run 0 'itemless status reports zero' status count-zero
+assert_contains "$OUT" 'items: 0' 'a batch with no items counts zero'
 
 # --- corrupt records are reported by line number, content withheld ----------
 
