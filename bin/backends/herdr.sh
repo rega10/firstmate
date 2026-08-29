@@ -686,9 +686,9 @@ fm_backend_herdr_presentation_lock_namespace_valid() {
 
 # Resolve the one verified running named-session socket path as an absolute
 # string. Requires JSON string type and non-empty length (jq -r is never used:
-# it would turn JSON null into the literal string "null"). Canonicalizes the
-# parent directory when that directory exists so symlink parents such as /tmp
-# -> /private/tmp cannot yield two lock identities for the same socket.
+# it would turn JSON null into the literal string "null"). Keep the exact
+# server-reported spelling for socket connections: resolving a symlinked parent
+# can lengthen an otherwise valid AF_UNIX path past the platform limit.
 # fm_backend_herdr_canonical_socket_path: normalize one absolute Unix-socket
 # path so two spellings of the same socket compare equal. Refuses a relative
 # or empty path. An unresolvable directory is left as-is rather than treated as
@@ -725,13 +725,17 @@ fm_backend_herdr_presentation_session_socket_path() {  # <session>
       | .socket_path]
     | if length == 1 then .[0] else empty end
   ' 2>/dev/null) || return 1
-  fm_backend_herdr_canonical_socket_path "$socket"
+  case "$socket" in
+    /*) printf '%s' "$socket" ;;
+    *) return 1 ;;
+  esac
 }
 
 fm_backend_herdr_presentation_session_lock_path() {  # <session>
   local session=$1 socket key dir hash
   [ -n "$session" ] || return 1
   socket=$(fm_backend_herdr_presentation_session_socket_path "$session") || return 1
+  socket=$(fm_backend_herdr_canonical_socket_path "$socket") || return 1
   if command -v shasum >/dev/null 2>&1; then
     hash=$(printf '%s\0%s' "$session" "$socket" | shasum -a 256 2>/dev/null | awk '{print $1}')
   elif command -v sha256sum >/dev/null 2>&1; then
@@ -1562,6 +1566,10 @@ fm_backend_herdr_launcher_identity() {  # <session>
   }
   session_socket=$(fm_backend_herdr_presentation_session_socket_path "$session") || {
     echo "error: herdr session '$session' has no unambiguous socket to match against the launcher pane's own; refusing to place a worker from an unverifiable parent identity" >&2
+    return 1
+  }
+  session_socket=$(fm_backend_herdr_canonical_socket_path "$session_socket") || {
+    echo "error: herdr session '$session' reports an unusable socket path; refusing to place a worker from an unverifiable parent identity" >&2
     return 1
   }
   if [ "$claimed_socket" != "$session_socket" ]; then
