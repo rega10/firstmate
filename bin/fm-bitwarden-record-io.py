@@ -2,7 +2,9 @@
 """Safe record I/O and transaction locking for fm-bitwarden-ceremony.sh."""
 
 import hashlib
+import fcntl
 import json
+import math
 import os
 import secrets
 import stat
@@ -180,51 +182,103 @@ def lock_unchanged(directory, name, payload, identity):
     return current is not None and current[1] == payload and current[2] == identity
 
 
+def wait_deadline():
+    try:
+        wait_seconds = float(os.environ.get("FM_BITWARDEN_LOCK_WAIT_SECONDS", "15"))
+    except (OverflowError, ValueError):
+        fail("refused: ceremony lock wait must be a finite number between 0 and 30 seconds")
+    if not math.isfinite(wait_seconds) or wait_seconds < 0 or wait_seconds > 30:
+        fail("refused: ceremony lock wait must be a finite number between 0 and 30 seconds")
+    return time.monotonic() + wait_seconds
+
+
+def acquire_guard(directory, record_name, deadline):
+    guard_name = record_name + ".guard"
+    try:
+        descriptor = os.open(
+            guard_name,
+            os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW,
+            0o600,
+            dir_fd=directory,
+        )
+    except OSError:
+        fail("refused: ceremony lock guard is unreadable")
+    metadata = os.fstat(descriptor)
+    if not stat.S_ISREG(metadata.st_mode):
+        os.close(descriptor)
+        fail("refused: ceremony lock guard is malformed")
+    while True:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            break
+        except BlockingIOError:
+            if time.monotonic() >= deadline:
+                os.close(descriptor)
+                fail("ceremony record is busy; retry after the active writer finishes")
+            time.sleep(0.05)
+    try:
+        current = os.stat(guard_name, dir_fd=directory, follow_symlinks=False)
+    except OSError:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
+        fail("refused: ceremony lock guard changed during ownership validation")
+    if (current.st_dev, current.st_ino) != (metadata.st_dev, metadata.st_ino):
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
+        fail("refused: ceremony lock guard changed during ownership validation")
+    return descriptor
+
+
+def release_guard(descriptor):
+    fcntl.flock(descriptor, fcntl.LOCK_UN)
+    os.close(descriptor)
+
+
+def install_lock(directory, lock_name, token, owner_payload):
+    temporary = f".{lock_name}.claim.{token}"
+    descriptor = os.open(
+        temporary,
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+        0o600,
+        dir_fd=directory,
+    )
+    try:
+        write_all(descriptor, owner_payload)
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+    try:
+        try:
+            os.link(temporary, lock_name, src_dir_fd=directory, dst_dir_fd=directory, follow_symlinks=False)
+        except FileExistsError:
+            fail("refused: ceremony lock ownership changed during acquisition")
+        os.fsync(directory)
+    finally:
+        os.unlink(temporary, dir_fd=directory)
+
+
 def claim_lock(directory, record_name):
     lock_name = record_name + ".lock"
     token = secrets.token_hex(24)
     owner_payload = lock_owner_bytes(token)
-    wait_seconds = float(os.environ.get("FM_BITWARDEN_LOCK_WAIT_SECONDS", "15"))
-    if wait_seconds < 0 or wait_seconds > 30:
-        fail("refused: ceremony lock wait must be between 0 and 30 seconds")
-    deadline = time.monotonic() + wait_seconds
+    deadline = wait_deadline()
     while True:
-        temporary = f".{lock_name}.claim.{token}"
+        guard = acquire_guard(directory, record_name, deadline)
         try:
-            descriptor = os.open(
-                temporary,
-                os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
-                0o600,
-                dir_fd=directory,
-            )
-            try:
-                write_all(descriptor, owner_payload)
-                os.fsync(descriptor)
-            finally:
-                os.close(descriptor)
-            try:
-                os.link(temporary, lock_name, src_dir_fd=directory, dst_dir_fd=directory, follow_symlinks=False)
-                os.unlink(temporary, dir_fd=directory)
-                os.fsync(directory)
+            current = read_lock(directory, lock_name)
+            if current is None:
+                install_lock(directory, lock_name, token, owner_payload)
                 return lock_name, token, owner_payload
-            except FileExistsError:
-                os.unlink(temporary, dir_fd=directory)
-        except FileExistsError:
-            try:
-                os.unlink(temporary, dir_fd=directory)
-            except FileNotFoundError:
-                pass
-        current = read_lock(directory, lock_name)
-        if current is None:
-            continue
-        owner, payload, identity = current
-        state, uncertain_reason = owner_state(owner)
-        if state == "dead":
-            if not lock_unchanged(directory, lock_name, payload, identity):
-                fail("refused: ceremony lock ownership changed during stale recovery")
-            os.unlink(lock_name, dir_fd=directory)
-            os.fsync(directory)
-            continue
+            owner, payload, identity = current
+            state, uncertain_reason = owner_state(owner)
+            if state == "dead":
+                if not lock_unchanged(directory, lock_name, payload, identity):
+                    fail("refused: ceremony lock ownership changed during stale recovery")
+                os.unlink(lock_name, dir_fd=directory)
+                install_lock(directory, lock_name, token, owner_payload)
+                return lock_name, token, owner_payload
+        finally:
+            release_guard(guard)
         if time.monotonic() >= deadline:
             if state == "uncertain":
                 fail(uncertain_reason)
@@ -232,15 +286,20 @@ def claim_lock(directory, record_name):
         time.sleep(0.05)
 
 
-def release_lock(directory, lock_name, token, owner_payload):
-    current = read_lock(directory, lock_name)
-    if current is None:
-        return
-    owner, payload, _ = current
-    if owner["token"] != token or payload != owner_payload or owner["pid"] != os.getpid():
-        return
-    os.unlink(lock_name, dir_fd=directory)
-    os.fsync(directory)
+def release_lock(directory, record_name, lock_name, token, owner_payload):
+    guard = acquire_guard(directory, record_name, wait_deadline())
+    try:
+        current = read_lock(directory, lock_name)
+        if current is None:
+            return
+        owner, payload, _ = current
+        if owner["token"] != token or payload != owner_payload or owner["pid"] != os.getpid():
+            return
+        pause_at("FM_BITWARDEN_TEST_BEFORE_RELEASE")
+        os.unlink(lock_name, dir_fd=directory)
+        os.fsync(directory)
+    finally:
+        release_guard(guard)
 
 
 def pause_at(environment_name):
@@ -272,6 +331,38 @@ def stage_bytes(directory, record_name, payload):
     return temporary
 
 
+def validate_record_bytes(payload):
+    if not payload:
+        fail("record is corrupt at line 1 (record is empty; content withheld)")
+    for offset, value in enumerate(payload):
+        if value != 10 and not 32 <= value <= 126:
+            line = payload.count(b"\n", 0, offset) + 1
+            fail(f"record is corrupt at line {line} (byte is outside the printable ASCII record grammar; content withheld)")
+    if payload[-1] != 10:
+        line = payload.count(b"\n") + 1
+        fail(f"record is corrupt at line {line} (final line has no terminating newline, so the record is truncated; content withheld)")
+
+
+def record_snapshot(directory, record_name, allow_missing):
+    try:
+        descriptor = os.open(record_name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory)
+    except FileNotFoundError:
+        if allow_missing:
+            return None, None
+        fail("no ceremony record for this batch; run init first")
+    except OSError:
+        fail("refused: ceremony record destination is a symbolic link or non-regular file")
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            fail("refused: ceremony record destination is not a regular file")
+        payload = read_all(descriptor)
+    finally:
+        os.close(descriptor)
+    validate_record_bytes(payload)
+    return payload, hashlib.sha256(payload).hexdigest()
+
+
 def command_run(arguments):
     if len(arguments) < 6:
         fail("internal record transaction arguments are incomplete")
@@ -281,43 +372,36 @@ def command_run(arguments):
     directory = open_directory(directory_path, create_text == "1")
     old_cwd = os.open(".", os.O_RDONLY | os.O_DIRECTORY)
     lock_state = None
+    record_name = batch + ".ceremony"
     try:
         if lock_text == "1":
-            lock_state = claim_lock(directory, batch + ".ceremony")
+            lock_state = claim_lock(directory, record_name)
             pause_at("FM_BITWARDEN_TEST_AFTER_LOCK")
+        payload, fingerprint = record_snapshot(directory, record_name, command == "__io-init")
         os.fchdir(directory)
         environment = os.environ.copy()
         environment["FM_BITWARDEN_IO_ACTIVE"] = "1"
         environment["FM_BITWARDEN_RECORD_DISPLAY"] = os.path.join(directory_path, batch + ".ceremony")
-        completed = subprocess.run([script, command, *command_arguments], env=environment, check=False)
+        environment["FM_BITWARDEN_RECORD_PRESENT"] = "0" if payload is None else "1"
+        environment["FM_BITWARDEN_RECORD_HASH"] = fingerprint or ""
+        completed = subprocess.run(
+            [script, command, *command_arguments],
+            env=environment,
+            input=payload or b"",
+            check=False,
+        )
         return completed.returncode
     finally:
         os.fchdir(old_cwd)
         os.close(old_cwd)
         if lock_state is not None:
-            release_lock(directory, *lock_state)
+            release_lock(directory, record_name, *lock_state)
         os.close(directory)
-
-
-def command_stream(batch):
-    directory = os.open(".", os.O_RDONLY | os.O_DIRECTORY)
-    try:
-        descriptor = open_regular(directory, batch + ".ceremony")
-        try:
-            payload = read_all(descriptor)
-        finally:
-            os.close(descriptor)
-    finally:
-        os.close(directory)
-    fingerprint = hashlib.sha256(payload).hexdigest()
-    sys.stdout.buffer.write(f"fm-bitwarden-snapshot-v1 sha256={fingerprint}\n".encode("ascii"))
-    sys.stdout.buffer.write(payload)
-    sys.stdout.buffer.flush()
-    return 0
 
 
 def command_create(batch):
     payload = sys.stdin.buffer.read()
+    validate_record_bytes(payload)
     directory = os.open(".", os.O_RDONLY | os.O_DIRECTORY)
     record_name = batch + ".ceremony"
     temporary = stage_bytes(directory, record_name, payload)
@@ -350,6 +434,7 @@ def command_append(batch, expected_hash, line):
             payload = read_all(descriptor)
         finally:
             os.close(descriptor)
+        validate_record_bytes(payload)
         if hashlib.sha256(payload).hexdigest() != expected_hash:
             fail("refused: ceremony record changed during the transaction; retry")
         temporary = stage_bytes(directory, record_name, payload + line.encode("utf-8") + b"\n")
@@ -374,8 +459,6 @@ def main():
     command = sys.argv[1]
     if command == "run":
         return command_run(sys.argv[2:])
-    if command == "stream" and len(sys.argv) == 3:
-        return command_stream(sys.argv[2])
     if command == "create" and len(sys.argv) == 3:
         return command_create(sys.argv[2])
     if command == "append" and len(sys.argv) == 5:

@@ -89,6 +89,17 @@ esac
 found=$(find "$TMP_ROOT" -name '*.ceremony' | wc -l | tr -d ' ')
 [ "$found" = 1 ] || fail "malicious ids created records (found $found)"
 
+if [ -x /bin/bash ] && [ "$(/bin/bash -c 'printf "%s.%s" "${BASH_VERSINFO[0]}" "${BASH_VERSINFO[1]}"')" = 3.2 ]; then
+  BASH32_DATA="$TMP_ROOT/bash32-data"
+  FM_DATA_OVERRIDE="$BASH32_DATA" /bin/bash "$CEREMONY" init bash32 >/dev/null || fail 'stock Bash 3.2 could not initialize a ceremony record'
+  FM_DATA_OVERRIDE="$BASH32_DATA" /bin/bash "$CEREMONY" add-item bash32 prod-db --owner ops --collection prod >/dev/null || fail 'stock Bash 3.2 could not register an item'
+  FM_DATA_OVERRIDE="$BASH32_DATA" /bin/bash "$CEREMONY" mark bash32 preflight >/dev/null || fail 'stock Bash 3.2 could not mark a ceremony step'
+  OUT=$(FM_DATA_OVERRIDE="$BASH32_DATA" /bin/bash "$CEREMONY" check bash32 2>&1) || fail 'stock Bash 3.2 could not read a ceremony record'
+  assert_contains "$OUT" 'next: approval' 'stock Bash 3.2 reports the record resume point'
+else
+  printf 'skip - stock Bash 3.2 is unavailable\n'
+fi
+
 # --- record paths never follow symbolic links -------------------------------
 
 SYMLINK_ROOT="$TMP_ROOT/symlink-paths"
@@ -324,7 +335,15 @@ wait_for_file "$killed_marker.ready" 'hard-kill writer did not acquire its lock'
 killed_owner=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["pid"])' "$LOCK_DATA/bitwarden/killed-writer.ceremony.lock")
 kill -9 "$killed_owner"
 wait "$killed_command" 2>/dev/null && fail 'hard-killed writer command reported success'
-FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark killed-writer preflight >/dev/null || fail 'retry did not reclaim a positively stale writer lock'
+stale_pids=()
+for i in $(seq 1 20); do
+  FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark killed-writer preflight > "$TMP_ROOT/stale-retry-$i.out" 2>&1 &
+  stale_pids+=("$!")
+done
+for pid in "${stale_pids[@]}"; do
+  wait "$pid" || fail 'a simultaneous retry failed to reclaim or follow a positively stale writer lock'
+done
+[ "$(grep -c '^step: preflight' "$LOCK_DATA/bitwarden/killed-writer.ceremony")" = 1 ] || fail 'simultaneous stale-lock reclaimers recorded duplicate steps'
 [ ! -e "$LOCK_DATA/bitwarden/killed-writer.ceremony.lock" ] || fail 'stale writer recovery left the lock behind'
 
 FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" init live-writer >/dev/null
@@ -337,8 +356,32 @@ rc=0
 OUT=$(FM_BITWARDEN_LOCK_WAIT_SECONDS=0.1 FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark live-writer preflight 2>&1) || rc=$?
 [ "$rc" -ne 0 ] || fail 'a second writer entered while the recorded owner was live'
 assert_contains "$OUT" 'busy' 'live owner exclusion reports bounded contention'
+live_before=$(cksum < "$LOCK_DATA/bitwarden/live-writer.ceremony")
+for invalid_wait in nan +inf -inf; do
+  rc=0
+  OUT=$(FM_BITWARDEN_LOCK_WAIT_SECONDS="$invalid_wait" FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark live-writer preflight 2>&1) || rc=$?
+  [ "$rc" -ne 0 ] || fail "non-finite lock wait $invalid_wait was accepted"
+  assert_contains "$OUT" 'finite number' "non-finite lock wait $invalid_wait names the bounded numeric requirement"
+done
+[ "$(cksum < "$LOCK_DATA/bitwarden/live-writer.ceremony")" = "$live_before" ] || fail 'non-finite lock wait changed the active writer record'
 : > "$live_marker.go"
 wait "$live_command" || fail 'live lock owner did not finish after exclusion test'
+
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" init release-race >/dev/null
+release_marker="$TMP_ROOT/release-race-pause"
+FM_BITWARDEN_TEST_BEFORE_RELEASE="$release_marker" FM_DATA_OVERRIDE="$LOCK_DATA" \
+  "$CEREMONY" mark release-race preflight > "$TMP_ROOT/release-race-first.out" 2>&1 &
+release_first=$!
+wait_for_file "$release_marker.ready" 'first writer did not pause during owner-checked lock release'
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark release-race preflight > "$TMP_ROOT/release-race-second.out" 2>&1 &
+release_second=$!
+sleep 0.1
+kill -0 "$release_second" 2>/dev/null || fail 'a new claimant bypassed the guarded lock release'
+: > "$release_marker.go"
+wait "$release_first" || fail 'first writer failed during guarded lock release'
+wait "$release_second" || fail 'new claimant failed after guarded lock release'
+[ "$(grep -c '^step: preflight' "$LOCK_DATA/bitwarden/release-race.ceremony")" = 1 ] || fail 'release-versus-claim race recorded duplicate steps'
+[ ! -e "$LOCK_DATA/bitwarden/release-race.ceremony.lock" ] || fail 'release-versus-claim race left a lock behind'
 
 FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" init reused-pid >/dev/null
 reuse_marker="$TMP_ROOT/reused-pid-pause"
@@ -638,6 +681,7 @@ assert_contains "$OUT" 'next: verified' 'the tool-written record reports its tru
 # final line with no newline means the last line may be incomplete; appending
 # to it would fuse two record lines into one.
 printf 'fm-bitwarden-ceremony v1\nbatch: no-newline\ncreated: 2026-01-01\nitem: prod-db owner=ops-team collection=prod-infra' > "$RECORDS/no-newline.ceremony"
+printf 'external truncated-record sentinel\n' > "$TMP_ROOT/truncated-record-sentinel"
 before=$(cat "$RECORDS/no-newline.ceremony")
 for cmd in check status; do
   run 1 "$cmd refuses a record with no final newline" "$cmd" no-newline
@@ -649,6 +693,22 @@ run 1 'mark refuses to append to a record with no final newline' mark no-newline
 run 1 'add-item refuses to append to a record with no final newline' add-item no-newline web --owner ops-team --collection prod-infra
 [ "$(cat "$RECORDS/no-newline.ceremony")" = "$before" ] || fail 'a truncated record was modified instead of refused'
 grep -q 'collection=prod-infra$' "$RECORDS/no-newline.ceremony" || fail 'the truncated record lost its recorded collection target'
+[ "$(cat "$TMP_ROOT/truncated-record-sentinel")" = 'external truncated-record sentinel' ] || fail 'truncated-record refusal changed the external sentinel'
+
+BYTE_SENTINEL="$TMP_ROOT/byte-boundary-sentinel"
+printf 'external byte-boundary sentinel\n' > "$BYTE_SENTINEL"
+printf 'fm-bitwarden-ceremony v1\nbatch: byte-nul\ncreated: 2026-01-01\nitem: prod-db owner=ops\0team collection=prod\n' > "$RECORDS/byte-nul.ceremony"
+printf 'fm-bitwarden-ceremony v1\nbatch: byte-nonascii\ncreated: 2026-01-01\nitem: prod-db owner=ops\303\251 collection=prod\n' > "$RECORDS/byte-nonascii.ceremony"
+for batch in byte-nul byte-nonascii; do
+  byte_before=$(cksum < "$RECORDS/$batch.ceremony")
+  run 1 "$batch rejects bytes outside the record grammar" check "$batch"
+  assert_contains "$OUT" 'corrupt at line 4' "$batch reports the offending line number"
+  assert_contains "$OUT" 'printable ASCII record grammar' "$batch names the byte grammar violation"
+  assert_not_contains "$OUT" 'owner=' "$batch refusal echoed record content"
+  run 1 "$batch cannot be appended" mark "$batch" preflight
+  [ "$(cksum < "$RECORDS/$batch.ceremony")" = "$byte_before" ] || fail "$batch was modified after byte-boundary refusal"
+  [ "$(cat "$BYTE_SENTINEL")" = 'external byte-boundary sentinel' ] || fail "$batch refusal changed the external sentinel"
+done
 
 # --- recorded dates must be real and must not run backwards ------------------
 

@@ -242,7 +242,7 @@ today() { date -u +%Y-%m-%d; }
 # from it.
 # Dies with a line NUMBER (never content) on any malformed line.
 parse_record() {
-  local batch=$1 stream_fd=$2 lineno=0 line rest name pending=$STEPS expected
+  local batch=$1 lineno=0 line rest name pending=$STEPS expected
   local fields owner collection date_value approver='' defect
   local seen_batch=0 seen_created=0 in_body=0 moved_seen=0 unterminated=0
   local created_date='' prev_step_date='' today_date
@@ -340,7 +340,7 @@ parse_record() {
         ;;
       *) corrupt "$batch" "$lineno" 'unrecognized line' ;;
     esac
-  done <&"$stream_fd"
+  done
   [ "$seen_batch" -eq 1 ] || die "record for batch '$batch' has no batch header naming the batch it is evidence for; $RECOVERY_HINT"
   [ "$seen_created" -eq 1 ] || die "record for batch '$batch' has no created header; $RECOVERY_HINT"
   PARSED_CREATED_DATE=$created_date
@@ -348,25 +348,12 @@ parse_record() {
 }
 
 load_record() {  # <batch>
-  local batch=$1 stream_fd stream_pid protocol
-  require_io_helper
-  coproc BW_RECORD_STREAM { python3 "$IO_HELPER" stream "$batch"; }
-  stream_fd=${BW_RECORD_STREAM[0]}
-  stream_pid=$BW_RECORD_STREAM_PID
-  if ! IFS= read -r protocol <&"$stream_fd"; then
-    wait "$stream_pid" || true
-    return 1
-  fi
-  case $protocol in
-    'fm-bitwarden-snapshot-v1 sha256='*) ;;
-    *) wait "$stream_pid" || true; die 'refused: ceremony record snapshot protocol is invalid' ;;
-  esac
-  PARSED_RECORD_HASH=${protocol#fm-bitwarden-snapshot-v1 sha256=}
+  local batch=$1
+  [ "${FM_BITWARDEN_RECORD_PRESENT:-0}" = 1 ] || die 'no ceremony record for this batch; run init first'
+  PARSED_RECORD_HASH=${FM_BITWARDEN_RECORD_HASH:-}
   [ "${#PARSED_RECORD_HASH}" -eq 64 ] || die 'refused: ceremony record snapshot fingerprint is invalid'
   case $PARSED_RECORD_HASH in *[!A-Fa-f0-9]*) die 'refused: ceremony record snapshot fingerprint is invalid' ;; esac
-  parse_record "$batch" "$stream_fd"
-  exec {stream_fd}<&-
-  wait "$stream_pid" || return 1
+  parse_record "$batch"
 }
 
 step_recorded() {  # <step> - against PARSED_STEPS
@@ -397,6 +384,11 @@ cmd_init() {
     return
   fi
   path=$(record_path "$batch")
+  if [ "${FM_BITWARDEN_RECORD_PRESENT:-0}" = 1 ]; then
+    load_record "$batch"
+    note "batch '$batch' already initialized; nothing to do"
+    return 0
+  fi
   stamp=$(today)
   {
     printf 'fm-bitwarden-ceremony v1\n'
@@ -404,9 +396,7 @@ cmd_init() {
     printf 'created: %s\n' "$stamp"
   } | python3 "$IO_HELPER" create "$batch" || rc=$?
   if [ "$rc" -eq 17 ]; then
-    load_record "$batch"
-    note "batch '$batch' already initialized; nothing to do"
-    return 0
+    die "batch '$batch': ceremony record changed during initialization; retry"
   fi
   [ "$rc" -eq 0 ] || return "$rc"
   note "batch '$batch' initialized at ${FM_BITWARDEN_RECORD_DISPLAY:-$path}"
