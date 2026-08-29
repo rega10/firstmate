@@ -35,7 +35,13 @@
 #
 # Steps are batch-level and strictly ordered:
 #   preflight -> approval -> moved -> verified -> retired
-# with these gates on `mark`:
+# Every command that reads a record requires its recorded steps to be exactly
+# that order with nothing skipped, repeated, or added after `retired`, so a
+# hand-edited or tampered history is refused by `check` and `status` instead of
+# being reported as progress. A refused record is corrected back to its last
+# valid prefix, or quarantined and replaced by a new batch, per the recovery
+# procedure in docs/bitwarden-rollout.md; this tool never normalizes one.
+# Further gates on `mark`:
 #   - approval requires --approved-by (the captain's recorded identity label);
 #     no other step accepts it.
 #   - moved requires at least one registered item, so a batch cannot be
@@ -60,6 +66,14 @@ STEPS="preflight approval moved verified retired"
 
 die() { printf 'fm-bitwarden-ceremony: %s\n' "$*" >&2; exit 1; }
 note() { printf 'fm-bitwarden-ceremony: %s\n' "$*"; }
+
+RECOVERY_HINT='correct the record back to its last valid prefix, or quarantine it and start a new batch (see docs/bitwarden-rollout.md); this tool never repairs a record for you'
+
+# $1=batch $2=line-number $3=reason. Names the line and the expected shape,
+# never the line content (see the safety contract above).
+corrupt() {
+  die "record for batch '$1' is corrupt at line $2 ($3; content withheld in case it holds secret material); $RECOVERY_HINT"
+}
 
 usage() {
   awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
@@ -113,17 +127,20 @@ today() { date -u +%Y-%m-%d; }
 #   PARSED_ITEMS   - newline list of item labels
 #   PARSED_STEPS   - space list of recorded step names, record order
 #   PARSED_APPROVED_BY - approver label when the approval step is recorded
+# Recorded steps must form an ordered prefix of $STEPS with no repeat, gap, or
+# trailing step, and each item label may appear once, so every reader refuses a
+# tampered history rather than reporting progress from it.
 # Dies with a line NUMBER (never content) on any malformed line.
 parse_record() {
-  local path=$1 lineno=0 line rest
+  local path=$1 batch=$2 lineno=0 line rest name pending=$STEPS expected
   PARSED_ITEMS=""
   PARSED_STEPS=""
   PARSED_APPROVED_BY=""
-  [ -f "$path" ] || die "no ceremony record for batch '$2'; run init first"
+  [ -f "$path" ] || die "no ceremony record for batch '$batch'; run init first"
   while IFS= read -r line || [ -n "$line" ]; do
     lineno=$((lineno + 1))
     if [ "$lineno" -eq 1 ]; then
-      [ "$line" = 'fm-bitwarden-ceremony v1' ] || die "record for batch '$2' is not a v1 ceremony record (line 1)"
+      [ "$line" = 'fm-bitwarden-ceremony v1' ] || die "record for batch '$batch' is not a v1 ceremony record (line 1); $RECOVERY_HINT"
       continue
     fi
     case $line in
@@ -131,30 +148,43 @@ parse_record() {
       'item: '*)
         rest=${line#item: }
         case $rest in
-          *' owner='*' collection='*) PARSED_ITEMS="$PARSED_ITEMS${rest%% *}"$'\n' ;;
-          *) die "record for batch '$2' is corrupt at line $lineno (malformed item line; content withheld in case it holds secret material)" ;;
+          *' owner='*' collection='*) ;;
+          *) corrupt "$batch" "$lineno" 'malformed item line' ;;
         esac
+        name=${rest%% *}
+        case $'\n'"$PARSED_ITEMS" in
+          *$'\n'"$name"$'\n'*) corrupt "$batch" "$lineno" 'item label already registered on an earlier line' ;;
+        esac
+        PARSED_ITEMS="$PARSED_ITEMS$name"$'\n'
         ;;
       'step: '*)
         rest=${line#step: }
-        local step_name=${rest%% *}
+        name=${rest%% *}
         case " $STEPS " in
-          *" $step_name "*) ;;
-          *) die "record for batch '$2' is corrupt at line $lineno (unknown step; content withheld in case it holds secret material)" ;;
+          *" $name "*) ;;
+          *) corrupt "$batch" "$lineno" 'unknown step' ;;
         esac
         case $rest in
           *' date='*) ;;
-          *) die "record for batch '$2' is corrupt at line $lineno (step line has no date; content withheld in case it holds secret material)" ;;
+          *) corrupt "$batch" "$lineno" 'step line has no date' ;;
         esac
-        if [ "$step_name" = approval ]; then
+        expected=${pending%% *}
+        [ -n "$expected" ] || corrupt "$batch" "$lineno" 'step recorded after the ceremony is already complete'
+        [ "$name" = "$expected" ] || corrupt "$batch" "$lineno" "steps out of order, expected '$expected' at this point"
+        case $pending in
+          *' '*) pending=${pending#* } ;;
+          *) pending='' ;;
+        esac
+        if [ "$name" = approval ]; then
           case $rest in
             *' approved-by='*) PARSED_APPROVED_BY=${rest##* approved-by=} ;;
-            *) die "record for batch '$2' is corrupt at line $lineno (approval step has no approved-by)" ;;
+            *) corrupt "$batch" "$lineno" 'approval step has no approved-by' ;;
           esac
+          [ -n "$PARSED_APPROVED_BY" ] || corrupt "$batch" "$lineno" 'approval step has an empty approved-by'
         fi
-        PARSED_STEPS="$PARSED_STEPS$step_name "
+        PARSED_STEPS="$PARSED_STEPS$name "
         ;;
-      *) die "record for batch '$2' is corrupt at line $lineno (unrecognized line; content withheld in case it holds secret material)" ;;
+      *) corrupt "$batch" "$lineno" 'unrecognized line' ;;
     esac
   done < "$path"
 }
@@ -243,8 +273,6 @@ cmd_mark() {
     note "batch '$batch': step '$step' already recorded; nothing to do"
     return 0
   fi
-  expected=$(next_step) || die "batch '$batch' is already complete"
-  [ "$step" = "$expected" ] || die "batch '$batch': next required step is '$expected', not '$step' (steps in order are: $STEPS)"
   if [ "$step" = approval ]; then
     [ -n "$approved_by" ] || die "refused: approval requires --approved-by with the captain's recorded identity label"
     require_label '--approved-by' "$approved_by"
@@ -258,6 +286,8 @@ cmd_mark() {
     step_recorded verified || die "batch '$batch': refused to record retirement before post-move verification"
     [ -n "$PARSED_APPROVED_BY" ] || die "batch '$batch': refused to record retirement without a recorded captain approval"
   fi
+  expected=$(next_step) || die "batch '$batch' is already complete"
+  [ "$step" = "$expected" ] || die "batch '$batch': next required step is '$expected', not '$step' (steps in order are: $STEPS)"
   if [ "$step" = approval ]; then
     printf 'step: %s date=%s approved-by=%s\n' "$step" "$(today)" "$approved_by" >> "$path"
   else

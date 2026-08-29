@@ -129,20 +129,34 @@ run 0 'dash-leading batch status counts one item' status batch-dash
 assert_contains "$OUT" 'items: 1' 'dash-leading batch reports one registered item'
 
 run 1 'retirement is refused before any earlier step' mark batch-a retired
+assert_contains "$OUT" 'before post-move verification' 'retirement refusal names the verification gate, not generic ordering'
 ! grep -q '^step: retired' "$RECORDS/batch-a.ceremony" || fail 'refused retirement was recorded anyway'
 run 1 'verification cannot be recorded before the move' mark batch-a verified
+assert_contains "$OUT" "next required step is 'preflight'" 'out-of-turn step names the required step'
 run 1 'approval requires --approved-by' mark batch-a approval
+assert_contains "$OUT" 'approval requires --approved-by' 'approval refusal names the missing approver, not generic ordering'
 
 run 0 'preflight records' mark batch-a preflight
 run 0 'preflight re-mark is an idempotent no-op' mark batch-a preflight
 [ "$(grep -c '^step: preflight' "$RECORDS/batch-a.ceremony")" = 1 ] || fail 'idempotent re-mark duplicated the step line'
 run 1 'skipping ahead to moved is refused' mark batch-a moved
+assert_contains "$OUT" "next required step is 'approval'" 'skip-ahead refusal names the required step'
+# With preflight recorded, approval is the next step, so this reaches the
+# --approved-by gate rather than the ordering check ahead of it.
+run 1 'approval at its own turn still requires --approved-by' mark batch-a approval
+assert_contains "$OUT" 'approval requires --approved-by' 'in-turn approval refusal names the missing approver'
+! grep -q '^step: approval' "$RECORDS/batch-a.ceremony" || fail 'refused approval was recorded anyway'
+run 1 '--approved-by is rejected for a non-approval step' mark batch-a moved --approved-by captain
+assert_contains "$OUT" 'only valid for the approval step' 'misplaced --approved-by names the reason'
 run 0 'approval records with approver' mark batch-a approval --approved-by captain
 grep -q '^step: approval date=.* approved-by=captain$' "$RECORDS/batch-a.ceremony" || fail 'approval line missing approver'
 run 1 'retirement is still refused before verification' mark batch-a retired
+assert_contains "$OUT" 'before post-move verification' 'retirement refusal after approval still names the verification gate'
 run 0 'moved records' mark batch-a moved
 run 1 'items cannot be added after the move' add-item batch-a late-item --owner ops --collection team
 run 1 'retirement is refused before post-move verification' mark batch-a retired
+assert_contains "$OUT" 'before post-move verification' 'post-move retirement refusal names the verification gate'
+! grep -q '^step: retired' "$RECORDS/batch-a.ceremony" || fail 'refused retirement was recorded after the move'
 run 0 'verified records' mark batch-a verified
 run 0 'retirement is allowed only after verification and approval' mark batch-a retired
 run 0 'status renders the complete batch' status batch-a
@@ -166,6 +180,109 @@ run 0 'replaying the completed step still succeeds' mark batch-part preflight
 run 0 'ceremony resumes from the reported step' mark batch-part approval --approved-by captain
 run 0 'check advances with the record' check batch-part
 assert_contains "$OUT" 'next: moved' 'check reflects recorded progress'
+
+# --- tampered step histories are refused by every reader --------------------
+
+# The record file is this tool's own append-only text contract (see its --help),
+# so a hand-edited history is written here and then read back through the
+# commands, exactly as a tampered record would reach an auditor.
+write_record() {  # <batch> <step-lines...>
+  local batch=$1
+  shift
+  {
+    printf 'fm-bitwarden-ceremony v1\n'
+    printf 'batch: %s\n' "$batch"
+    printf 'created: 2026-01-01\n'
+    printf 'item: prod-db owner=ops-team collection=prod-infra\n'
+    printf '%s\n' "$@"
+  } > "$RECORDS/$batch.ceremony"
+}
+
+# retired written before approval and verified: the exact history the ceremony
+# exists to make impossible.
+write_record tamper-order \
+  'step: preflight date=2026-01-01' \
+  'step: moved date=2026-01-01' \
+  'step: retired date=2026-01-01'
+for cmd in check status; do
+  run 1 "$cmd refuses a record whose steps are out of order" "$cmd" tamper-order
+  assert_contains "$OUT" 'corrupt at line 6' 'out-of-order record is reported by line number'
+  assert_contains "$OUT" "expected 'approval' at this point" 'out-of-order refusal names the expected transition'
+  assert_not_contains "$OUT" 'step: moved' 'out-of-order refusal echoed record content'
+  assert_contains "$OUT" 'last valid prefix' 'refusal explains the recovery path'
+  assert_not_contains "$OUT" 'next:' "$cmd reported progress from a tampered record"
+done
+run 1 'mark refuses to append to an out-of-order record' mark tamper-order approval --approved-by captain
+[ "$(grep -c '^step: ' "$RECORDS/tamper-order.ceremony")" = 3 ] || fail 'a refused record was appended to'
+
+# A skipped prerequisite is refused at the line that skips it.
+write_record tamper-skip \
+  'step: preflight date=2026-01-01' \
+  'step: approval date=2026-01-01 approved-by=captain' \
+  'step: verified date=2026-01-01'
+run 1 'check refuses a record with a skipped step' check tamper-skip
+assert_contains "$OUT" "expected 'moved' at this point" 'skipped-step refusal names the expected transition'
+
+# A repeated step is refused even though every name is individually valid.
+write_record tamper-dup \
+  'step: preflight date=2026-01-01' \
+  'step: preflight date=2026-01-01'
+run 1 'check refuses a duplicated step' check tamper-dup
+assert_contains "$OUT" 'corrupt at line 6' 'duplicate step is reported by line number'
+
+# Nothing may follow a complete ceremony.
+write_record tamper-trailing \
+  'step: preflight date=2026-01-01' \
+  'step: approval date=2026-01-01 approved-by=captain' \
+  'step: moved date=2026-01-01' \
+  'step: verified date=2026-01-01' \
+  'step: retired date=2026-01-01' \
+  'step: retired date=2026-01-01'
+run 1 'check refuses a step recorded after completion' check tamper-trailing
+assert_contains "$OUT" 'already complete' 'trailing step refusal names the reason'
+
+# An approval line with no approver is not a recorded approval.
+write_record tamper-approver \
+  'step: preflight date=2026-01-01' \
+  'step: approval date=2026-01-01 approved-by=' \
+  'step: moved date=2026-01-01' \
+  'step: verified date=2026-01-01'
+run 1 'check refuses an approval with an empty approver' check tamper-approver
+assert_contains "$OUT" 'empty approved-by' 'empty-approver refusal names the reason'
+run 1 'retirement cannot be recorded against an empty approver' mark tamper-approver retired
+! grep -q '^step: retired' "$RECORDS/tamper-approver.ceremony" || fail 'retirement was recorded against an empty approver'
+
+# A hand-edited duplicate item line would double-count the auditable evidence.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: tamper-item\n'
+  printf 'created: 2026-01-01\n'
+  printf 'item: prod-db owner=ops-team collection=prod-infra\n'
+  printf 'item: prod-db owner=other collection=prod-infra\n'
+} > "$RECORDS/tamper-item.ceremony"
+run 1 'status refuses a record with a duplicated item label' status tamper-item
+assert_contains "$OUT" 'corrupt at line 5' 'duplicate item is reported by line number'
+assert_not_contains "$OUT" 'items:' 'status counted items from a tampered record'
+
+# A record that is a valid prefix - the shape a corrected record is restored to
+# - stays fully usable, so the validation never blocks legitimate recovery.
+write_record tamper-fixed \
+  'step: preflight date=2026-01-01' \
+  'step: approval date=2026-01-01 approved-by=captain'
+run 0 'a corrected record resumes from its last valid prefix' check tamper-fixed
+assert_contains "$OUT" 'next: moved' 'corrected record reports the true resume point'
+run 0 'the corrected record accepts the next real step' mark tamper-fixed moved
+
+# Refusals never echo secret-shaped content from the record itself.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: tamper-secret\n'
+  printf 'created: 2026-01-01\n'
+  printf 'step: preflight date=2026-01-01\n'
+  printf 'step: retired date=2026-01-01 note=ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n'
+} > "$RECORDS/tamper-secret.ceremony"
+run 1 'a tampered record holding secret material is refused' check tamper-secret
+assert_not_contains "$OUT" 'ghp_' 'refusal echoed secret-shaped record content'
 
 # --- corrupt records are reported by line number, content withheld ----------
 
