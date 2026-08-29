@@ -71,6 +71,8 @@
 # owner or collection for a registered item, another --approved-by for a
 # recorded approval - is refused naming the conflicting field instead, so a
 # replay is never reported as success while the evidence says something else.
+# Mutating commands serialize on a per-record lock and replace records
+# atomically, so concurrent retries converge on the same validated evidence.
 # `check` re-validates any partial record and prints the next required step,
 # which is the recovery entry point after an interruption.
 set -eu
@@ -80,6 +82,10 @@ FM_ROOT="$(cd "$SELF_DIR/.." && pwd)"
 FM_HOME="${FM_HOME:-$FM_ROOT}"
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 RECORD_DIR="$DATA/bitwarden"
+LOCK_DIR=''
+LOCK_TOKEN=''
+LOCK_OWNED=0
+TMP_RECORD=''
 
 STEPS="preflight approval moved verified retired"
 
@@ -195,7 +201,102 @@ require_label() {
   fi
 }
 
-record_path() { printf '%s/%s.ceremony' "$RECORD_DIR" "$1"; }
+assert_no_symlink_components() {  # <path>
+  local remaining=$1 prefix='' part
+  case $remaining in
+    /*) prefix=/; remaining=${remaining#/} ;;
+  esac
+  while [ -n "$remaining" ]; do
+    part=${remaining%%/*}
+    remaining=${remaining#"$part"}
+    remaining=${remaining#/}
+    [ -n "$part" ] || continue
+    if [ "$prefix" = / ]; then
+      prefix="/$part"
+    elif [ -n "$prefix" ]; then
+      prefix="$prefix/$part"
+    else
+      prefix=$part
+    fi
+    [ ! -L "$prefix" ] || die 'refused: ceremony record path contains a symbolic link'
+  done
+}
+
+prepare_record_dir() {
+  assert_no_symlink_components "$RECORD_DIR"
+  if [ -e "$RECORD_DIR" ]; then
+    [ -d "$RECORD_DIR" ] || die 'refused: ceremony record directory is not a directory'
+  else
+    mkdir -p "$RECORD_DIR" || die 'could not create ceremony record directory'
+  fi
+  assert_no_symlink_components "$RECORD_DIR"
+  [ -d "$RECORD_DIR" ] || die 'refused: ceremony record directory is not a directory'
+}
+
+record_path() {
+  local path="$RECORD_DIR/$1.ceremony"
+  assert_no_symlink_components "$path"
+  printf '%s' "$path"
+}
+
+release_record_lock() {
+  local owner actual=''
+  [ "$LOCK_OWNED" -eq 1 ] || return 0
+  owner="$LOCK_DIR/owner"
+  if [ -f "$owner" ]; then
+    IFS= read -r actual < "$owner" || true
+    if [ "$actual" = "$LOCK_TOKEN" ]; then
+      rm -f "$owner"
+      rmdir "$LOCK_DIR" 2>/dev/null || true
+    fi
+  elif [ ! -e "$owner" ]; then
+    rmdir "$LOCK_DIR" 2>/dev/null || true
+  fi
+  LOCK_DIR=''
+  LOCK_TOKEN=''
+  LOCK_OWNED=0
+}
+
+cleanup() {
+  if [ -n "$TMP_RECORD" ] && [ -f "$TMP_RECORD" ] && [ ! -L "$TMP_RECORD" ]; then
+    rm -f "$TMP_RECORD"
+  fi
+  release_record_lock
+}
+
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+
+acquire_record_lock() {  # <path> <batch>
+  local path=$1 batch=$2 attempts=0
+  [ -d "$RECORD_DIR" ] || die "no ceremony record for batch '$batch'; run init first"
+  LOCK_DIR="$path.lock"
+  LOCK_TOKEN="$$-${RANDOM:-0}"
+  assert_no_symlink_components "$LOCK_DIR"
+  while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+    [ ! -L "$LOCK_DIR" ] || die 'refused: ceremony record lock path is a symbolic link'
+    attempts=$((attempts + 1))
+    [ "$attempts" -lt 100 ] || die "batch '$batch': ceremony record is busy; retry after the active writer finishes"
+    sleep 0.05
+  done
+  LOCK_OWNED=1
+  if ! printf '%s\n' "$LOCK_TOKEN" > "$LOCK_DIR/owner"; then
+    die "batch '$batch': could not record ceremony lock ownership"
+  fi
+}
+
+atomic_append_line() {  # <path> <batch> <line>
+  local path=$1 batch=$2 line=$3
+  assert_no_symlink_components "$path"
+  [ -f "$path" ] || die "no ceremony record for batch '$batch'; run init first"
+  TMP_RECORD=$(mktemp "$RECORD_DIR/.$batch.ceremony.XXXXXX") || die "batch '$batch': could not stage ceremony record update"
+  cp "$path" "$TMP_RECORD" || die "batch '$batch': could not stage ceremony record update"
+  printf '%s\n' "$line" >> "$TMP_RECORD" || die "batch '$batch': could not stage ceremony record update"
+  assert_no_symlink_components "$path"
+  [ ! -L "$path" ] || die 'refused: ceremony record destination is a symbolic link'
+  mv -f "$TMP_RECORD" "$path" || die "batch '$batch': could not install ceremony record update"
+  TMP_RECORD=''
+}
 
 today() { date -u +%Y-%m-%d; }
 
@@ -336,18 +437,26 @@ report_next() {
 cmd_init() {
   local batch=$1 path
   require_batch_id "$batch"
+  prepare_record_dir
   path=$(record_path "$batch")
-  if [ -f "$path" ]; then
+  acquire_record_lock "$path" "$batch"
+  assert_no_symlink_components "$path"
+  if [ -e "$path" ] || [ -L "$path" ]; then
+    [ ! -L "$path" ] || die 'refused: ceremony record destination is a symbolic link'
     parse_record "$path" "$batch"
     note "batch '$batch' already initialized; nothing to do"
     return 0
   fi
-  mkdir -p "$RECORD_DIR"
+  TMP_RECORD=$(mktemp "$RECORD_DIR/.$batch.ceremony.XXXXXX") || die "batch '$batch': could not stage ceremony record creation"
   {
     printf 'fm-bitwarden-ceremony v1\n'
     printf 'batch: %s\n' "$batch"
     printf 'created: %s\n' "$(today)"
-  } > "$path"
+  } > "$TMP_RECORD"
+  assert_no_symlink_components "$path"
+  [ ! -e "$path" ] && [ ! -L "$path" ] || die "batch '$batch': ceremony record appeared during initialization; retry"
+  mv -f "$TMP_RECORD" "$path" || die "batch '$batch': could not install ceremony record"
+  TMP_RECORD=''
   note "batch '$batch' initialized at $path"
 }
 
@@ -366,6 +475,8 @@ cmd_add_item() {
   require_label '--owner' "$owner"
   require_label '--collection' "$collection"
   path=$(record_path "$batch")
+  acquire_record_lock "$path" "$batch"
+  assert_no_symlink_components "$path"
   parse_record "$path" "$batch"
   local line="item: $label owner=$owner collection=$collection"
   if grep -Fqx -- "$line" "$path"; then
@@ -379,7 +490,7 @@ cmd_add_item() {
   if step_recorded moved; then
     die "batch '$batch': items cannot be added after the batch is marked moved; start a new batch"
   fi
-  printf '%s\n' "$line" >> "$path"
+  atomic_append_line "$path" "$batch" "$line"
   note "batch '$batch': item '$label' registered (owner=$owner collection=$collection)"
 }
 
@@ -401,6 +512,8 @@ cmd_mark() {
     [ -z "$approved_by" ] || die "--approved-by is only valid for the approval step"
   fi
   path=$(record_path "$batch")
+  acquire_record_lock "$path" "$batch"
+  assert_no_symlink_components "$path"
   parse_record "$path" "$batch"
   if step_recorded "$step"; then
     if [ "$step" = approval ] && [ "$approved_by" != "$PARSED_APPROVED_BY" ]; then
@@ -419,9 +532,9 @@ cmd_mark() {
   expected=$(next_step) || die "batch '$batch' is already complete"
   [ "$step" = "$expected" ] || die "batch '$batch': next required step is '$expected', not '$step' (steps in order are: $STEPS)"
   if [ "$step" = approval ]; then
-    printf 'step: %s date=%s approved-by=%s\n' "$step" "$(today)" "$approved_by" >> "$path"
+    atomic_append_line "$path" "$batch" "step: $step date=$(today) approved-by=$approved_by"
   else
-    printf 'step: %s date=%s\n' "$step" "$(today)" >> "$path"
+    atomic_append_line "$path" "$batch" "step: $step date=$(today)"
   fi
   note "batch '$batch': step '$step' recorded ($(today))"
 }

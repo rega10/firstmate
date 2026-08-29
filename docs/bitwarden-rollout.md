@@ -2,7 +2,7 @@
 
 This runbook is the staged path from temporary local-only credential custody to organization-owned Bitwarden custody for production and team credentials.
 It is written for a normal operator: every routine action is a short checklist step, and engineering is only needed when a step says so.
-Current access is preserved throughout: nothing is retired, rotated, or moved until the specific migration batch holding it is approved and verified.
+Current access is preserved throughout: every move requires captain approval for its specific batch, and old custody remains available until post-move verification succeeds.
 
 ## Custody boundaries this rollout does not change
 

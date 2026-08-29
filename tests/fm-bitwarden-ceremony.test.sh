@@ -14,6 +14,7 @@ set -u
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 TMP_ROOT=$(fm_test_tmproot fm-bitwarden-ceremony-tests)
+TMP_ROOT=$(cd "$TMP_ROOT" && pwd -P)
 CEREMONY="$ROOT/bin/fm-bitwarden-ceremony.sh"
 export FM_DATA_OVERRIDE="$TMP_ROOT/data"
 RECORDS="$FM_DATA_OVERRIDE/bitwarden"
@@ -78,6 +79,35 @@ esac
 [ ! -e "$RECORDS/x" ] || fail 'metacharacter id executed or created a file'
 found=$(find "$TMP_ROOT" -name '*.ceremony' | wc -l | tr -d ' ')
 [ "$found" = 1 ] || fail "malicious ids created records (found $found)"
+
+# --- record paths never follow symbolic links -------------------------------
+
+SYMLINK_ROOT="$TMP_ROOT/symlink-paths"
+mkdir -p "$SYMLINK_ROOT/destination-data/bitwarden" "$SYMLINK_ROOT/directory-data" "$SYMLINK_ROOT/external-dir"
+
+printf 'outside sentinel\n' > "$SYMLINK_ROOT/dangling-target"
+before=$(cat "$SYMLINK_ROOT/dangling-target")
+ln -s "$SYMLINK_ROOT/dangling-target" "$SYMLINK_ROOT/destination-data/bitwarden/linked.ceremony"
+rc=0
+OUT=$(FM_DATA_OVERRIDE="$SYMLINK_ROOT/destination-data" "$CEREMONY" init linked 2>&1) || rc=$?
+[ "$rc" -ne 0 ] || fail 'init accepted a symlinked destination record'
+assert_contains "$OUT" 'symbolic link' 'symlinked destination refusal names the path defect'
+[ "$(cat "$SYMLINK_ROOT/dangling-target")" = "$before" ] || fail 'init changed a symlink target outside the record directory'
+
+ln -s "$SYMLINK_ROOT/external-dir" "$SYMLINK_ROOT/directory-data/bitwarden"
+rc=0
+OUT=$(FM_DATA_OVERRIDE="$SYMLINK_ROOT/directory-data" "$CEREMONY" init linked-dir 2>&1) || rc=$?
+[ "$rc" -ne 0 ] || fail 'init accepted a symlinked record directory'
+assert_contains "$OUT" 'symbolic link' 'symlinked record directory refusal names the path defect'
+[ ! -e "$SYMLINK_ROOT/external-dir/linked-dir.ceremony" ] || fail 'init wrote through a symlinked record directory'
+
+mkdir -p "$SYMLINK_ROOT/real-parent"
+ln -s "$SYMLINK_ROOT/real-parent" "$SYMLINK_ROOT/linked-parent"
+rc=0
+OUT=$(FM_DATA_OVERRIDE="$SYMLINK_ROOT/linked-parent/data" "$CEREMONY" init linked-parent 2>&1) || rc=$?
+[ "$rc" -ne 0 ] || fail 'init accepted a symlinked parent path component'
+assert_contains "$OUT" 'symbolic link' 'symlinked parent component refusal names the path defect'
+[ ! -e "$SYMLINK_ROOT/real-parent/data/bitwarden/linked-parent.ceremony" ] || fail 'init wrote through a symlinked parent path component'
 
 # --- secret-shaped input is refused, redacted, and never persisted ----------
 
@@ -194,6 +224,52 @@ run 0 'replaying the completed step still succeeds' mark batch-part preflight
 run 0 'ceremony resumes from the reported step' mark batch-part approval --approved-by captain
 run 0 'check advances with the record' check batch-part
 assert_contains "$OUT" 'next: moved' 'check reflects recorded progress'
+
+# --- concurrent retries serialize and converge ------------------------------
+
+CONCURRENT_DATA="$TMP_ROOT/concurrent-data"
+init_pids=()
+for i in $(seq 1 20); do
+  FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" init retry-init > "$TMP_ROOT/retry-init-$i.out" 2>&1 &
+  init_pids+=("$!")
+done
+for pid in "${init_pids[@]}"; do
+  wait "$pid" || fail 'an identical concurrent init retry was refused'
+done
+[ "$(grep -c '^fm-bitwarden-ceremony v1$' "$CONCURRENT_DATA/bitwarden/retry-init.ceremony")" = 1 ] || fail 'concurrent init retries created an invalid record'
+OUT=$(FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" check retry-init 2>&1) || fail 'concurrent init retries corrupted the record'
+assert_contains "$OUT" 'next: preflight' 'concurrent identical init retries converge on one valid record'
+
+FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" init retry-mark >/dev/null
+pids=()
+for i in $(seq 1 40); do
+  FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" mark retry-mark preflight > "$TMP_ROOT/retry-mark-$i.out" 2>&1 &
+  pids+=("$!")
+done
+for pid in "${pids[@]}"; do
+  wait "$pid" || fail 'an identical concurrent mark retry was refused'
+done
+[ "$(grep -c '^step: preflight' "$CONCURRENT_DATA/bitwarden/retry-mark.ceremony")" = 1 ] || fail 'concurrent mark retries recorded more than one step'
+OUT=$(FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" check retry-mark 2>&1) || fail 'concurrent mark retries corrupted the record'
+assert_contains "$OUT" 'next: approval' 'concurrent identical marks converge on one valid step'
+
+FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" init retry-item >/dev/null
+pids=()
+for i in $(seq 1 40); do
+  if [ $((i % 2)) -eq 0 ]; then owner=owner-a; else owner=owner-b; fi
+  FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" add-item retry-item prod-db --owner "$owner" --collection prod > "$TMP_ROOT/retry-item-$i.out" 2>&1 &
+  pids+=("$!")
+done
+accepted=0
+refused=0
+for pid in "${pids[@]}"; do
+  if wait "$pid"; then accepted=$((accepted + 1)); else refused=$((refused + 1)); fi
+done
+[ "$accepted" -gt 0 ] || fail 'all conflicting concurrent item retries were refused'
+[ "$refused" -gt 0 ] || fail 'conflicting concurrent item retries reported every owner as accepted'
+[ "$(grep -c '^item: prod-db ' "$CONCURRENT_DATA/bitwarden/retry-item.ceremony")" = 1 ] || fail 'conflicting concurrent item retries recorded duplicate items'
+OUT=$(FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" check retry-item 2>&1) || fail 'conflicting concurrent item retries corrupted the record'
+assert_contains "$OUT" 'next: preflight' 'conflicting retries leave one valid ownership record'
 
 # --- tampered step histories are refused by every reader --------------------
 
