@@ -273,6 +273,64 @@ The Kimi installer requires an existing regular non-symlink `~/.kimi-code/config
 Its `remove` action excises only the marker-delimited Firstmate region and removes Firstmate's hook files.
 For Pi and pi-signed secondmate launches, `fm-spawn.sh` starts the selected executable with `-e` pointed at the secondmate home's own tracked `.pi/extensions/fm-primary-pi-watch.ts` and `.pi/extensions/fm-primary-turnend-guard.ts`, both already present from the secondmate home's git worktree.
 
+## Claude authentication through Automic Vault (config/claude-automic-vault)
+
+`bin/fm-claude-automic-vault.sh` is the single executable owner of Firstmate's optional Claude Code authentication through Automic Vault.
+This integration is disabled by default and affects only launches whose concrete harness is `claude`.
+It does not wrap, replace, configure, log in, or otherwise change the captain's ordinary `claude` command.
+
+The local, gitignored `config/claude-automic-vault` file is the explicit opt-in.
+Its only valid bytes are `on` followed by one newline, absence means disabled, and a symlink, hardlink, directory, or any other content blocks a concrete Claude launch until the artifact is removed or repaired.
+Enable the integration for the first time by running this command in an attended captain terminal:
+
+```sh
+bin/fm-claude-automic-vault.sh provision
+```
+
+The command runs Claude Code's supported `claude setup-token` ceremony with all raw child output suppressed, captures the generated subscription token only in memory, and sends it directly to `av save CLAUDE_CODE_OAUTH_TOKEN` through that process's controlling terminal.
+Complete browser and Automic Vault Secret Gate prompts in their own application windows.
+The ceremony never accepts the token as an argument and never places it in shell history, a repository file, a log, a report, a status message, the clipboard, or chat.
+The opt-in file is written atomically only after the saved token passes redacted authentication classification and live validation.
+
+Every enabled Firstmate Claude launch and relaunch resolves the real `av` and `claude` executables before endpoint creation, rejects an Automic Vault injection wrapper in the Claude position, and pins both absolute paths in the launch command.
+The token value enters only the Claude process environment through `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`, while the secret name but never its value appears in argv.
+The launch clears ambient API-key, cloud-provider, and Anthropic endpoint overrides, disables `apiKeyHelper` and matching auth settings inline, and enables Claude Code's subprocess credential scrub.
+This prevents a missing or denied Vault value from falling back to stale interactive OAuth, a keychain credential, an API key, a cloud provider, or a different endpoint.
+The captain's normal Claude config directory, Firstmate worktree isolation, lifecycle hooks, model and effort flags, prompt, and runtime-backend behavior remain in place.
+
+Each launch preflight first requires Claude to report `oauth_token` against the first-party provider and then makes one minimal safe-mode, tool-free, non-persistent request through the same resolved executables and Vault injection.
+The live request is necessary because Claude Code's local `auth status` accepts an arbitrary non-empty OAuth environment value without proving the service accepts it.
+The request consumes a minimal Claude subscription turn, sends only a fixed validation prompt, uses a disposable config directory, deletes that directory on completion, and never prints raw Claude or Vault output.
+Run the same supported check at any time with:
+
+```sh
+bin/fm-claude-automic-vault.sh preflight
+```
+
+Missing or locked Vault state, denied Secret Gate access, a missing secret, an invalid or revoked token, unsupported CLI surfaces, a timeout, and inconclusive or conflicting authentication all block the launch with a redacted action.
+Inspect Automic Vault Authorization History when an injection failure is not safely classifiable, and never paste credential material into a diagnostic or report.
+
+Renew the token from an attended captain terminal with:
+
+```sh
+bin/fm-claude-automic-vault.sh renew
+```
+
+Renew uses the same no-display terminal relay, replaces the Vault value directly, and leaves the opt-in active so a failed replacement validation blocks every later Claude launch.
+After a successful renewal, remove the superseded Claude Code token from Claude Settings when the old token should no longer remain valid.
+For deliberate revocation, first run `bin/fm-claude-automic-vault.sh disable`, then remove `CLAUDE_CODE_OAUTH_TOKEN` through the Automic Vault application and remove the token through Claude Settings under Claude Code.
+Disable changes only the local flag and does not delete a Vault secret or revoke a Claude account token by itself.
+
+If the correct `CLAUDE_CODE_OAUTH_TOKEN` already exists in this machine's Automic Vault but the local flag is absent, use the one-time recovery path `bin/fm-claude-automic-vault.sh enable`.
+Enable validates the existing secret before atomically writing the flag and never runs `setup-token` or `av save`.
+If the flag is active but the token was deleted or revoked, use `renew`, or disable and run `provision` when intentionally rebuilding the integration from a clean local state.
+
+The opt-in flag is primary-authoritative inherited local material under [`secondmate-provisioning`](../.agents/skills/secondmate-provisioning/SKILL.md), so local persistent secondmates and their workers on the same machine apply the same setting on launch and relaunch.
+Only the flag is copied between homes, and the token itself always remains in Automic Vault.
+A remote secondmate receives the same flag through the existing inherited-material allowlist but cannot receive the local Vault value, so its Claude launches fail closed until Automic Vault and the token are provisioned separately on that host.
+Non-Claude harnesses never read the flag, resolve these executables, contact Automic Vault, or change launch behavior.
+Maintainer verification and the intentionally skipped live-secret checks are recorded in [`verification/claude-automic-vault.md`](verification/claude-automic-vault.md).
+
 ## Crew dispatch profiles (config/crew-dispatch.json)
 
 `config/crew-dispatch.json` is an optional local, gitignored file containing natural-language rules that firstmate reads before dispatching a crewmate or scout.
@@ -353,7 +411,7 @@ When a running home advances and its loaded instruction surface (`AGENTS.md`, `b
 If that send fails, bootstrap keeps an idempotent retry marker and emits `NUDGE_SECONDMATES:` with the failure reason.
 The same bootstrap run emits `SECONDMATE_LIVENESS:` only when a registered secondmate is skipped or its relaunch fails; already-live and successfully relaunched secondmates are handled silently.
 For a mid-session inherited local-material edit where tracked-file sync is not needed, run `bin/fm-config-push.sh`.
-It uses the same live secondmate discovery and propagation helper as bootstrap, prints each live home's `crew-dispatch.json`, `crew-harness`, `backlog-backend`, `backend`, `herdr-presentation-spaces`, `startup-memory-budget`, `trace-context`, and `data/captain-shared.md` result as `pushed`, `unchanged`, `skipped`, or `error`, and exits non-zero for real propagation errors or config-reread send failures.
+It uses the same live secondmate discovery and propagation helper as bootstrap, prints each live home's `crew-dispatch.json`, `crew-harness`, `backlog-backend`, `backend`, `herdr-presentation-spaces`, `startup-memory-budget`, `claude-automic-vault`, `trace-context`, and `data/captain-shared.md` result as `pushed`, `unchanged`, `skipped`, or `error`, and exits non-zero for real propagation errors or config-reread send failures.
 When an allowlisted config item changes for an already-running local home, it sends the literal-content reread pointer described in [`secondmate-provisioning`](../.agents/skills/secondmate-provisioning/SKILL.md); unchanged allowlisted config sends no pointer unless a previous delivery is pending.
 A changed remote home instead receives one durably recorded marked re-read instruction after the allowlisted bytes have transferred because primary-local generation paths are not meaningful on another host.
 The locked bootstrap inheritance pass uses the same placement-specific behavior; see `secondmate-provisioning` for the single contract owner.

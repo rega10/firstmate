@@ -12,7 +12,9 @@
 # preference - an absent primary file and an absent destination file both mean
 # the same unconfigured default, so the generic absence mirror below converges
 # a secondmate without deciding the release-dependent floor; explicit "on" and
-# "off" preferences propagate as files. Primary
+# "off" preferences propagate as files. Primary config/claude-automic-vault
+# carries the fail-closed opt-in into every secondmate home while the Vault token
+# itself remains machine-local and is never copied. Primary
 # config/trace-context is copied at the launch convergence point as part of the
 # default-off W3C trace-context setup, while live convergence leaves it unchanged.
 # The primary passes its frozen home-session decision into a newly launched
@@ -53,6 +55,8 @@
 #
 # shellcheck source=bin/fm-startup-memory-budget-lib.sh
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-startup-memory-budget-lib.sh"
+# shellcheck source=bin/fm-claude-automic-vault-lib.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-claude-automic-vault-lib.sh"
 
 # The one shared data file in this inheritance contract. There is deliberately
 # no shared learnings file.
@@ -63,7 +67,7 @@ FM_SHARED_CAPTAIN_MODE="444"
 # The declared inheritable set (space-separated, config-dir-relative item paths).
 # Extend here to inherit more of the primary's local config; override via the
 # environment only in tests. Items must not contain whitespace.
-FM_INHERITABLE_CONFIG="${FM_INHERITABLE_CONFIG:-crew-dispatch.json crew-harness backlog-backend backend herdr-presentation-spaces startup-memory-budget trace-context}"
+FM_INHERITABLE_CONFIG="${FM_INHERITABLE_CONFIG:-crew-dispatch.json crew-harness backlog-backend backend herdr-presentation-spaces startup-memory-budget claude-automic-vault trace-context}"
 
 # Items whose value is a home-SESSION enablement decision rather than durable
 # local configuration. They are inherited at the launch convergence point, where
@@ -440,7 +444,7 @@ propagate_secondmate_inheritance() {
 }
 
 propagate_inheritable_config() {
-  local src_config=$1 dest_config=$2 item src dest reason rc
+  local src_config=$1 dest_config=$2 item src dest reason rc src_state dest_state
   [ -n "$src_config" ] || return 1
   [ -n "$dest_config" ] || return 1
   rc=0
@@ -493,6 +497,29 @@ propagate_inheritable_config() {
           rc=1
           continue
         fi
+      fi
+    fi
+    # The Claude Automic Vault flag enables a fail-closed credential boundary.
+    # Validate both homes through that boundary's owner before generic copying
+    # can treat an unsafe artifact or malformed value as ordinary config.
+    if [ "$item" = "$FM_CLAUDE_AV_CONFIG_FILE" ]; then
+      src_state=0
+      fm_claude_av_enabled "$src_config" || src_state=$?
+      if [ "$src_state" -eq 2 ]; then
+        reason="unsafe or invalid primary source: $FM_CLAUDE_AV_ERROR"
+        warn_inheritable_config_error "$item" "$src" "$reason"
+        record_inheritable_config_result "$item" error "$reason"
+        rc=1
+        continue
+      fi
+      dest_state=0
+      fm_claude_av_enabled "$dest_config" || dest_state=$?
+      if [ "$dest_state" -eq 2 ]; then
+        reason="unsafe or invalid destination: $FM_CLAUDE_AV_ERROR"
+        warn_inheritable_config_error "$item" "$dest" "$reason"
+        record_inheritable_config_result "$item" error "$reason"
+        rc=1
+        continue
       fi
     fi
     if [ -f "$src" ]; then

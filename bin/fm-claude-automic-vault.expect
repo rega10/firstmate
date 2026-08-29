@@ -1,0 +1,77 @@
+#!/usr/bin/expect -f
+# Capture Claude Code's setup-token result without displaying it, then send the
+# captured bytes directly to `av save` through that process's controlling PTY.
+# The token never enters argv, shell history, a file, a clipboard, or output.
+
+if {$argc != 2} {
+  puts stderr "error: internal Claude Automic Vault ceremony needs resolved claude and av executables"
+  exit 2
+}
+
+set claude [lindex $argv 0]
+set av [lindex $argv 1]
+set timeout 600
+log_user 0
+
+spawn -noecho $claude setup-token
+expect {
+  -re {(sk-ant-oat[[:alnum:]_-]+)} {
+    set token $expect_out(1,string)
+  }
+  timeout {
+    puts stderr "error: Claude setup-token timed out before producing a token"
+    exit 20
+  }
+  eof {
+    puts stderr "error: Claude setup-token ended without producing a recognizable subscription token"
+    exit 20
+  }
+}
+unset expect_out
+expect {
+  eof {}
+  timeout {
+    unset token
+    puts stderr "error: Claude setup-token did not exit after producing a token"
+    exit 20
+  }
+}
+set claude_wait [wait]
+set claude_status [lindex $claude_wait 3]
+if {$claude_status != 0} {
+  unset token
+  puts stderr "error: Claude setup-token did not complete successfully"
+  exit 20
+}
+
+spawn -noecho $av save CLAUDE_CODE_OAUTH_TOKEN
+expect {
+  -re {(?i)(enter|secret|value|token|password)} {
+    send -- "$token\r"
+  }
+  timeout {
+    unset token
+    puts stderr "error: Automic Vault did not present its terminal value prompt"
+    exit 21
+  }
+  eof {
+    unset token
+    puts stderr "error: Automic Vault ended before accepting the token"
+    exit 21
+  }
+}
+unset token
+expect {
+  eof {}
+  timeout {
+    puts stderr "error: Automic Vault save timed out after receiving the token"
+    exit 21
+  }
+}
+set av_wait [wait]
+set av_status [lindex $av_wait 3]
+if {$av_status != 0} {
+  puts stderr "error: Automic Vault did not confirm a successful save"
+  exit 21
+}
+exit 0

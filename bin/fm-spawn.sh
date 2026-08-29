@@ -161,6 +161,8 @@
 #     __OPINPUT__   absolute path to the canonical operational-input encoder
 #     __WORKTREE__  absolute path to the task worktree
 #     __CURSORBIN__ resolved, cursor-verified executable for a cursor launch
+#     __CLAUDELAUNCH__ bare claude when Vault auth is disabled, or the pinned
+#                      Automic Vault injection prefix after redacted preflight
 # Verified per-harness turn-end hooks are installed automatically where enabled; some live outside the worktree.
 # Kimi uses one surgically installed Firstmate region in $HOME/.kimi-code/config.toml,
 # a firstmate-owned global hook and registry, and a gitignored per-task pointer.
@@ -1138,7 +1140,7 @@ launch_template() {
     # saving while leaving child-session semantics in place, so it is not the chosen
     # firstmate contract. Scoped to this launch line only; non-Claude harnesses and the
     # captain's shell are untouched.
-    claude) printf '%s' 'env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_JOB_DIR CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false claude --dangerously-skip-permissions __MODELFLAG____EFFORTFLAG__"$(__OPINPUT__ encode launch-brief < __BRIEF__)"' ;;
+    claude) printf '%s' 'env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_JOB_DIR CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false __CLAUDELAUNCH__ --dangerously-skip-permissions __MODELFLAG____EFFORTFLAG__"$(__OPINPUT__ encode launch-brief < __BRIEF__)"' ;;
     codex)
       if [ "$kind" = secondmate ]; then
         printf '%s' 'codex __MODELFLAG____EFFORTFLAG__--dangerously-bypass-approvals-and-sandbox "$(__OPINPUT__ encode launch-brief < __BRIEF__)"'
@@ -1305,6 +1307,21 @@ if [ "$KIND" = secondmate ] && [ -z "$ARG3" ]; then
       esac
     fi
   fi
+fi
+
+# Preserve the historical launch bytes when the opt-in is absent.
+# When it is present, the owner resolves both executables and validates the
+# injected token before any worker endpoint is created, then supplies one pinned
+# prefix used unchanged by every backend and by fresh and relaunch paths alike.
+CLAUDE_LAUNCH=claude
+if [ "$HARNESS" = claude ]; then
+  claude_av_rc=0
+  fm_claude_av_prepare_launch "$CONFIG" || claude_av_rc=$?
+  case "$claude_av_rc" in
+    0) CLAUDE_LAUNCH=$FM_CLAUDE_AV_LAUNCH_COMMAND ;;
+    2) ;;
+    *) exit 1 ;;
+  esac
 fi
 
 secondmate_registry_value() {
@@ -2757,6 +2774,7 @@ case "$HARNESS" in
   pi|pi-signed) LAUNCH=${LAUNCH//__PIBIN__/"$(shell_quote "$PI_BIN")"} ;;
   cursor) LAUNCH=${LAUNCH//__CURSORBIN__/"$(shell_quote "$CURSOR_BIN")"} ;;
 esac
+LAUNCH=${LAUNCH//__CLAUDELAUNCH__/$CLAUDE_LAUNCH}
 LAUNCH=${LAUNCH//__WORKTREE__/$sq_worktree}
 case "$HARNESS" in
   claude|codex|opencode|pi|pi-signed|grok|kimi|muse)
