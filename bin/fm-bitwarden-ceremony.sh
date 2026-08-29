@@ -82,10 +82,9 @@ FM_ROOT="$(cd "$SELF_DIR/.." && pwd)"
 FM_HOME="${FM_HOME:-$FM_ROOT}"
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 RECORD_DIR="$DATA/bitwarden"
-LOCK_DIR=''
-LOCK_TOKEN=''
-LOCK_OWNED=0
-TMP_RECORD=''
+IO_HELPER="$SELF_DIR/fm-bitwarden-record-io.py"
+SELF_PATH="$SELF_DIR/fm-bitwarden-ceremony.sh"
+IO_ACTIVE=0
 
 STEPS="preflight approval moved verified retired"
 
@@ -201,101 +200,29 @@ require_label() {
   fi
 }
 
-assert_no_symlink_components() {  # <path>
-  local remaining=$1 prefix='' part
-  case $remaining in
-    /*) prefix=/; remaining=${remaining#/} ;;
-  esac
-  while [ -n "$remaining" ]; do
-    part=${remaining%%/*}
-    remaining=${remaining#"$part"}
-    remaining=${remaining#/}
-    [ -n "$part" ] || continue
-    if [ "$prefix" = / ]; then
-      prefix="/$part"
-    elif [ -n "$prefix" ]; then
-      prefix="$prefix/$part"
-    else
-      prefix=$part
-    fi
-    [ ! -L "$prefix" ] || die 'refused: ceremony record path contains a symbolic link'
-  done
-}
-
-prepare_record_dir() {
-  assert_no_symlink_components "$RECORD_DIR"
-  if [ -e "$RECORD_DIR" ]; then
-    [ -d "$RECORD_DIR" ] || die 'refused: ceremony record directory is not a directory'
-  else
-    mkdir -p "$RECORD_DIR" || die 'could not create ceremony record directory'
-  fi
-  assert_no_symlink_components "$RECORD_DIR"
-  [ -d "$RECORD_DIR" ] || die 'refused: ceremony record directory is not a directory'
-}
-
 record_path() {
-  local path="$RECORD_DIR/$1.ceremony"
-  assert_no_symlink_components "$path"
-  printf '%s' "$path"
-}
-
-release_record_lock() {
-  local owner actual=''
-  [ "$LOCK_OWNED" -eq 1 ] || return 0
-  owner="$LOCK_DIR/owner"
-  if [ -f "$owner" ]; then
-    IFS= read -r actual < "$owner" || true
-    if [ "$actual" = "$LOCK_TOKEN" ]; then
-      rm -f "$owner"
-      rmdir "$LOCK_DIR" 2>/dev/null || true
-    fi
-  elif [ ! -e "$owner" ]; then
-    rmdir "$LOCK_DIR" 2>/dev/null || true
-  fi
-  LOCK_DIR=''
-  LOCK_TOKEN=''
-  LOCK_OWNED=0
-}
-
-cleanup() {
-  if [ -n "$TMP_RECORD" ] && [ -f "$TMP_RECORD" ] && [ ! -L "$TMP_RECORD" ]; then
-    rm -f "$TMP_RECORD"
-  fi
-  release_record_lock
-}
-
-trap cleanup EXIT
-trap 'exit 1' HUP INT TERM
-
-acquire_record_lock() {  # <path> <batch>
-  local path=$1 batch=$2 attempts=0
-  [ -d "$RECORD_DIR" ] || die "no ceremony record for batch '$batch'; run init first"
-  LOCK_DIR="$path.lock"
-  LOCK_TOKEN="$$-${RANDOM:-0}"
-  assert_no_symlink_components "$LOCK_DIR"
-  while ! mkdir "$LOCK_DIR" 2>/dev/null; do
-    [ ! -L "$LOCK_DIR" ] || die 'refused: ceremony record lock path is a symbolic link'
-    attempts=$((attempts + 1))
-    [ "$attempts" -lt 100 ] || die "batch '$batch': ceremony record is busy; retry after the active writer finishes"
-    sleep 0.05
-  done
-  LOCK_OWNED=1
-  if ! printf '%s\n' "$LOCK_TOKEN" > "$LOCK_DIR/owner"; then
-    die "batch '$batch': could not record ceremony lock ownership"
+  if [ "$IO_ACTIVE" = 1 ]; then
+    printf '%s' "$1.ceremony"
+  else
+    printf '%s/%s.ceremony' "$RECORD_DIR" "$1"
   fi
 }
 
-atomic_append_line() {  # <path> <batch> <line>
-  local path=$1 batch=$2 line=$3
-  assert_no_symlink_components "$path"
-  [ -f "$path" ] || die "no ceremony record for batch '$batch'; run init first"
-  TMP_RECORD=$(mktemp "$RECORD_DIR/.$batch.ceremony.XXXXXX") || die "batch '$batch': could not stage ceremony record update"
-  cp "$path" "$TMP_RECORD" || die "batch '$batch': could not stage ceremony record update"
-  printf '%s\n' "$line" >> "$TMP_RECORD" || die "batch '$batch': could not stage ceremony record update"
-  assert_no_symlink_components "$path"
-  [ ! -L "$path" ] || die 'refused: ceremony record destination is a symbolic link'
-  mv -f "$TMP_RECORD" "$path" || die "batch '$batch': could not install ceremony record update"
-  TMP_RECORD=''
+require_io_helper() {
+  command -v python3 >/dev/null 2>&1 || die 'refused: python3 is required for no-follow ceremony record I/O'
+  [ -f "$IO_HELPER" ] || die 'refused: ceremony record I/O helper is unavailable'
+}
+
+run_record_command() {  # <batch> <create-dir:0|1> <lock:0|1> <internal-command> <args...>
+  local batch=$1 create_dir=$2 lock=$3 internal_command=$4
+  shift 4
+  require_io_helper
+  python3 "$IO_HELPER" run "$RECORD_DIR" "$batch" "$create_dir" "$lock" "$SELF_PATH" "$internal_command" "$@"
+}
+
+atomic_append_line() {  # <batch> <line>
+  local batch=$1 line=$2
+  python3 "$IO_HELPER" append "$batch" "$PARSED_RECORD_HASH" "$line"
 }
 
 today() { date -u +%Y-%m-%d; }
@@ -303,8 +230,11 @@ today() { date -u +%Y-%m-%d; }
 # Parse and validate a record. Populates:
 #   PARSED_ITEMS   - newline list of item labels
 #   PARSED_ITEM_COUNT - how many item labels that list holds
+#   PARSED_ITEM_LINES - newline list of complete item records
 #   PARSED_STEPS   - space list of recorded step names, record order
 #   PARSED_APPROVED_BY - approver label when the approval step is recorded
+#   PARSED_CREATED_DATE - created header date
+#   PARSED_LAST_STEP_DATE - latest recorded step date, when present
 # The record must name the batch being read, carry each header exactly once
 # ahead of the body, register no item after the moved step, and record steps as
 # an ordered prefix of $STEPS with no repeat, gap, or trailing step, so every
@@ -312,16 +242,16 @@ today() { date -u +%Y-%m-%d; }
 # from it.
 # Dies with a line NUMBER (never content) on any malformed line.
 parse_record() {
-  local path=$1 batch=$2 lineno=0 line rest name pending=$STEPS expected
+  local batch=$1 stream_fd=$2 lineno=0 line rest name pending=$STEPS expected
   local fields owner collection date_value approver='' defect
   local seen_batch=0 seen_created=0 in_body=0 moved_seen=0 unterminated=0
   local created_date='' prev_step_date='' today_date
   today_date=$(today)
   PARSED_ITEMS=""
   PARSED_ITEM_COUNT=0
+  PARSED_ITEM_LINES=""
   PARSED_STEPS=""
   PARSED_APPROVED_BY=""
-  [ -f "$path" ] || die "no ceremony record for batch '$batch'; run init first"
   while IFS= read -r line || { [ -n "$line" ] && unterminated=1; }; do
     lineno=$((lineno + 1))
     [ "$unterminated" -eq 0 ] || corrupt "$batch" "$lineno" 'final line has no terminating newline, so the record is truncated'
@@ -363,6 +293,7 @@ parse_record() {
           *$'\n'"$name"$'\n'*) corrupt "$batch" "$lineno" 'item label already registered on an earlier line' ;;
         esac
         PARSED_ITEMS="$PARSED_ITEMS$name"$'\n'
+        PARSED_ITEM_LINES="$PARSED_ITEM_LINES$line"$'\n'
         PARSED_ITEM_COUNT=$((PARSED_ITEM_COUNT + 1))
         ;;
       'step: '*)
@@ -409,9 +340,33 @@ parse_record() {
         ;;
       *) corrupt "$batch" "$lineno" 'unrecognized line' ;;
     esac
-  done < "$path"
+  done <&"$stream_fd"
   [ "$seen_batch" -eq 1 ] || die "record for batch '$batch' has no batch header naming the batch it is evidence for; $RECOVERY_HINT"
   [ "$seen_created" -eq 1 ] || die "record for batch '$batch' has no created header; $RECOVERY_HINT"
+  PARSED_CREATED_DATE=$created_date
+  PARSED_LAST_STEP_DATE=$prev_step_date
+}
+
+load_record() {  # <batch>
+  local batch=$1 stream_fd stream_pid protocol
+  require_io_helper
+  coproc BW_RECORD_STREAM { python3 "$IO_HELPER" stream "$batch"; }
+  stream_fd=${BW_RECORD_STREAM[0]}
+  stream_pid=$BW_RECORD_STREAM_PID
+  if ! IFS= read -r protocol <&"$stream_fd"; then
+    wait "$stream_pid" || true
+    return 1
+  fi
+  case $protocol in
+    'fm-bitwarden-snapshot-v1 sha256='*) ;;
+    *) wait "$stream_pid" || true; die 'refused: ceremony record snapshot protocol is invalid' ;;
+  esac
+  PARSED_RECORD_HASH=${protocol#fm-bitwarden-snapshot-v1 sha256=}
+  [ "${#PARSED_RECORD_HASH}" -eq 64 ] || die 'refused: ceremony record snapshot fingerprint is invalid'
+  case $PARSED_RECORD_HASH in *[!A-Fa-f0-9]*) die 'refused: ceremony record snapshot fingerprint is invalid' ;; esac
+  parse_record "$batch" "$stream_fd"
+  exec {stream_fd}<&-
+  wait "$stream_pid" || return 1
 }
 
 step_recorded() {  # <step> - against PARSED_STEPS
@@ -435,33 +390,30 @@ report_next() {
 }
 
 cmd_init() {
-  local batch=$1 path
+  local batch=$1 path stamp rc=0
   require_batch_id "$batch"
-  prepare_record_dir
-  path=$(record_path "$batch")
-  acquire_record_lock "$path" "$batch"
-  assert_no_symlink_components "$path"
-  if [ -e "$path" ] || [ -L "$path" ]; then
-    [ ! -L "$path" ] || die 'refused: ceremony record destination is a symbolic link'
-    parse_record "$path" "$batch"
-    note "batch '$batch' already initialized; nothing to do"
-    return 0
+  if [ "$IO_ACTIVE" != 1 ]; then
+    run_record_command "$batch" 1 1 __io-init "$batch"
+    return
   fi
-  TMP_RECORD=$(mktemp "$RECORD_DIR/.$batch.ceremony.XXXXXX") || die "batch '$batch': could not stage ceremony record creation"
+  path=$(record_path "$batch")
+  stamp=$(today)
   {
     printf 'fm-bitwarden-ceremony v1\n'
     printf 'batch: %s\n' "$batch"
-    printf 'created: %s\n' "$(today)"
-  } > "$TMP_RECORD"
-  assert_no_symlink_components "$path"
-  [ ! -e "$path" ] && [ ! -L "$path" ] || die "batch '$batch': ceremony record appeared during initialization; retry"
-  mv -f "$TMP_RECORD" "$path" || die "batch '$batch': could not install ceremony record"
-  TMP_RECORD=''
-  note "batch '$batch' initialized at $path"
+    printf 'created: %s\n' "$stamp"
+  } | python3 "$IO_HELPER" create "$batch" || rc=$?
+  if [ "$rc" -eq 17 ]; then
+    load_record "$batch"
+    note "batch '$batch' already initialized; nothing to do"
+    return 0
+  fi
+  [ "$rc" -eq 0 ] || return "$rc"
+  note "batch '$batch' initialized at ${FM_BITWARDEN_RECORD_DISPLAY:-$path}"
 }
 
 cmd_add_item() {
-  local batch=$1 label=$2 owner='' collection='' path
+  local batch=$1 label=$2 owner='' collection=''
   shift 2
   while [ $# -gt 0 ]; do
     case $1 in
@@ -474,15 +426,15 @@ cmd_add_item() {
   require_label 'item label' "$label"
   require_label '--owner' "$owner"
   require_label '--collection' "$collection"
-  path=$(record_path "$batch")
-  acquire_record_lock "$path" "$batch"
-  assert_no_symlink_components "$path"
-  parse_record "$path" "$batch"
-  local line="item: $label owner=$owner collection=$collection"
-  if grep -Fqx -- "$line" "$path"; then
-    note "batch '$batch': item '$label' already recorded; nothing to do"
-    return 0
+  if [ "$IO_ACTIVE" != 1 ]; then
+    run_record_command "$batch" 0 1 __io-add-item "$batch" "$label" --owner "$owner" --collection "$collection"
+    return
   fi
+  load_record "$batch"
+  local line="item: $label owner=$owner collection=$collection"
+  case $'\n'"$PARSED_ITEM_LINES" in
+    *$'\n'"$line"$'\n'*) note "batch '$batch': item '$label' already recorded; nothing to do"; return 0 ;;
+  esac
   case $'\n'"$PARSED_ITEMS" in
     *$'\n'"$label"$'\n'*)
       die "batch '$batch': item '$label' already recorded with a different owner/collection; resolve the conflict in the record before continuing" ;;
@@ -490,12 +442,12 @@ cmd_add_item() {
   if step_recorded moved; then
     die "batch '$batch': items cannot be added after the batch is marked moved; start a new batch"
   fi
-  atomic_append_line "$path" "$batch" "$line"
+  atomic_append_line "$batch" "$line"
   note "batch '$batch': item '$label' registered (owner=$owner collection=$collection)"
 }
 
 cmd_mark() {
-  local batch=$1 step=$2 approved_by='' path expected
+  local batch=$1 step=$2 approved_by='' expected stamp
   shift 2
   while [ $# -gt 0 ]; do
     case $1 in
@@ -511,10 +463,15 @@ cmd_mark() {
   else
     [ -z "$approved_by" ] || die "--approved-by is only valid for the approval step"
   fi
-  path=$(record_path "$batch")
-  acquire_record_lock "$path" "$batch"
-  assert_no_symlink_components "$path"
-  parse_record "$path" "$batch"
+  if [ "$IO_ACTIVE" != 1 ]; then
+    if [ "$step" = approval ]; then
+      run_record_command "$batch" 0 1 __io-mark "$batch" "$step" --approved-by "$approved_by"
+    else
+      run_record_command "$batch" 0 1 __io-mark "$batch" "$step"
+    fi
+    return
+  fi
+  load_record "$batch"
   if step_recorded "$step"; then
     if [ "$step" = approval ] && [ "$approved_by" != "$PARSED_APPROVED_BY" ]; then
       die "batch '$batch': approval is already recorded for a different approver; resolve the conflict in the record before continuing"
@@ -531,21 +488,33 @@ cmd_mark() {
   fi
   expected=$(next_step) || die "batch '$batch' is already complete"
   [ "$step" = "$expected" ] || die "batch '$batch': next required step is '$expected', not '$step' (steps in order are: $STEPS)"
-  if [ "$step" = approval ]; then
-    atomic_append_line "$path" "$batch" "step: $step date=$(today) approved-by=$approved_by"
-  else
-    atomic_append_line "$path" "$batch" "step: $step date=$(today)"
+  stamp=$(today)
+  is_date "$stamp" || die 'refused: current UTC date is not a YYYY-MM-DD calendar date'
+  if [ -n "$PARSED_LAST_STEP_DATE" ] && [[ $stamp < $PARSED_LAST_STEP_DATE ]]; then
+    die "batch '$batch': refused to record a step because the current UTC date is earlier than the previous step date"
   fi
-  note "batch '$batch': step '$step' recorded ($(today))"
+  if [[ $stamp < $PARSED_CREATED_DATE ]]; then
+    die "batch '$batch': refused to record a step because the current UTC date is earlier than the batch creation date"
+  fi
+  if [ "$step" = approval ]; then
+    atomic_append_line "$batch" "step: $step date=$stamp approved-by=$approved_by"
+  else
+    atomic_append_line "$batch" "step: $step date=$stamp"
+  fi
+  note "batch '$batch': step '$step' recorded ($stamp)"
 }
 
 cmd_status() {
   local batch=$1 path s marker
   require_batch_id "$batch"
+  if [ "$IO_ACTIVE" != 1 ]; then
+    run_record_command "$batch" 0 0 __io-status "$batch"
+    return
+  fi
   path=$(record_path "$batch")
-  parse_record "$path" "$batch"
+  load_record "$batch"
   printf 'batch: %s\n' "$batch"
-  printf 'record: %s\n' "$path"
+  printf 'record: %s\n' "${FM_BITWARDEN_RECORD_DISPLAY:-$path}"
   printf 'items: %s\n' "$PARSED_ITEM_COUNT"
   for s in $STEPS; do
     if step_recorded "$s"; then marker='x'; else marker=' '; fi
@@ -557,7 +526,11 @@ cmd_status() {
 cmd_check() {
   local batch=$1
   require_batch_id "$batch"
-  parse_record "$(record_path "$batch")" "$batch"
+  if [ "$IO_ACTIVE" != 1 ]; then
+    run_record_command "$batch" 0 0 __io-check "$batch"
+    return
+  fi
+  load_record "$batch"
   report_next
 }
 
@@ -568,5 +541,10 @@ case ${1:-} in
   mark) [ $# -ge 3 ] || die "usage: mark <batch-id> <step> [--approved-by <label>]"; shift; cmd_mark "$@" ;;
   status) [ $# -eq 2 ] || die "usage: status <batch-id>"; cmd_status "$2" ;;
   check) [ $# -eq 2 ] || die "usage: check <batch-id>"; cmd_check "$2" ;;
+  __io-init) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -eq 2 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; cmd_init "$2" ;;
+  __io-add-item) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -ge 3 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; shift; cmd_add_item "$@" ;;
+  __io-mark) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -ge 3 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; shift; cmd_mark "$@" ;;
+  __io-status) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -eq 2 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; cmd_status "$2" ;;
+  __io-check) [ "${FM_BITWARDEN_IO_ACTIVE:-0}" = 1 ] && [ $# -eq 2 ] || die 'refused: invalid internal ceremony invocation'; IO_ACTIVE=1; cmd_check "$2" ;;
   *) die "unknown command; commands are: init add-item mark status check --help" ;;
 esac

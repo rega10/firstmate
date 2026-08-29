@@ -26,6 +26,15 @@ run() {  # <expected-exit> <label> <args...>
   [ "$rc" -eq "$expected" ] || fail "$label: expected exit $expected, got $rc"$'\n'"--- output ---"$'\n'"$OUT"
 }
 
+wait_for_file() {  # <path> <label>
+  local path=$1 label=$2 attempts=0
+  while [ ! -f "$path" ]; do
+    attempts=$((attempts + 1))
+    [ "$attempts" -lt 500 ] || fail "$label"
+    sleep 0.02
+  done
+}
+
 # --- init and malicious batch ids -------------------------------------------
 
 run 0 'init creates a record' init batch-a
@@ -108,6 +117,40 @@ OUT=$(FM_DATA_OVERRIDE="$SYMLINK_ROOT/linked-parent/data" "$CEREMONY" init linke
 [ "$rc" -ne 0 ] || fail 'init accepted a symlinked parent path component'
 assert_contains "$OUT" 'symbolic link' 'symlinked parent component refusal names the path defect'
 [ ! -e "$SYMLINK_ROOT/real-parent/data/bitwarden/linked-parent.ceremony" ] || fail 'init wrote through a symlinked parent path component'
+
+RACE_ROOT="$TMP_ROOT/path-races"
+mkdir -p "$RACE_ROOT/ancestor" "$RACE_ROOT/external/bitwarden"
+printf 'outside ancestor sentinel\n' > "$RACE_ROOT/external/bitwarden/ancestor.ceremony"
+FM_DATA_OVERRIDE="$RACE_ROOT/ancestor/data" "$CEREMONY" init ancestor >/dev/null
+ancestor_marker="$RACE_ROOT/ancestor-pause"
+FM_BITWARDEN_TEST_AFTER_LOCK="$ancestor_marker" FM_DATA_OVERRIDE="$RACE_ROOT/ancestor/data" \
+  "$CEREMONY" mark ancestor preflight > "$RACE_ROOT/ancestor.out" 2>&1 &
+ancestor_writer=$!
+wait_for_file "$ancestor_marker.ready" 'ancestor-swap writer did not reach the locked pause'
+mv "$RACE_ROOT/ancestor/data" "$RACE_ROOT/ancestor/data-stable"
+ln -s "$RACE_ROOT/external" "$RACE_ROOT/ancestor/data"
+: > "$ancestor_marker.go"
+wait "$ancestor_writer" || fail 'ancestor-swap writer did not finish through its stable directory identity'
+[ "$(cat "$RACE_ROOT/external/bitwarden/ancestor.ceremony")" = 'outside ancestor sentinel' ] || fail 'ancestor swap redirected the record write to the external sentinel'
+grep -q '^step: preflight ' "$RACE_ROOT/ancestor/data-stable/bitwarden/ancestor.ceremony" || fail 'ancestor-swap writer did not update the directory it locked'
+rm "$RACE_ROOT/ancestor/data"
+mv "$RACE_ROOT/ancestor/data-stable" "$RACE_ROOT/ancestor/data"
+
+mkdir -p "$RACE_ROOT/destination-data" "$RACE_ROOT/destination-external"
+printf 'outside destination sentinel\n' > "$RACE_ROOT/destination-external/sentinel"
+FM_DATA_OVERRIDE="$RACE_ROOT/destination-data" "$CEREMONY" init destination-race >/dev/null
+destination_marker="$RACE_ROOT/destination-pause"
+FM_BITWARDEN_TEST_BEFORE_REPLACE="$destination_marker" FM_DATA_OVERRIDE="$RACE_ROOT/destination-data" \
+  "$CEREMONY" add-item destination-race prod-db --owner ops --collection prod > "$RACE_ROOT/destination.out" 2>&1 &
+destination_writer=$!
+wait_for_file "$destination_marker.ready" 'destination-swap writer did not reach the replacement pause'
+mv "$RACE_ROOT/destination-data/bitwarden/destination-race.ceremony" "$RACE_ROOT/destination-data/bitwarden/destination-race.saved"
+ln -s "$RACE_ROOT/destination-external/sentinel" "$RACE_ROOT/destination-data/bitwarden/destination-race.ceremony"
+: > "$destination_marker.go"
+wait "$destination_writer" || fail 'destination-swap writer did not finish with relative atomic replacement'
+[ "$(cat "$RACE_ROOT/destination-external/sentinel")" = 'outside destination sentinel' ] || fail 'destination swap changed the external sentinel'
+grep -q '^item: prod-db ' "$RACE_ROOT/destination-data/bitwarden/destination-race.ceremony" || fail 'destination-swap writer did not install the validated record update'
+FM_DATA_OVERRIDE="$RACE_ROOT/destination-data" "$CEREMONY" check destination-race >/dev/null || fail 'destination-swap update left an unreadable record'
 
 # --- secret-shaped input is refused, redacted, and never persisted ----------
 
@@ -270,6 +313,61 @@ done
 [ "$(grep -c '^item: prod-db ' "$CONCURRENT_DATA/bitwarden/retry-item.ceremony")" = 1 ] || fail 'conflicting concurrent item retries recorded duplicate items'
 OUT=$(FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" check retry-item 2>&1) || fail 'conflicting concurrent item retries corrupted the record'
 assert_contains "$OUT" 'next: preflight' 'conflicting retries leave one valid ownership record'
+
+LOCK_DATA="$TMP_ROOT/lock-recovery-data"
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" init killed-writer >/dev/null
+killed_marker="$TMP_ROOT/killed-writer-pause"
+FM_BITWARDEN_TEST_AFTER_LOCK="$killed_marker" FM_DATA_OVERRIDE="$LOCK_DATA" \
+  "$CEREMONY" mark killed-writer preflight > "$TMP_ROOT/killed-writer.out" 2>&1 &
+killed_command=$!
+wait_for_file "$killed_marker.ready" 'hard-kill writer did not acquire its lock'
+killed_owner=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["pid"])' "$LOCK_DATA/bitwarden/killed-writer.ceremony.lock")
+kill -9 "$killed_owner"
+wait "$killed_command" 2>/dev/null && fail 'hard-killed writer command reported success'
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark killed-writer preflight >/dev/null || fail 'retry did not reclaim a positively stale writer lock'
+[ ! -e "$LOCK_DATA/bitwarden/killed-writer.ceremony.lock" ] || fail 'stale writer recovery left the lock behind'
+
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" init live-writer >/dev/null
+live_marker="$TMP_ROOT/live-writer-pause"
+FM_BITWARDEN_TEST_AFTER_LOCK="$live_marker" FM_DATA_OVERRIDE="$LOCK_DATA" \
+  "$CEREMONY" mark live-writer preflight > "$TMP_ROOT/live-writer.out" 2>&1 &
+live_command=$!
+wait_for_file "$live_marker.ready" 'live writer did not acquire its lock'
+rc=0
+OUT=$(FM_BITWARDEN_LOCK_WAIT_SECONDS=0.1 FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark live-writer preflight 2>&1) || rc=$?
+[ "$rc" -ne 0 ] || fail 'a second writer entered while the recorded owner was live'
+assert_contains "$OUT" 'busy' 'live owner exclusion reports bounded contention'
+: > "$live_marker.go"
+wait "$live_command" || fail 'live lock owner did not finish after exclusion test'
+
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" init reused-pid >/dev/null
+reuse_marker="$TMP_ROOT/reused-pid-pause"
+FM_BITWARDEN_TEST_AFTER_LOCK="$reuse_marker" FM_DATA_OVERRIDE="$LOCK_DATA" \
+  "$CEREMONY" mark reused-pid preflight > "$TMP_ROOT/reused-pid.out" 2>&1 &
+reuse_command=$!
+wait_for_file "$reuse_marker.ready" 'PID-reuse owner did not acquire its lock'
+python3 - "$LOCK_DATA/bitwarden/reused-pid.ceremony.lock" <<'PY'
+import json
+import os
+import sys
+
+path = sys.argv[1]
+with open(path, encoding="utf-8") as source:
+    owner = json.load(source)
+owner["process_start"] += "-different"
+temporary = path + ".replacement"
+with open(temporary, "w", encoding="utf-8") as destination:
+    json.dump(owner, destination, separators=(",", ":"), sort_keys=True)
+    destination.write("\n")
+os.replace(temporary, path)
+PY
+rc=0
+OUT=$(FM_BITWARDEN_LOCK_WAIT_SECONDS=0.1 FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark reused-pid preflight 2>&1) || rc=$?
+[ "$rc" -ne 0 ] || fail 'a live PID with mismatched start identity was treated as stale'
+assert_contains "$OUT" 'identity does not match' 'PID-reuse uncertainty names the refusal reason'
+[ -f "$LOCK_DATA/bitwarden/reused-pid.ceremony.lock" ] || fail 'PID-reuse uncertainty stole the existing lock'
+: > "$reuse_marker.go"
+wait "$reuse_command" || fail 'identity-tampered live owner did not finish its record operation'
 
 # --- tampered step histories are refused by every reader --------------------
 
@@ -645,6 +743,41 @@ run 0 'a batch stamped today initializes' init dated-today
 run 0 'a step stamped today records' mark dated-today preflight
 run 0 'a record stamped today reads back' check dated-today
 assert_contains "$OUT" 'next: approval' "today's own stamp is not treated as future"
+
+CLOCK_BIN="$TMP_ROOT/clock-bin"
+mkdir -p "$CLOCK_BIN"
+{
+  printf '%s\n' '#!/usr/bin/env bash'
+  printf '%s\n' 'count=0'
+  printf '%s\n' '[ ! -f "$FM_CLOCK_COUNT" ] || count=$(cat "$FM_CLOCK_COUNT")'
+  printf '%s\n' 'count=$((count + 1))'
+  printf '%s\n' 'printf "%s\n" "$count" > "$FM_CLOCK_COUNT"'
+  printf '%s\n' 'sed -n "${count}p" "$FM_CLOCK_VALUES"'
+} > "$CLOCK_BIN/date"
+chmod +x "$CLOCK_BIN/date"
+
+CLOCK_DATA="$TMP_ROOT/clock-data"
+FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" init midnight >/dev/null
+printf '2026-08-29\n2026-08-30\n' > "$TMP_ROOT/midnight-values"
+rc=0
+OUT=$(PATH="$CLOCK_BIN:$PATH" FM_CLOCK_COUNT="$TMP_ROOT/midnight-count" FM_CLOCK_VALUES="$TMP_ROOT/midnight-values" \
+  FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" mark midnight preflight 2>&1) || rc=$?
+[ "$rc" -eq 0 ] || fail "midnight mark failed: $OUT"
+assert_contains "$OUT" 'recorded (2026-08-30)' 'mark reports the one timestamp captured for the write'
+grep -q '^step: preflight date=2026-08-30$' "$CLOCK_DATA/bitwarden/midnight.ceremony" || fail 'mark persisted a date different from its reported timestamp'
+[ "$(cat "$TMP_ROOT/midnight-count")" = 2 ] || fail 'mark sampled the UTC date more than once after parsing'
+
+FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" init rollback-clock >/dev/null
+FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" mark rollback-clock preflight >/dev/null
+before=$(cat "$CLOCK_DATA/bitwarden/rollback-clock.ceremony")
+printf '2026-08-29\n2026-08-28\n' > "$TMP_ROOT/rollback-values"
+rc=0
+OUT=$(PATH="$CLOCK_BIN:$PATH" FM_CLOCK_COUNT="$TMP_ROOT/rollback-count" FM_CLOCK_VALUES="$TMP_ROOT/rollback-values" \
+  FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" mark rollback-clock approval --approved-by captain 2>&1) || rc=$?
+[ "$rc" -ne 0 ] || fail 'mark accepted a clock rollback before the previous step date'
+assert_contains "$OUT" 'earlier than the previous step date' 'clock rollback refusal names the violated ordering invariant'
+[ "$(cat "$CLOCK_DATA/bitwarden/rollback-clock.ceremony")" = "$before" ] || fail 'clock rollback changed the ceremony record'
+[ "$(cat "$TMP_ROOT/rollback-count")" = 2 ] || fail 'clock rollback path sampled the UTC date after its final validation'
 
 # Repeated dates are legitimate: a whole batch can run within one day.
 {
