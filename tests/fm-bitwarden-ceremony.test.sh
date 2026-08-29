@@ -327,7 +327,7 @@ assert_contains "$OUT" 'next: complete' 'the original record still reports its o
 printf 'fm-bitwarden-ceremony v1\nbatch: hdr-dup\nbatch: hdr-dup\ncreated: 2026-01-01\n' > "$RECORDS/hdr-dup.ceremony"
 run 1 'check refuses a repeated batch header' check hdr-dup
 assert_contains "$OUT" 'corrupt at line 3' 'repeated batch header is reported by line number'
-printf 'fm-bitwarden-ceremony v1\nbatch: hdr-created\ncreated: 2026-01-01\ncreated: 2030-01-01\n' > "$RECORDS/hdr-created.ceremony"
+printf 'fm-bitwarden-ceremony v1\nbatch: hdr-created\ncreated: 2026-01-01\ncreated: 2025-01-01\n' > "$RECORDS/hdr-created.ceremony"
 run 1 'check refuses a repeated created header' check hdr-created
 assert_contains "$OUT" 'corrupt at line 4' 'repeated created header is reported by line number'
 printf 'fm-bitwarden-ceremony v1\ncreated: 2026-01-01\nitem: db owner=ops collection=prod\n' > "$RECORDS/hdr-none.ceremony"
@@ -492,14 +492,14 @@ for bad_date in 2026-02-30 2026-04-31 2025-02-29 2026-00-10 2026-13-01 0000-01-0
   assert_contains "$OUT" 'not a YYYY-MM-DD calendar date' "the impossible date $bad_date is refused as a calendar date"
 done
 # Leap days that did occur stay valid, as does the last day of a short month.
-for good_date in 2024-02-29 2026-02-28 2026-04-30 2026-12-31; do
+for good_date in 2024-02-29 2024-02-28 2024-04-30 2024-12-31; do
   printf 'fm-bitwarden-ceremony v1\nbatch: cal-ok\ncreated: %s\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=%s\n' "$good_date" "$good_date" > "$RECORDS/cal-ok.ceremony"
   run 0 "check accepts the real date $good_date" check cal-ok
   assert_contains "$OUT" 'next: approval' "the record dated $good_date reports its resume point"
 done
 
 # A step cannot have happened before the batch it belongs to was created.
-printf 'fm-bitwarden-ceremony v1\nbatch: date-early\ncreated: 2030-01-01\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=2026-12-31\n' > "$RECORDS/date-early.ceremony"
+printf 'fm-bitwarden-ceremony v1\nbatch: date-early\ncreated: 2025-06-01\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=2025-01-01\n' > "$RECORDS/date-early.ceremony"
 run 1 'check refuses a step dated before the batch was created' check date-early
 assert_contains "$OUT" 'earlier than the created header' 'pre-creation step refusal names the reason'
 
@@ -507,10 +507,10 @@ assert_contains "$OUT" 'earlier than the created header' 'pre-creation step refu
 {
   printf 'fm-bitwarden-ceremony v1\n'
   printf 'batch: date-back\n'
-  printf 'created: 2026-01-01\n'
+  printf 'created: 2024-01-01\n'
   printf 'item: prod-db owner=ops-team collection=prod-infra\n'
-  printf 'step: preflight date=2026-12-31\n'
-  printf 'step: approval date=2026-06-01 approved-by=captain\n'
+  printf 'step: preflight date=2025-06-01\n'
+  printf 'step: approval date=2025-01-01 approved-by=captain\n'
 } > "$RECORDS/date-back.ceremony"
 for cmd in check status; do
   run 1 "$cmd refuses a history whose dates run backwards" "$cmd" date-back
@@ -520,6 +520,55 @@ for cmd in check status; do
 done
 run 1 'mark refuses to advance a backwards history' mark date-back moved
 ! grep -q '^step: moved' "$RECORDS/date-back.ceremony" || fail 'a backwards-dated record was appended to'
+
+# A date this tool could not have stamped is not evidence. mark stamps today,
+# so appending to a future-dated record would write a line its own readers then
+# refuse - the record must be refused before that happens.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: date-future\n'
+  printf 'created: 2026-01-01\n'
+  printf 'item: prod-db owner=ops-team collection=prod-infra\n'
+  printf 'step: preflight date=2099-12-31\n'
+} > "$RECORDS/date-future.ceremony"
+future_before=$(cat "$RECORDS/date-future.ceremony")
+for cmd in check status; do
+  run 1 "$cmd refuses a step dated in the future" "$cmd" date-future
+  assert_contains "$OUT" 'corrupt at line 5' 'future step date is reported by line number'
+  assert_contains "$OUT" 'in the future' 'future step date refusal names the reason'
+  assert_not_contains "$OUT" 'next:' "$cmd reported progress from a future-dated record"
+done
+run 1 'mark refuses to append to a future-dated record' mark date-future approval --approved-by captain
+[ "$(cat "$RECORDS/date-future.ceremony")" = "$future_before" ] || fail 'mark modified a future-dated record instead of refusing it'
+
+printf 'fm-bitwarden-ceremony v1\nbatch: created-future\ncreated: 2099-12-31\n' > "$RECORDS/created-future.ceremony"
+created_before=$(cat "$RECORDS/created-future.ceremony")
+run 1 'check refuses a created header dated in the future' check created-future
+assert_contains "$OUT" 'in the future' 'future created header refusal names the reason'
+run 1 'mark refuses to append under a future created header' mark created-future preflight
+[ "$(cat "$RECORDS/created-future.ceremony")" = "$created_before" ] || fail 'mark modified a record with a future created header'
+
+# A ceremony cannot have been completed on a day that has not happened.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: all-future\n'
+  printf 'created: 2099-12-31\n'
+  printf 'item: prod-db owner=ops-team collection=prod-infra\n'
+  printf 'step: preflight date=2099-12-31\n'
+  printf 'step: approval date=2099-12-31 approved-by=captain\n'
+  printf 'step: moved date=2099-12-31\n'
+  printf 'step: verified date=2099-12-31\n'
+  printf 'step: retired date=2099-12-31\n'
+} > "$RECORDS/all-future.ceremony"
+run 1 'status refuses an entirely future-dated completion record' status all-future
+assert_not_contains "$OUT" 'next: complete' 'a future-dated ceremony was certified as complete'
+
+# A record the tool wrote today is readable by the same rules that refuse the
+# future, so the accepted set is exactly what the writer can produce.
+run 0 'a batch stamped today initializes' init dated-today
+run 0 'a step stamped today records' mark dated-today preflight
+run 0 'a record stamped today reads back' check dated-today
+assert_contains "$OUT" 'next: approval' "today's own stamp is not treated as future"
 
 # Repeated dates are legitimate: a whole batch can run within one day.
 {

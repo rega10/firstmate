@@ -37,9 +37,11 @@
 # copied or renamed to another batch id is refused rather than reported as that
 # batch's evidence. Every line must carry exactly the fields shown above, every
 # label value must be a valid reference label, and every date must be a real
-# YYYY-MM-DD calendar date no earlier than the created header and no earlier
-# than the previous step's date, so the record cannot certify a history the
-# ceremony could not have produced. Every line ends with a newline; a record
+# YYYY-MM-DD calendar date that is not in the future, no earlier than the
+# created header, and no earlier than the previous step's date, so the record
+# cannot certify a history the ceremony could not have produced. The accepted
+# dates are exactly the ones this tool can stamp, so it never appends a line
+# its own readers would then refuse. Every line ends with a newline; a record
 # whose final line does not is treated as truncated and refused, because
 # appending to it would fuse two record lines into one. An item may not be
 # registered after the moved step, and the moved step requires at least one
@@ -208,7 +210,8 @@ parse_record() {
   local path=$1 batch=$2 lineno=0 line rest name pending=$STEPS expected
   local fields owner collection date_value approver='' defect
   local seen_batch=0 seen_created=0 in_body=0 moved_seen=0 unterminated=0
-  local created_date='' prev_step_date=''
+  local created_date='' prev_step_date='' today_date
+  today_date=$(today)
   PARSED_ITEMS=""
   PARSED_ITEM_COUNT=0
   PARSED_STEPS=""
@@ -234,6 +237,9 @@ parse_record() {
         seen_created=1
         created_date=${line#created: }
         is_date "$created_date" || corrupt "$batch" "$lineno" 'created header is not a YYYY-MM-DD calendar date'
+        if [[ $created_date > $today_date ]]; then
+          corrupt "$batch" "$lineno" 'created header is dated in the future, so the batch cannot have been created yet'
+        fi
         ;;
       'item: '*)
         in_body=1
@@ -269,6 +275,9 @@ parse_record() {
           [ "$line" = "step: $name date=$date_value" ] || corrupt "$batch" "$lineno" 'malformed step line'
         fi
         is_date "$date_value" || corrupt "$batch" "$lineno" 'step date is not a YYYY-MM-DD calendar date'
+        if [[ $date_value > $today_date ]]; then
+          corrupt "$batch" "$lineno" 'step date is in the future, so the ceremony cannot have reached it'
+        fi
         if [[ $date_value < $created_date ]]; then
           corrupt "$batch" "$lineno" 'step date is earlier than the created header, so the step predates the batch'
         fi
@@ -359,9 +368,10 @@ cmd_add_item() {
     note "batch '$batch': item '$label' already recorded; nothing to do"
     return 0
   fi
-  if printf '%s\n' "$PARSED_ITEMS" | grep -Fqx -- "$label"; then
-    die "batch '$batch': item '$label' already recorded with a different owner/collection; resolve the conflict in the record before continuing"
-  fi
+  case $'\n'"$PARSED_ITEMS" in
+    *$'\n'"$label"$'\n'*)
+      die "batch '$batch': item '$label' already recorded with a different owner/collection; resolve the conflict in the record before continuing" ;;
+  esac
   if step_recorded moved; then
     die "batch '$batch': items cannot be added after the batch is marked moved; start a new batch"
   fi
