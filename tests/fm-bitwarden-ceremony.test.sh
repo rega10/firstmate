@@ -248,9 +248,9 @@ write_record tamper-approver \
   'step: moved date=2026-01-01' \
   'step: verified date=2026-01-01'
 run 1 'check refuses an approval with an empty approver' check tamper-approver
-assert_contains "$OUT" 'empty approved-by' 'empty-approver refusal names the reason'
+assert_contains "$OUT" 'approved-by is empty' 'empty-approver refusal names the reason'
 run 1 'mark refuses to append to a record whose approval has no approver' mark tamper-approver retired
-assert_contains "$OUT" 'empty approved-by' 'the empty-approver record is refused when read, before any gate on the step itself'
+assert_contains "$OUT" 'approved-by is empty' 'the empty-approver record is refused when read, before any gate on the step itself'
 ! grep -q '^step: retired' "$RECORDS/tamper-approver.ceremony" || fail 'retirement was recorded against an empty approver'
 
 # A hand-edited duplicate item line would double-count the auditable evidence.
@@ -358,6 +358,91 @@ assert_contains "$OUT" 'items: 1' 'a pre-move item registered after preflight is
 
 run 1 'a multi-word step argument is not a step' mark item-mid 'preflight approval'
 assert_contains "$OUT" 'unknown step' 'a run of step names is refused as a step name'
+
+# --- a moved batch must name what it moved -----------------------------------
+
+# mark refuses to record moved with no registered item; a hand-edited record
+# must not turn that into a completed ceremony that names no credential.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: moved-bare\n'
+  printf 'created: 2026-01-01\n'
+  printf 'step: preflight date=2026-01-01\n'
+  printf 'step: approval date=2026-01-01 approved-by=captain\n'
+  printf 'step: moved date=2026-01-01\n'
+} > "$RECORDS/moved-bare.ceremony"
+for cmd in check status; do
+  run 1 "$cmd refuses a move recorded with no registered item" "$cmd" moved-bare
+  assert_contains "$OUT" 'corrupt at line 6' 'itemless move is reported by line number'
+  assert_contains "$OUT" 'no registered item' 'itemless move refusal names the reason'
+  assert_not_contains "$OUT" 'next:' "$cmd reported progress from a move that names nothing"
+done
+run 1 'mark refuses to advance a move that names no item' mark moved-bare verified
+! grep -q '^step: verified' "$RECORDS/moved-bare.ceremony" || fail 'an itemless moved record was advanced'
+
+# --- item and step fields must carry real values -----------------------------
+
+# An empty label made the item count and the moved gate disagree about the same
+# record: status reported items: 0 while mark moved succeeded.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: empty-label\n'
+  printf 'created: 2026-01-01\n'
+  printf 'item:  owner=ops-team collection=prod-infra\n'
+  printf 'step: preflight date=2026-01-01\n'
+  printf 'step: approval date=2026-01-01 approved-by=captain\n'
+} > "$RECORDS/empty-label.ceremony"
+run 1 'status refuses an item line with no label' status empty-label
+assert_contains "$OUT" 'corrupt at line 4' 'empty item label is reported by line number'
+assert_contains "$OUT" 'item label is empty' 'empty item label refusal names the field'
+assert_not_contains "$OUT" 'items:' 'status counted items from a record with an unlabelled item'
+run 1 'mark refuses to record a move against an unlabelled item' mark empty-label moved
+! grep -q '^step: moved' "$RECORDS/empty-label.ceremony" || fail 'a move was recorded against an unlabelled item'
+
+# An item with no owner or collection is not the ownership target the ceremony
+# requires, so it must not carry a batch through to retirement.
+{
+  printf 'fm-bitwarden-ceremony v1\n'
+  printf 'batch: empty-fields\n'
+  printf 'created: 2026-01-01\n'
+  printf 'item: prod-db owner= collection=\n'
+  printf 'step: preflight date=2026-01-01\n'
+} > "$RECORDS/empty-fields.ceremony"
+run 1 'check refuses an item with no owner' check empty-fields
+assert_contains "$OUT" 'item owner is empty' 'empty owner refusal names the field'
+printf 'fm-bitwarden-ceremony v1\nbatch: empty-coll\ncreated: 2026-01-01\nitem: prod-db owner=ops-team collection=\n' > "$RECORDS/empty-coll.ceremony"
+run 1 'check refuses an item with no collection' check empty-coll
+assert_contains "$OUT" 'item collection is empty' 'empty collection refusal names the field'
+
+# A record value that is secret-shaped is refused by the same rule the
+# arguments face, and the refusal still withholds the content.
+printf 'fm-bitwarden-ceremony v1\nbatch: item-secret\ncreated: 2026-01-01\nitem: prod-db owner=ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA collection=prod-infra\n' > "$RECORDS/item-secret.ceremony"
+run 1 'check refuses a secret-shaped owner recorded in the record' check item-secret
+assert_contains "$OUT" 'credential shape' 'secret-shaped record value refusal names the reason'
+assert_not_contains "$OUT" 'ghp_' 'refusal echoed the secret-shaped record value'
+
+# Stray content on a line is not silently ignored.
+printf 'fm-bitwarden-ceremony v1\nbatch: item-extra\ncreated: 2026-01-01\nitem: prod-db owner=ops-team extra=x collection=prod-infra\n' > "$RECORDS/item-extra.ceremony"
+run 1 'check refuses an item line carrying unknown fields' check item-extra
+assert_contains "$OUT" 'malformed item line' 'unknown item field is refused as malformed'
+
+# Dates are the record's own evidence of when each gate was passed.
+printf 'fm-bitwarden-ceremony v1\nbatch: no-date\ncreated: 2026-01-01\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=\n' > "$RECORDS/no-date.ceremony"
+run 1 'check refuses a step with an empty date' check no-date
+assert_contains "$OUT" 'not a YYYY-MM-DD date' 'empty step date refusal names the expected shape'
+printf 'fm-bitwarden-ceremony v1\nbatch: bad-created\ncreated: sometime\n' > "$RECORDS/bad-created.ceremony"
+run 1 'check refuses a created header that is not a date' check bad-created
+assert_contains "$OUT" 'corrupt at line 3' 'malformed created header is reported by line number'
+
+# The records this tool writes itself stay readable throughout.
+run 0 'a tool-written batch initializes' init fields-ok
+run 0 'a tool-written item registers' add-item fields-ok prod-db --owner ops-team --collection prod-infra
+run 0 'a tool-written batch reaches the move' mark fields-ok preflight
+run 0 'a tool-written approval records' mark fields-ok approval --approved-by captain
+run 0 'a tool-written move records' mark fields-ok moved
+run 0 'a tool-written record still reads back' status fields-ok
+assert_contains "$OUT" 'items: 1' 'the tool-written record reports its registered item'
+assert_contains "$OUT" 'next: verified' 'the tool-written record reports its true resume point'
 
 # --- corrupt records are reported by line number, content withheld ----------
 

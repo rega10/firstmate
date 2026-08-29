@@ -35,8 +35,11 @@
 # The batch and created headers appear exactly once each, before any item or
 # step line, and the batch header must name the batch being read - a record
 # copied or renamed to another batch id is refused rather than reported as that
-# batch's evidence. An item may not be registered after the moved step, the
-# same rule `add-item` applies when it writes.
+# batch's evidence. Every line must carry exactly the fields shown above, every
+# label value must be a valid reference label, and every date must be a
+# YYYY-MM-DD date. An item may not be registered after the moved step, and the
+# moved step requires at least one item already registered - the same rules
+# `add-item` and `mark` apply when they write.
 #
 # Steps are batch-level and strictly ordered:
 #   preflight -> approval -> moved -> verified -> retired
@@ -92,15 +95,49 @@ usage() {
   awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
 }
 
+# Prints why $1 looks like secret material and returns 0; returns 1 when it
+# does not. The reason never contains the value (see the safety contract).
+secret_shape_defect() {
+  case $1 in
+    ghp_*|github_pat_*|sk-*|xox*|AKIA*|glpat-*|eyJ*) printf 'matches a well-known credential shape'; return 0 ;;
+  esac
+  if printf '%s' "$1" | grep -Eq -- '[A-Fa-f0-9]{32}'; then
+    printf 'contains a long hexadecimal run'
+    return 0
+  fi
+  return 1
+}
+
+# Prints why $1 is not a usable reference label and returns 0; returns 1 when it
+# is one. Sole definition of a label, shared by the arguments this tool accepts
+# and the values it reads back out of a record.
+label_defect() {
+  case $1 in
+    '') printf 'is empty'; return 0 ;;
+  esac
+  if [ ${#1} -gt 64 ]; then
+    printf 'is too long for a reference label (max 64)'
+    return 0
+  fi
+  case $1 in
+    *[!A-Za-z0-9._@/-]*) printf 'contains characters outside A-Za-z0-9 . _ @ / -'; return 0 ;;
+  esac
+  secret_shape_defect "$1"
+}
+
+is_date() {  # <value> - the YYYY-MM-DD shape every record date uses
+  case $1 in
+    [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) return 0 ;;
+  esac
+  return 1
+}
+
 # Secret-shape refusals shared by every free-text argument. $1=field-name
 # $2=value; on refusal, dies naming only the field, never the value.
 refuse_secret_shape() {
-  local field=$1 value=$2
-  case $value in
-    ghp_*|github_pat_*|sk-*|xox*|AKIA*|glpat-*|eyJ*) die "refused: value for $field matches a well-known credential shape; secret values must never be passed to this tool" ;;
-  esac
-  if printf '%s' "$value" | grep -Eq -- '[A-Fa-f0-9]{32}'; then
-    die "refused: value for $field contains a long hexadecimal run; secret values must never be passed to this tool"
+  local field=$1 defect
+  if defect=$(secret_shape_defect "$2"); then
+    die "refused: value for $field $defect; secret values must never be passed to this tool"
   fi
 }
 
@@ -123,13 +160,11 @@ require_batch_id() {
 # material WITHOUT echoing it (see the safety contract above).
 # $1=field-name $2=value; on refusal, dies naming only the field.
 require_label() {
-  local field=$1 value=$2
-  [ -n "$value" ] || die "refused: $field is empty; pass a short reference label"
-  [ ${#value} -le 64 ] || die "refused: value for $field is too long for a reference label (max 64); secret values must never be passed to this tool"
-  case $value in
-    *[!A-Za-z0-9._@/-]*) die "refused: value for $field contains characters outside A-Za-z0-9 . _ @ / -; secret values must never be passed to this tool" ;;
-  esac
-  refuse_secret_shape "$field" "$value"
+  local field=$1 value=$2 defect
+  if defect=$(label_defect "$value"); then
+    [ -n "$value" ] || die "refused: $field is empty; pass a short reference label"
+    die "refused: value for $field $defect; secret values must never be passed to this tool"
+  fi
 }
 
 record_path() { printf '%s/%s.ceremony' "$RECORD_DIR" "$1"; }
@@ -148,6 +183,7 @@ today() { date -u +%Y-%m-%d; }
 # Dies with a line NUMBER (never content) on any malformed line.
 parse_record() {
   local path=$1 batch=$2 lineno=0 line rest name pending=$STEPS expected
+  local fields owner collection date_value approver='' defect
   local seen_batch=0 seen_created=0 in_body=0 moved_seen=0
   PARSED_ITEMS=""
   PARSED_STEPS=""
@@ -170,16 +206,21 @@ parse_record() {
         [ "$in_body" -eq 0 ] || corrupt "$batch" "$lineno" 'created header after the record body'
         [ "$seen_created" -eq 0 ] || corrupt "$batch" "$lineno" 'repeated created header'
         seen_created=1
+        is_date "${line#created: }" || corrupt "$batch" "$lineno" 'created header is not a YYYY-MM-DD date'
         ;;
       'item: '*)
         in_body=1
         [ "$moved_seen" -eq 0 ] || corrupt "$batch" "$lineno" 'item registered after the batch was marked moved'
         rest=${line#item: }
-        case $rest in
-          *' owner='*' collection='*) ;;
-          *) corrupt "$batch" "$lineno" 'malformed item line' ;;
-        esac
         name=${rest%% *}
+        if defect=$(label_defect "$name"); then corrupt "$batch" "$lineno" "item label $defect"; fi
+        fields=${rest#"$name" }
+        owner=${fields#owner=}
+        owner=${owner%% *}
+        collection=${fields##*collection=}
+        [ "$line" = "item: $name owner=$owner collection=$collection" ] || corrupt "$batch" "$lineno" 'malformed item line'
+        if defect=$(label_defect "$owner"); then corrupt "$batch" "$lineno" "item owner $defect"; fi
+        if defect=$(label_defect "$collection"); then corrupt "$batch" "$lineno" "item collection $defect"; fi
         case $'\n'"$PARSED_ITEMS" in
           *$'\n'"$name"$'\n'*) corrupt "$batch" "$lineno" 'item label already registered on an earlier line' ;;
         esac
@@ -190,10 +231,16 @@ parse_record() {
         rest=${line#step: }
         name=${rest%% *}
         is_step "$name" || corrupt "$batch" "$lineno" 'unknown step'
-        case $rest in
-          *' date='*) ;;
-          *) corrupt "$batch" "$lineno" 'step line has no date' ;;
-        esac
+        fields=${rest#"$name" }
+        date_value=${fields#date=}
+        date_value=${date_value%% *}
+        if [ "$name" = approval ]; then
+          approver=${fields##* approved-by=}
+          [ "$line" = "step: $name date=$date_value approved-by=$approver" ] || corrupt "$batch" "$lineno" 'malformed approval step line'
+        else
+          [ "$line" = "step: $name date=$date_value" ] || corrupt "$batch" "$lineno" 'malformed step line'
+        fi
+        is_date "$date_value" || corrupt "$batch" "$lineno" 'step date is not a YYYY-MM-DD date'
         expected=${pending%% *}
         [ -n "$expected" ] || corrupt "$batch" "$lineno" 'step recorded after the ceremony is already complete'
         [ "$name" = "$expected" ] || corrupt "$batch" "$lineno" "steps out of order, expected '$expected' at this point"
@@ -202,13 +249,13 @@ parse_record() {
           *) pending='' ;;
         esac
         if [ "$name" = approval ]; then
-          case $rest in
-            *' approved-by='*) PARSED_APPROVED_BY=${rest##* approved-by=} ;;
-            *) corrupt "$batch" "$lineno" 'approval step has no approved-by' ;;
-          esac
-          [ -n "$PARSED_APPROVED_BY" ] || corrupt "$batch" "$lineno" 'approval step has an empty approved-by'
+          if defect=$(label_defect "$approver"); then corrupt "$batch" "$lineno" "approval approved-by $defect"; fi
+          PARSED_APPROVED_BY=$approver
         fi
-        if [ "$name" = moved ]; then moved_seen=1; fi
+        if [ "$name" = moved ]; then
+          [ -n "$PARSED_ITEMS" ] || corrupt "$batch" "$lineno" 'batch marked moved with no registered item, so the record names no ownership or collection target'
+          moved_seen=1
+        fi
         PARSED_STEPS="$PARSED_STEPS$name "
         ;;
       *) corrupt "$batch" "$lineno" 'unrecognized line' ;;
