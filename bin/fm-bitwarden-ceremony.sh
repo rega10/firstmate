@@ -62,7 +62,19 @@ die() { printf 'fm-bitwarden-ceremony: %s\n' "$*" >&2; exit 1; }
 note() { printf 'fm-bitwarden-ceremony: %s\n' "$*"; }
 
 usage() {
-  sed -n '2,50p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
+}
+
+# Secret-shape refusals shared by every free-text argument. $1=field-name
+# $2=value; on refusal, dies naming only the field, never the value.
+refuse_secret_shape() {
+  local field=$1 value=$2
+  case $value in
+    ghp_*|github_pat_*|sk-*|xox*|AKIA*|glpat-*|eyJ*) die "refused: value for $field matches a well-known credential shape; secret values must never be passed to this tool" ;;
+  esac
+  if printf '%s' "$value" | grep -Eq -- '[A-Fa-f0-9]{32}'; then
+    die "refused: value for $field contains a long hexadecimal run; secret values must never be passed to this tool"
+  fi
 }
 
 # A batch id is a filename component; anything else risks path traversal.
@@ -71,6 +83,13 @@ valid_batch_id() {
     *[!a-z0-9-]*|-*|'') return 1 ;;
   esac
   [ ${#1} -le 64 ]
+}
+
+# A batch id is persisted as a filename and echoed in progress messages, so it
+# faces the same secret-shape refusals as a label.
+require_batch_id() {
+  valid_batch_id "$1" || die "refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)"
+  refuse_secret_shape 'batch id' "$1"
 }
 
 # Labels are short human references. Refuse anything shaped like secret
@@ -82,11 +101,8 @@ require_label() {
   [ ${#value} -le 64 ] || die "refused: value for $field is too long for a reference label (max 64); secret values must never be passed to this tool"
   case $value in
     *[!A-Za-z0-9._@/-]*) die "refused: value for $field contains characters outside A-Za-z0-9 . _ @ / -; secret values must never be passed to this tool" ;;
-    ghp_*|github_pat_*|sk-*|xox*|AKIA*|glpat-*|eyJ*) die "refused: value for $field matches a well-known credential shape; secret values must never be passed to this tool" ;;
   esac
-  if printf '%s' "$value" | grep -Eq '[A-Fa-f0-9]{32}'; then
-    die "refused: value for $field contains a long hexadecimal run; secret values must never be passed to this tool"
-  fi
+  refuse_secret_shape "$field" "$value"
 }
 
 record_path() { printf '%s/%s.ceremony' "$RECORD_DIR" "$1"; }
@@ -160,7 +176,7 @@ next_step() {  # first unrecorded step in order, or nothing when complete
 
 cmd_init() {
   local batch=$1 path
-  valid_batch_id "$batch" || die "refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)"
+  require_batch_id "$batch"
   path=$(record_path "$batch")
   if [ -f "$path" ]; then
     parse_record "$path" "$batch"
@@ -186,18 +202,18 @@ cmd_add_item() {
       *) die "unknown add-item argument (see --help)" ;;
     esac
   done
-  valid_batch_id "$batch" || die "refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)"
+  require_batch_id "$batch"
   require_label 'item label' "$label"
   require_label '--owner' "$owner"
   require_label '--collection' "$collection"
   path=$(record_path "$batch")
   parse_record "$path" "$batch"
   local line="item: $label owner=$owner collection=$collection"
-  if grep -Fqx "$line" "$path"; then
+  if grep -Fqx -- "$line" "$path"; then
     note "batch '$batch': item '$label' already recorded; nothing to do"
     return 0
   fi
-  if printf '%s\n' "$PARSED_ITEMS" | grep -Fqx "$label"; then
+  if printf '%s\n' "$PARSED_ITEMS" | grep -Fqx -- "$label"; then
     die "batch '$batch': item '$label' already recorded with a different owner/collection; resolve the conflict in the record before continuing"
   fi
   if step_recorded moved; then
@@ -216,7 +232,7 @@ cmd_mark() {
       *) die "unknown mark argument (see --help)" ;;
     esac
   done
-  valid_batch_id "$batch" || die "refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)"
+  require_batch_id "$batch"
   case " $STEPS " in
     *" $step "*) ;;
     *) die "unknown step; steps in order are: $STEPS" ;;
@@ -252,12 +268,12 @@ cmd_mark() {
 
 cmd_status() {
   local batch=$1 path s marker
-  valid_batch_id "$batch" || die "refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)"
+  require_batch_id "$batch"
   path=$(record_path "$batch")
   parse_record "$path" "$batch"
   printf 'batch: %s\n' "$batch"
   printf 'record: %s\n' "$path"
-  printf 'items: %s\n' "$(printf '%s' "$PARSED_ITEMS" | grep -c . || true)"
+  printf 'items: %s\n' "$(printf '%s' "$PARSED_ITEMS" | grep -c -- . || true)"
   for s in $STEPS; do
     if step_recorded "$s"; then marker='x'; else marker=' '; fi
     printf '  [%s] %s\n' "$marker" "$s"
@@ -271,7 +287,7 @@ cmd_status() {
 
 cmd_check() {
   local batch=$1
-  valid_batch_id "$batch" || die "refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)"
+  require_batch_id "$batch"
   parse_record "$(record_path "$batch")" "$batch"
   if next_step >/dev/null; then
     printf 'next: %s\n' "$(next_step)"
@@ -287,5 +303,5 @@ case ${1:-} in
   mark) [ $# -ge 3 ] || die "usage: mark <batch-id> <step> [--approved-by <label>]"; shift; cmd_mark "$@" ;;
   status) [ $# -eq 2 ] || die "usage: status <batch-id>"; cmd_status "$2" ;;
   check) [ $# -eq 2 ] || die "usage: check <batch-id>"; cmd_check "$2" ;;
-  *) die "unknown command '$1' (see --help)" ;;
+  *) die "unknown command; commands are: init add-item mark status check --help" ;;
 esac

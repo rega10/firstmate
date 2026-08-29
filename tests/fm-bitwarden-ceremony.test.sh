@@ -39,6 +39,41 @@ for bad in '../evil' 'a/b' 'a b' 'UPPER' '-lead' '' '$(touch x)'; do
   OUT=$("$CEREMONY" init "$bad" 2>&1) || rc=$?
   [ "$rc" -ne 0 ] || fail "malicious batch id was accepted: '$bad'"
 done
+# A secret-shaped batch id faces the same refusals as a label: it is persisted
+# as a filename and echoed in progress messages.
+SECRET_BATCH_IDS=(
+  'glpat-xxxxxxxxxxxxxxxxxxxx'
+  'sk-proj-abcdef'
+  'xoxb-1234-abcd'
+  'deadbeefdeadbeefdeadbeefdeadbeef'
+)
+for secret in "${SECRET_BATCH_IDS[@]}"; do
+  for cmd in init status check; do
+    rc=0
+    OUT=$("$CEREMONY" "$cmd" "$secret" 2>&1) || rc=$?
+    [ "$rc" -ne 0 ] || fail "secret-shaped batch id was accepted by $cmd: shape $(printf '%.4s' "$secret")..."
+    case $OUT in
+      *"$secret"*) fail "$cmd refusal output echoed the secret-shaped batch id" ;;
+    esac
+    assert_contains "$OUT" 'refused' "$cmd refuses a secret-shaped batch id with a redacted message"
+  done
+  rc=0
+  OUT=$("$CEREMONY" add-item "$secret" item-x --owner ops --collection team 2>&1) || rc=$?
+  [ "$rc" -ne 0 ] || fail 'secret-shaped batch id was accepted by add-item'
+  case $OUT in
+    *"$secret"*) fail 'add-item refusal output echoed the secret-shaped batch id' ;;
+  esac
+  assert_absent "$RECORDS/$secret.ceremony" 'a refused secret-shaped batch id created a record file'
+done
+
+# The dispatcher must not log an argument it has not validated.
+rc=0
+OUT=$("$CEREMONY" 'ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' 2>&1) || rc=$?
+[ "$rc" -ne 0 ] || fail 'unknown command was accepted'
+case $OUT in
+  *ghp_*) fail 'unknown-command diagnostic echoed the raw argument' ;;
+esac
+
 [ ! -e "$TMP_ROOT/data/evil.ceremony" ] || fail 'traversal id escaped the record dir'
 [ ! -e "$RECORDS/x" ] || fail 'metacharacter id executed or created a file'
 found=$(find "$TMP_ROOT" -name '*.ceremony' | wc -l | tr -d ' ')
@@ -80,6 +115,18 @@ run 0 'item registers with owner and collection' add-item batch-a prod-db --owne
 run 0 'identical add-item is an idempotent no-op' add-item batch-a prod-db --owner ops-team --collection prod-infra
 [ "$(grep -c '^item: prod-db ' "$RECORDS/batch-a.ceremony")" = 1 ] || fail 'idempotent add-item duplicated the item line'
 run 1 'conflicting re-add of the same label is refused' add-item batch-a prod-db --owner other --collection prod-infra
+
+# A leading-dash label must reach the conflict guard as a pattern, not as
+# options to the command that implements it.
+run 0 'dash-leading batch initializes' init batch-dash
+run 0 'dash-leading item registers' add-item batch-dash -dash-item --owner ops --collection team
+assert_not_contains "$OUT" 'grep:' 'dash-leading label was parsed as command options'
+run 0 'identical dash-leading re-add is an idempotent no-op' add-item batch-dash -dash-item --owner ops --collection team
+run 1 'conflicting dash-leading re-add is refused' add-item batch-dash -dash-item --owner other --collection team
+assert_contains "$OUT" 'different owner/collection' 'dash-leading conflict names the reason'
+[ "$(grep -Fc -- 'item: -dash-item ' "$RECORDS/batch-dash.ceremony")" = 1 ] || fail 'conflicting dash-leading item was appended anyway'
+run 0 'dash-leading batch status counts one item' status batch-dash
+assert_contains "$OUT" 'items: 1' 'dash-leading batch reports one registered item'
 
 run 1 'retirement is refused before any earlier step' mark batch-a retired
 ! grep -q '^step: retired' "$RECORDS/batch-a.ceremony" || fail 'refused retirement was recorded anyway'
@@ -135,5 +182,13 @@ printf 'something else\n' > "$RECORDS/batch-alien.ceremony"
 run 1 'foreign file is not treated as a ceremony record' check batch-alien
 run 1 'missing record demands init' check batch-none
 assert_contains "$OUT" 'run init first' 'missing record points at init'
+
+# --- --help publishes the record-format contract, not shell source ----------
+
+run 0 'help renders the header contract' --help
+assert_contains "$OUT" 'Record format (v1, line-based, append-only):' 'help publishes the record format'
+assert_contains "$OUT" 'preflight -> approval -> moved -> verified -> retired' 'help publishes the ordered steps'
+assert_not_contains "$OUT" 'set -eu' 'help leaked shell source past the header'
+[ "$(printf '%s\n' "$OUT" | tail -n 1)" = 'which is the recovery entry point after an interruption.' ] || fail 'help output does not end with the final header sentence'
 
 pass 'fm-bitwarden-ceremony behavior'
