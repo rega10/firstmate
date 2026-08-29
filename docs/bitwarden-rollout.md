@@ -93,7 +93,7 @@ Every batch follows the same ordered ceremony, and its auditable no-secret recor
 8. **Record**: the completed batch record (labels, owners, collections, dates, approver - never values) is the completion evidence.
 
 The record tool refuses to mark retirement before verification and recorded approval, so a batch cannot skip its own safety order.
-It also refuses to read a record whose steps are repeated, skipped, or out of order, so a tampered or hand-edited history is never reported as progress.
+It also refuses to read any record it cannot fully validate - a hand-edited, truncated, or misfiled history is never reported as progress - and its `--help` owns the exact record rules.
 When a record is refused, correct it back to its last valid prefix (delete only the trailing lines that are not yet true) or quarantine it outside the record directory and start a new batch; never edit it into a shape that merely satisfies the tool.
 
 ## Encrypted export and recovery drills

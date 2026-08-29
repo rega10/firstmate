@@ -43,10 +43,10 @@
 # dates are exactly the ones this tool can stamp, so it never appends a line
 # its own readers would then refuse. Every line ends with a newline; a record
 # whose final line does not is treated as truncated and refused, because
-# appending to it would fuse two record lines into one. An item may not be
-# registered after the moved step, and the moved step requires at least one
-# item already registered - the same rules `add-item` and `mark` apply when
-# they write.
+# appending to it would fuse two record lines into one. An item label may be
+# registered at most once and never after the moved step, and the moved step
+# requires at least one item already registered - the same rules `add-item`
+# and `mark` apply when they write.
 #
 # Steps are batch-level and strictly ordered:
 #   preflight -> approval -> moved -> verified -> retired
@@ -64,9 +64,13 @@
 #   - retired is the destructive gate: it is refused unless verified is marked
 #     AND an approval line with approved-by exists, so old-custody retirement
 #     can never be recorded before post-move verification and captain approval.
-# Every command is idempotent: re-running init on an initialized batch,
-# re-adding an identical item, or re-marking a recorded step is a no-op
-# success, so an interrupted ceremony can be resumed by replaying commands.
+# Replaying a command with the same arguments is idempotent: re-running init on
+# an initialized batch, re-adding an identical item, or re-marking a recorded
+# step is a no-op success, so an interrupted ceremony can be resumed by
+# replaying commands. A replay whose arguments contradict the record - another
+# owner or collection for a registered item, another --approved-by for a
+# recorded approval - is refused naming the conflicting field instead, so a
+# replay is never reported as success while the evidence says something else.
 # `check` re-validates any partial record and prints the next required step,
 # which is the recovery entry point after an interruption.
 set -eu
