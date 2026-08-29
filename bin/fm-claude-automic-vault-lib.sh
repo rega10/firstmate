@@ -9,8 +9,9 @@
 #   - the concrete `av` and `claude` executables are resolved once before
 #     endpoint creation, canonicalized through symlinks, and kept as absolute
 #     paths in the launch command;
-#   - an Automic Vault wrapper masquerading as Claude is refused before either
-#     preflight or launch, preventing `av inject ... claude` recursion;
+#   - the resolved Claude executable must produce Claude Code's structured auth
+#     status from an isolated empty home and restricted PATH before any Vault
+#     command can run;
 #   - the token value enters only the Claude process environment through
 #     `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`;
 #   - higher-precedence API-key, cloud-provider, and endpoint overrides are
@@ -35,6 +36,7 @@ FM_CLAUDE_AV_SETTINGS='{"apiKeyHelper":null,"env":{"ANTHROPIC_API_KEY":null,"ANT
 FM_CLAUDE_AV_ERROR=
 FM_CLAUDE_AV_BIN=
 FM_CLAUDE_BIN=
+FM_CLAUDE_AV_LAUNCH_RELAY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-claude-automic-vault-launch.sh"
 # shellcheck disable=SC2034 # Consumed by callers after fm_claude_av_prepare_launch returns.
 FM_CLAUDE_AV_LAUNCH_COMMAND=
 
@@ -123,15 +125,32 @@ fm_claude_av_resolve_named_executable() {  # <name>
   fm_claude_av_realpath "$candidate"
 }
 
-fm_claude_av_is_injecting_wrapper() {  # <resolved-claude>
-  local executable=$1 first
-  IFS= read -r first < "$executable" 2>/dev/null || return 1
-  case "$first" in
-    '#!'*) ;;
-    *) return 1 ;;
-  esac
-  LC_ALL=C sed -n '1,120p' "$executable" 2>/dev/null \
-    | grep -aEq '(^|[[:space:];|&])([^[:space:];|&]*/)?av[[:space:]]+inject([[:space:]]|$)'
+fm_claude_av_probe_identity() {  # <resolved-claude>
+  local executable=$1 probe_root output rc=0
+  command -v jq >/dev/null 2>&1 || {
+    printf 'error: Claude Automic Vault authentication requires jq for redacted authentication validation.\n' >&2
+    return 1
+  }
+  probe_root=$(mktemp -d "${TMPDIR:-/tmp}/fm-claude-av.identity.XXXXXX" 2>/dev/null) || {
+    printf 'error: could not create the private temporary directory required to identify Claude Code.\n' >&2
+    return 1
+  }
+  mkdir -p "$probe_root/config" || {
+    fm_claude_av_remove_probe_root "$probe_root"
+    printf 'error: could not initialize the private temporary directory required to identify Claude Code.\n' >&2
+    return 1
+  }
+  output=$(fm_run_timed 10 \
+    env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin HOME="$probe_root" \
+      CLAUDE_CONFIG_DIR="$probe_root/config" CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 \
+      "$executable" --settings "$FM_CLAUDE_AV_SETTINGS" auth status --json 2>&1) || rc=$?
+  fm_claude_av_remove_probe_root "$probe_root"
+  if { [ "$rc" -ne 0 ] && [ "$rc" -ne 1 ]; } || ! printf '%s' "$output" | jq -e \
+    '(.loggedIn | type == "boolean") and (.authMethod | type == "string") and .apiProvider == "firstParty"' \
+    >/dev/null 2>&1; then
+    printf 'error: refusing Claude Automic Vault authentication because the resolved claude executable could not be positively identified as the standalone Claude Code CLI; restore the real Claude Code executable on PATH before retrying.\n' >&2
+    return 1
+  fi
 }
 
 fm_claude_av_resolve_tools() {
@@ -143,10 +162,15 @@ fm_claude_av_resolve_tools() {
     printf 'error: Claude Automic Vault authentication is enabled, but claude is unavailable; install or repair Claude Code, then run bin/fm-claude-automic-vault.sh preflight.\n' >&2
     return 1
   }
-  if [ "$FM_CLAUDE_AV_BIN" = "$FM_CLAUDE_BIN" ] || fm_claude_av_is_injecting_wrapper "$FM_CLAUDE_BIN"; then
-    printf 'error: refusing Claude Automic Vault authentication because the resolved claude executable is an Automic Vault injection wrapper; restore the real Claude Code executable on PATH before retrying.\n' >&2
+  if [ "$FM_CLAUDE_AV_BIN" = "$FM_CLAUDE_BIN" ]; then
+    printf 'error: refusing Claude Automic Vault authentication because av and claude resolve to the same executable; restore the real Claude Code executable on PATH before retrying.\n' >&2
     return 1
   fi
+  [ -x "$FM_CLAUDE_AV_LAUNCH_RELAY" ] || {
+    printf 'error: the tracked Claude Automic Vault launch relay is unavailable: %s\n' "$FM_CLAUDE_AV_LAUNCH_RELAY" >&2
+    return 1
+  }
+  fm_claude_av_probe_identity "$FM_CLAUDE_BIN"
 }
 
 fm_claude_av_probe_tools() {
@@ -298,11 +322,12 @@ fm_claude_av_shell_quote() {
 }
 
 fm_claude_av_build_launch_command() {
-  local av_q claude_q settings_q
+  local relay_q av_q claude_q settings_q
+  relay_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_LAUNCH_RELAY")
   av_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_BIN")
   claude_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_BIN")
   settings_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_SETTINGS")
-  printf '%s' "env -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_BASE_URL -u ANTHROPIC_BEDROCK_BASE_URL -u ANTHROPIC_VERTEX_BASE_URL -u ANTHROPIC_FOUNDRY_BASE_URL -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX -u CLAUDE_CODE_USE_FOUNDRY -u AWS_BEARER_TOKEN_BEDROCK CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 $av_q inject --replace-existing-env +$FM_CLAUDE_AV_SECRET_NAME -- $claude_q --settings $settings_q"
+  printf '%s' "env -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_BASE_URL -u ANTHROPIC_BEDROCK_BASE_URL -u ANTHROPIC_VERTEX_BASE_URL -u ANTHROPIC_FOUNDRY_BASE_URL -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX -u CLAUDE_CODE_USE_FOUNDRY -u AWS_BEARER_TOKEN_BEDROCK CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 $relay_q $av_q $claude_q $settings_q"
 }
 
 # Returns 0 with FM_CLAUDE_AV_LAUNCH_COMMAND set for an enabled, authenticated

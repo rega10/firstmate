@@ -53,6 +53,15 @@ shift
 printf 'inject' >> "$state/av-argv.log"
 for arg in "$@"; do printf ' <%s>' "$arg" >> "$state/av-argv.log"; done
 printf '\n' >> "$state/av-argv.log"
+count_file="$state/av-inject-count"
+count=0
+[ ! -f "$count_file" ] || count=$(cat "$count_file")
+count=$((count + 1))
+printf '%s\n' "$count" > "$count_file"
+if [ "${FM_FAKE_AV_FAIL_AT:-0}" = "$count" ]; then
+  printf 'Vault unavailable: failed to connect %s\n' "${FM_FAKE_SECRET:?}" >&2
+  exit 43
+fi
 case "${FM_FAKE_AV_MODE:-ok}" in
   denied) printf 'Secret Gate access denied\n' >&2; exit 41 ;;
   missing) printf 'CLAUDE_CODE_OAUTH_TOKEN not found\n' >&2; exit 42 ;;
@@ -68,6 +77,14 @@ SH
   cat > "$fakebin/claude" <<'SH'
 #!/usr/bin/env bash
 set -u
+if [ -z "${FM_FAKE_STATE:-}" ]; then
+  case " $* " in
+    *" auth status --json "*|*" auth status --json")
+      printf '%s\n' '{"loggedIn":false,"authMethod":"none","apiProvider":"firstParty"}'
+      exit 1
+      ;;
+  esac
+fi
 state=${FM_FAKE_STATE:?}
 if [ "${1:-}" = --help ]; then
   if [ "${FM_FAKE_CLAUDE_HELP_MODE:-current}" = old ]; then
@@ -115,6 +132,11 @@ case " $* " in
     exit 0
     ;;
 esac
+if [ "${FM_FAKE_CLAUDE_MODE:-ok}" = interactive ]; then
+  IFS= read -r reply || exit 51
+  printf 'interactive stdout: %s\n' "$reply"
+  printf 'interactive stderr: authenticated\n' >&2
+fi
 printf 'interactive=authenticated\n' >> "$state/claude-env.log"
 exit 0
 SH
@@ -258,8 +280,8 @@ test_enabled_disabled_and_non_claude_launches() {
   status=$?
   expect_code 0 "$status" "enabled Claude spawn"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "'$fakebin/av' inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN -- '$fakebin/claude'" \
-    "enabled launch did not pin the resolved AV injection path"
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '$fakebin/claude'" \
+    "enabled launch did not pin the redacted injection relay and resolved tools"
   assert_contains "$launch" "--model 'sonnet' --effort 'high'" "enabled launch did not preserve profile arguments"
   assert_not_contains "$launch" "$SECRET" "launch argv contains synthetic secret"
   executed=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
@@ -304,7 +326,7 @@ test_enabled_disabled_and_non_claude_launches() {
 }
 
 test_actionable_fail_closed_paths() {
-  local dir home fakebin state mode output status expected wrapper record proj wt launchlog
+  local dir home fakebin state mode output status expected wrapper record proj wt launchlog before
   dir="$TMP_ROOT/blockers"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -364,21 +386,66 @@ test_actionable_fail_closed_paths() {
   assert_contains "$output" "lacks the required" "unsupported Claude blocker was not actionable"
   assert_secret_absent "$dir" "$output"
 
-  wrapper="$dir/claude-wrapper"
+  wrapper="$fakebin/claude-wrapper"
   cat > "$wrapper" <<'SH'
 #!/usr/bin/env bash
-exec av inject +CLAUDE_CODE_OAUTH_TOKEN -- claude "$@"
+case " $* " in
+  *" --help "*|*" --help") exec "$(dirname "$0")/claude-real" "$@" ;;
+esac
+vault=av
+exec "$vault" inject +CLAUDE_CODE_OAUTH_TOKEN -- claude "$@"
 SH
   chmod +x "$wrapper"
   mv "$fakebin/claude" "$fakebin/claude-real"
   ln -s "$wrapper" "$fakebin/claude"
+  before=$(wc -l < "$state/av-argv.log" | tr -d ' ')
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
     FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "injecting Claude wrapper was accepted"
-  assert_contains "$output" "injection wrapper" "wrapper recursion refusal was not actionable"
+  assert_contains "$output" "positively identified" "wrapper recursion refusal was not actionable"
+  [ "$(wc -l < "$state/av-argv.log" | tr -d ' ')" = "$before" ] \
+    || fail "indirect wrapper reached Automic Vault before identity refusal"
   assert_secret_absent "$dir" "$output"
   pass "Vault, token, version-surface, inconclusive, and recursion failures all block before launch"
+}
+
+test_launch_time_failure_redaction_and_interactive_io() {
+  local dir home fakebin state record proj wt launchlog output status launch
+  dir="$TMP_ROOT/launch-boundary"
+  home="$dir/home"
+  fakebin=$(make_fake_tools "$dir")
+  state="$dir/fake-state"
+  record=$(make_ship "$dir" "$home" launch-boundary)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  launchlog="$dir/launch.log"
+  : > "$launchlog"
+  printf 'on\n' > "$home/config/claude-automic-vault"
+
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    launch-boundary "$proj" claude --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "launch-boundary spawn"
+  launch=$(last_launch_command "$launchlog")
+
+  output=$(cd "$wt" && printf 'captain-input\n' | \
+    FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=interactive \
+    PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
+  status=$?
+  expect_code 0 "$status" "interactive relayed launch"
+  assert_contains "$output" "interactive stdout: captain-input" "worker stdin or stdout was not preserved"
+  assert_contains "$output" "interactive stderr: authenticated" "worker stderr was not preserved"
+
+  rm -f "$state/av-inject-count"
+  output=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+    FM_FAKE_AV_FAIL_AT=1 PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "launch-time injection failure did not block Claude exec"
+  assert_contains "$output" "unavailable or locked" "launch-time Vault failure was not classified"
+  assert_not_contains "$output" "$SECRET" "launch-time Vault failure exposed raw output"
+  assert_secret_absent "$dir" "$output"
+  pass "launch-time failures are redacted while successful worker I/O stays interactive"
 }
 
 make_secondmate_home() {  # <home> <id>
@@ -410,7 +477,8 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   expect_code 0 "$status" "enabled Claude secondmate launch"
   [ "$(cat "$sm/config/claude-automic-vault")" = on ] || fail "secondmate did not inherit opt-in"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "'$fakebin/av' inject" "secondmate launch did not use pinned Vault injection"
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '$fakebin/claude'" \
+    "secondmate launch did not use the pinned Vault relay"
 
   : > "$launchlog"
   output=$(FM_FAKE_WINDOWS=fm-sm-vault run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
@@ -418,7 +486,8 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   status=$?
   expect_code 0 "$status" "enabled Claude secondmate relaunch"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "'$fakebin/av' inject" "secondmate relaunch did not reuse Vault injection"
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '$fakebin/claude'" \
+    "secondmate relaunch did not reuse the pinned Vault relay"
 
   : > "$launchlog"
   record=$(make_ship "$dir" "$sm" nested-worker)
@@ -429,7 +498,8 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   status=$?
   expect_code 0 "$status" "nested worker from inherited secondmate home"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "'$fakebin/av' inject" "nested worker did not use inherited opt-in"
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '$fakebin/claude'" \
+    "nested worker did not use the inherited pinned Vault relay"
   assert_secret_absent "$dir" "$output"
   pass "secondmate launch, relaunch, inheritance, and nested worker all use the same local injection contract"
 }
@@ -437,6 +507,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
 test_provision_recovery_renewal_preflight_and_redaction
 test_enabled_disabled_and_non_claude_launches
 test_actionable_fail_closed_paths
+test_launch_time_failure_redaction_and_interactive_io
 test_secondmate_inheritance_launch_relaunch_and_nested_worker
 
 printf '# all fm-claude-automic-vault tests passed\n'
