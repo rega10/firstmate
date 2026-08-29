@@ -150,6 +150,20 @@ run 1 '--approved-by is rejected for a non-approval step' mark batch-a moved --a
 assert_contains "$OUT" 'only valid for the approval step' 'misplaced --approved-by names the reason'
 run 0 'approval records with approver' mark batch-a approval --approved-by captain
 grep -q '^step: approval date=.* approved-by=captain$' "$RECORDS/batch-a.ceremony" || fail 'approval line missing approver'
+
+# A replay must be judged against the arguments the operator actually passed:
+# identical is a no-op, conflicting is a refusal, invalid is refused either way.
+run 0 'replaying approval with the same approver stays a no-op' mark batch-a approval --approved-by captain
+assert_contains "$OUT" 'already recorded' 'identical approval replay is idempotent'
+run 1 'replaying approval with a different approver is refused' mark batch-a approval --approved-by someone-else
+assert_contains "$OUT" 'different approver' 'conflicting approval replay names the conflict'
+grep -q '^step: approval date=.* approved-by=captain$' "$RECORDS/batch-a.ceremony" || fail 'a conflicting replay changed the recorded approver'
+[ "$(grep -c '^step: approval' "$RECORDS/batch-a.ceremony")" = 1 ] || fail 'a conflicting replay appended a second approval line'
+run 1 'replaying approval with a secret-shaped approver is refused' mark batch-a approval --approved-by ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+assert_contains "$OUT" 'refused' 'a secret-shaped approver is refused even on a recorded step'
+assert_not_contains "$OUT" 'ghp_' 'the refusal echoed the secret-shaped approver'
+run 1 '--approved-by is refused on an already-recorded non-approval step' mark batch-a preflight --approved-by captain
+assert_contains "$OUT" 'only valid for the approval step' 'misplaced --approved-by is refused on a replay too'
 run 1 'retirement is still refused before verification' mark batch-a retired
 assert_contains "$OUT" 'before post-move verification' 'retirement refusal after approval still names the verification gate'
 run 0 'moved records' mark batch-a moved
@@ -470,6 +484,19 @@ assert_contains "$OUT" 'corrupt at line 3' 'out-of-range created date is reporte
 printf 'fm-bitwarden-ceremony v1\nbatch: step-range\ncreated: 2026-01-01\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=0000-00-00\n' > "$RECORDS/step-range.ceremony"
 run 1 'check refuses an out-of-range step date' check step-range
 assert_contains "$OUT" 'not a YYYY-MM-DD calendar date' 'out-of-range step date names the expected shape'
+
+# A day that never occurred is not evidence of when a gate was passed.
+for bad_date in 2026-02-30 2026-04-31 2025-02-29 2026-00-10 2026-13-01 0000-01-01; do
+  printf 'fm-bitwarden-ceremony v1\nbatch: cal-bad\ncreated: %s\n' "$bad_date" > "$RECORDS/cal-bad.ceremony"
+  run 1 "check refuses the impossible date $bad_date" check cal-bad
+  assert_contains "$OUT" 'not a YYYY-MM-DD calendar date' "the impossible date $bad_date is refused as a calendar date"
+done
+# Leap days that did occur stay valid, as does the last day of a short month.
+for good_date in 2024-02-29 2026-02-28 2026-04-30 2026-12-31; do
+  printf 'fm-bitwarden-ceremony v1\nbatch: cal-ok\ncreated: %s\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=%s\n' "$good_date" "$good_date" > "$RECORDS/cal-ok.ceremony"
+  run 0 "check accepts the real date $good_date" check cal-ok
+  assert_contains "$OUT" 'next: approval' "the record dated $good_date reports its resume point"
+done
 
 # A step cannot have happened before the batch it belongs to was created.
 printf 'fm-bitwarden-ceremony v1\nbatch: date-early\ncreated: 2030-01-01\nitem: prod-db owner=ops-team collection=prod-infra\nstep: preflight date=2026-12-31\n' > "$RECORDS/date-early.ceremony"

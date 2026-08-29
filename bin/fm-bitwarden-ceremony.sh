@@ -130,23 +130,28 @@ label_defect() {
   secret_shape_defect "$1"
 }
 
-is_date() {  # <value> - a YYYY-MM-DD date with in-range fields
+is_leap_year() {  # <yyyy>
+  if [ $(($1 % 400)) -eq 0 ]; then return 0; fi
+  if [ $(($1 % 100)) -eq 0 ]; then return 1; fi
+  [ $(($1 % 4)) -eq 0 ]
+}
+
+is_date() {  # <value> - a real YYYY-MM-DD calendar date
+  local year day last_day
   case $1 in
     [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
     *) return 1 ;;
   esac
-  case ${1:0:4} in
-    0000) return 1 ;;
-  esac
+  year=$((10#${1:0:4}))
+  [ "$year" -ne 0 ] || return 1
   case ${1:5:2} in
-    0[1-9]|1[0-2]) ;;
+    01|03|05|07|08|10|12) last_day=31 ;;
+    04|06|09|11) last_day=30 ;;
+    02) if is_leap_year "$year"; then last_day=29; else last_day=28; fi ;;
     *) return 1 ;;
   esac
-  case ${1:8:2} in
-    0[1-9]|[12][0-9]|3[01]) ;;
-    *) return 1 ;;
-  esac
-  return 0
+  day=$((10#${1:8:2}))
+  [ "$day" -ge 1 ] && [ "$day" -le "$last_day" ]
 }
 
 # Secret-shape refusals shared by every free-text argument. $1=field-name
@@ -375,17 +380,20 @@ cmd_mark() {
   done
   require_batch_id "$batch"
   is_step "$step" || die "unknown step; steps in order are: $STEPS"
-  path=$(record_path "$batch")
-  parse_record "$path" "$batch"
-  if step_recorded "$step"; then
-    note "batch '$batch': step '$step' already recorded; nothing to do"
-    return 0
-  fi
   if [ "$step" = approval ]; then
     [ -n "$approved_by" ] || die "refused: approval requires --approved-by with the captain's recorded identity label"
     require_label '--approved-by' "$approved_by"
   else
     [ -z "$approved_by" ] || die "--approved-by is only valid for the approval step"
+  fi
+  path=$(record_path "$batch")
+  parse_record "$path" "$batch"
+  if step_recorded "$step"; then
+    if [ "$step" = approval ] && [ "$approved_by" != "$PARSED_APPROVED_BY" ]; then
+      die "batch '$batch': approval is already recorded for a different approver; resolve the conflict in the record before continuing"
+    fi
+    note "batch '$batch': step '$step' already recorded; nothing to do"
+    return 0
   fi
   if [ "$step" = moved ] && [ "$PARSED_ITEM_COUNT" -eq 0 ]; then
     die "batch '$batch': refused to mark moved with no registered items; every moved credential needs a recorded owner/collection target"
