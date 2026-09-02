@@ -614,7 +614,7 @@ function hasUnclassifiableProtectedExpansion(word, root) {
   return /(?:^|\/)fm-watch/.test(word.value);
 }
 
-function shellInvocation(position) {
+export function shellInvocation(position) {
   if (!position.command) return null;
   const name = basename(position.command.value);
   if (!["sh", "bash", "zsh"].includes(name)) return null;

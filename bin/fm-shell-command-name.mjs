@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Lexer, splitProgram, commandPosition } from "./fm-arm-command-policy.mjs";
+import { Lexer, splitProgram, commandPosition, shellInvocation } from "./fm-arm-command-policy.mjs";
 
 function basename(value) {
   return value.split("/").filter(Boolean).at(-1) || value;
@@ -18,6 +18,10 @@ function commandNames(source, depth = 0) {
     }
     for (const payload of position.wrapperPayloads) {
       names.push(...commandNames(payload, depth + 1));
+    }
+    const shell = shellInvocation(position);
+    if (shell?.kind === "command" && shell.payload?.literal && shell.payload.subs.length === 0) {
+      names.push(...commandNames(shell.payload.value, depth + 1));
     }
   }
   return names;

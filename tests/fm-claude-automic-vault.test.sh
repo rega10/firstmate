@@ -434,7 +434,11 @@ test_enabled_disabled_and_non_claude_launches() {
     '/usr/bin/env -i -- claude --dangerously-skip-permissions' \
     '/usr/bin/env --unset=OLD_TOKEN claude --dangerously-skip-permissions' \
     "/usr/bin/env -S 'claude --dangerously-skip-permissions'" \
-    "env --split-string='claude --dangerously-skip-permissions'"; do
+    "env --split-string='claude --dangerously-skip-permissions'" \
+    "/bin/sh -c 'exec claude --dangerously-skip-permissions'" \
+    "bash -lc 'FOO=bar claude --dangerously-skip-permissions'" \
+    "zsh -c 'env FOO=bar claude --dangerously-skip-permissions'" \
+    "/bin/bash -c \"env -S 'claude --dangerously-skip-permissions'\""; do
     raw_index=$((raw_index + 1))
     id="raw-prefixed-$raw_index"
     : > "$launchlog"
@@ -479,6 +483,23 @@ test_enabled_disabled_and_non_claude_launches() {
     "unrelated non-Claude env split-string launch changed"
   [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
     || fail "unrelated non-Claude env split-string launch contacted Automic Vault"
+  assert_secret_absent "$dir" "$output"
+
+  : > "$launchlog"
+  before=$(wc -l < "$state/av-argv.log")
+  record=$(make_ship "$dir" "$home" raw-shell-non-claude)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-shell-non-claude "$proj" "/bin/sh -c 'exec custom-agent --flag'" \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "unrelated non-Claude literal shell launch"
+  launch=$(last_launch_command "$launchlog")
+  assert_contains "$launch" "/bin/sh -c 'exec custom-agent --flag'" \
+    "unrelated non-Claude literal shell launch changed"
+  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+    || fail "unrelated non-Claude literal shell launch contacted Automic Vault"
   assert_secret_absent "$dir" "$output"
 
   rm -f "$home/config/claude-automic-vault"

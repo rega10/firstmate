@@ -30,7 +30,7 @@ tests/fm-claude-automic-vault.test.sh
 ```
 
 The test uses fake `av` and fake `claude` executables with synthetic secret bytes held only in process environment.
-It exercises public provisioning, one-time enable recovery, renewal, and preflight, enabled and disabled spawn behavior, direct, assignment-prefixed, option-prefixed, and split-string `env` opted-in raw Claude refusal before endpoint creation, Claude versus non-Claude isolation, missing Vault state, Secret Gate denial, a missing secret, revoked-token rejection, unsupported tool surfaces, inconclusive authentication, executable recursion refusal, model and effort argument preservation, redacted output, persistent secondmate launch and relaunch, inherited opt-in, and a nested worker launched from the inherited home.
+It exercises public provisioning, one-time enable recovery, renewal, and preflight, enabled and disabled spawn behavior, direct, assignment-prefixed, option-prefixed, split-string `env`, and literal shell-payload opted-in raw Claude refusal before endpoint creation, Claude versus non-Claude isolation, missing Vault state, Secret Gate denial, a missing secret, revoked-token rejection, unsupported tool surfaces, inconclusive authentication, executable recursion refusal, model and effort argument preservation, redacted output, persistent secondmate launch and relaunch, inherited opt-in, and a nested worker launched from the inherited home.
 It executes the captured enabled worker launch and proves the fake Claude process received the injected environment while higher-precedence auth inputs were absent.
 It then scans every fixture file, captured launch command, fake argv log, and command output to prove the synthetic secret bytes were not persisted or displayed.
 
