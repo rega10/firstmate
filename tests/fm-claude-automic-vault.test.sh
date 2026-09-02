@@ -87,6 +87,12 @@ if [ "${1:-}" != inject ]; then
   exit 2
 fi
 shift
+if [ "${LD_PRELOAD+x}" = x ] || [ "${BASH_ENV+x}" = x ]; then
+  : > "$state/unsafe-inject-environment"
+fi
+case "$(/usr/bin/env)" in
+  *BASH_FUNC_*) : > "$state/unsafe-inject-environment" ;;
+esac
 printf 'inject' >> "$state/av-argv.log"
 for arg in "$@"; do printf ' <%s>' "$arg" >> "$state/av-argv.log"; done
 printf '\n' >> "$state/av-argv.log"
@@ -179,8 +185,10 @@ int main(int argc, char **argv) {
   if (argc == 2 && strcmp(argv[1], "--help") == 0) {
     if (getenv("FM_FAKE_CLAUDE_HELP_MODE") && strcmp(getenv("FM_FAKE_CLAUDE_HELP_MODE"), "old") == 0)
       puts("setup-token --print");
-    else
+    else if (getenv("FM_FAKE_CLAUDE_HELP_MODE") && strcmp(getenv("FM_FAKE_CLAUDE_HELP_MODE"), "no-permission") == 0)
       puts("setup-token --settings --safe-mode --no-session-persistence --output-format --tools --print");
+    else
+      puts("setup-token --settings --permission-mode --safe-mode --no-session-persistence --output-format --tools --print");
     return 0;
   }
   if (argc >= 4 && strcmp(argv[1], "auth") == 0 && strcmp(argv[2], "status") == 0 && strcmp(argv[3], "--help") == 0) {
@@ -244,6 +252,19 @@ int main(int argc, char **argv) {
     }
     puts("{\"type\":\"result\",\"is_error\":false,\"result\":\"OK\"}");
     return 0;
+  }
+  if (getenv("CLAUDE_CODE_SUBPROCESS_ENV_SCRUB")) {
+    if (!has_arg(argc, argv, "--permission-mode") || !has_arg(argc, argv, "bypassPermissions")) {
+      append_line(path, "approval=required");
+      return 52;
+    }
+    append_line(path, "permission=bypassPermissions");
+  }
+  if (getenv("FM_FAKE_TOOL_NAME")) {
+    const char *tool = getenv("FM_FAKE_TOOL_NAME");
+    unsetenv("CLAUDE_CODE_OAUTH_TOKEN");
+    if (system(tool) != 0) return 53;
+    append_line(path, "tool=executed");
   }
   if (mode && strcmp(mode, "interactive") == 0) {
     char reply[1024];
@@ -312,7 +333,12 @@ SH
 #!/usr/bin/env bash
 exit 0
 SH
-  chmod +x "$fakebin/av" "$fakebin/curl" "$fakebin/tmux" "$fakebin/treehouse"
+  cat > "$fakebin/worker-tool" <<'SH'
+#!/bin/sh
+[ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] || exit 91
+: > "${FM_FAKE_STATE:?}/worker-tool-executed"
+SH
+  chmod +x "$fakebin/av" "$fakebin/curl" "$fakebin/tmux" "$fakebin/treehouse" "$fakebin/worker-tool"
   (cd "$fakebin" && pwd -P)
 }
 
@@ -331,6 +357,16 @@ assert_secret_absent() {  # <case-dir> <captured-output>
 
 last_launch_command() {
   grep -v '^export GOTMPDIR=' "$1" | grep -v '^$' | tail -1
+}
+
+assert_sanitized_launch() {
+  local launch=$1 fakebin=$2
+  assert_contains "$launch" \
+    "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' \"\${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}\" '/bin/bash' --noprofile --norc" \
+    "enabled launch did not use the startup-clean injection boundary"
+  assert_contains "$launch" \
+    "'$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
+    "enabled launch did not pin the resolved Vault and Claude tools"
 }
 
 make_ship() {  # <case-dir> <home> <id>
@@ -420,10 +456,16 @@ test_provision_recovery_renewal_preflight_and_redaction() {
   assert_contains "$output" "replaced directly" "renewal did not report direct replacement"
   assert_secret_absent "$dir" "$output"
 
+  preflight_probe() { :; }
+  export -f preflight_probe
+  rm -f "$state/unsafe-inject-environment"
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    TEST_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
+    TEST_FAKE_SECRET="$SECRET" LD_PRELOAD= PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
   status=$?
+  unset -f preflight_probe
   expect_code 0 "$status" "redacted public preflight"
+  [ ! -e "$state/unsafe-inject-environment" ] \
+    || fail "preflight injection inherited a loader or shell startup control"
   assert_contains "$output" "credential material was not displayed" "preflight omitted its redaction guarantee"
   assert_secret_absent "$dir" "$output"
   pass "provision, recovery, renewal, and preflight keep the synthetic credential off every output and file"
@@ -449,13 +491,12 @@ test_enabled_disabled_and_non_claude_launches() {
   status=$?
   expect_code 0 "$status" "enabled Claude spawn"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' '/bin/bash' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
-    "enabled launch did not pin the redacted injection relay and resolved tools"
+  assert_sanitized_launch "$launch" "$fakebin"
   assert_contains "$launch" "--model 'sonnet' --effort 'high'" "enabled launch did not preserve profile arguments"
   assert_not_contains "$launch" "$SECRET" "launch argv contains synthetic secret"
   tasktmp=$(sed -n 's/^tasktmp=//p' "$home/state/auth-ship.meta")
   gotmp="$tasktmp/gotmp"
-  executed=$(cd "$wt" && FM_FAKE_STATE="$state" \
+  executed=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_TOOL_NAME=worker-tool \
     GOTMPDIR="$gotmp" \
     ANTHROPIC_API_KEY=must-be-cleared ANTHROPIC_BASE_URL=https://invalid.example \
     PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1) || fail "captured enabled launch did not execute"
@@ -463,6 +504,11 @@ test_enabled_disabled_and_non_claude_launches() {
   assert_grep 'interactive=authenticated' "$state/claude-env.log" "launched fake Claude was not authenticated"
   assert_grep "GOTMPDIR=$gotmp" "$state/claude-env.log" \
     "enabled Claude launch dropped task-managed GOTMPDIR"
+  [ -e "$state/worker-tool-executed" ] || fail "enabled Claude launch did not restore the worker tool PATH"
+  assert_grep 'permission=bypassPermissions' "$state/claude-env.log" \
+    "enabled Claude launch did not preserve non-interactive permission mode"
+  assert_no_grep 'approval=required' "$state/claude-env.log" \
+    "enabled Claude launch required an approval prompt"
   assert_no_grep 'conflict=' "$state/claude-env.log" "higher-precedence auth environment reached Claude"
 
   : > "$launchlog"
@@ -847,6 +893,14 @@ test_actionable_fail_closed_paths() {
   assert_contains "$output" "lacks the required" "unsupported Claude blocker was not actionable"
   assert_secret_absent "$dir" "$output"
 
+  output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
+    TEST_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_HELP_MODE=no-permission PATH="$fakebin:$BASE_PATH" \
+    "$AUTH" preflight 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "Claude without explicit permission mode was accepted"
+  assert_contains "$output" "permission-mode" "permission-mode blocker was not actionable"
+  assert_secret_absent "$dir" "$output"
+
   mv "$fakebin/claude" "$fakebin/claude-real"
   direct="$fakebin/claude-direct-wrapper"
   cat > "$direct" <<'SH'
@@ -1190,8 +1244,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   [ "$(cat "$sm/config/claude-automic-vault")" = on ] || fail "secondmate did not inherit opt-in"
   sm_abs=$(sed -n 's/^home=//p' "$primary/state/sm-vault.meta")
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' '/bin/bash' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
-    "secondmate launch did not use the pinned Vault relay"
+  assert_sanitized_launch "$launch" "$fakebin"
   leak="$dir/secondmate-exported-function-token-leak"
   exec() {
     if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
@@ -1245,8 +1298,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   status=$?
   expect_code 0 "$status" "enabled Claude secondmate relaunch"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' '/bin/bash' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
-    "secondmate relaunch did not reuse the pinned Vault relay"
+  assert_sanitized_launch "$launch" "$fakebin"
 
   : > "$launchlog"
   record=$(make_ship "$dir" "$sm" nested-worker)
@@ -1257,8 +1309,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   status=$?
   expect_code 0 "$status" "nested worker from inherited secondmate home"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' '/bin/bash' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
-    "nested worker did not use the inherited pinned Vault relay"
+  assert_sanitized_launch "$launch" "$fakebin"
   assert_secret_absent "$dir" "$output"
   pass "secondmate launch, relaunch, inheritance, and nested worker all use the same local injection contract"
 }

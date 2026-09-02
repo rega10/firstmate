@@ -386,8 +386,9 @@ fm_claude_av_probe_tools() {
   if [ "$rc" -ne 0 ] || [[ "$output" != *"setup-token"* ]] \
      || [[ "$output" != *"--settings"* ]] || [[ "$output" != *"--safe-mode"* ]] \
      || [[ "$output" != *"--no-session-persistence"* ]] || [[ "$output" != *"--output-format"* ]] \
-     || [[ "$output" != *"--tools"* ]] || [[ "$output" != *"--print"* ]]; then
-    printf 'error: the installed Claude Code CLI lacks the required setup-token or redacted validation surfaces; update Claude Code before enabling Vault authentication.\n' >&2
+     || [[ "$output" != *"--tools"* ]] || [[ "$output" != *"--print"* ]] \
+     || [[ "$output" != *"--permission-mode"* ]]; then
+    printf 'error: the installed Claude Code CLI lacks the required setup-token, permission-mode, or redacted validation surfaces; update Claude Code before enabling Vault authentication.\n' >&2
     return 1
   fi
   rc=0
@@ -446,13 +447,14 @@ fm_claude_av_preflight() {  # [quiet]
   }
 
   output=$(fm_run_timed "$FM_CLAUDE_AV_TIMEOUT" \
-    env -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN \
-      -u ANTHROPIC_BASE_URL -u ANTHROPIC_BEDROCK_BASE_URL \
-      -u ANTHROPIC_VERTEX_BASE_URL -u ANTHROPIC_FOUNDRY_BASE_URL \
-      -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX \
-      -u CLAUDE_CODE_USE_FOUNDRY -u AWS_BEARER_TOKEN_BEDROCK \
-      CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 CLAUDE_CONFIG_DIR="$probe_root/config" \
-      "$FM_CLAUDE_AV_BIN" inject --replace-existing-env \
+    "$FM_CLAUDE_AV_ENV" -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV \
+      -u SHELLOPTS -u BASHOPTS -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND \
+      -u LD_PRELOAD -u DYLD_INSERT_LIBRARIES -u DYLD_LIBRARY_PATH \
+      -u DYLD_FRAMEWORK_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
+      CLAUDE_CONFIG_DIR="$probe_root/config" PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+      "$FM_CLAUDE_AV_BASH" --noprofile --norc -p "$FM_CLAUDE_AV_LAUNCH_RELAY" \
+      --sanitize "$FM_CLAUDE_AV_ENV" '' "$FM_CLAUDE_AV_BIN" \
+      inject --replace-existing-env \
       "+$FM_CLAUDE_AV_SECRET_NAME" -- "$FM_CLAUDE_BIN" \
       --settings "$FM_CLAUDE_AV_SETTINGS" auth status --json 2>&1) || status_rc=$?
   if [ "$status_rc" -ne 0 ]; then
@@ -473,13 +475,14 @@ fm_claude_av_preflight() {  # [quiet]
   fi
 
   output=$(fm_run_timed "$FM_CLAUDE_AV_TIMEOUT" \
-    env -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN \
-      -u ANTHROPIC_BASE_URL -u ANTHROPIC_BEDROCK_BASE_URL \
-      -u ANTHROPIC_VERTEX_BASE_URL -u ANTHROPIC_FOUNDRY_BASE_URL \
-      -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX \
-      -u CLAUDE_CODE_USE_FOUNDRY -u AWS_BEARER_TOKEN_BEDROCK \
-      CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 CLAUDE_CONFIG_DIR="$probe_root/config" \
-      "$FM_CLAUDE_AV_BIN" inject --replace-existing-env \
+    "$FM_CLAUDE_AV_ENV" -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV \
+      -u SHELLOPTS -u BASHOPTS -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND \
+      -u LD_PRELOAD -u DYLD_INSERT_LIBRARIES -u DYLD_LIBRARY_PATH \
+      -u DYLD_FRAMEWORK_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
+      CLAUDE_CONFIG_DIR="$probe_root/config" PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+      "$FM_CLAUDE_AV_BASH" --noprofile --norc -p "$FM_CLAUDE_AV_LAUNCH_RELAY" \
+      --sanitize "$FM_CLAUDE_AV_ENV" '' "$FM_CLAUDE_AV_BIN" \
+      inject --replace-existing-env \
       "+$FM_CLAUDE_AV_SECRET_NAME" -- "$FM_CLAUDE_BIN" \
       --settings "$FM_CLAUDE_AV_SETTINGS" --safe-mode --no-session-persistence \
       --tools '' --output-format json -p 'Reply with the single word OK.' 2>&1) || live_rc=$?
@@ -521,7 +524,7 @@ fm_claude_av_build_launch_command() {
   claude_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_BIN")
   checksum_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_CLAUDE_SHA256")
   settings_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_SETTINGS")
-  printf '%s' "$env_q -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV -u SHELLOPTS -u BASHOPTS -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND $bash_q --noprofile --norc -p $relay_q --sanitize $env_q $bash_q $av_q $claude_q $checksum_q $settings_q"
+  printf '%s' "PATH=/usr/bin:/bin:/usr/sbin:/sbin $env_q -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV -u SHELLOPTS -u BASHOPTS -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND -u LD_PRELOAD -u DYLD_INSERT_LIBRARIES -u DYLD_LIBRARY_PATH -u DYLD_FRAMEWORK_PATH -u DYLD_FALLBACK_LIBRARY_PATH $bash_q --noprofile --norc -p $relay_q --sanitize $env_q \"\${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}\" $bash_q --noprofile --norc $relay_q $av_q $claude_q $checksum_q $settings_q"
 }
 
 # Returns 0 with FM_CLAUDE_AV_LAUNCH_COMMAND set for an enabled, authenticated

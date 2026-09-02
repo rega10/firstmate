@@ -299,10 +299,10 @@ A malformed or unreadable opt-in file applies the same fail-safe refusal to a ra
 Install Claude Code with its official native installer before enabling this integration; script wrappers and other distribution layouts fail closed because their artifact identity can be forwarded or substituted.
 This boundary assumes same-user process integrity, and TOCTOU attacks by another process running as the same user are out of scope by captain decision on 2026-09-02.
 The token value enters only the Claude process environment through `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`, while the secret name but never its value appears in argv.
-The launch builds its clean explicit environment after task-specific launch values are final, carrying required home, terminal, locale, temporary-directory, proxy, certificate, SSH-agent, Claude configuration, Firstmate lifecycle, trace, and backend identity context while enabling Claude Code's subprocess credential scrub.
+The launch builds its clean explicit environment after task-specific launch values are final, keeps a restricted trusted path through preflight and injection, restores the worker's original tool path only at Claude exec, and carries required home, terminal, locale, temporary-directory, proxy, certificate, SSH-agent, Claude configuration, Firstmate lifecycle, trace, and backend identity context while enabling Claude Code's subprocess credential scrub.
 Exported shell functions, shell startup controls, linker controls, ambient API-key state, cloud-provider state, and Anthropic endpoint overrides are excluded before injection.
 This prevents a missing or denied Vault value from falling back to stale interactive OAuth, a keychain credential, an API key, a cloud provider, or a different endpoint.
-The captain's normal Claude config directory, Firstmate worktree isolation, lifecycle hooks, model and effort flags, prompt, and runtime-backend behavior remain in place.
+The captain's normal Claude config directory, Firstmate worktree isolation, lifecycle hooks, model and effort flags, explicit bypass permission mode, prompt, and runtime-backend behavior remain in place.
 
 Each launch preflight first requires Claude to report `oauth_token` against the first-party provider and then makes one minimal safe-mode, tool-free, non-persistent request through the same resolved executables and Vault injection.
 The live request is necessary because Claude Code's local `auth status` accepts an arbitrary non-empty OAuth environment value without proving the service accepts it.
