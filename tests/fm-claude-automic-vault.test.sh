@@ -12,7 +12,8 @@ AUTH="$ROOT/bin/fm-claude-automic-vault.sh"
 SPAWN="$ROOT/bin/fm-spawn.sh"
 TMP_ROOT=$(fm_test_tmproot fm-claude-automic-vault)
 JQ_BIN=$(command -v jq) || fail "test needs jq"
-BASE_PATH="$(dirname "$JQ_BIN"):/usr/bin:/bin:/usr/sbin:/sbin"
+NODE_BIN=$(command -v node) || fail "test needs node"
+BASE_PATH="$(dirname "$JQ_BIN"):$(dirname "$NODE_BIN"):/usr/bin:/bin:/usr/sbin:/sbin"
 SECRET='sk-ant-oat01-FM_SYNTHETIC_SENTINEL_NEVER_PERSIST'
 
 sha256_file() {
@@ -431,7 +432,9 @@ test_enabled_disabled_and_non_claude_launches() {
     'env FOO=bar claude --dangerously-skip-permissions' \
     'FOO=bar /usr/bin/env -u OLD_TOKEN claude --dangerously-skip-permissions' \
     '/usr/bin/env -i -- claude --dangerously-skip-permissions' \
-    '/usr/bin/env --unset=OLD_TOKEN claude --dangerously-skip-permissions'; do
+    '/usr/bin/env --unset=OLD_TOKEN claude --dangerously-skip-permissions' \
+    "/usr/bin/env -S 'claude --dangerously-skip-permissions'" \
+    "env --split-string='claude --dangerously-skip-permissions'"; do
     raw_index=$((raw_index + 1))
     id="raw-prefixed-$raw_index"
     : > "$launchlog"
@@ -460,6 +463,23 @@ test_enabled_disabled_and_non_claude_launches() {
     fi
     assert_secret_absent "$dir" "$output"
   done
+
+  : > "$launchlog"
+  before=$(wc -l < "$state/av-argv.log")
+  record=$(make_ship "$dir" "$home" raw-prefixed-non-claude)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-prefixed-non-claude "$proj" "env --split-string='custom-agent --flag'" \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "unrelated non-Claude env split-string launch"
+  launch=$(last_launch_command "$launchlog")
+  assert_contains "$launch" "env --split-string='custom-agent --flag'" \
+    "unrelated non-Claude env split-string launch changed"
+  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+    || fail "unrelated non-Claude env split-string launch contacted Automic Vault"
+  assert_secret_absent "$dir" "$output"
 
   rm -f "$home/config/claude-automic-vault"
   : > "$launchlog"

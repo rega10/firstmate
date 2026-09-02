@@ -1209,44 +1209,14 @@ launch_template() {
   esac
 }
 
-raw_launch_harness() {
-  local launch=$1 word candidate env_prefix=0 skip_env_value=0
-  local -a words
-  read -r -a words <<< "$launch"
-  for word in "${words[@]}"; do
-    if [ "$skip_env_value" -eq 1 ]; then
-      skip_env_value=0
-      continue
-    fi
-    case "$word" in
-      [A-Za-z_]*=*) continue ;;
-    esac
-    if [ "$env_prefix" -eq 1 ]; then
-      case "$word" in
-        --|-i|-0|-v|--ignore-environment|--null|--debug) continue ;;
-        -u|-C|-P|--unset|--chdir|--argv0)
-          skip_env_value=1
-          continue
-          ;;
-        -u?*|-C?*|-P?*|--unset=*|--chdir=*|--argv0=*) continue ;;
-        -*) return 1 ;;
-      esac
-    fi
-    candidate=${word##*/}
-    if [ "$candidate" = env ]; then
-      env_prefix=1
-      continue
-    fi
-    printf '%s\n' "$candidate"
-    return 0
-  done
-  return 1
-}
-
 case "$ARG3" in
   *' '*)  # raw launch command (unverified-adapter escape hatch)
     LAUNCH=$ARG3
-    HARNESS=$(raw_launch_harness "$LAUNCH" 2>/dev/null || true)
+    HARNESS=
+    RAW_LAUNCH_NODE=$(command -v node 2>/dev/null || true)
+    if [ -n "$RAW_LAUNCH_NODE" ]; then
+      HARNESS=$("$RAW_LAUNCH_NODE" "$FM_ROOT/bin/fm-shell-command-name.mjs" "$LAUNCH" 2>/dev/null || true)
+    fi
     ;;
   '')
     # No explicit harness: resolve from config. A secondmate AGENT launches on the
