@@ -479,7 +479,9 @@ test_enabled_disabled_and_non_claude_launches() {
 
   for raw in \
     '"$(printf clau%s de)" --dangerously-skip-permissions' \
-    '"$(printf custom-%s agent)" --flag'; do
+    '"$(printf custom-%s agent)" --flag' \
+    'true; "$(printf clau%s de)" --dangerously-skip-permissions' \
+    "/bin/sh -c 'true; \"\$(printf clau%s de)\" --dangerously-skip-permissions'"; do
     raw_index=$((raw_index + 1))
     id="raw-ambiguous-$raw_index"
     : > "$launchlog"
@@ -524,6 +526,23 @@ test_enabled_disabled_and_non_claude_launches() {
     "unrelated non-Claude env split-string launch changed"
   [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
     || fail "unrelated non-Claude env split-string launch contacted Automic Vault"
+  assert_secret_absent "$dir" "$output"
+
+  : > "$launchlog"
+  before=$(wc -l < "$state/av-argv.log")
+  record=$(make_ship "$dir" "$home" raw-multiple-non-claude)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-multiple-non-claude "$proj" 'true; custom-agent --flag' \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "fully resolved multi-command non-Claude raw launch"
+  launch=$(last_launch_command "$launchlog")
+  assert_contains "$launch" 'true; custom-agent --flag' \
+    "fully resolved multi-command non-Claude raw launch changed"
+  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+    || fail "fully resolved multi-command non-Claude raw launch contacted Automic Vault"
   assert_secret_absent "$dir" "$output"
 
   : > "$launchlog"
@@ -612,7 +631,8 @@ SH
   printf 'off\n' > "$home/config/claude-automic-vault"
   for raw in \
     '"$(printf clau%s de)" --dangerously-skip-permissions' \
-    '"$(printf custom-%s agent)" --flag'; do
+    '"$(printf custom-%s agent)" --flag' \
+    'true; "$(printf clau%s de)" --dangerously-skip-permissions'; do
     raw_index=$((raw_index + 1))
     id="raw-malformed-$raw_index"
     : > "$launchlog"
