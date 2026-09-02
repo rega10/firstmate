@@ -2,7 +2,7 @@
 
 This runbook is the staged path from temporary local-only credential custody to organization-owned Bitwarden custody for production and team credentials.
 It is written for a normal operator: every routine action is a short checklist step, and engineering is only needed when a step says so.
-Current access is preserved throughout: every move requires captain approval for its specific batch, and old custody remains available until post-move verification succeeds.
+Current access is preserved throughout: every move requires captain approval for its specific batch, and old custody remains unchanged after post-move verification as part of the intended Bitwarden and Automic Vault coexistence end state.
 
 ## Custody boundaries this rollout does not change
 
@@ -16,7 +16,7 @@ Current access is preserved throughout: every move requires captain approval for
 
 ## Roles
 
-- **Owner (captain)**: approves phase gates, migration batches, and retirements; holds one organization owner account.
+- **Owner (captain)**: approves phase gates and migration batches; holds one organization owner account.
 - **Second owner/admin**: an independent person or independently held account that can recover the organization if the captain's account is lost.
 - **Batch operator**: runs a migration batch's checklist; may be the captain or a delegate; never approves their own batch when dual control applies.
 
@@ -87,12 +87,11 @@ Every batch follows the same ordered ceremony, and its auditable no-secret recor
 2. **Preflight**: confirm each item's current custody still works, its target collection exists with the right group access, and its owner is available for verification.
 3. **Captain approval**: the captain approves this exact batch; the approval is recorded with the approver's identity.
 4. **Move**: the owner (or batch operator, with the owner for dual control) creates each item in Bitwarden by signing into both sides directly; values pass through no intermediate file, chat, or tool.
-5. **Verify**: each item's intended users prove real access through Bitwarden (an actual sign-in or connection using the migrated item), and anyone who should not see it confirms they cannot.
-6. **Rollback point**: if verification fails, the old custody is still intact; fix or remove the Bitwarden item and re-verify - nothing has been lost.
-7. **Retire old custody**: only after verification, delete or invalidate the old copy; where exposure during handling is suspected, rotate instead of merely deleting.
-8. **Record**: the completed batch record (labels, owners, collections, dates, approver - never values) is the completion evidence.
+5. **Verify coexistence**: each item's intended users prove real access through Bitwarden (an actual sign-in or connection using the migrated item), anyone who should not see it confirms they cannot, and the operator confirms the old custody remains intact and usable.
+6. **Rollback point**: if Bitwarden verification fails, the old custody is still intact; fix or remove the Bitwarden item and re-verify - nothing has been lost.
+7. **Record**: the verified batch record (labels, owners, collections, dates, approver - never values) is the completion evidence for coexistence.
 
-The record tool refuses to mark retirement before verification and recorded approval, so a batch cannot skip its own safety order.
+The record tool has no retirement transition: verification completes the batch as coexistence evidence, and neither batch approval nor completion authorizes deletion, invalidation, rotation, or retirement of old custody.
 It also refuses to read any record it cannot fully validate - a hand-edited, truncated, or misfiled history is never reported as progress - and its `--help` owns the exact record rules.
 When a record is refused, correct it back to its last valid prefix (delete only the trailing lines that are not yet true) or quarantine it outside the record directory and start a new batch; never edit it into a shape that merely satisfies the tool.
 
@@ -122,4 +121,5 @@ notes: <free text, labels only>
 
 ## What this runbook never authorizes
 
-Creating accounts or organizations, choosing or purchasing a plan, inviting users, changing billing, reading or moving secret values, changing production access, rotating credentials, or retiring old custody all require the captain's direct participation or explicit approval at the gate that names them.
+This runbook never authorizes deleting, invalidating, rotating, or retiring existing custody or credentials, and no migration-batch approval can authorize those actions.
+Creating accounts or organizations, choosing or purchasing a plan, inviting users, changing billing, reading or moving secret values, or changing production access require the captain's direct participation or explicit approval at the gate that names them.

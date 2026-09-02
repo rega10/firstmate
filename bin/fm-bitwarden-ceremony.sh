@@ -49,9 +49,9 @@
 # and `mark` apply when they write.
 #
 # Steps are batch-level and strictly ordered:
-#   preflight -> approval -> moved -> verified -> retired
+#   preflight -> approval -> moved -> verified
 # Every command that reads a record requires its recorded steps to be exactly
-# that order with nothing skipped, repeated, or added after `retired`, so a
+# that order with nothing skipped, repeated, or added after `verified`, so a
 # hand-edited or tampered history is refused by `check` and `status` instead of
 # being reported as progress. A refused record is corrected back to its last
 # valid prefix, or quarantined and replaced by a new batch, per the recovery
@@ -61,9 +61,8 @@
 #     no other step accepts it.
 #   - moved requires at least one registered item, so a batch cannot be
 #     "moved" with no recorded per-item ownership/collection target.
-#   - retired is the destructive gate: it is refused unless verified is marked
-#     AND an approval line with approved-by exists, so old-custody retirement
-#     can never be recorded before post-move verification and captain approval.
+#   - verified records both working Bitwarden access and confirmed coexistence
+#     with unchanged old custody. Destructive retirement is not a valid step.
 # Replaying a command with the same arguments is idempotent: re-running init on
 # an initialized batch, re-adding an identical item, or re-marking a recorded
 # step is a no-op success, so an interrupted ceremony can be resumed by
@@ -87,7 +86,7 @@ SELF_PATH="$SELF_DIR/fm-bitwarden-ceremony.sh"
 IO_ACTIVE=0
 FM_BITWARDEN_PARSE_DATE=''
 
-STEPS="preflight approval moved verified retired"
+STEPS="preflight approval moved verified"
 
 is_step() {  # <name> - exact whole-word membership in $STEPS
   local s
@@ -223,7 +222,8 @@ run_record_command() {  # <batch> <create-dir:0|1> <lock:0|1> <internal-command>
 
 atomic_append_line() {  # <batch> <line>
   local batch=$1 line=$2
-  python3 "$IO_HELPER" append "$batch" "$PARSED_RECORD_HASH" "$line"
+  [ -n "${FM_BITWARDEN_LOCK_TOKEN:-}" ] || die 'refused: ceremony lock ownership is unavailable'
+  python3 "$IO_HELPER" append "$batch" "$PARSED_RECORD_HASH" "$FM_BITWARDEN_LOCK_TOKEN" "$line"
 }
 
 today() { date -u +%Y-%m-%d 2>/dev/null; }
@@ -501,10 +501,6 @@ cmd_mark() {
   fi
   if [ "$step" = moved ] && [ "$PARSED_ITEM_COUNT" -eq 0 ]; then
     die "batch '$batch': refused to mark moved with no registered items; every moved credential needs a recorded owner/collection target"
-  fi
-  if [ "$step" = retired ]; then
-    step_recorded verified || die "batch '$batch': refused to record retirement before post-move verification"
-    [ -n "$PARSED_APPROVED_BY" ] || die "batch '$batch': refused to record retirement without a recorded captain approval"
   fi
   expected=$(next_step) || die "batch '$batch' is already complete"
   [ "$step" = "$expected" ] || die "batch '$batch': next required step is '$expected', not '$step' (steps in order are: $STEPS)"

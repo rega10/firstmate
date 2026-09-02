@@ -384,6 +384,7 @@ def command_run(arguments):
         environment["FM_BITWARDEN_RECORD_DISPLAY"] = os.path.join(directory_path, batch + ".ceremony")
         environment["FM_BITWARDEN_RECORD_PRESENT"] = "0" if payload is None else "1"
         environment["FM_BITWARDEN_RECORD_HASH"] = fingerprint or ""
+        environment["FM_BITWARDEN_LOCK_TOKEN"] = lock_state[1] if lock_state is not None else ""
         completed = subprocess.run(
             [script, command, *command_arguments],
             env=environment,
@@ -423,7 +424,7 @@ def command_create(batch):
         os.close(directory)
 
 
-def command_append(batch, expected_hash, line):
+def command_append(batch, expected_hash, lock_token, line):
     if "\n" in line or "\r" in line:
         fail("refused: ceremony record update contains a line break")
     directory = os.open(".", os.O_RDONLY | os.O_DIRECTORY)
@@ -440,8 +441,15 @@ def command_append(batch, expected_hash, line):
         temporary = stage_bytes(directory, record_name, payload + line.encode("utf-8") + b"\n")
         try:
             pause_at("FM_BITWARDEN_TEST_BEFORE_REPLACE")
-            os.rename(temporary, record_name, src_dir_fd=directory, dst_dir_fd=directory)
-            os.fsync(directory)
+            guard = acquire_guard(directory, record_name, wait_deadline())
+            try:
+                current = read_lock(directory, record_name + ".lock")
+                if current is None or current[0]["token"] != lock_token:
+                    fail("refused: ceremony lock ownership changed before record replacement; retry")
+                os.rename(temporary, record_name, src_dir_fd=directory, dst_dir_fd=directory)
+                os.fsync(directory)
+            finally:
+                release_guard(guard)
         finally:
             try:
                 os.unlink(temporary, dir_fd=directory)
@@ -461,8 +469,8 @@ def main():
         return command_run(sys.argv[2:])
     if command == "create" and len(sys.argv) == 3:
         return command_create(sys.argv[2])
-    if command == "append" and len(sys.argv) == 5:
-        return command_append(sys.argv[2], sys.argv[3], sys.argv[4])
+    if command == "append" and len(sys.argv) == 6:
+        return command_append(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     fail("internal record I/O command is invalid")
 
 

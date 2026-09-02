@@ -4,10 +4,7 @@
 #
 # The safety contract under test: the tool refuses secret-shaped input without
 # echoing or persisting it, refuses malicious batch ids that could escape the
-# record directory, enforces the strict step order that keeps old-custody
-# retirement behind post-move verification and captain approval, stays
-# idempotent so an interrupted ceremony can be replayed, and reports a corrupt
-# record by line number only, never by content.
+# record directory, enforces the strict step order that ends in verified coexistence without a destructive retirement transition, stays idempotent so an interrupted ceremony can be replayed, and reports a corrupt record by line number only, never by content.
 set -u
 
 # shellcheck source=tests/lib.sh disable=SC1091
@@ -29,6 +26,17 @@ run() {  # <expected-exit> <label> <args...>
 wait_for_file() {  # <path> <label>
   local path=$1 label=$2 attempts=0
   while [ ! -f "$path" ]; do
+    attempts=$((attempts + 1))
+    [ "$attempts" -lt 500 ] || fail "$label"
+    sleep 0.02
+  done
+}
+
+wait_for_no_stage() {  # <directory> <batch> <label>
+  local directory=$1 batch=$2 label=$3 attempts=0 path
+  while :; do
+    path=$(find "$directory" -name ".$batch.ceremony.stage.*" -print -quit)
+    [ -z "$path" ] && return 0
     attempts=$((attempts + 1))
     [ "$attempts" -lt 500 ] || fail "$label"
     sleep 0.02
@@ -264,7 +272,7 @@ for secret in "${SECRETS[@]}"; do
   ! grep -Fq "$secret" "$RECORDS/batch-a.ceremony" || fail 'a refused secret-shaped value was persisted to the record'
 done
 
-# --- ordering, retirement gates, and idempotent replay ----------------------
+# --- ordering, coexistence completion, and idempotent replay ----------------
 
 run 0 'item registers with owner and collection' add-item batch-a prod-db --owner ops-team --collection prod-infra
 run 0 'identical add-item is an idempotent no-op' add-item batch-a prod-db --owner ops-team --collection prod-infra
@@ -283,8 +291,8 @@ assert_contains "$OUT" 'different owner/collection' 'dash-leading conflict names
 run 0 'dash-leading batch status counts one item' status batch-dash
 assert_contains "$OUT" 'items: 1' 'dash-leading batch reports one registered item'
 
-run 1 'retirement is refused before any earlier step' mark batch-a retired
-assert_contains "$OUT" 'before post-move verification' 'retirement refusal names the verification gate, not generic ordering'
+run 1 'destructive retirement is not a ceremony step' mark batch-a retired
+assert_contains "$OUT" 'unknown step' 'retirement is refused as outside the ceremony state machine'
 ! grep -q '^step: retired' "$RECORDS/batch-a.ceremony" || fail 'refused retirement was recorded anyway'
 run 1 'verification cannot be recorded before the move' mark batch-a verified
 assert_contains "$OUT" "next required step is 'preflight'" 'out-of-turn step names the required step'
@@ -319,17 +327,15 @@ assert_contains "$OUT" 'refused' 'a secret-shaped approver is refused even on a 
 assert_not_contains "$OUT" 'ghp_' 'the refusal echoed the secret-shaped approver'
 run 1 '--approved-by is refused on an already-recorded non-approval step' mark batch-a preflight --approved-by captain
 assert_contains "$OUT" 'only valid for the approval step' 'misplaced --approved-by is refused on a replay too'
-run 1 'retirement is still refused before verification' mark batch-a retired
-assert_contains "$OUT" 'before post-move verification' 'retirement refusal after approval still names the verification gate'
 run 0 'moved records' mark batch-a moved
 run 1 'items cannot be added after the move' add-item batch-a late-item --owner ops --collection team
-run 1 'retirement is refused before post-move verification' mark batch-a retired
-assert_contains "$OUT" 'before post-move verification' 'post-move retirement refusal names the verification gate'
-! grep -q '^step: retired' "$RECORDS/batch-a.ceremony" || fail 'refused retirement was recorded after the move'
 run 0 'verified records' mark batch-a verified
-run 0 'retirement is allowed only after verification and approval' mark batch-a retired
-run 0 'status renders the complete batch' status batch-a
-assert_contains "$OUT" 'next: complete' 'complete batch reports next: complete'
+run 0 'status renders verified coexistence as complete' status batch-a
+assert_contains "$OUT" 'next: complete' 'verified coexistence reports next: complete'
+verified_record=$(cat "$RECORDS/batch-a.ceremony")
+run 1 'retirement remains unavailable after verification' mark batch-a retired
+assert_contains "$OUT" 'unknown step' 'completed verification does not expose a retirement transition'
+[ "$(cat "$RECORDS/batch-a.ceremony")" = "$verified_record" ] || fail 'retirement refusal changed verified coexistence evidence'
 
 # A batch with no registered items can never be marked moved.
 run 0 'empty batch initializes' init batch-empty
@@ -417,6 +423,23 @@ done
 [ "$(grep -c '^step: preflight' "$LOCK_DATA/bitwarden/killed-writer.ceremony")" = 1 ] || fail 'simultaneous stale-lock reclaimers recorded duplicate steps'
 [ ! -e "$LOCK_DATA/bitwarden/killed-writer.ceremony.lock" ] || fail 'stale writer recovery left the lock behind'
 
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" init orphan-writer >/dev/null
+orphan_marker="$TMP_ROOT/orphan-writer-pause"
+FM_BITWARDEN_TEST_BEFORE_REPLACE="$orphan_marker" FM_DATA_OVERRIDE="$LOCK_DATA" \
+  "$CEREMONY" mark orphan-writer preflight > "$TMP_ROOT/orphan-writer.out" 2>&1 &
+orphan_command=$!
+wait_for_file "$orphan_marker.ready" 'writer did not pause after staging its record update'
+orphan_owner=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["pid"])' "$LOCK_DATA/bitwarden/orphan-writer.ceremony.lock")
+kill -9 "$orphan_owner"
+wait "$orphan_command" 2>/dev/null && fail 'writer whose transaction owner was killed reported success'
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark orphan-writer preflight >/dev/null
+FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" mark orphan-writer approval --approved-by captain >/dev/null
+: > "$orphan_marker.go"
+wait_for_no_stage "$LOCK_DATA/bitwarden" orphan-writer 'orphaned staged update did not finish its replacement attempt'
+OUT=$(FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" check orphan-writer 2>&1) || fail 'orphaned writer damaged the successful retry record'
+assert_contains "$OUT" 'next: moved' 'orphaned writer cannot overwrite a later successful approval'
+[ "$(grep -c '^step: approval ' "$LOCK_DATA/bitwarden/orphan-writer.ceremony")" = 1 ] || fail 'orphaned writer overwrote the successful retry'
+
 FM_DATA_OVERRIDE="$LOCK_DATA" "$CEREMONY" init live-writer >/dev/null
 live_marker="$TMP_ROOT/live-writer-pause"
 FM_BITWARDEN_TEST_AFTER_LOCK="$live_marker" FM_DATA_OVERRIDE="$LOCK_DATA" \
@@ -500,12 +523,10 @@ write_record() {  # <batch> <step-lines...>
   } > "$RECORDS/$batch.ceremony"
 }
 
-# retired written before approval and verified: the exact history the ceremony
-# exists to make impossible.
+# A moved step written before approval is an impossible ceremony history.
 write_record tamper-order \
   'step: preflight date=2026-01-01' \
-  'step: moved date=2026-01-01' \
-  'step: retired date=2026-01-01'
+  'step: moved date=2026-01-01'
 for cmd in check status; do
   run 1 "$cmd refuses a record whose steps are out of order" "$cmd" tamper-order
   assert_contains "$OUT" 'corrupt at line 6' 'out-of-order record is reported by line number'
@@ -515,7 +536,7 @@ for cmd in check status; do
   assert_not_contains "$OUT" 'next:' "$cmd reported progress from a tampered record"
 done
 run 1 'mark refuses to append to an out-of-order record' mark tamper-order approval --approved-by captain
-[ "$(grep -c '^step: ' "$RECORDS/tamper-order.ceremony")" = 3 ] || fail 'a refused record was appended to'
+[ "$(grep -c '^step: ' "$RECORDS/tamper-order.ceremony")" = 2 ] || fail 'a refused record was appended to'
 
 # A skipped prerequisite is refused at the line that skips it.
 write_record tamper-skip \
@@ -538,10 +559,21 @@ write_record tamper-trailing \
   'step: approval date=2026-01-01 approved-by=captain' \
   'step: moved date=2026-01-01' \
   'step: verified date=2026-01-01' \
-  'step: retired date=2026-01-01' \
-  'step: retired date=2026-01-01'
+  'step: verified date=2026-01-01'
 run 1 'check refuses a step recorded after completion' check tamper-trailing
 assert_contains "$OUT" 'already complete' 'trailing step refusal names the reason'
+
+write_record tamper-retired \
+  'step: preflight date=2026-01-01' \
+  'step: approval date=2026-01-01 approved-by=captain' \
+  'step: moved date=2026-01-01' \
+  'step: verified date=2026-01-01' \
+  'step: retired date=2026-01-01'
+for cmd in check status; do
+  run 1 "$cmd refuses a legacy retirement transition" "$cmd" tamper-retired
+  assert_contains "$OUT" 'unknown step' 'legacy retirement is outside the accepted record state machine'
+  assert_not_contains "$OUT" 'next: complete' "$cmd certified a record carrying a retirement transition"
+done
 
 # An approval line with no approver is not a recorded approval.
 write_record tamper-approver \
@@ -551,9 +583,9 @@ write_record tamper-approver \
   'step: verified date=2026-01-01'
 run 1 'check refuses an approval with an empty approver' check tamper-approver
 assert_contains "$OUT" 'approved-by is empty' 'empty-approver refusal names the reason'
-run 1 'mark refuses to append to a record whose approval has no approver' mark tamper-approver retired
+run 1 'mark refuses to append to a record whose approval has no approver' mark tamper-approver verified
 assert_contains "$OUT" 'approved-by is empty' 'the empty-approver record is refused when read, before any gate on the step itself'
-! grep -q '^step: retired' "$RECORDS/tamper-approver.ceremony" || fail 'retirement was recorded against an empty approver'
+[ "$(grep -c '^step: verified' "$RECORDS/tamper-approver.ceremony")" = 1 ] || fail 'verification was appended to a record with an empty approver'
 
 # A hand-edited duplicate item line would double-count the auditable evidence.
 {
@@ -582,7 +614,7 @@ run 0 'the corrected record accepts the next real step' mark tamper-fixed moved
   printf 'batch: tamper-secret\n'
   printf 'created: 2026-01-01\n'
   printf 'step: preflight date=2026-01-01\n'
-  printf 'step: retired date=2026-01-01 note=ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n'
+  printf 'step: verified date=2026-01-01 note=ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n'
 } > "$RECORDS/tamper-secret.ceremony"
 run 1 'a tampered record holding secret material is refused' check tamper-secret
 assert_not_contains "$OUT" 'ghp_' 'refusal echoed secret-shaped record content'
@@ -597,7 +629,6 @@ run 0 'source batch preflight' mark copy-src preflight
 run 0 'source batch approval' mark copy-src approval --approved-by captain
 run 0 'source batch moved' mark copy-src moved
 run 0 'source batch verified' mark copy-src verified
-run 0 'source batch retired' mark copy-src retired
 cp "$RECORDS/copy-src.ceremony" "$RECORDS/copy-dst.ceremony"
 for cmd in init check status; do
   run 1 "$cmd refuses a record copied from another batch" "$cmd" copy-dst
@@ -607,7 +638,7 @@ for cmd in init check status; do
   assert_not_contains "$OUT" 'next:' "$cmd reported progress from another batch's record"
 done
 run 1 'mark refuses a record copied from another batch' mark copy-dst preflight
-[ "$(grep -c '^step: ' "$RECORDS/copy-dst.ceremony")" = 5 ] || fail 'a wrong-batch record was appended to'
+[ "$(grep -c '^step: ' "$RECORDS/copy-dst.ceremony")" = 4 ] || fail 'a wrong-batch record was appended to'
 run 0 'the source batch is unaffected' check copy-src
 assert_contains "$OUT" 'next: complete' 'the original record still reports its own completion'
 
@@ -701,8 +732,7 @@ assert_not_contains "$OUT" 'items:' 'status counted items from a record with an 
 run 1 'mark refuses to record a move against an unlabelled item' mark empty-label moved
 ! grep -q '^step: moved' "$RECORDS/empty-label.ceremony" || fail 'a move was recorded against an unlabelled item'
 
-# An item with no owner or collection is not the ownership target the ceremony
-# requires, so it must not carry a batch through to retirement.
+# An item with no owner or collection is not the ownership target the ceremony requires, so it must not carry a batch through coexistence verification.
 {
   printf 'fm-bitwarden-ceremony v1\n'
   printf 'batch: empty-fields\n'
@@ -853,7 +883,7 @@ assert_contains "$OUT" 'in the future' 'future created header refusal names the 
 run 1 'mark refuses to append under a future created header' mark created-future preflight
 [ "$(cat "$RECORDS/created-future.ceremony")" = "$created_before" ] || fail 'mark modified a record with a future created header'
 
-# A ceremony cannot have been completed on a day that has not happened.
+# A ceremony cannot have verified coexistence on a day that has not happened.
 {
   printf 'fm-bitwarden-ceremony v1\n'
   printf 'batch: all-future\n'
@@ -863,7 +893,6 @@ run 1 'mark refuses to append under a future created header' mark created-future
   printf 'step: approval date=2099-12-31 approved-by=captain\n'
   printf 'step: moved date=2099-12-31\n'
   printf 'step: verified date=2099-12-31\n'
-  printf 'step: retired date=2099-12-31\n'
 } > "$RECORDS/all-future.ceremony"
 run 1 'status refuses an entirely future-dated completion record' status all-future
 assert_not_contains "$OUT" 'next: complete' 'a future-dated ceremony was certified as complete'
@@ -888,7 +917,9 @@ mkdir -p "$CLOCK_BIN"
 chmod +x "$CLOCK_BIN/date"
 
 CLOCK_DATA="$TMP_ROOT/clock-data"
-FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" init midnight >/dev/null
+printf '2026-08-29\n' > "$TMP_ROOT/midnight-init-values"
+PATH="$CLOCK_BIN:$PATH" FM_CLOCK_COUNT="$TMP_ROOT/midnight-init-count" FM_CLOCK_VALUES="$TMP_ROOT/midnight-init-values" \
+  FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" init midnight >/dev/null
 printf '2026-08-29\n2026-08-30\n' > "$TMP_ROOT/midnight-values"
 rc=0
 OUT=$(PATH="$CLOCK_BIN:$PATH" FM_CLOCK_COUNT="$TMP_ROOT/midnight-count" FM_CLOCK_VALUES="$TMP_ROOT/midnight-values" \
@@ -898,8 +929,12 @@ assert_contains "$OUT" 'recorded (2026-08-30)' 'mark reports the one timestamp c
 grep -q '^step: preflight date=2026-08-30$' "$CLOCK_DATA/bitwarden/midnight.ceremony" || fail 'mark persisted a date different from its reported timestamp'
 [ "$(cat "$TMP_ROOT/midnight-count")" = 2 ] || fail 'mark sampled the UTC date more than once after parsing'
 
-FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" init rollback-clock >/dev/null
-FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" mark rollback-clock preflight >/dev/null
+printf '2026-08-28\n' > "$TMP_ROOT/rollback-init-values"
+PATH="$CLOCK_BIN:$PATH" FM_CLOCK_COUNT="$TMP_ROOT/rollback-init-count" FM_CLOCK_VALUES="$TMP_ROOT/rollback-init-values" \
+  FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" init rollback-clock >/dev/null
+printf '2026-08-29\n2026-08-29\n' > "$TMP_ROOT/rollback-preflight-values"
+PATH="$CLOCK_BIN:$PATH" FM_CLOCK_COUNT="$TMP_ROOT/rollback-preflight-count" FM_CLOCK_VALUES="$TMP_ROOT/rollback-preflight-values" \
+  FM_DATA_OVERRIDE="$CLOCK_DATA" "$CEREMONY" mark rollback-clock preflight >/dev/null
 before=$(cat "$CLOCK_DATA/bitwarden/rollback-clock.ceremony")
 printf '2026-08-29\n2026-08-28\n' > "$TMP_ROOT/rollback-values"
 rc=0
@@ -956,7 +991,8 @@ assert_contains "$OUT" 'run init first' 'missing record points at init'
 
 run 0 'help renders the header contract' --help
 assert_contains "$OUT" 'Record format (v1, line-based, append-only):' 'help publishes the record format'
-assert_contains "$OUT" 'preflight -> approval -> moved -> verified -> retired' 'help publishes the ordered steps'
+assert_contains "$OUT" 'preflight -> approval -> moved -> verified' 'help publishes the ordered steps'
+assert_not_contains "$OUT" 'verified -> retired' 'help exposed a destructive post-verification transition'
 assert_not_contains "$OUT" 'set -eu' 'help leaked shell source past the header'
 [ "$(printf '%s\n' "$OUT" | tail -n 1)" = 'which is the recovery entry point after an interruption.' ] || fail 'help output does not end with the final header sentence'
 
