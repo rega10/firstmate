@@ -6,6 +6,14 @@ function basename(value) {
   return value.split("/").filter(Boolean).at(-1) || value;
 }
 
+const ARGUMENT_DRIVEN_EXECUTION_DELEGATES = new Set(["parallel", "xargs"]);
+
+function hasUnresolvedExecutionDelegate(position) {
+  const shell = shellInvocation(position);
+  if (shell && shell.kind !== "command") return true;
+  return ARGUMENT_DRIVEN_EXECUTION_DELEGATES.has(basename(position.command?.value || ""));
+}
+
 function commandNames(source, depth = 0) {
   if (depth > 12) return null;
   const lexed = new Lexer(source).tokenize();
@@ -14,7 +22,7 @@ function commandNames(source, depth = 0) {
   for (const tokens of splitProgram(lexed.tokens).nodes) {
     if (startsShellControlGrammar(tokens) || tokens.some((token) => token.type === "group")) return null;
     const position = commandPosition(tokens);
-    if (position.unresolvedWrapperOption) return null;
+    if (position.unresolvedWrapperOption || hasUnresolvedExecutionDelegate(position)) return null;
     if (position.command) {
       if (!position.command.literal || position.command.subs.length > 0) return null;
       names.push(basename(position.command.value));
@@ -25,11 +33,6 @@ function commandNames(source, depth = 0) {
       names.push(...nested);
     }
     for (const token of tokens) {
-      if (token.type === "group") {
-        const nested = commandNames(token.content, depth + 1);
-        if (nested === null) return null;
-        names.push(...nested);
-      }
       if (token.type !== "word") continue;
       for (const substitution of token.subs) {
         const nested = commandNames(substitution.content, depth + 1);

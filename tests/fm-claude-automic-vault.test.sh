@@ -387,7 +387,7 @@ test_provision_recovery_renewal_preflight_and_redaction() {
 }
 
 test_enabled_disabled_and_non_claude_launches() {
-  local dir home fakebin state record proj wt launchlog output status launch before executed raw id before_claude before_endpoint raw_index=0
+  local dir home fakebin state record proj wt launchlog output status launch before executed raw id before_claude before_endpoint raw_heredoc raw_index=0
   dir="$TMP_ROOT/launches"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -477,11 +477,15 @@ test_enabled_disabled_and_non_claude_launches() {
     assert_secret_absent "$dir" "$output"
   done
 
+  raw_heredoc=$'/bin/sh <<\'EOF\'\nclaude --dangerously-skip-permissions\nEOF'
   for raw in \
     '"$(printf clau%s de)" --dangerously-skip-permissions' \
     '"$(printf custom-%s agent)" --flag' \
     'true; "$(printf clau%s de)" --dangerously-skip-permissions' \
     "/bin/sh -c 'true; \"\$(printf clau%s de)\" --dangerously-skip-permissions'" \
+    "$raw_heredoc" \
+    "printf '%s\\n' 'claude --dangerously-skip-permissions' | sh" \
+    'printf x | xargs claude --dangerously-skip-permissions' \
     'if true; then claude --dangerously-skip-permissions; fi' \
     'if true; then custom-agent --flag; fi' \
     'while false; do custom-agent --flag; done' \
@@ -547,6 +551,23 @@ test_enabled_disabled_and_non_claude_launches() {
     "fully resolved multi-command non-Claude raw launch changed"
   [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
     || fail "fully resolved multi-command non-Claude raw launch contacted Automic Vault"
+  assert_secret_absent "$dir" "$output"
+
+  : > "$launchlog"
+  before=$(wc -l < "$state/av-argv.log")
+  record=$(make_ship "$dir" "$home" raw-pipeline-non-claude)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-pipeline-non-claude "$proj" 'printf x | custom-agent --flag' \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "fully resolved non-delegating pipeline raw launch"
+  launch=$(last_launch_command "$launchlog")
+  assert_contains "$launch" 'printf x | custom-agent --flag' \
+    "fully resolved non-delegating pipeline raw launch changed"
+  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+    || fail "fully resolved non-delegating pipeline contacted Automic Vault"
   assert_secret_absent "$dir" "$output"
 
   : > "$launchlog"
