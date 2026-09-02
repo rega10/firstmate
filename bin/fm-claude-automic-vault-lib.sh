@@ -9,9 +9,9 @@
 #   - the concrete `av` and `claude` executables are resolved once before
 #     endpoint creation, canonicalized through symlinks, and kept as absolute
 #     paths in the launch command;
-#   - the resolved Claude executable must produce Claude Code's structured auth
-#     status from an isolated empty home and restricted PATH before any Vault
-#     command can run;
+#   - the resolved Claude executable must be the canonical native executable in
+#     Claude Code's versioned install tree, then produce Claude Code's structured
+#     auth status from an isolated empty home before any Vault command can run;
 #   - the token value enters only the Claude process environment through
 #     `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`;
 #   - higher-precedence API-key, cloud-provider, and endpoint overrides are
@@ -36,6 +36,8 @@ FM_CLAUDE_AV_SETTINGS='{"apiKeyHelper":null,"env":{"ANTHROPIC_API_KEY":null,"ANT
 FM_CLAUDE_AV_ERROR=
 FM_CLAUDE_AV_BIN=
 FM_CLAUDE_BIN=
+FM_CLAUDE_AV_BASH=/bin/bash
+FM_CLAUDE_AV_ENV=/usr/bin/env
 FM_CLAUDE_AV_LAUNCH_RELAY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-claude-automic-vault-launch.sh"
 # shellcheck disable=SC2034 # Consumed by callers after fm_claude_av_prepare_launch returns.
 FM_CLAUDE_AV_LAUNCH_COMMAND=
@@ -125,6 +127,28 @@ fm_claude_av_resolve_named_executable() {  # <name>
   fm_claude_av_realpath "$candidate"
 }
 
+fm_claude_av_is_native_install_artifact() {  # <resolved-claude>
+  local executable=$1 artifact_type version major minor patch
+  version=${executable##*/}
+  major=${version%%.*}
+  minor=${version#*.}
+  [ "$minor" != "$version" ] || return 1
+  patch=${minor#*.}
+  [ "$patch" != "$minor" ] || return 1
+  minor=${minor%%.*}
+  [ -n "$major" ] && [ -n "$minor" ] && [ -n "$patch" ] || return 1
+  case "$major:$minor:$patch" in *[!0-9:]*|::*|*::|*:*:*:*) return 1 ;; esac
+  case "$executable" in
+    */.local/share/claude/versions/"$version") ;;
+    *) return 1 ;;
+  esac
+  artifact_type=$(/usr/bin/file -b -- "$executable" 2>/dev/null) || return 1
+  case "$artifact_type" in
+    *Mach-O*executable*|*ELF*executable*|*PE32*executable*) return 0 ;;
+  esac
+  return 1
+}
+
 fm_claude_av_probe_identity() {  # <resolved-claude>
   local executable=$1 probe_root output rc=0
   command -v jq >/dev/null 2>&1 || {
@@ -166,6 +190,18 @@ fm_claude_av_resolve_tools() {
     printf 'error: refusing Claude Automic Vault authentication because av and claude resolve to the same executable; restore the real Claude Code executable on PATH before retrying.\n' >&2
     return 1
   fi
+  if ! fm_claude_av_is_native_install_artifact "$FM_CLAUDE_BIN"; then
+    printf 'error: refusing Claude Automic Vault authentication because the resolved claude executable could not be positively identified as the canonical native Claude Code artifact under .local/share/claude/versions; install Claude Code with the official native installer and retry.\n' >&2
+    return 1
+  fi
+  [ -x "$FM_CLAUDE_AV_BASH" ] || {
+    printf 'error: the pinned startup-clean shell required for Claude Automic Vault authentication is unavailable: %s\n' "$FM_CLAUDE_AV_BASH" >&2
+    return 1
+  }
+  [ -x "$FM_CLAUDE_AV_ENV" ] || {
+    printf 'error: the pinned environment sanitizer required for Claude Automic Vault authentication is unavailable: %s\n' "$FM_CLAUDE_AV_ENV" >&2
+    return 1
+  }
   [ -x "$FM_CLAUDE_AV_LAUNCH_RELAY" ] || {
     printf 'error: the tracked Claude Automic Vault launch relay is unavailable: %s\n' "$FM_CLAUDE_AV_LAUNCH_RELAY" >&2
     return 1
@@ -322,12 +358,14 @@ fm_claude_av_shell_quote() {
 }
 
 fm_claude_av_build_launch_command() {
-  local relay_q av_q claude_q settings_q
+  local env_q bash_q relay_q av_q claude_q settings_q
+  env_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_ENV")
+  bash_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_BASH")
   relay_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_LAUNCH_RELAY")
   av_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_BIN")
   claude_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_BIN")
   settings_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_SETTINGS")
-  printf '%s' "env -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_BASE_URL -u ANTHROPIC_BEDROCK_BASE_URL -u ANTHROPIC_VERTEX_BASE_URL -u ANTHROPIC_FOUNDRY_BASE_URL -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX -u CLAUDE_CODE_USE_FOUNDRY -u AWS_BEARER_TOKEN_BEDROCK CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 $relay_q $av_q $claude_q $settings_q"
+  printf '%s' "$env_q -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_BASE_URL -u ANTHROPIC_BEDROCK_BASE_URL -u ANTHROPIC_VERTEX_BASE_URL -u ANTHROPIC_FOUNDRY_BASE_URL -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX -u CLAUDE_CODE_USE_FOUNDRY -u AWS_BEARER_TOKEN_BEDROCK -u BASH_ENV -u ENV -u SHELLOPTS -u BASHOPTS -u BASH_XTRACEFD -u PROMPT_COMMAND -u CDPATH -u GLOBIGNORE PATH=/usr/bin:/bin:/usr/sbin:/sbin CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 $bash_q --noprofile --norc $relay_q $av_q $claude_q $settings_q"
 }
 
 # Returns 0 with FM_CLAUDE_AV_LAUNCH_COMMAND set for an enabled, authenticated

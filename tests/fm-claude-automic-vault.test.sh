@@ -16,7 +16,7 @@ BASE_PATH="$(dirname "$JQ_BIN"):/usr/bin:/bin:/usr/sbin:/sbin"
 SECRET='sk-ant-oat01-FM_SYNTHETIC_SENTINEL_NEVER_PERSIST'
 
 make_fake_tools() {  # <case-dir>
-  local dir=$1 fakebin
+  local dir=$1 fakebin native_dir cc_bin
   fakebin=$(fm_fakebin "$dir")
   mkdir -p "$dir/fake-state"
   cat > "$fakebin/av" <<'SH'
@@ -74,72 +74,104 @@ shift
 export CLAUDE_CODE_OAUTH_TOKEN=${FM_FAKE_SECRET:?}
 exec "$@"
 SH
-  cat > "$fakebin/claude" <<'SH'
-#!/usr/bin/env bash
-set -u
-if [ -z "${FM_FAKE_STATE:-}" ]; then
-  case " $* " in
-    *" auth status --json "*|*" auth status --json")
-      printf '%s\n' '{"loggedIn":false,"authMethod":"none","apiProvider":"firstParty"}'
-      exit 1
-      ;;
-  esac
-fi
-state=${FM_FAKE_STATE:?}
-if [ "${1:-}" = --help ]; then
-  if [ "${FM_FAKE_CLAUDE_HELP_MODE:-current}" = old ]; then
-    printf '%s\n' 'setup-token --print'
-  else
-    printf '%s\n' 'setup-token --settings --safe-mode --no-session-persistence --output-format --tools --print'
-  fi
-  exit 0
-fi
-if [ "${1:-} ${2:-} ${3:-}" = "auth status --help" ]; then
-  printf '%s\n' 'Usage: claude auth status --json'
-  exit 0
-fi
-if [ "${1:-}" = setup-token ]; then
-  printf 'Complete browser authentication.\n%s\n' "${FM_FAKE_SECRET:?}"
-  exit 0
-fi
-printf 'claude' >> "$state/claude-argv.log"
-for arg in "$@"; do printf ' <%s>' "$arg" >> "$state/claude-argv.log"; done
-printf '\n' >> "$state/claude-argv.log"
-if [ "${CLAUDE_CODE_OAUTH_TOKEN:-}" = "${FM_FAKE_SECRET:?}" ]; then
-  printf 'oauth=present\n' >> "$state/claude-env.log"
-else
-  printf 'oauth=missing\n' >> "$state/claude-env.log"
-fi
-for name in ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_BASE_URL CLAUDE_CODE_USE_BEDROCK; do
-  eval "value=\${$name-}"
-  [ -z "$value" ] || printf 'conflict=%s\n' "$name" >> "$state/claude-env.log"
-done
-case " $* " in
-  *" auth status --json "*)
-    if [ "${FM_FAKE_CLAUDE_MODE:-ok}" = inconclusive ]; then
-      printf '%s\n' '{"loggedIn":true,"authMethod":"api_key","apiProvider":"firstParty","apiKeySource":"apiKeyHelper"}'
+  native_dir="$dir/fake-home/.local/share/claude/versions"
+  mkdir -p "$native_dir"
+  cat > "$dir/fake-claude.c" <<'C'
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static int has_arg(int argc, char **argv, const char *wanted) {
+  int i;
+  for (i = 1; i < argc; i++) if (strcmp(argv[i], wanted) == 0) return 1;
+  return 0;
+}
+
+static void append_args(const char *path, int argc, char **argv) {
+  FILE *out = fopen(path, "a");
+  int i;
+  if (!out) exit(70);
+  fputs("claude", out);
+  for (i = 1; i < argc; i++) fprintf(out, " <%s>", argv[i]);
+  fputc('\n', out);
+  fclose(out);
+}
+
+static void append_line(const char *path, const char *line) {
+  FILE *out = fopen(path, "a");
+  if (!out) exit(70);
+  fprintf(out, "%s\n", line);
+  fclose(out);
+}
+
+int main(int argc, char **argv) {
+  const char *state = getenv("FM_FAKE_STATE");
+  const char *secret = getenv("FM_FAKE_SECRET");
+  const char *mode = getenv("FM_FAKE_CLAUDE_MODE");
+  char path[4096];
+  int i;
+  if (!state && has_arg(argc, argv, "auth") && has_arg(argc, argv, "status")) {
+    puts("{\"loggedIn\":false,\"authMethod\":\"none\",\"apiProvider\":\"firstParty\"}");
+    return 1;
+  }
+  if (argc == 2 && strcmp(argv[1], "--help") == 0) {
+    if (getenv("FM_FAKE_CLAUDE_HELP_MODE") && strcmp(getenv("FM_FAKE_CLAUDE_HELP_MODE"), "old") == 0)
+      puts("setup-token --print");
     else
-      printf '%s\n' '{"loggedIn":true,"authMethod":"oauth_token","apiProvider":"firstParty"}'
-    fi
-    exit 0
-    ;;
-  *" -p "*)
-    if [ "${FM_FAKE_CLAUDE_MODE:-ok}" = revoked ]; then
-      printf '%s\n' '{"type":"result","is_error":true,"api_error_status":401,"error":"authentication_error"}'
-      exit 1
-    fi
-    printf '%s\n' '{"type":"result","is_error":false,"result":"OK"}'
-    exit 0
-    ;;
-esac
-if [ "${FM_FAKE_CLAUDE_MODE:-ok}" = interactive ]; then
-  IFS= read -r reply || exit 51
-  printf 'interactive stdout: %s\n' "$reply"
-  printf 'interactive stderr: authenticated\n' >&2
-fi
-printf 'interactive=authenticated\n' >> "$state/claude-env.log"
-exit 0
-SH
+      puts("setup-token --settings --safe-mode --no-session-persistence --output-format --tools --print");
+    return 0;
+  }
+  if (argc >= 4 && strcmp(argv[1], "auth") == 0 && strcmp(argv[2], "status") == 0 && strcmp(argv[3], "--help") == 0) {
+    puts("Usage: claude auth status --json");
+    return 0;
+  }
+  if (argc >= 2 && strcmp(argv[1], "setup-token") == 0) {
+    if (!secret) return 71;
+    printf("Complete browser authentication.\n%s\n", secret);
+    return 0;
+  }
+  if (!state || !secret) return 72;
+  snprintf(path, sizeof(path), "%s/claude-argv.log", state);
+  append_args(path, argc, argv);
+  snprintf(path, sizeof(path), "%s/claude-env.log", state);
+  append_line(path, getenv("CLAUDE_CODE_OAUTH_TOKEN") && strcmp(getenv("CLAUDE_CODE_OAUTH_TOKEN"), secret) == 0 ? "oauth=present" : "oauth=missing");
+  {
+    const char *names[] = {"ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "CLAUDE_CODE_USE_BEDROCK"};
+    for (i = 0; i < 4; i++) if (getenv(names[i]) && *getenv(names[i])) {
+      char line[256];
+      snprintf(line, sizeof(line), "conflict=%s", names[i]);
+      append_line(path, line);
+    }
+  }
+  if (has_arg(argc, argv, "auth") && has_arg(argc, argv, "status") && has_arg(argc, argv, "--json")) {
+    if (mode && strcmp(mode, "inconclusive") == 0)
+      puts("{\"loggedIn\":true,\"authMethod\":\"api_key\",\"apiProvider\":\"firstParty\",\"apiKeySource\":\"apiKeyHelper\"}");
+    else
+      puts("{\"loggedIn\":true,\"authMethod\":\"oauth_token\",\"apiProvider\":\"firstParty\"}");
+    return 0;
+  }
+  if (has_arg(argc, argv, "-p")) {
+    if (mode && strcmp(mode, "revoked") == 0) {
+      puts("{\"type\":\"result\",\"is_error\":true,\"api_error_status\":401,\"error\":\"authentication_error\"}");
+      return 1;
+    }
+    puts("{\"type\":\"result\",\"is_error\":false,\"result\":\"OK\"}");
+    return 0;
+  }
+  if (mode && strcmp(mode, "interactive") == 0) {
+    char reply[1024];
+    if (!fgets(reply, sizeof(reply), stdin)) return 51;
+    reply[strcspn(reply, "\r\n")] = 0;
+    printf("interactive stdout: %s\n", reply);
+    fprintf(stderr, "interactive stderr: authenticated\n");
+  }
+  append_line(path, "interactive=authenticated");
+  return 0;
+}
+C
+  cc_bin=$(command -v cc 2>/dev/null || command -v gcc 2>/dev/null) || fail "test needs a C compiler for the native Claude fixture"
+  "$cc_bin" -o "$native_dir/2.1.220" "$dir/fake-claude.c" || fail "could not build native Claude fixture"
+  ln -s "$native_dir/2.1.220" "$fakebin/claude"
   cat > "$fakebin/tmux" <<'SH'
 #!/usr/bin/env bash
 set -u
@@ -175,7 +207,7 @@ SH
 #!/usr/bin/env bash
 exit 0
 SH
-  chmod +x "$fakebin/av" "$fakebin/claude" "$fakebin/tmux" "$fakebin/treehouse"
+  chmod +x "$fakebin/av" "$fakebin/tmux" "$fakebin/treehouse"
   (cd "$fakebin" && pwd -P)
 }
 
@@ -280,7 +312,7 @@ test_enabled_disabled_and_non_claude_launches() {
   status=$?
   expect_code 0 "$status" "enabled Claude spawn"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '$fakebin/claude'" \
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "enabled launch did not pin the redacted injection relay and resolved tools"
   assert_contains "$launch" "--model 'sonnet' --effort 'high'" "enabled launch did not preserve profile arguments"
   assert_not_contains "$launch" "$SECRET" "launch argv contains synthetic secret"
@@ -326,7 +358,7 @@ test_enabled_disabled_and_non_claude_launches() {
 }
 
 test_actionable_fail_closed_paths() {
-  local dir home fakebin state mode output status expected wrapper record proj wt launchlog before
+  local dir home fakebin state mode output status expected direct wrapper record proj wt launchlog before
   dir="$TMP_ROOT/blockers"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -386,17 +418,34 @@ test_actionable_fail_closed_paths() {
   assert_contains "$output" "lacks the required" "unsupported Claude blocker was not actionable"
   assert_secret_absent "$dir" "$output"
 
+  mv "$fakebin/claude" "$fakebin/claude-real"
+  direct="$fakebin/claude-direct-wrapper"
+  cat > "$direct" <<'SH'
+#!/usr/bin/env bash
+exec av inject +CLAUDE_CODE_OAUTH_TOKEN -- claude "$@"
+SH
+  chmod +x "$direct"
+  ln -s "$direct" "$fakebin/claude"
+  before=$(wc -l < "$state/av-argv.log" | tr -d ' ')
+  output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
+    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "direct injecting Claude wrapper was accepted"
+  assert_contains "$output" "positively identified" "direct wrapper refusal was not actionable"
+  [ "$(wc -l < "$state/av-argv.log" | tr -d ' ')" = "$before" ] \
+    || fail "direct wrapper reached Automic Vault before artifact refusal"
+  rm "$fakebin/claude"
+
   wrapper="$fakebin/claude-wrapper"
   cat > "$wrapper" <<'SH'
 #!/usr/bin/env bash
 case " $* " in
-  *" --help "*|*" --help") exec "$(dirname "$0")/claude-real" "$@" ;;
+  *" --help "*|*" --help"|*" auth status "*|*" -p "*) exec "$(dirname "$0")/claude-real" "$@" ;;
 esac
 vault=av
 exec "$vault" inject +CLAUDE_CODE_OAUTH_TOKEN -- claude "$@"
 SH
   chmod +x "$wrapper"
-  mv "$fakebin/claude" "$fakebin/claude-real"
   ln -s "$wrapper" "$fakebin/claude"
   before=$(wc -l < "$state/av-argv.log" | tr -d ' ')
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
@@ -407,11 +456,11 @@ SH
   [ "$(wc -l < "$state/av-argv.log" | tr -d ' ')" = "$before" ] \
     || fail "indirect wrapper reached Automic Vault before identity refusal"
   assert_secret_absent "$dir" "$output"
-  pass "Vault, token, version-surface, inconclusive, and recursion failures all block before launch"
+  pass "Vault, token, version-surface, inconclusive, and direct or forwarding wrapper failures all block before launch"
 }
 
 test_launch_time_failure_redaction_and_interactive_io() {
-  local dir home fakebin state record proj wt launchlog output status launch
+  local dir home fakebin state record proj wt launchlog output status launch hostilebin leak
   dir="$TMP_ROOT/launch-boundary"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -436,6 +485,33 @@ test_launch_time_failure_redaction_and_interactive_io() {
   expect_code 0 "$status" "interactive relayed launch"
   assert_contains "$output" "interactive stdout: captain-input" "worker stdin or stdout was not preserved"
   assert_contains "$output" "interactive stderr: authenticated" "worker stderr was not preserved"
+
+  hostilebin="$dir/hostile-bin"
+  leak="$dir/startup-token-leak"
+  mkdir -p "$hostilebin"
+  cat > "$dir/hostile-startup.sh" <<'SH'
+if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+  printf '%s\n' "$CLAUDE_CODE_OAUTH_TOKEN" > "${FM_HOSTILE_LEAK:?}"
+fi
+SH
+  cat > "$hostilebin/bash" <<'SH'
+#!/bin/sh
+if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+  printf '%s\n' "$CLAUDE_CODE_OAUTH_TOKEN" > "${FM_HOSTILE_LEAK:?}"
+fi
+exec /bin/bash "$@"
+SH
+  chmod +x "$hostilebin/bash"
+  output=$(cd "$wt" && printf 'startup-clean-input\n' | \
+    env BASH_ENV="$dir/hostile-startup.sh" ENV="$dir/hostile-startup.sh" \
+      SHELLOPTS=xtrace FM_HOSTILE_LEAK="$leak" FM_FAKE_STATE="$state" \
+      FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=interactive \
+      PATH="$hostilebin:$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
+  status=$?
+  expect_code 0 "$status" "startup-clean interactive launch"
+  [ ! -e "$leak" ] || fail "hostile shell startup controls observed the injected token"
+  assert_contains "$output" "interactive stdout: startup-clean-input" "startup-clean launch did not preserve interactive I/O"
+  assert_not_contains "$output" "$SECRET" "shell tracing exposed the injected token"
 
   rm -f "$state/av-inject-count"
   output=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
@@ -477,7 +553,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   expect_code 0 "$status" "enabled Claude secondmate launch"
   [ "$(cat "$sm/config/claude-automic-vault")" = on ] || fail "secondmate did not inherit opt-in"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '$fakebin/claude'" \
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "secondmate launch did not use the pinned Vault relay"
 
   : > "$launchlog"
@@ -486,7 +562,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   status=$?
   expect_code 0 "$status" "enabled Claude secondmate relaunch"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '$fakebin/claude'" \
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "secondmate relaunch did not reuse the pinned Vault relay"
 
   : > "$launchlog"
@@ -498,7 +574,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   status=$?
   expect_code 0 "$status" "nested worker from inherited secondmate home"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '$fakebin/claude'" \
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "nested worker did not use the inherited pinned Vault relay"
   assert_secret_absent "$dir" "$output"
   pass "secondmate launch, relaunch, inheritance, and nested worker all use the same local injection contract"
