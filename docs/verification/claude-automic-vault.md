@@ -16,12 +16,13 @@ The installed Automic Vault hardener catalog contained no Claude-specific harden
 
 ## Claude version qualification
 
-Claude Code 2.1.220 was qualified on 2026-09-02 for Firstmate's explicit `bypassPermissions` mode with `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1` and restoration of the worker tool path only at final Claude exec.
-The executable admission owner is `bin/fm-claude-automic-vault-qualified-versions`, which contains one exact version and qualification date per evidence-backed entry.
-To qualify an upgrade, set the public behavioral fixture to the exact candidate version, run `tests/fm-claude-automic-vault.test.sh`, and confirm its captured opted-in launch executes the synthetic worker tool without an approval request while credential scrubbing remains enabled.
-Then add that exact version and the check date to the qualification list, pin its official release-manifest checksum separately, and rerun the same public behavioral check before review.
+No real Claude Code version is currently admitted because no actual candidate has completed the required non-secret behavioral qualification.
+The executable admission owner is `bin/fm-claude-automic-vault-qualified-versions`, which stays empty until an actual candidate succeeds and then contains one exact version and qualification date per evidence-backed entry.
+To qualify an upgrade, run `bin/fm-claude-automic-vault-qualify.sh /absolute/path/to/.local/share/claude/versions/<version>` against the actual candidate executable that will be admitted.
+The check runs the actual candidate through Firstmate's pinned startup-clean sanitizer, supplies a clearly non-secret placeholder token, directs it to a loopback model fixture, requires approval-free Bash tool execution, and requires the tool subprocess to receive no OAuth token.
+After a successful result, add that exact version and the check date to the qualification list, pin its official release-manifest checksum separately, and rerun `tests/fm-claude-automic-vault.test.sh` before review.
 Do not infer qualification from a newer version number, advertised flags, release-manifest attestation, or another version's result.
-This procedure uses only fake Vault and token inputs; it does not authorize a real Vault, real token, or live authenticated Claude operation.
+This procedure uses no Vault and only a loopback model fixture with a fake token; it does not authorize a real Vault, real token, or live authenticated Claude operation.
 
 ## Authentication counterfactual
 
@@ -42,6 +43,7 @@ The test uses fake `av` and fake `claude` executables with synthetic secret byte
 It exercises public provisioning, one-time enable recovery, renewal, and preflight, enabled and disabled spawn behavior, direct, assignment-prefixed, option-prefixed, split-string `env`, literal shell-payload, literal-eval, and classifier-unavailable opted-in raw Claude refusal before endpoint creation, Claude versus non-Claude isolation, missing Vault state, Secret Gate denial, a missing secret, revoked-token rejection, unsupported tool surfaces, inconclusive authentication, executable recursion refusal, model and effort argument preservation, redacted output, persistent secondmate launch and relaunch, inherited opt-in, and a nested worker launched from the inherited home.
 It executes the captured enabled worker launch and proves the fake Claude process received the injected environment while higher-precedence auth inputs were absent.
 It then scans every fixture file, captured launch command, fake argv log, and command output to prove the synthetic secret bytes were not persisted or displayed.
+The fake Claude coverage exercises general launch mechanics but never qualifies or admits a real Claude version; only the actual-candidate command in the qualification section can supply that evidence.
 
 The inherited-material regression is also covered by:
 

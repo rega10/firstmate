@@ -332,7 +332,7 @@ If the correct `CLAUDE_CODE_OAUTH_TOKEN` already exists in this machine's Automi
 Enable validates the existing secret before atomically writing the flag and never runs `setup-token` or `av save`.
 If the flag is active but the token was deleted or revoked, use `renew`, or disable and run `provision` when intentionally rebuilding the integration from a clean local state.
 
-The opt-in flag is primary-authoritative inherited local material under [`secondmate-provisioning`](../.agents/skills/secondmate-provisioning/SKILL.md), so local persistent secondmates and their workers on the same machine apply the same setting on launch and relaunch.
+The opt-in flag is primary-authoritative inherited local material under [`secondmate-provisioning`](../.agents/skills/secondmate-provisioning/SKILL.md), so local persistent secondmates and their workers on the same machine apply the same setting on launch and relaunch only after the destination proves its tracked authentication owner is compatible.
 Only the flag is copied between homes, and the token itself always remains in Automic Vault.
 A remote secondmate receives the same flag through the existing inherited-material allowlist but cannot receive the local Vault value, so its Claude launches fail closed until Automic Vault and the token are provisioned separately on that host.
 Concrete non-Claude harness tokens never read the flag, resolve these executables, contact Automic Vault, or change launch behavior.

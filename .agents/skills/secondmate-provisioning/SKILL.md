@@ -112,6 +112,7 @@ Inherited `config/backend` becomes that secondmate home's local runtime-backend 
 A present primary value always converges byte-exact into validated secondmate homes, and primary absence removes the destination so those homes keep runtime auto-detection.
 Explicit per-spawn `--backend` and `FM_BACKEND` remain stronger than every home's local `config/backend`, including an inherited default.
 Inherited `config/claude-automic-vault` carries only the fail-closed opt-in; the Automic Vault token is never copied between homes, and a remote home must have its own Vault value before its Claude launches can proceed.
+Before a local launch can inherit an enabled Claude Automic Vault flag, the validated destination home must contain the exact tracked authentication-owner version marker required by the primary; an absent, unsafe, or incompatible marker blocks propagation and launch until tracked code is synchronized.
 `config/secondmate-harness` is not inherited because it is only the primary's knob for launching secondmate agents.
 `data/captain-shared.md` is main-authoritative in the primary home and read-only in secondmate homes.
 Its primary file header must state that the file is main-authoritative, read-only in secondmate homes, must not be edited there, and that new captain-preference discoveries are routed to the main firstmate through marked status or a document pointer.

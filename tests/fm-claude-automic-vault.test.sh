@@ -517,14 +517,15 @@ test_enabled_disabled_and_non_claude_launches() {
   wt=${record#*$'\t'}
   output=$(FM_CLAUDE_AV_CURL_BIN="$fakebin/curl" \
     FM_CLAUDE_AV_MANIFEST_CHECKSUMS="$state/release-manifests.sha256" \
+    FM_CLAUDE_AV_QUALIFIED_VERSIONS="$ROOT/tests/fixtures/fm-claude-automic-vault-qualified-versions" \
     HTTPS_PROXY=http://127.0.0.1:1 ALL_PROXY=http://127.0.0.1:1 NO_PROXY= \
     https_proxy=http://127.0.0.1:1 all_proxy=http://127.0.0.1:1 no_proxy= \
     run_real_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
       production-attestation "$proj" claude --mode local-only --yolo off 2>&1)
   status=$?
-  [ "$status" -ne 0 ] || fail "production spawn honored caller-controlled attestation inputs"
-  assert_contains "$output" "could not retrieve Claude Code release attestation" \
-    "production spawn did not use the pinned curl boundary"
+  [ "$status" -ne 0 ] || fail "production spawn honored caller-controlled identity inputs"
+  assert_contains "$output" "version 2.1.220 is not qualified" \
+    "production spawn did not use the checked-in qualification boundary"
   [ ! -s "$launchlog" ] || fail "production attestation refusal sent a launch command"
   [ ! -e "$home/state/production-attestation.meta" ] \
     || fail "production attestation refusal published worker metadata"
@@ -1220,6 +1221,7 @@ make_secondmate_home() {  # <home> <id>
   local home=$1 id=$2
   mkdir -p "$home/bin" "$home/data" "$home/state" "$home/config" "$home/projects"
   printf '# Firstmate\n' > "$home/AGENTS.md"
+  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" "$home/bin/fm-claude-automic-vault-owner-version"
   printf '%s\n' "$id" > "$home/.fm-secondmate-home"
   printf 'charter for %s\n' "$id" > "$home/data/charter.md"
 }
@@ -1241,6 +1243,33 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   : > "$launchlog"
   traceparent=00-0123456789abcdef0123456789abcdef-0123456789abcdef-01
   store="$dir/claude-store"
+
+  rm "$sm/bin/fm-claude-automic-vault-owner-version"
+  before_endpoint=0
+  [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
+  output=$(run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
+    sm-vault "$sm" claude --secondmate 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "secondmate without a compatible Vault owner launched"
+  assert_contains "$output" "destination home $(cd "$sm" && pwd -P) lacks the compatible tracked authentication owner version 1" \
+    "secondmate owner compatibility refusal did not name the destination and version"
+  [ ! -e "$sm/config/claude-automic-vault" ] \
+    || fail "incompatible secondmate home received the Claude Vault opt-in"
+  [ ! -s "$launchlog" ] || fail "incompatible secondmate owner sent a launch command"
+  if [ -f "$state/endpoint.log" ]; then
+    [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+      || fail "incompatible secondmate owner created an endpoint"
+  fi
+  printf '2\n' > "$sm/bin/fm-claude-automic-vault-owner-version"
+  output=$(run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
+    sm-vault "$sm" claude --secondmate 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "secondmate with an incompatible Vault owner launched"
+  assert_contains "$output" "compatible tracked authentication owner version 1" \
+    "incompatible secondmate owner version was not refused"
+  [ ! -e "$sm/config/claude-automic-vault" ] \
+    || fail "incompatible secondmate owner received the Claude Vault opt-in"
+  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" "$sm/bin/fm-claude-automic-vault-owner-version"
 
   before=0
   [ ! -f "$state/av-argv.log" ] || before=$(wc -l < "$state/av-argv.log")

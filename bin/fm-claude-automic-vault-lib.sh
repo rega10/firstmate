@@ -32,6 +32,7 @@
 
 FM_CLAUDE_AV_CONFIG_FILE=claude-automic-vault
 FM_CLAUDE_AV_SECRET_NAME=CLAUDE_CODE_OAUTH_TOKEN
+FM_CLAUDE_AV_OWNER_VERSION=1
 FM_CLAUDE_AV_TIMEOUT=${FM_CLAUDE_AV_TIMEOUT:-45}
 FM_CLAUDE_AV_RELEASE_BASE=https://downloads.claude.ai/claude-code-releases
 FM_CLAUDE_AV_MANIFEST_CHECKSUMS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-claude-automic-vault-manifests.sha256"
@@ -105,6 +106,15 @@ fm_claude_av_enabled() {  # <config-dir>
     return 2
   fi
   return 0
+}
+
+fm_claude_av_home_owner_compatible() {  # <home>
+  local marker="$1/bin/fm-claude-automic-vault-owner-version" bytes
+  [ ! -L "$marker" ] && [ -f "$marker" ] || return 1
+  [ "$(fm_claude_av_link_count "$marker")" = 1 ] || return 1
+  bytes=$(wc -c < "$marker" 2>/dev/null) || return 1
+  bytes=${bytes//[[:space:]]/}
+  [ "$bytes" = 2 ] && [ "$(cat "$marker" 2>/dev/null)" = "$FM_CLAUDE_AV_OWNER_VERSION" ]
 }
 
 fm_claude_av_realpath() {  # <path>
