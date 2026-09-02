@@ -1,0 +1,56 @@
+Scope: isolated structure/status demonstration only. No real Bitwarden or Automic Vault system, account, secret, credential, custody, or access path was exercised.
+
+$ bin/fm-bitwarden-ceremony.sh init TeamBatch1
+fm-bitwarden-ceremony: batch 'TeamBatch1' initialized (2026-09-02) at /Users/rega1011/.no-mistakes/evidence/01M1GJ5JTEM2HNE2JJZ76RHYXF/bitwarden-ceremony-demo-data/bitwarden/TeamBatch1.ceremony
+
+$ bin/fm-bitwarden-ceremony.sh add-item TeamBatch1 HumanAdmin --owner IdentityOps --collection ProdAdmins
+fm-bitwarden-ceremony: batch 'TeamBatch1': item 'HumanAdmin' registered (owner=IdentityOps collection=ProdAdmins)
+
+$ bin/fm-bitwarden-ceremony.sh check TeamBatch1
+next: preflight
+
+$ bin/fm-bitwarden-ceremony.sh mark TeamBatch1 preflight
+fm-bitwarden-ceremony: batch 'TeamBatch1': step 'preflight' recorded (2026-09-02)
+
+$ bin/fm-bitwarden-ceremony.sh mark TeamBatch1 approval --approved-by Captain
+fm-bitwarden-ceremony: batch 'TeamBatch1': step 'approval' recorded (2026-09-02)
+
+$ bin/fm-bitwarden-ceremony.sh mark TeamBatch1 moved
+fm-bitwarden-ceremony: batch 'TeamBatch1': step 'moved' recorded (2026-09-02)
+
+$ bin/fm-bitwarden-ceremony.sh mark TeamBatch1 verified
+fm-bitwarden-ceremony: batch 'TeamBatch1': step 'verified' recorded (2026-09-02)
+
+$ bin/fm-bitwarden-ceremony.sh status TeamBatch1
+batch: TeamBatch1
+record: /Users/rega1011/.no-mistakes/evidence/01M1GJ5JTEM2HNE2JJZ76RHYXF/bitwarden-ceremony-demo-data/bitwarden/TeamBatch1.ceremony
+items: 1
+  [x] preflight
+  [x] approval
+  [x] moved
+  [x] verified
+next: complete
+
+$ persisted no-secret record
+fm-bitwarden-ceremony v1
+batch: TeamBatch1
+created: 2026-09-02
+item: HumanAdmin owner=IdentityOps collection=ProdAdmins
+step: preflight date=2026-09-02
+step: approval date=2026-09-02 approved-by=Captain
+step: moved date=2026-09-02
+step: verified date=2026-09-02
+
+$ bin/fm-bitwarden-ceremony.sh mark TeamBatch1 retired
+fm-bitwarden-ceremony: unknown step; steps in order are: preflight approval moved verified
+[exit 1, expected refusal]
+
+$ bin/fm-bitwarden-ceremony.sh status TeamBatch1
+batch: TeamBatch1
+record: /Users/rega1011/.no-mistakes/evidence/01M1GJ5JTEM2HNE2JJZ76RHYXF/bitwarden-ceremony-demo-data/bitwarden/TeamBatch1.ceremony
+items: 1
+  [x] preflight
+  [x] approval
+  [x] moved
+  [x] verified
+next: complete

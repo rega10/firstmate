@@ -1,0 +1,8 @@
+fm-bitwarden-ceremony v1
+batch: TeamBatch1
+created: 2026-09-02
+item: HumanAdmin owner=IdentityOps collection=ProdAdmins
+step: preflight date=2026-09-02
+step: approval date=2026-09-02 approved-by=Captain
+step: moved date=2026-09-02
+step: verified date=2026-09-02
