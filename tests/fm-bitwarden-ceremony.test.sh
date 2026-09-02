@@ -52,7 +52,7 @@ run 0 'init is an idempotent no-op' init batch-a
 assert_contains "$OUT" 'already initialized' 'repeat init reports no-op'
 
 # shellcheck disable=SC2016  # the literal '$(touch x)' string is the attack input
-for bad in '../evil' 'a/b' 'a b' 'UPPER' '-lead' '' '$(touch x)'; do
+for bad in '../evil' 'a/b' 'a b' '-lead' '' '$(touch x)'; do
   rc=0
   OUT=$("$CEREMONY" init "$bad" 2>&1) || rc=$?
   [ "$rc" -ne 0 ] || fail "malicious batch id was accepted: '$bad'"
@@ -153,6 +153,29 @@ OUT=$(PATH="$INIT_DATE_BIN:$PATH" FM_INIT_DATE_MODE=value FM_INIT_DATE_VALUE=202
 [ "$(cat "$TMP_ROOT/init-date-single-count")" = 2 ] || fail 'repeat init sampled the UTC date provider more than once'
 assert_contains "$OUT" 'already initialized' 'repeat init remains an idempotent no-op with one date sample'
 
+read_date_before=$(cksum < "$RECORDS/batch-a.ceremony")
+for cmd in check status; do
+  for date_case in malformed impossible nonascii empty failure; do
+    case $date_case in
+      malformed) date_mode=value; date_value=zzzz ;;
+      impossible) date_mode=value; date_value=2026-02-30 ;;
+      nonascii) date_mode=nonascii; date_value=unused ;;
+      empty) date_mode=empty; date_value=unused ;;
+      failure) date_mode=failure; date_value=unused ;;
+    esac
+    date_count="$TMP_ROOT/$cmd-date-$date_case-count"
+    rc=0
+    OUT=$(PATH="$INIT_DATE_BIN:$PATH" FM_INIT_DATE_MODE="$date_mode" FM_INIT_DATE_VALUE="$date_value" \
+      FM_INIT_DATE_COUNT="$date_count" "$CEREMONY" "$cmd" batch-a 2>&1) || rc=$?
+    [ "$rc" -ne 0 ] || fail "$cmd accepted the $date_case UTC date provider sample"
+    assert_contains "$OUT" 'refused' "$cmd reports the $date_case UTC date provider refusal"
+    assert_not_contains "$OUT" 'next:' "$cmd certified progress after a $date_case UTC date provider sample"
+    assert_not_contains "$OUT" 'items:' "$cmd reported record state after a $date_case UTC date provider sample"
+    [ "$(cat "$date_count")" = 1 ] || fail "$cmd sampled the $date_case UTC date provider more than once"
+  done
+done
+[ "$(cksum < "$RECORDS/batch-a.ceremony")" = "$read_date_before" ] || fail 'current-date read refusals changed the ceremony record'
+
 # --- record paths never follow symbolic links -------------------------------
 
 SYMLINK_ROOT="$TMP_ROOT/symlink-paths"
@@ -218,6 +241,50 @@ FM_DATA_OVERRIDE="$RACE_ROOT/destination-data" "$CEREMONY" check destination-rac
 
 # --- secret-shaped input is refused, redacted, and never persisted ----------
 
+assert_identifier_refused() {
+  local field=$1 value=$2 rc=0
+  case $field in
+    batch) OUT=$("$CEREMONY" init "$value" 2>&1) || rc=$? ;;
+    item) OUT=$("$CEREMONY" add-item batch-a "$value" --owner ops --collection team 2>&1) || rc=$? ;;
+    owner) OUT=$("$CEREMONY" add-item batch-a field-owner --owner "$value" --collection team 2>&1) || rc=$? ;;
+    collection) OUT=$("$CEREMONY" add-item batch-a field-collection --owner ops --collection "$value" 2>&1) || rc=$? ;;
+    approver) OUT=$("$CEREMONY" mark batch-a approval --approved-by "$value" 2>&1) || rc=$? ;;
+  esac
+  [ "$rc" -ne 0 ] || fail "$field accepted a value outside the identifier contract"
+  assert_contains "$OUT" 'labels are identifiers' "$field refusal names the identifier-only interface"
+  assert_contains "$OUT" 'secrets must never be passed on the command line' "$field refusal keeps the no-secret boundary explicit"
+  case $OUT in
+    *"$value"*) fail "$field refusal echoed the rejected value" ;;
+  esac
+}
+
+identifier_before=$(cksum < "$RECORDS/batch-a.ceremony")
+identifier_count_before=$(find "$TMP_ROOT/data" -name '*.ceremony' | wc -l | tr -d ' ')
+for field in batch item owner collection approver; do
+  for invalid_identifier in '.leading' '_leading' '-leading' 'has space' 'has/slash' 'has"quote' 'has=equals' 'has:colon' 'has@sign' $'nonascii-\303\251'; do
+    assert_identifier_refused "$field" "$invalid_identifier"
+  done
+  assert_identifier_refused "$field" "A.$(printf 'z%.0s' $(seq 1 63))"
+  assert_identifier_refused "$field" 'aB3aB3aB3aB3aB3aB3aB3aB3aB3aB3aB3aB3'
+done
+[ "$(cksum < "$RECORDS/batch-a.ceremony")" = "$identifier_before" ] || fail 'identifier refusals changed the ceremony record'
+[ "$(find "$TMP_ROOT/data" -name '*.ceremony' | wc -l | tr -d ' ')" = "$identifier_count_before" ] || fail 'identifier refusals created a ceremony record'
+
+identifier64="A.$(printf 'z%.0s' $(seq 1 62))"
+run 0 'one-byte batch identifier is accepted' init A
+run 0 '64-byte batch identifier is accepted' init "$identifier64"
+run 0 'one-byte item owner and collection identifiers are accepted' add-item A I --owner O --collection C
+run 0 'identifier punctuation is accepted after the first byte' add-item A Item.v1_name --owner Owner.v1_name --collection Collection.v1_name
+run 0 '64-byte item identifier is accepted' add-item A "$identifier64" --owner O --collection C
+run 0 '64-byte owner identifier is accepted' add-item A MaxOwner --owner "$identifier64" --collection C
+run 0 '64-byte collection identifier is accepted' add-item A MaxCollection --owner O --collection "$identifier64"
+run 0 'boundary batch reaches preflight' mark A preflight
+run 0 'one-byte approver identifier is accepted' mark A approval --approved-by P
+run 0 'maximum approver batch initializes' init MaxApprover
+run 0 'maximum approver batch registers an item' add-item MaxApprover I --owner O --collection C
+run 0 'maximum approver batch reaches preflight' mark MaxApprover preflight
+run 0 '64-byte approver identifier is accepted' mark MaxApprover approval --approved-by "$identifier64"
+
 SECRETS=(
   'ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
   'github_pat_11ABCDEFG'
@@ -278,18 +345,6 @@ run 0 'item registers with owner and collection' add-item batch-a prod-db --owne
 run 0 'identical add-item is an idempotent no-op' add-item batch-a prod-db --owner ops-team --collection prod-infra
 [ "$(grep -c '^item: prod-db ' "$RECORDS/batch-a.ceremony")" = 1 ] || fail 'idempotent add-item duplicated the item line'
 run 1 'conflicting re-add of the same label is refused' add-item batch-a prod-db --owner other --collection prod-infra
-
-# A leading-dash label must reach the conflict guard as a pattern, not as
-# options to the command that implements it.
-run 0 'dash-leading batch initializes' init batch-dash
-run 0 'dash-leading item registers' add-item batch-dash -dash-item --owner ops --collection team
-assert_not_contains "$OUT" 'grep:' 'dash-leading label was parsed as command options'
-run 0 'identical dash-leading re-add is an idempotent no-op' add-item batch-dash -dash-item --owner ops --collection team
-run 1 'conflicting dash-leading re-add is refused' add-item batch-dash -dash-item --owner other --collection team
-assert_contains "$OUT" 'different owner/collection' 'dash-leading conflict names the reason'
-[ "$(grep -Fc -- 'item: -dash-item ' "$RECORDS/batch-dash.ceremony")" = 1 ] || fail 'conflicting dash-leading item was appended anyway'
-run 0 'dash-leading batch status counts one item' status batch-dash
-assert_contains "$OUT" 'items: 1' 'dash-leading batch reports one registered item'
 
 run 1 'destructive retirement is not a ceremony step' mark batch-a retired
 assert_contains "$OUT" 'unknown step' 'retirement is refused as outside the ceremony state machine'

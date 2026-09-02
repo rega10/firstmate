@@ -16,6 +16,8 @@ import time
 PREFIX = "fm-bitwarden-ceremony: "
 LOCK_VERSION = "fm-bitwarden-lock-v1"
 EXIT_EXISTS = 17
+IDENTIFIER_FIRST = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+IDENTIFIER_REST = IDENTIFIER_FIRST + "._-"
 
 
 def fail(message, code=1):
@@ -367,7 +369,7 @@ def command_run(arguments):
     if len(arguments) < 6:
         fail("internal record transaction arguments are incomplete")
     directory_path, batch, create_text, lock_text, script, command, *command_arguments = arguments
-    if not batch or any(character not in "abcdefghijklmnopqrstuvwxyz0123456789-" for character in batch):
+    if not 1 <= len(batch) <= 64 or batch[0] not in IDENTIFIER_FIRST or any(character not in IDENTIFIER_REST for character in batch[1:]):
         fail("refused: invalid internal batch identity")
     directory = open_directory(directory_path, create_text == "1")
     old_cwd = os.open(".", os.O_RDONLY | os.O_DIRECTORY)

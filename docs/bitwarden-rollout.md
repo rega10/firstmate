@@ -12,7 +12,7 @@ Current access is preserved throughout: every move requires captain approval for
   Bitwarden Password Manager (human and team credentials) and Bitwarden Secrets Manager (machine and unattended access) are separate custody models with separate consequences.
   Secrets Manager is deliberately not selected or enabled here; see the open decisions below.
 - No secret value ever appears in this repo, in ceremony records, in task reports, or in chat.
-  Every record names credentials by label, owner, and collection only.
+  Every record names credentials through the helper's identifier-only fields; its `--help` owns the exact grammar and secondary credential-shape refusals.
 
 ## Roles
 
@@ -81,7 +81,7 @@ Each phase has an entry gate; do not start a phase until the previous phase's ex
 
 ## Migration ceremony (per batch)
 
-Every batch follows the same ordered ceremony, and its auditable no-secret record is kept with `bin/fm-bitwarden-ceremony.sh` (its `--help` owns the record format and step gates; the tool validates structure and status only and must never be given a secret value):
+Every batch follows the same ordered ceremony, and its auditable no-secret record is kept with `bin/fm-bitwarden-ceremony.sh` (its `--help` owns the identifier-only record format and step gates; the tool validates structure and status only and must never be given a secret value):
 
 1. **Init and plan**: initialize the batch record; register every item as label, owner, and target collection.
 2. **Preflight**: confirm each item's current custody still works, its target collection exists with the right group access, and its owner is available for verification.

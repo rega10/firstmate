@@ -18,11 +18,12 @@
 # HARD SAFETY CONTRACT - this tool never touches secrets:
 #   - It never reads from, writes to, or talks to Bitwarden, Automic Vault, or
 #     any credential store. It validates a local text record, nothing else.
-#   - Every free-text argument is a short reference LABEL (an item name, a
-#     person, a collection). Values that look like secret material - wrong
-#     charset, excessive length, long hex runs, or well-known token prefixes -
-#     are refused, and the refusal message never echoes the offending value,
-#     so a mistakenly pasted secret is neither persisted nor logged.
+#   - Every batch id and label is an identifier, not free text: its first byte
+#     is A-Z, a-z, or 0-9; its remaining bytes are A-Z, a-z, 0-9, dot,
+#     underscore, or hyphen; and its total length is 1 through 64 bytes.
+#     Recognized credential shapes are refused as a secondary defense, but an
+#     identifier can still resemble a secret, so secrets never belong on this
+#     command line. A refusal never echoes the offending value.
 #   - A structurally invalid record line is reported by line number only,
 #     never by content, for the same reason.
 #
@@ -36,7 +37,7 @@
 # step line, and the batch header must name the batch being read - a record
 # copied or renamed to another batch id is refused rather than reported as that
 # batch's evidence. Every line must carry exactly the fields shown above, every
-# label value must be a valid reference label, and every date must be a real
+# identifier must follow the grammar above, and every date must be a real
 # YYYY-MM-DD calendar date that is not in the future, no earlier than the
 # created header, and no earlier than the previous step's date, so the record
 # cannot certify a history the ceremony could not have produced. The accepted
@@ -75,6 +76,8 @@
 # `check` re-validates any partial record and prints the next required step,
 # which is the recovery entry point after an interruption.
 set -eu
+LC_ALL=C
+export LC_ALL
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FM_ROOT="$(cd "$SELF_DIR/.." && pwd)"
@@ -121,22 +124,32 @@ secret_shape_defect() {
     printf 'contains a long hexadecimal run'
     return 0
   fi
+  if [ ${#1} -ge 32 ]; then
+    case $1 in
+      *[!A-Za-z0-9]*) ;;
+      *[A-Z]*)
+        case $1 in
+          *[a-z]*[0-9]*|*[0-9]*[a-z]*) printf 'matches a long mixed alphanumeric credential shape'; return 0 ;;
+        esac
+        ;;
+    esac
+  fi
   return 1
 }
 
-# Prints why $1 is not a usable reference label and returns 0; returns 1 when it
-# is one. Sole definition of a label, shared by the arguments this tool accepts
-# and the values it reads back out of a record.
-label_defect() {
+# Prints why $1 is not a usable identifier and returns 0; returns 1 when it is
+# one. Sole definition shared by every record name and label.
+identifier_defect() {
   case $1 in
     '') printf 'is empty'; return 0 ;;
   esac
   if [ ${#1} -gt 64 ]; then
-    printf 'is too long for a reference label (max 64)'
+    printf 'is too long for an identifier (max 64 bytes)'
     return 0
   fi
   case $1 in
-    *[!A-Za-z0-9._@/-]*) printf 'contains characters outside A-Za-z0-9 . _ @ / -'; return 0 ;;
+    [!A-Za-z0-9]*) printf 'does not start with an ASCII letter or digit'; return 0 ;;
+    *[!A-Za-z0-9._-]*) printf 'contains bytes outside A-Za-z0-9 . _ -'; return 0 ;;
   esac
   secret_shape_defect "$1"
 }
@@ -165,40 +178,14 @@ is_date() {  # <value> - a real YYYY-MM-DD calendar date
   [ "$day" -ge 1 ] && [ "$day" -le "$last_day" ]
 }
 
-# Secret-shape refusals shared by every free-text argument. $1=field-name
-# $2=value; on refusal, dies naming only the field, never the value.
-refuse_secret_shape() {
-  local field=$1 defect
-  if defect=$(secret_shape_defect "$2"); then
-    die "refused: value for $field $defect; secret values must never be passed to this tool"
-  fi
-}
-
-# A batch id is a filename component; anything else risks path traversal.
-valid_batch_id() {
-  case $1 in
-    *[!a-z0-9-]*|-*|'') return 1 ;;
-  esac
-  [ ${#1} -le 64 ]
-}
-
-# A batch id is persisted as a filename and echoed in progress messages, so it
-# faces the same secret-shape refusals as a label.
-require_batch_id() {
-  valid_batch_id "$1" || die "refused: batch id must match [a-z0-9][a-z0-9-]* (max 64 chars)"
-  refuse_secret_shape 'batch id' "$1"
-}
-
-# Labels are short human references. Refuse anything shaped like secret
-# material WITHOUT echoing it (see the safety contract above).
-# $1=field-name $2=value; on refusal, dies naming only the field.
-require_label() {
+require_identifier() {
   local field=$1 value=$2 defect
-  if defect=$(label_defect "$value"); then
-    [ -n "$value" ] || die "refused: $field is empty; pass a short reference label"
-    die "refused: value for $field $defect; secret values must never be passed to this tool"
+  if defect=$(identifier_defect "$value"); then
+    die "refused: value for $field $defect; labels are identifiers, and secrets must never be passed on the command line"
   fi
 }
+
+require_batch_id() { require_identifier 'batch id' "$1"; }
 
 record_path() {
   if [ "$IO_ACTIVE" = 1 ]; then
@@ -250,8 +237,11 @@ parse_record() {
   if [ -n "$FM_BITWARDEN_PARSE_DATE" ]; then
     today_date=$FM_BITWARDEN_PARSE_DATE
   else
-    today_date=$(today)
+    if ! today_date=$(today); then
+      die 'refused: could not read the current UTC date'
+    fi
   fi
+  is_date "$today_date" || die 'refused: current UTC date is not a YYYY-MM-DD calendar date'
   PARSED_ITEMS=""
   PARSED_ITEM_COUNT=0
   PARSED_ITEM_LINES=""
@@ -286,14 +276,14 @@ parse_record() {
         [ "$moved_seen" -eq 0 ] || corrupt "$batch" "$lineno" 'item registered after the batch was marked moved'
         rest=${line#item: }
         name=${rest%% *}
-        if defect=$(label_defect "$name"); then corrupt "$batch" "$lineno" "item label $defect"; fi
+        if defect=$(identifier_defect "$name"); then corrupt "$batch" "$lineno" "item label $defect"; fi
         fields=${rest#"$name" }
         owner=${fields#owner=}
         owner=${owner%% *}
         collection=${fields##*collection=}
         [ "$line" = "item: $name owner=$owner collection=$collection" ] || corrupt "$batch" "$lineno" 'malformed item line'
-        if defect=$(label_defect "$owner"); then corrupt "$batch" "$lineno" "item owner $defect"; fi
-        if defect=$(label_defect "$collection"); then corrupt "$batch" "$lineno" "item collection $defect"; fi
+        if defect=$(identifier_defect "$owner"); then corrupt "$batch" "$lineno" "item owner $defect"; fi
+        if defect=$(identifier_defect "$collection"); then corrupt "$batch" "$lineno" "item collection $defect"; fi
         case $'\n'"$PARSED_ITEMS" in
           *$'\n'"$name"$'\n'*) corrupt "$batch" "$lineno" 'item label already registered on an earlier line' ;;
         esac
@@ -334,7 +324,7 @@ parse_record() {
           *) pending='' ;;
         esac
         if [ "$name" = approval ]; then
-          if defect=$(label_defect "$approver"); then corrupt "$batch" "$lineno" "approval approved-by $defect"; fi
+          if defect=$(identifier_defect "$approver"); then corrupt "$batch" "$lineno" "approval approved-by $defect"; fi
           PARSED_APPROVED_BY=$approver
         fi
         if [ "$name" = moved ]; then
@@ -419,7 +409,7 @@ cmd_add_item() {
     case $1 in
       --owner)
         [ $# -ge 2 ] || die 'usage: add-item requires a value for --owner'
-        require_label '--owner' "$2"
+        require_identifier '--owner' "$2"
         [ "$owner_seen" -eq 0 ] || die 'refused: duplicate --owner option'
         owner=$2
         owner_seen=1
@@ -427,7 +417,7 @@ cmd_add_item() {
         ;;
       --collection)
         [ $# -ge 2 ] || die 'usage: add-item requires a value for --collection'
-        require_label '--collection' "$2"
+        require_identifier '--collection' "$2"
         [ "$collection_seen" -eq 0 ] || die 'refused: duplicate --collection option'
         collection=$2
         collection_seen=1
@@ -437,9 +427,9 @@ cmd_add_item() {
     esac
   done
   require_batch_id "$batch"
-  require_label 'item label' "$label"
-  require_label '--owner' "$owner"
-  require_label '--collection' "$collection"
+  require_identifier 'item label' "$label"
+  require_identifier '--owner' "$owner"
+  require_identifier '--collection' "$collection"
   if [ "$IO_ACTIVE" != 1 ]; then
     run_record_command "$batch" 0 1 __io-add-item "$batch" "$label" --owner "$owner" --collection "$collection"
     return
@@ -467,7 +457,7 @@ cmd_mark() {
     case $1 in
       --approved-by)
         [ $# -ge 2 ] || die 'usage: mark requires a value for --approved-by'
-        require_label '--approved-by' "$2"
+        require_identifier '--approved-by' "$2"
         [ "$approved_by_seen" -eq 0 ] || die 'refused: duplicate --approved-by option'
         approved_by=$2
         approved_by_seen=1
