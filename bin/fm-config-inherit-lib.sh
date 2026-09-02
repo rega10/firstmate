@@ -444,7 +444,7 @@ propagate_secondmate_inheritance() {
 }
 
 propagate_inheritable_config() {
-  local src_config=$1 dest_config=$2 item src dest reason rc src_state dest_state
+  local src_config=$1 dest_config=$2 item src dest dest_home reason rc src_state dest_state
   [ -n "$src_config" ] || return 1
   [ -n "$dest_config" ] || return 1
   rc=0
@@ -511,6 +511,17 @@ propagate_inheritable_config() {
         record_inheritable_config_result "$item" error "$reason"
         rc=1
         continue
+      fi
+      if [ "$src_state" -eq 0 ]; then
+        dest_home=${dest_config%/*}
+        if [ -z "$dest_home" ] || [ "$dest_home" = "$dest_config" ] \
+          || ! fm_claude_av_home_owner_compatible "$dest_home"; then
+          reason="destination home $dest_home lacks the compatible tracked authentication owner version $FM_CLAUDE_AV_OWNER_VERSION; synchronize that home and retry"
+          warn_inheritable_config_error "$item" "$dest" "$reason"
+          record_inheritable_config_result "$item" error "$reason"
+          rc=1
+          continue
+        fi
       fi
       dest_state=0
       fm_claude_av_enabled "$dest_config" || dest_state=$?

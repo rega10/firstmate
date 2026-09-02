@@ -1678,11 +1678,6 @@ if [ "$KIND" = secondmate ]; then
   }
   PRIMARY_CLAUDE_AV_STATE=0
   fm_claude_av_enabled "$CONFIG" || PRIMARY_CLAUDE_AV_STATE=$?
-  if [ "$PRIMARY_CLAUDE_AV_STATE" -eq 0 ] \
-    && ! fm_claude_av_home_owner_compatible "$PROJ_ABS"; then
-    echo "error: secondmate $ID launch cannot propagate the enabled Claude Automic Vault flag because destination home $PROJ_ABS lacks the compatible tracked authentication owner version $FM_CLAUDE_AV_OWNER_VERSION; synchronize that home and retry." >&2
-    exit 1
-  fi
   if [ "${FM_SKIP_SECONDMATE_INHERIT:-0}" != 1 ]; then
     CONFIG_INHERIT_LOCK=$(fm_config_inherit_lock_path "$PROJ_ABS") || {
       echo "error: could not resolve secondmate inheritance lock for $PROJ_ABS" >&2

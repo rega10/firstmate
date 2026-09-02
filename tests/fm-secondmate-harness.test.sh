@@ -286,6 +286,9 @@ test_propagate_lib() {
   home="$d/home1"
   dest="$home/config"
   mkdir -p "$src" "$dest" "$home/state"
+  mkdir -p "$home/bin"
+  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" \
+    "$home/bin/fm-claude-automic-vault-owner-version"
 
   # 1. present source is copied
   printf '{"default":{"harness":"codex"}}\n' > "$src/crew-dispatch.json"
@@ -379,7 +382,9 @@ test_propagate_lib() {
   printf 'herdr\n' > "$src/backend"
   printf 'on\n' > "$src/claude-automic-vault"
   rm -rf "$d/home2"
-  mkdir -p "$d/home2/config" "$d/home2/state"
+  mkdir -p "$d/home2/bin" "$d/home2/config" "$d/home2/state"
+  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" \
+    "$d/home2/bin/fm-claude-automic-vault-owner-version"
   propagate_inheritable_config "$src" "$d/home2/config"
   [ -e "$d/home2/config/secondmate-harness" ] && fail "secondmate-harness was inherited (must not be)"
   [ "$(cat "$d/home2/config/crew-dispatch.json")" = '{"default":{"harness":"codex"}}' ] || fail "crew-dispatch.json not propagated alongside"
@@ -1019,6 +1024,8 @@ new_world() {
   printf 'r1\n' > "$w/main/README.md"
   mkdir -p "$w/main/bin"
   printf 'echo a\n' > "$w/main/bin/tool.sh"
+  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" \
+    "$w/main/bin/fm-claude-automic-vault-owner-version"
   git -C "$w/main" add -A
   git -C "$w/main" commit -qm c1
   printf '%s\n' "$w"
@@ -1519,6 +1526,60 @@ test_bootstrap_rereads_after_partial_propagation() {
   assert_contains "$(inbox_stream "$w/home/state" sm)" "$pointer" \
     "partial bootstrap propagation did not route the instruction pointer"
   pass "B11 bootstrap rereads completed config writes after partial propagation"
+}
+
+test_claude_vault_owner_compatibility_at_local_convergence_points() {
+  local d primary second err output status w head fakebin second_real
+  d="$TMP_ROOT/vault-owner-shared"
+  primary="$d/primary"
+  second="$d/second"
+  mkdir -p "$primary/config" "$primary/data" "$second/config" "$second/data"
+  printf 'on\n' > "$primary/config/claude-automic-vault"
+  printf 'codex\n' > "$primary/config/crew-harness"
+  err="$d/shared.err"
+  if propagate_secondmate_inheritance "$primary" "$second" 2>"$err"; then
+    fail "shared propagation admitted an enabled Vault flag without a compatible destination owner"
+  fi
+  assert_contains "$(cat "$err")" \
+    "destination home $second lacks the compatible tracked authentication owner version 1" \
+    "shared propagation owner refusal did not name the destination and required version"
+  [ ! -e "$second/config/claude-automic-vault" ] \
+    || fail "shared propagation copied the enabled Vault flag into an incompatible home"
+  [ "$(cat "$second/config/crew-harness")" = codex ] \
+    || fail "Vault owner refusal blocked unrelated inherited material"
+
+  w=$(new_world vault-owner-bootstrap)
+  head=$(git -C "$w/main" rev-parse HEAD)
+  add_sm_worktree "$w" sm "$head"
+  rm "$w/sm/bin/fm-claude-automic-vault-owner-version"
+  printf 'on\n' > "$w/home/config/claude-automic-vault"
+  fakebin=$(make_fake_toolchain "$w")
+  output=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
+    FM_SEND_SETTLE=0 "$ROOT/bin/fm-bootstrap.sh" 2>&1); status=$?
+  expect_code 0 "$status" "bootstrap should report an incompatible owner without aborting its sweep"
+  second_real=$(cd "$w/sm" && pwd -P)
+  assert_contains "$output" \
+    "destination home $second_real lacks the compatible tracked authentication owner version 1" \
+    "bootstrap convergence did not surface the shared destination-specific owner refusal"
+  [ ! -e "$w/sm/config/claude-automic-vault" ] \
+    || fail "bootstrap copied the enabled Vault flag into an incompatible home"
+
+  w=$(new_world vault-owner-config-push)
+  head=$(git -C "$w/main" rev-parse HEAD)
+  add_sm_worktree "$w" sm "$head"
+  rm "$w/sm/bin/fm-claude-automic-vault-owner-version"
+  printf 'on\n' > "$w/home/config/claude-automic-vault"
+  output=$(run_config_push "$w" 2>&1); status=$?
+  expect_code 1 "$status" "config push should fail when enabled Vault ownership is incompatible"
+  second_real=$(cd "$w/sm" && pwd -P)
+  assert_contains "$output" \
+    "destination home $second_real lacks the compatible tracked authentication owner version 1" \
+    "config-push convergence did not surface the shared destination-specific owner refusal"
+  assert_contains "$output" "claude-automic-vault: error" \
+    "config push did not report the enabled Vault item as an error"
+  [ ! -e "$w/sm/config/claude-automic-vault" ] \
+    || fail "config push copied the enabled Vault flag into an incompatible home"
+  pass "B12 shared local convergence refuses enabled Vault propagation into incompatible homes"
 }
 
 test_config_push_propagates_reports_without_ff_or_nudge() {
@@ -2594,6 +2655,7 @@ test_backend_inheritance_present_and_absent
 test_presentation_inheritance_default_on_and_opt_out
 test_bootstrap_sweep_surfaces_config_propagation_failure
 test_bootstrap_rereads_after_partial_propagation
+test_claude_vault_owner_compatibility_at_local_convergence_points
 test_config_push_propagates_reports_without_ff_or_nudge
 test_config_push_reports_skips_dirty_and_invalid_home
 test_config_push_exits_nonzero_on_copy_error
