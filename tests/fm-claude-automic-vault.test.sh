@@ -438,7 +438,8 @@ test_enabled_disabled_and_non_claude_launches() {
     "/bin/sh -c 'exec claude --dangerously-skip-permissions'" \
     "bash -lc 'FOO=bar claude --dangerously-skip-permissions'" \
     "zsh -c 'env FOO=bar claude --dangerously-skip-permissions'" \
-    "/bin/bash -c \"env -S 'claude --dangerously-skip-permissions'\""; do
+    "/bin/bash -c \"env -S 'claude --dangerously-skip-permissions'\"" \
+    "eval 'exec claude --dangerously-skip-permissions'"; do
     raw_index=$((raw_index + 1))
     id="raw-prefixed-$raw_index"
     : > "$launchlog"
@@ -501,6 +502,56 @@ test_enabled_disabled_and_non_claude_launches() {
   [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
     || fail "unrelated non-Claude literal shell launch contacted Automic Vault"
   assert_secret_absent "$dir" "$output"
+
+  cat > "$fakebin/node" <<'SH'
+#!/usr/bin/env bash
+exit 127
+SH
+  chmod +x "$fakebin/node"
+  : > "$launchlog"
+  before=$(wc -l < "$state/av-argv.log")
+  before_claude=$(wc -l < "$state/claude-argv.log")
+  before_endpoint=0
+  [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
+  record=$(make_ship "$dir" "$home" raw-no-node-claude)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-no-node-claude "$proj" "eval 'exec claude --dangerously-skip-permissions'" \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "Node-unavailable raw Claude launch bypassed the injection boundary"
+  assert_contains "$output" "no supported injection boundary" \
+    "Node-unavailable raw Claude refusal was not actionable"
+  [ ! -s "$launchlog" ] || fail "Node-unavailable raw Claude refusal sent a launch command"
+  [ ! -e "$home/state/raw-no-node-claude.meta" ] || fail "Node-unavailable raw Claude refusal published worker metadata"
+  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+    || fail "Node-unavailable raw Claude refusal contacted Automic Vault"
+  [ "$(wc -l < "$state/claude-argv.log")" = "$before_claude" ] \
+    || fail "Node-unavailable raw Claude refusal started ordinary Claude"
+  if [ -f "$state/endpoint.log" ]; then
+    [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+      || fail "Node-unavailable raw Claude refusal created an endpoint"
+  fi
+  assert_secret_absent "$dir" "$output"
+
+  : > "$launchlog"
+  before=$(wc -l < "$state/av-argv.log")
+  record=$(make_ship "$dir" "$home" raw-no-node-non-claude)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-no-node-non-claude "$proj" "eval 'exec custom-agent --flag'" \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "Node-unavailable non-Claude raw launch"
+  launch=$(last_launch_command "$launchlog")
+  assert_contains "$launch" "eval 'exec custom-agent --flag'" \
+    "Node-unavailable non-Claude raw launch changed"
+  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+    || fail "Node-unavailable non-Claude raw launch contacted Automic Vault"
+  assert_secret_absent "$dir" "$output"
+  rm -f "$fakebin/node"
 
   rm -f "$home/config/claude-automic-vault"
   : > "$launchlog"

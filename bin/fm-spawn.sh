@@ -1091,6 +1091,15 @@ shell_quote() {
   printf "'"
 }
 
+raw_launch_suspects_claude() {
+  local launch=" ${1//\"/} "
+  launch=${launch//\'/}
+  case "$launch" in
+    *[!A-Za-z0-9_.-]claude[!A-Za-z0-9_.-]*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 resolve_pi_executable() {
   local candidate dir
   candidate=$(type -P -- "$1" 2>/dev/null) || return 1
@@ -1213,9 +1222,17 @@ case "$ARG3" in
   *' '*)  # raw launch command (unverified-adapter escape hatch)
     LAUNCH=$ARG3
     HARNESS=
+    RAW_LAUNCH_CLASSIFIED=0
     RAW_LAUNCH_NODE=$(command -v node 2>/dev/null || true)
     if [ -n "$RAW_LAUNCH_NODE" ]; then
-      HARNESS=$("$RAW_LAUNCH_NODE" "$FM_ROOT/bin/fm-shell-command-name.mjs" "$LAUNCH" 2>/dev/null || true)
+      if HARNESS=$("$RAW_LAUNCH_NODE" "$FM_ROOT/bin/fm-shell-command-name.mjs" "$LAUNCH" 2>/dev/null); then
+        RAW_LAUNCH_CLASSIFIED=1
+      fi
+    fi
+    if [ "$RAW_LAUNCH_CLASSIFIED" -eq 0 ] && raw_launch_suspects_claude "$LAUNCH"; then
+      raw_claude_opt_in=0
+      fm_claude_av_enabled "$CONFIG" || raw_claude_opt_in=$?
+      [ "$raw_claude_opt_in" -eq 1 ] || HARNESS=claude
     fi
     ;;
   '')

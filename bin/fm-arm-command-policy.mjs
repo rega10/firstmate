@@ -659,7 +659,7 @@ function sourcedScript(position) {
   return position.words[position.index + 1] || null;
 }
 
-function evalPayload(position) {
+export function evalPayload(position) {
   if (!position.command || basename(position.command.value) !== "eval") return null;
   const payloads = position.words.slice(position.index + 1);
   if (payloads.length === 0 || payloads.some((payload) => !payload.literal || payload.subs.length > 0)) return null;
