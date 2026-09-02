@@ -475,6 +475,14 @@ function wordsInNode(tokens) {
   return words;
 }
 
+const SHELL_CONTROL_KEYWORDS = new Set([
+  "!", "[[", "]]", "case", "coproc", "do", "done", "elif", "else", "esac", "fi", "for", "function", "if", "in", "repeat", "select", "then", "time", "until", "while",
+]);
+
+export function startsShellControlGrammar(tokens) {
+  return SHELL_CONTROL_KEYWORDS.has(basename(wordsInNode(tokens)[0]?.value || ""));
+}
+
 const WRAPPER_OPTIONS = {
   command: { noArgument: new Set(["p", "v", "V"]), takesArgument: new Set() },
   env: { noArgument: new Set(["0", "i", "P", "v"]), takesArgument: new Set(["a", "C", "S", "u"]) },
@@ -753,8 +761,7 @@ function analyzeProgram(command, context, depth = 0) {
   for (const tokens of program.nodes) {
     const position = commandPosition(tokens);
     const nodeContext = contextWithAssignments(activeContext, position.words);
-    const firstName = basename(position.words[0]?.value || "");
-    if (["if", "then", "else", "elif", "fi", "for", "while", "until", "case", "esac", "do", "done", "function", "time", "coproc"].includes(firstName)) {
+    if (startsShellControlGrammar(tokens)) {
       unsupported = true;
     }
 

@@ -481,7 +481,11 @@ test_enabled_disabled_and_non_claude_launches() {
     '"$(printf clau%s de)" --dangerously-skip-permissions' \
     '"$(printf custom-%s agent)" --flag' \
     'true; "$(printf clau%s de)" --dangerously-skip-permissions' \
-    "/bin/sh -c 'true; \"\$(printf clau%s de)\" --dangerously-skip-permissions'"; do
+    "/bin/sh -c 'true; \"\$(printf clau%s de)\" --dangerously-skip-permissions'" \
+    'if true; then claude --dangerously-skip-permissions; fi' \
+    'if true; then custom-agent --flag; fi' \
+    'while false; do custom-agent --flag; done' \
+    'worker() { custom-agent --flag; }; worker'; do
     raw_index=$((raw_index + 1))
     id="raw-ambiguous-$raw_index"
     : > "$launchlog"

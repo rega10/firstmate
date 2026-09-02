@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Lexer, splitProgram, commandPosition, shellInvocation, evalPayload } from "./fm-arm-command-policy.mjs";
+import { Lexer, splitProgram, commandPosition, shellInvocation, evalPayload, startsShellControlGrammar } from "./fm-arm-command-policy.mjs";
 
 function basename(value) {
   return value.split("/").filter(Boolean).at(-1) || value;
@@ -12,6 +12,7 @@ function commandNames(source, depth = 0) {
   if (lexed.error) return null;
   const names = [];
   for (const tokens of splitProgram(lexed.tokens).nodes) {
+    if (startsShellControlGrammar(tokens) || tokens.some((token) => token.type === "group")) return null;
     const position = commandPosition(tokens);
     if (position.unresolvedWrapperOption) return null;
     if (position.command) {
