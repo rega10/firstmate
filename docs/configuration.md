@@ -293,7 +293,7 @@ The ceremony never accepts the token as an argument and never places it in shell
 The opt-in file is written atomically only after the saved token passes redacted authentication classification and live validation.
 
 Every enabled Firstmate Claude launch and relaunch resolves `av` before endpoint creation, verifies the canonical native executable under `.local/share/claude/versions` against an Anthropic HTTPS release manifest whose checksum is pinned in Firstmate, and executes a private same-filesystem hard link to that attested file object.
-An opted-in raw Claude launch is refused before endpoint creation because only the verified Claude harness template carries the required injection boundary.
+An opted-in raw Claude launch, including one reached through leading assignments or supported `env` options, is refused before endpoint creation because only the verified Claude harness template carries the required injection boundary.
 Install Claude Code with its official native installer before enabling this integration; script wrappers and other distribution layouts fail closed because their artifact identity can be forwarded or substituted.
 This boundary assumes same-user process integrity, and TOCTOU attacks by another process running as the same user are out of scope by captain decision on 2026-09-02.
 The token value enters only the Claude process environment through `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`, while the secret name but never its value appears in argv.

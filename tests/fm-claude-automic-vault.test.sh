@@ -259,7 +259,11 @@ case "${1:-}" in
     done
     exit 0
     ;;
-  has-session|new-session|new-window|kill-window)
+  new-session|new-window)
+    printf '%s\n' "$*" >> "${FM_FAKE_STATE:?}/endpoint.log"
+    exit 0
+    ;;
+  has-session|kill-window)
     exit 0
     ;;
 esac
@@ -376,7 +380,7 @@ test_provision_recovery_renewal_preflight_and_redaction() {
 }
 
 test_enabled_disabled_and_non_claude_launches() {
-  local dir home fakebin state record proj wt launchlog output status launch before executed
+  local dir home fakebin state record proj wt launchlog output status launch before executed raw id before_claude before_endpoint raw_index=0
   dir="$TMP_ROOT/launches"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -422,6 +426,40 @@ test_enabled_disabled_and_non_claude_launches() {
   [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
     || fail "enabled raw Claude refusal contacted Automic Vault"
   assert_secret_absent "$dir" "$output"
+
+  for raw in \
+    'env FOO=bar claude --dangerously-skip-permissions' \
+    'FOO=bar /usr/bin/env -u OLD_TOKEN claude --dangerously-skip-permissions' \
+    '/usr/bin/env -i -- claude --dangerously-skip-permissions' \
+    '/usr/bin/env --unset=OLD_TOKEN claude --dangerously-skip-permissions'; do
+    raw_index=$((raw_index + 1))
+    id="raw-prefixed-$raw_index"
+    : > "$launchlog"
+    before=$(wc -l < "$state/av-argv.log")
+    before_claude=$(wc -l < "$state/claude-argv.log")
+    before_endpoint=0
+    [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
+    record=$(make_ship "$dir" "$home" "$id")
+    proj=${record%%$'\t'*}
+    wt=${record#*$'\t'}
+    output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+      "$id" "$proj" "$raw" --mode local-only --yolo off 2>&1)
+    status=$?
+    [ "$status" -ne 0 ] || fail "enabled prefixed raw Claude launch bypassed the injection boundary: $raw"
+    assert_contains "$output" "no supported injection boundary" \
+      "enabled prefixed raw Claude refusal was not actionable: $raw"
+    [ ! -s "$launchlog" ] || fail "enabled prefixed raw Claude refusal sent a launch command: $raw"
+    [ ! -e "$home/state/$id.meta" ] || fail "enabled prefixed raw Claude refusal published worker metadata: $raw"
+    [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+      || fail "enabled prefixed raw Claude refusal contacted Automic Vault: $raw"
+    [ "$(wc -l < "$state/claude-argv.log")" = "$before_claude" ] \
+      || fail "enabled prefixed raw Claude refusal started ordinary Claude: $raw"
+    if [ -f "$state/endpoint.log" ]; then
+      [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+        || fail "enabled prefixed raw Claude refusal created an endpoint: $raw"
+    fi
+    assert_secret_absent "$dir" "$output"
+  done
 
   rm -f "$home/config/claude-automic-vault"
   : > "$launchlog"
