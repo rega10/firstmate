@@ -279,6 +279,23 @@ SH
 # ===========================================================================
 # B) propagate_inheritable_config unit behavior
 # ===========================================================================
+make_compatible_claude_vault_owner_checkout() {
+  local home=$1 rel
+  mkdir -p "$home/bin" "$home/config" "$home/data" "$home/state"
+  git init -q -b main "$home"
+  printf 'config/\ndata/\nstate/\n' > "$home/.gitignore"
+  for rel in \
+    fm-claude-automic-vault-owner-version \
+    fm-claude-automic-vault-lib.sh \
+    fm-claude-automic-vault-launch.sh \
+    fm-config-inherit-lib.sh \
+    fm-spawn.sh; do
+    cp "$ROOT/bin/$rel" "$home/bin/$rel"
+  done
+  git -C "$home" add .gitignore bin
+  git -C "$home" commit -qm compatible-owner
+}
+
 test_propagate_lib() {
   local d src dest home m1 m2 outside stdout stderr guard_repo err_text
   d="$TMP_ROOT/prop-lib"
@@ -286,9 +303,7 @@ test_propagate_lib() {
   home="$d/home1"
   dest="$home/config"
   mkdir -p "$src" "$dest" "$home/state"
-  mkdir -p "$home/bin"
-  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" \
-    "$home/bin/fm-claude-automic-vault-owner-version"
+  make_compatible_claude_vault_owner_checkout "$home"
 
   # 1. present source is copied
   printf '{"default":{"harness":"codex"}}\n' > "$src/crew-dispatch.json"
@@ -382,9 +397,7 @@ test_propagate_lib() {
   printf 'herdr\n' > "$src/backend"
   printf 'on\n' > "$src/claude-automic-vault"
   rm -rf "$d/home2"
-  mkdir -p "$d/home2/bin" "$d/home2/config" "$d/home2/state"
-  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" \
-    "$d/home2/bin/fm-claude-automic-vault-owner-version"
+  make_compatible_claude_vault_owner_checkout "$d/home2"
   propagate_inheritable_config "$src" "$d/home2/config"
   [ -e "$d/home2/config/secondmate-harness" ] && fail "secondmate-harness was inherited (must not be)"
   [ "$(cat "$d/home2/config/crew-dispatch.json")" = '{"default":{"harness":"codex"}}' ] || fail "crew-dispatch.json not propagated alongside"
@@ -1009,7 +1022,7 @@ test_spawn_fallback_chain_and_crew_scout_unaffected() {
 # real gitignore (config/crew-harness ignored, so a propagated value never dirties
 # the secondmate worktree on a later sweep). Echoes the world dir.
 new_world() {
-  local name=$1 dispatch_ignore=${2:-yes} w
+  local name=$1 dispatch_ignore=${2:-yes} w rel
   w="$TMP_ROOT/$name"
   mkdir -p "$w/home/state" "$w/home/data" "$w/home/config"
   touch "$w/home/state/.last-watcher-beat"
@@ -1024,8 +1037,14 @@ new_world() {
   printf 'r1\n' > "$w/main/README.md"
   mkdir -p "$w/main/bin"
   printf 'echo a\n' > "$w/main/bin/tool.sh"
-  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" \
-    "$w/main/bin/fm-claude-automic-vault-owner-version"
+  for rel in \
+    fm-claude-automic-vault-owner-version \
+    fm-claude-automic-vault-lib.sh \
+    fm-claude-automic-vault-launch.sh \
+    fm-config-inherit-lib.sh \
+    fm-spawn.sh; do
+    cp "$ROOT/bin/$rel" "$w/main/bin/$rel"
+  done
   git -C "$w/main" add -A
   git -C "$w/main" commit -qm c1
   printf '%s\n' "$w"
@@ -1529,7 +1548,7 @@ test_bootstrap_rereads_after_partial_propagation() {
 }
 
 test_claude_vault_owner_compatibility_at_local_convergence_points() {
-  local d primary second err output status w head fakebin second_real
+  local d primary second err output status w head fakebin second_real rel
   d="$TMP_ROOT/vault-owner-shared"
   primary="$d/primary"
   second="$d/second"
@@ -1547,6 +1566,32 @@ test_claude_vault_owner_compatibility_at_local_convergence_points() {
     || fail "shared propagation copied the enabled Vault flag into an incompatible home"
   [ "$(cat "$second/config/crew-harness")" = codex ] \
     || fail "Vault owner refusal blocked unrelated inherited material"
+
+  git init -q -b main "$second"
+  printf 'config/\ndata/\nstate/\n' > "$second/.gitignore"
+  printf 'stale owner\n' > "$second/README.md"
+  git -C "$second" add .gitignore README.md
+  git -C "$second" commit -qm stale-owner
+  mkdir -p "$second/bin"
+  for rel in \
+    fm-claude-automic-vault-owner-version \
+    fm-claude-automic-vault-lib.sh \
+    fm-claude-automic-vault-launch.sh \
+    fm-config-inherit-lib.sh \
+    fm-spawn.sh; do
+    cp "$ROOT/bin/$rel" "$second/bin/$rel"
+  done
+  if propagate_secondmate_inheritance "$primary" "$second" 2>"$err"; then
+    fail "shared propagation admitted an enabled Vault flag through untracked forged owner files"
+  fi
+  [ ! -e "$second/config/claude-automic-vault" ] \
+    || fail "untracked forged owner files admitted the enabled Vault flag"
+  git -C "$second" add bin
+  git -C "$second" commit -qm compatible-owner
+  propagate_secondmate_inheritance "$primary" "$second" 2>"$err" \
+    || fail "shared propagation refused tracked compatible owner files"
+  [ "$(cat "$second/config/claude-automic-vault")" = on ] \
+    || fail "tracked compatible owner files did not admit the enabled Vault flag"
 
   w=$(new_world vault-owner-bootstrap)
   head=$(git -C "$w/main" rev-parse HEAD)

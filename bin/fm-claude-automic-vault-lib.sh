@@ -41,6 +41,7 @@ FM_CLAUDE_AV_SETTINGS='{"apiKeyHelper":null,"env":{"ANTHROPIC_API_KEY":null,"ANT
 FM_CLAUDE_AV_ERROR=
 FM_CLAUDE_AV_BIN=
 FM_CLAUDE_BIN=
+FM_CLAUDE_AV_JQ_BIN=
 FM_CLAUDE_AV_CURL_BIN=/usr/bin/curl
 FM_CLAUDE_AV_CLAUDE_SHA256=
 FM_CLAUDE_AV_BASH=/bin/bash
@@ -109,12 +110,31 @@ fm_claude_av_enabled() {  # <config-dir>
 }
 
 fm_claude_av_home_owner_compatible() {  # <home>
-  local marker="$1/bin/fm-claude-automic-vault-owner-version" bytes
-  [ ! -L "$marker" ] && [ -f "$marker" ] || return 1
-  [ "$(fm_claude_av_link_count "$marker")" = 1 ] || return 1
-  bytes=$(wc -c < "$marker" 2>/dev/null) || return 1
-  bytes=${bytes//[[:space:]]/}
-  [ "$bytes" = 2 ] && [ "$(cat "$marker" 2>/dev/null)" = "$FM_CLAUDE_AV_OWNER_VERSION" ]
+  local home=$1 home_real git_root rel path head_oid work_oid marker_oid marker_size marker_version
+  home_real=$(CDPATH='' cd -- "$home" 2>/dev/null && pwd -P) || return 1
+  git_root=$(git -C "$home_real" rev-parse --show-toplevel 2>/dev/null) || return 1
+  git_root=$(CDPATH='' cd -- "$git_root" 2>/dev/null && pwd -P) || return 1
+  [ "$git_root" = "$home_real" ] || return 1
+  for rel in \
+    bin/fm-claude-automic-vault-owner-version \
+    bin/fm-claude-automic-vault-lib.sh \
+    bin/fm-claude-automic-vault-launch.sh \
+    bin/fm-config-inherit-lib.sh \
+    bin/fm-spawn.sh; do
+    path="$home_real/$rel"
+    [ ! -L "$path" ] && [ -f "$path" ] || return 1
+    [ "$(fm_claude_av_link_count "$path")" = 1 ] || return 1
+    [ "$(git -C "$home_real" cat-file -t "HEAD:$rel" 2>/dev/null)" = blob ] || return 1
+    head_oid=$(git -C "$home_real" rev-parse "HEAD:$rel" 2>/dev/null) || return 1
+    work_oid=$(git -C "$home_real" hash-object -- "$path" 2>/dev/null) || return 1
+    [ "$work_oid" = "$head_oid" ] || return 1
+  done
+  marker_oid=$(git -C "$home_real" rev-parse HEAD:bin/fm-claude-automic-vault-owner-version 2>/dev/null) || return 1
+  marker_size=$(git -C "$home_real" cat-file -s "$marker_oid" 2>/dev/null) || return 1
+  marker_version=$(git -C "$home_real" cat-file blob "$marker_oid" 2>/dev/null) || return 1
+  case "$marker_version" in ''|*[!0-9]*) return 1 ;; esac
+  [ "$marker_size" = "$((${#marker_version} + 1))" ] \
+    && [ "$marker_version" -ge "$FM_CLAUDE_AV_OWNER_VERSION" ]
 }
 
 fm_claude_av_realpath() {  # <path>
@@ -399,7 +419,7 @@ fm_claude_av_resolve_tools() {
 
 fm_claude_av_probe_tools() {
   local output rc=0
-  command -v jq >/dev/null 2>&1 || {
+  FM_CLAUDE_AV_JQ_BIN=$(fm_claude_av_resolve_named_executable jq) || {
     printf 'error: Claude Automic Vault authentication requires jq for redacted authentication validation.\n' >&2
     return 1
   }
@@ -467,8 +487,31 @@ fm_claude_av_remove_probe_root() {  # <mktemp-dir>
   esac
 }
 
+fm_claude_av_run_clean_preflight_stage() {  # <auth|live> <config-dir>
+  local stage=$1 config=$2 rc=0
+  fm_run_timed "$FM_CLAUDE_AV_TIMEOUT" \
+    "$FM_CLAUDE_AV_ENV" -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV \
+      -u SHELLOPTS -u BASHOPTS -u BASH_XTRACEFD -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND \
+      -u LD_PRELOAD -u DYLD_INSERT_LIBRARIES -u DYLD_LIBRARY_PATH \
+      -u DYLD_FRAMEWORK_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
+      CLAUDE_CONFIG_DIR="$config" PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+      "$FM_CLAUDE_AV_BASH" --noprofile --norc -p "$FM_CLAUDE_AV_LAUNCH_RELAY" \
+      --sanitize "$FM_CLAUDE_AV_ENV" '' "$FM_CLAUDE_AV_BASH" --noprofile --norc -p \
+      "$FM_CLAUDE_AV_LAUNCH_RELAY" "--preflight-$stage" \
+      "$FM_CLAUDE_AV_BIN" "$FM_CLAUDE_BIN" "$FM_CLAUDE_AV_JQ_BIN" \
+      "$FM_CLAUDE_AV_SETTINGS" "$FM_CLAUDE_AV_SECRET_NAME" || rc=$?
+  if [ "$rc" -eq 124 ]; then
+    if [ "$stage" = auth ]; then
+      printf 'error: Claude authentication preflight timed out; unlock Automic Vault, resolve any Secret Gate prompt, and retry.\n' >&2
+    else
+      printf 'error: live Claude token validation timed out; check network access and Automic Vault authorization, then retry.\n' >&2
+    fi
+  fi
+  return "$rc"
+}
+
 fm_claude_av_preflight() {  # [quiet]
-  local display=${1:-show} probe_root output status_rc=0 live_rc=0
+  local display=${1:-show} probe_root
   probe_root=$(mktemp -d "${TMPDIR:-/tmp}/fm-claude-av.XXXXXX" 2>/dev/null) || {
     printf 'error: could not create the private temporary directory required for Claude authentication validation.\n' >&2
     return 1
@@ -479,64 +522,15 @@ fm_claude_av_preflight() {  # [quiet]
     return 1
   }
 
-  output=$(fm_run_timed "$FM_CLAUDE_AV_TIMEOUT" \
-    "$FM_CLAUDE_AV_ENV" -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV \
-      -u SHELLOPTS -u BASHOPTS -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND \
-      -u LD_PRELOAD -u DYLD_INSERT_LIBRARIES -u DYLD_LIBRARY_PATH \
-      -u DYLD_FRAMEWORK_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
-      CLAUDE_CONFIG_DIR="$probe_root/config" PATH=/usr/bin:/bin:/usr/sbin:/sbin \
-      "$FM_CLAUDE_AV_BASH" --noprofile --norc -p "$FM_CLAUDE_AV_LAUNCH_RELAY" \
-      --sanitize "$FM_CLAUDE_AV_ENV" '' "$FM_CLAUDE_AV_BIN" \
-      inject --replace-existing-env \
-      "+$FM_CLAUDE_AV_SECRET_NAME" -- "$FM_CLAUDE_BIN" \
-      --settings "$FM_CLAUDE_AV_SETTINGS" auth status --json 2>&1) || status_rc=$?
-  if [ "$status_rc" -ne 0 ]; then
+  if ! fm_claude_av_run_clean_preflight_stage auth "$probe_root/config"; then
     fm_claude_av_remove_probe_root "$probe_root"
-    if [ "$status_rc" -eq 124 ]; then
-      printf 'error: Claude authentication preflight timed out; unlock Automic Vault, resolve any Secret Gate prompt, and retry.\n' >&2
-    else
-      fm_claude_av_classify_inject_failure "$output"
-    fi
     return 1
   fi
-  if ! printf '%s' "$output" | jq -e \
-    '.loggedIn == true and .authMethod == "oauth_token" and .apiProvider == "firstParty" and ((.apiKeySource // null) == null)' \
-    >/dev/null 2>&1; then
+  if ! fm_claude_av_run_clean_preflight_stage live "$probe_root/config"; then
     fm_claude_av_remove_probe_root "$probe_root"
-    printf 'error: Claude authentication preflight was inconclusive or selected a credential other than the injected first-party OAuth token; remove conflicting managed authentication settings and retry.\n' >&2
     return 1
   fi
-
-  output=$(fm_run_timed "$FM_CLAUDE_AV_TIMEOUT" \
-    "$FM_CLAUDE_AV_ENV" -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV \
-      -u SHELLOPTS -u BASHOPTS -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND \
-      -u LD_PRELOAD -u DYLD_INSERT_LIBRARIES -u DYLD_LIBRARY_PATH \
-      -u DYLD_FRAMEWORK_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
-      CLAUDE_CONFIG_DIR="$probe_root/config" PATH=/usr/bin:/bin:/usr/sbin:/sbin \
-      "$FM_CLAUDE_AV_BASH" --noprofile --norc -p "$FM_CLAUDE_AV_LAUNCH_RELAY" \
-      --sanitize "$FM_CLAUDE_AV_ENV" '' "$FM_CLAUDE_AV_BIN" \
-      inject --replace-existing-env \
-      "+$FM_CLAUDE_AV_SECRET_NAME" -- "$FM_CLAUDE_BIN" \
-      --settings "$FM_CLAUDE_AV_SETTINGS" --safe-mode --no-session-persistence \
-      --tools '' --output-format json -p 'Reply with the single word OK.' 2>&1) || live_rc=$?
   fm_claude_av_remove_probe_root "$probe_root"
-  if [ "$live_rc" -ne 0 ]; then
-    if [ "$live_rc" -eq 124 ]; then
-      printf 'error: live Claude token validation timed out; check network access and Automic Vault authorization, then retry.\n' >&2
-    elif [[ "$output" == *'401'* ]] || [[ "$output" == *'authentication_error'* ]] \
-         || [[ "$output" == *'invalid'*"token"* ]] || [[ "$output" == *'revoked'* ]]; then
-      printf 'error: Claude rejected the injected subscription token as invalid or revoked; run bin/fm-claude-automic-vault.sh renew before launching a Claude worker.\n' >&2
-    else
-      fm_claude_av_classify_inject_failure "$output"
-    fi
-    return 1
-  fi
-  if ! printf '%s' "$output" | jq -e \
-    '.type == "result" and (.is_error == false or .is_error == null) and (.result | type == "string")' \
-    >/dev/null 2>&1; then
-    printf 'error: live Claude token validation returned an inconclusive redacted result; retry preflight before launching a worker.\n' >&2
-    return 1
-  fi
   if [ "$display" != quiet ]; then
     printf 'Claude Automic Vault preflight: authenticated via injected first-party OAuth token; credential material was not displayed.\n'
   fi
@@ -557,7 +551,7 @@ fm_claude_av_build_launch_command() {
   claude_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_BIN")
   checksum_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_CLAUDE_SHA256")
   settings_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_SETTINGS")
-  printf '%s' "PATH=/usr/bin:/bin:/usr/sbin:/sbin $env_q -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV -u SHELLOPTS -u BASHOPTS -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND -u LD_PRELOAD -u DYLD_INSERT_LIBRARIES -u DYLD_LIBRARY_PATH -u DYLD_FRAMEWORK_PATH -u DYLD_FALLBACK_LIBRARY_PATH $bash_q --noprofile --norc -p $relay_q --sanitize $env_q \"\${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}\" $bash_q --noprofile --norc $relay_q $av_q $claude_q $checksum_q $settings_q"
+  printf '%s' "PATH=/usr/bin:/bin:/usr/sbin:/sbin $env_q -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV -u SHELLOPTS -u BASHOPTS -u BASH_XTRACEFD -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND -u LD_PRELOAD -u DYLD_INSERT_LIBRARIES -u DYLD_LIBRARY_PATH -u DYLD_FRAMEWORK_PATH -u DYLD_FALLBACK_LIBRARY_PATH $bash_q --noprofile --norc -p $relay_q --sanitize $env_q \"\${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}\" $bash_q --noprofile --norc $relay_q $av_q $claude_q $checksum_q $settings_q"
 }
 
 # Returns 0 with FM_CLAUDE_AV_LAUNCH_COMMAND set for an enabled, authenticated

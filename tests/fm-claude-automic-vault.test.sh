@@ -1028,6 +1028,41 @@ C
   pass "Vault, token, version-surface, inconclusive, and direct or forwarding wrapper failures all block before launch"
 }
 
+test_preflight_xtrace_redaction() {
+  local dir home fakebin state fail_at stdout stderr trace status output
+  dir="$TMP_ROOT/preflight-xtrace"
+  home="$dir/home"
+  fakebin=$(make_fake_tools "$dir")
+  state="$dir/fake-state"
+  configure_fake_attestation "$fakebin" "$state"
+  mkdir -p "$home/config"
+  printf 'on\n' > "$home/config/claude-automic-vault"
+  for fail_at in 1 2; do
+    rm -f "$state/av-inject-count"
+    stdout="$dir/preflight-$fail_at.out"
+    stderr="$dir/preflight-$fail_at.err"
+    trace="$dir/preflight-$fail_at.trace"
+    (
+      exec 9>"$trace"
+      BASH_XTRACEFD=9
+      export BASH_XTRACEFD SHELLOPTS
+      set -x
+      FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
+        FM_FAKE_AV_FAIL_AT="$fail_at" PATH="$fakebin:$BASE_PATH" \
+        "$AUTH" preflight
+    ) >"$stdout" 2>"$stderr"
+    status=$?
+    [ "$status" -ne 0 ] || fail "xtraced preflight stage $fail_at did not fail closed"
+    output=$(cat "$stdout" "$stderr" "$trace")
+    assert_contains "$output" "Automic Vault is unavailable or locked" \
+      "xtraced preflight stage $fail_at omitted its redacted classification"
+    assert_not_contains "$output" "$SECRET" \
+      "xtraced preflight stage $fail_at exposed raw injection output"
+  done
+  assert_secret_absent "$dir" ""
+  pass "auth and live preflight classification remain redacted under inherited xtrace controls"
+}
+
 test_launch_time_failure_redaction_and_interactive_io() {
   local dir home fakebin state record proj wt launchlog output status launch hostilebin leak native before cc_bin replacement marker expected signal expected_status block relay_pid attempt pidfile watcher_pid watcher_status
   dir="$TMP_ROOT/launch-boundary"
@@ -1218,12 +1253,24 @@ C
 }
 
 make_secondmate_home() {  # <home> <id>
-  local home=$1 id=$2
+  local home=$1 id=$2 rel
   mkdir -p "$home/bin" "$home/data" "$home/state" "$home/config" "$home/projects"
   printf '# Firstmate\n' > "$home/AGENTS.md"
-  cp "$ROOT/bin/fm-claude-automic-vault-owner-version" "$home/bin/fm-claude-automic-vault-owner-version"
+  printf 'config/\ndata/\nstate/\nprojects/\n.fm-secondmate-home\n' > "$home/.gitignore"
+  for rel in \
+    fm-claude-automic-vault-owner-version \
+    fm-claude-automic-vault-lib.sh \
+    fm-claude-automic-vault-launch.sh \
+    fm-config-inherit-lib.sh \
+    fm-spawn.sh; do
+    cp "$ROOT/bin/$rel" "$home/bin/$rel"
+  done
   printf '%s\n' "$id" > "$home/.fm-secondmate-home"
   printf 'charter for %s\n' "$id" > "$home/data/charter.md"
+  git init -q -b main "$home"
+  git -C "$home" add .gitignore AGENTS.md bin
+  git -C "$home" -c user.name='Firstmate Tests' -c user.email='tests@example.invalid' \
+    commit -qm compatible-owner
 }
 
 test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
@@ -1371,6 +1418,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
 test_provision_recovery_renewal_preflight_and_redaction
 test_enabled_disabled_and_non_claude_launches
 test_actionable_fail_closed_paths
+test_preflight_xtrace_redaction
 test_launch_time_failure_redaction_and_interactive_io
 test_secondmate_inheritance_launch_relaunch_and_nested_worker
 

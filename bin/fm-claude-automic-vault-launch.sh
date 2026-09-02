@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # fm-claude-automic-vault-launch.sh - redacted interactive launch boundary for
 # an opted-in Claude Code worker.
+set +x
+unset BASH_XTRACEFD 2>/dev/null || true
 set -u
 
 if [ "${1:-}" = --sanitize ]; then
@@ -15,7 +17,7 @@ if [ "${1:-}" = --sanitize ]; then
   [ -z "$worker_path" ] || clean_environment+=("FM_CLAUDE_AV_WORKER_PATH=$worker_path")
   while IFS= read -r environment_name; do
     case "$environment_name" in
-      CLAUDE_CODE_OAUTH_TOKEN|ANTHROPIC_API_KEY|ANTHROPIC_AUTH_TOKEN|ANTHROPIC_BASE_URL|ANTHROPIC_BEDROCK_BASE_URL|ANTHROPIC_VERTEX_BASE_URL|ANTHROPIC_FOUNDRY_BASE_URL|CLAUDE_CODE_USE_BEDROCK|CLAUDE_CODE_USE_VERTEX|CLAUDE_CODE_USE_FOUNDRY|FM_CLAUDE_AV_WORKER_PATH|BASH_FUNC_*|BASH_ENV|ENV|SHELLOPTS|BASHOPTS|PS4|CDPATH|IFS|PROMPT_COMMAND|LD_*|DYLD_*|PATH|CLAUDE_CODE_SUBPROCESS_ENV_SCRUB) continue ;;
+      CLAUDE_CODE_OAUTH_TOKEN|ANTHROPIC_API_KEY|ANTHROPIC_AUTH_TOKEN|ANTHROPIC_BASE_URL|ANTHROPIC_BEDROCK_BASE_URL|ANTHROPIC_VERTEX_BASE_URL|ANTHROPIC_FOUNDRY_BASE_URL|CLAUDE_CODE_USE_BEDROCK|CLAUDE_CODE_USE_VERTEX|CLAUDE_CODE_USE_FOUNDRY|FM_CLAUDE_AV_WORKER_PATH|BASH_FUNC_*|BASH_ENV|ENV|SHELLOPTS|BASHOPTS|BASH_XTRACEFD|PS4|CDPATH|IFS|PROMPT_COMMAND|LD_*|DYLD_*|PATH|CLAUDE_CODE_SUBPROCESS_ENV_SCRUB) continue ;;
       HOME|USER|LOGNAME|SHELL|TERM|COLORTERM|TERM_PROGRAM|TERM_PROGRAM_VERSION|COLORFGBG|TMPDIR|TMP|TEMP|GOTMPDIR|LANG|TZ|SSH_AUTH_SOCK|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|NO_PROXY|http_proxy|https_proxy|all_proxy|no_proxy|SSL_CERT_FILE|SSL_CERT_DIR|NODE_EXTRA_CA_CERTS|LC_*|XDG_*|CLAUDE_*|ANTHROPIC_*|FM_*|TRACEPARENT|TRACESTATE|TMUX|TMUX_PANE|HERDR_*|ZELLIJ*|CMUX_*) ;;
       *) continue ;;
     esac
@@ -50,6 +52,58 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=bin/fm-claude-automic-vault-lib.sh
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-claude-automic-vault-lib.sh"
+
+fm_claude_av_preflight_auth() {
+  local av=$1 claude=$2 jq=$3 settings=$4 secret_name=$5 output rc=0
+  set +x
+  unset BASH_XTRACEFD 2>/dev/null || true
+  output=$("$av" inject --replace-existing-env "+$secret_name" -- \
+    "$claude" --settings "$settings" auth status --json 2>&1) || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    fm_claude_av_classify_inject_failure "$output"
+    return 1
+  fi
+  if ! printf '%s' "$output" | "$jq" -e \
+    '.loggedIn == true and .authMethod == "oauth_token" and .apiProvider == "firstParty" and ((.apiKeySource // null) == null)' \
+    >/dev/null 2>&1; then
+    printf 'error: Claude authentication preflight was inconclusive or selected a credential other than the injected first-party OAuth token; remove conflicting managed authentication settings and retry.\n' >&2
+    return 1
+  fi
+}
+
+fm_claude_av_preflight_live() {
+  local av=$1 claude=$2 jq=$3 settings=$4 secret_name=$5 output rc=0
+  set +x
+  unset BASH_XTRACEFD 2>/dev/null || true
+  output=$("$av" inject --replace-existing-env "+$secret_name" -- \
+    "$claude" --settings "$settings" --safe-mode --no-session-persistence \
+    --tools '' --output-format json -p 'Reply with the single word OK.' 2>&1) || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    if [[ "$output" == *'401'* ]] || [[ "$output" == *'authentication_error'* ]] \
+      || [[ "$output" == *'invalid'*"token"* ]] || [[ "$output" == *'revoked'* ]]; then
+      printf 'error: Claude rejected the injected subscription token as invalid or revoked; run bin/fm-claude-automic-vault.sh renew before launching a Claude worker.\n' >&2
+    else
+      fm_claude_av_classify_inject_failure "$output"
+    fi
+    return 1
+  fi
+  if ! printf '%s' "$output" | "$jq" -e \
+    '.type == "result" and (.is_error == false or .is_error == null) and (.result | type == "string")' \
+    >/dev/null 2>&1; then
+    printf 'error: live Claude token validation returned an inconclusive redacted result; retry preflight before launching a worker.\n' >&2
+    return 1
+  fi
+}
+
+case "${1:-}" in
+  --preflight-auth|--preflight-live)
+    [ "$#" -eq 6 ] || exit 2
+    mode=${1#--preflight-}
+    shift
+    "fm_claude_av_preflight_$mode" "$@"
+    exit $?
+    ;;
+esac
 
 [ "$#" -ge 4 ] || exit 2
 av=$1

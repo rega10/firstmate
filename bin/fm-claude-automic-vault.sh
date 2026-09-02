@@ -36,6 +36,8 @@
 # docs/configuration.md owns the complete operator contract, including account
 # revocation, renewal, recovery, inheritance, and the intentional live-check
 # limitation.
+set +x
+unset BASH_XTRACEFD 2>/dev/null || true
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
