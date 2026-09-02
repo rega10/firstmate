@@ -15,7 +15,7 @@ log_user 0
 
 spawn -noecho $claude setup-token
 expect {
-  -re {(sk-ant-oat[[:alnum:]_-]+)} {
+  -re {(sk-ant-oat[[:alnum:]_-]+)(\r?\n)} {
     set token $expect_out(1,string)
   }
   timeout {

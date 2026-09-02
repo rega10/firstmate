@@ -15,6 +15,18 @@ JQ_BIN=$(command -v jq) || fail "test needs jq"
 BASE_PATH="$(dirname "$JQ_BIN"):/usr/bin:/bin:/usr/sbin:/sbin"
 SECRET='sk-ant-oat01-FM_SYNTHETIC_SENTINEL_NEVER_PERSIST'
 
+sha256_file() {
+  local output
+  if [ "$(uname)" = Darwin ]; then
+    output=$(/usr/bin/shasum -a 256 "$1") || return 1
+  elif [ -x /usr/bin/sha256sum ]; then
+    output=$(/usr/bin/sha256sum "$1") || return 1
+  else
+    output=$(/bin/sha256sum "$1") || return 1
+  fi
+  printf '%s\n' "${output%%[[:space:]]*}"
+}
+
 make_fake_tools() {  # <case-dir>
   local dir=$1 fakebin native_dir cc_bin
   fakebin=$(fm_fakebin "$dir")
@@ -40,6 +52,9 @@ case "${1:-} ${2:-}" in
     printf 'Enter secret value: ' >&2
     IFS= read -r supplied </dev/tty || exit 31
     [ "$supplied" = "${FM_FAKE_SECRET:?}" ] || exit 32
+    save_count=0
+    [ ! -f "$state/save-count" ] || save_count=$(cat "$state/save-count")
+    printf '%s\n' "$((save_count + 1))" > "$state/save-count"
     : > "$state/save-ok"
     printf 'saved\n'
     exit 0
@@ -74,12 +89,30 @@ shift
 export CLAUDE_CODE_OAUTH_TOKEN=${FM_FAKE_SECRET:?}
 exec "$@"
 SH
+  cat > "$fakebin/curl" <<'SH'
+#!/usr/bin/env bash
+set -u
+state=${FM_FAKE_STATE:?}
+checksum=$(cat "$state/expected-claude-sha256")
+case "${*}" in
+  *https://downloads.claude.ai/claude-code-releases/2.1.220/manifest.json) ;;
+  *) exit 22 ;;
+esac
+printf '{"version":"2.1.220","platforms":{'
+separator=
+for platform in darwin-arm64 darwin-x64 linux-arm64 linux-x64 linux-arm64-musl linux-x64-musl; do
+  printf '%s"%s":{"checksum":"%s"}' "$separator" "$platform" "$checksum"
+  separator=,
+done
+printf '}}\n'
+SH
   native_dir="$dir/fake-home/.local/share/claude/versions"
   mkdir -p "$native_dir"
   cat > "$dir/fake-claude.c" <<'C'
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static int has_arg(int argc, char **argv, const char *wanted) {
   int i;
@@ -108,6 +141,7 @@ int main(int argc, char **argv) {
   const char *state = getenv("FM_FAKE_STATE");
   const char *secret = getenv("FM_FAKE_SECRET");
   const char *mode = getenv("FM_FAKE_CLAUDE_MODE");
+  const char *setup_mode = getenv("FM_FAKE_SETUP_MODE");
   char path[4096];
   int i;
   if (!state && has_arg(argc, argv, "auth") && has_arg(argc, argv, "status")) {
@@ -126,8 +160,25 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (argc >= 2 && strcmp(argv[1], "setup-token") == 0) {
+    size_t length, cut;
     if (!secret) return 71;
-    printf("Complete browser authentication.\n%s\n", secret);
+    printf("Complete browser authentication.\n");
+    if (setup_mode && strcmp(setup_mode, "incomplete") == 0) {
+      fputs(secret, stdout);
+      fflush(stdout);
+      return 0;
+    }
+    if (setup_mode && strcmp(setup_mode, "split") == 0) {
+      length = strlen(secret);
+      cut = length / 2;
+      fwrite(secret, 1, cut, stdout);
+      fflush(stdout);
+      usleep(100000);
+      fwrite(secret + cut, 1, length - cut, stdout);
+      fputc('\n', stdout);
+      return 0;
+    }
+    printf("%s\n", secret);
     return 0;
   }
   if (!state || !secret) return 72;
@@ -171,6 +222,8 @@ int main(int argc, char **argv) {
 C
   cc_bin=$(command -v cc 2>/dev/null || command -v gcc 2>/dev/null) || fail "test needs a C compiler for the native Claude fixture"
   "$cc_bin" -o "$native_dir/2.1.220" "$dir/fake-claude.c" || fail "could not build native Claude fixture"
+  sha256_file "$native_dir/2.1.220" > "$dir/fake-state/expected-claude-sha256" \
+    || fail "could not hash native Claude fixture"
   ln -s "$native_dir/2.1.220" "$fakebin/claude"
   cat > "$fakebin/tmux" <<'SH'
 #!/usr/bin/env bash
@@ -207,7 +260,7 @@ SH
 #!/usr/bin/env bash
 exit 0
 SH
-  chmod +x "$fakebin/av" "$fakebin/tmux" "$fakebin/treehouse"
+  chmod +x "$fakebin/av" "$fakebin/curl" "$fakebin/tmux" "$fakebin/treehouse"
   (cd "$fakebin" && pwd -P)
 }
 
@@ -245,20 +298,22 @@ run_spawn() {  # <home> <fakebin> <state> <launchlog> <pane-path> <args...>
 }
 
 test_provision_recovery_renewal_preflight_and_redaction() {
-  local dir home fakebin state output status
+  local dir home fakebin state output status before
   dir="$TMP_ROOT/provision"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
   state="$dir/fake-state"
   mkdir -p "$home/config"
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" provision 2>&1)
+    FM_FAKE_SECRET="$SECRET" FM_FAKE_SETUP_MODE=split PATH="$fakebin:$BASE_PATH" \
+    "$AUTH" provision 2>&1)
   status=$?
   if [ "$status" -ne 0 ]; then
     fail "synthetic provision ceremony exited $status: ${output//$SECRET/[REDACTED]}"
   fi
   [ "$(cat "$home/config/claude-automic-vault")" = on ] || fail "provision did not enable exact local flag"
   [ -e "$state/save-ok" ] || fail "fake av did not receive the setup token through its terminal"
+  [ "$(cat "$state/save-count")" = 1 ] || fail "split setup token was not saved exactly once"
   assert_contains "$output" "credential output suppressed" "ceremony did not disclose suppression"
   assert_contains "$output" "validated" "ceremony did not report redacted validation"
   assert_secret_absent "$dir" "$output"
@@ -275,6 +330,18 @@ test_provision_recovery_renewal_preflight_and_redaction() {
   status=$?
   expect_code 0 "$status" "one-time enable recovery"
   [ "$(cat "$home/config/claude-automic-vault")" = on ] || fail "enable recovery did not restore the opt-in"
+  assert_secret_absent "$dir" "$output"
+
+  before=$(cat "$state/save-count")
+  output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
+    FM_FAKE_SECRET="$SECRET" FM_FAKE_SETUP_MODE=incomplete PATH="$fakebin:$BASE_PATH" \
+    "$AUTH" renew 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "delimiter-free setup token was accepted"
+  [ "$(cat "$state/save-count")" = "$before" ] || fail "incomplete renewal replaced the prior Vault value"
+  [ "$(cat "$home/config/claude-automic-vault")" = on ] || fail "incomplete renewal removed the fail-closed opt-in"
+  assert_contains "$output" "without producing a recognizable subscription token" \
+    "incomplete renewal did not report its delimiter failure"
   assert_secret_absent "$dir" "$output"
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
@@ -358,7 +425,7 @@ test_enabled_disabled_and_non_claude_launches() {
 }
 
 test_actionable_fail_closed_paths() {
-  local dir home fakebin state mode output status expected direct wrapper record proj wt launchlog before
+  local dir home fakebin state mode output status expected direct wrapper record proj wt launchlog before cc_bin native
   dir="$TMP_ROOT/blockers"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -456,11 +523,71 @@ SH
   [ "$(wc -l < "$state/av-argv.log" | tr -d ' ')" = "$before" ] \
     || fail "indirect wrapper reached Automic Vault before identity refusal"
   assert_secret_absent "$dir" "$output"
+
+  rm "$fakebin/claude"
+  native=$(readlink "$fakebin/claude-real")
+  mv "$native" "$native.real"
+  cat > "$dir/compiled-claude-wrapper.c" <<'C'
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+static int has_arg(int argc, char **argv, const char *wanted) {
+  int i;
+  for (i = 1; i < argc; i++) if (strcmp(argv[i], wanted) == 0) return 1;
+  return 0;
+}
+
+int main(int argc, char **argv) {
+  char real[4096], invoked[4096];
+  char **wrapped;
+  FILE *marker;
+  int i;
+  snprintf(invoked, sizeof(invoked), "%s.invoked", argv[0]);
+  marker = fopen(invoked, "w");
+  if (marker) fclose(marker);
+  snprintf(real, sizeof(real), "%s.real", argv[0]);
+  if (has_arg(argc, argv, "--help") ||
+      (has_arg(argc, argv, "auth") && has_arg(argc, argv, "status")) ||
+      has_arg(argc, argv, "-p")) {
+    execv(real, argv);
+    return 81;
+  }
+  wrapped = calloc((size_t)argc + 7, sizeof(char *));
+  if (!wrapped) return 82;
+  wrapped[0] = "av";
+  wrapped[1] = "inject";
+  wrapped[2] = "+CLAUDE_CODE_OAUTH_TOKEN";
+  wrapped[3] = "--";
+  wrapped[4] = "claude";
+  for (i = 1; i < argc; i++) wrapped[i + 4] = argv[i];
+  execvp(wrapped[0], wrapped);
+  return 83;
+}
+C
+  cc_bin=$(command -v cc 2>/dev/null || command -v gcc 2>/dev/null) \
+    || fail "test needs a C compiler for the compiled wrapper fixture"
+  "$cc_bin" -o "$native" "$dir/compiled-claude-wrapper.c" \
+    || fail "could not build compiled Claude wrapper fixture"
+  rm "$fakebin/claude-real"
+  ln -s "$native" "$fakebin/claude"
+  before=$(wc -l < "$state/av-argv.log" | tr -d ' ')
+  output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
+    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "compiled forwarding Claude wrapper was accepted"
+  assert_contains "$output" "does not match Anthropic release attestation" \
+    "compiled wrapper attestation refusal was not actionable"
+  [ ! -e "$native.invoked" ] || fail "compiled wrapper ran before artifact attestation refused it"
+  [ "$(wc -l < "$state/av-argv.log" | tr -d ' ')" = "$before" ] \
+    || fail "compiled wrapper reached Automic Vault before attestation refusal"
+  assert_secret_absent "$dir" "$output"
   pass "Vault, token, version-surface, inconclusive, and direct or forwarding wrapper failures all block before launch"
 }
 
 test_launch_time_failure_redaction_and_interactive_io() {
-  local dir home fakebin state record proj wt launchlog output status launch hostilebin leak
+  local dir home fakebin state record proj wt launchlog output status launch hostilebin leak native before
   dir="$TMP_ROOT/launch-boundary"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -520,8 +647,20 @@ SH
   [ "$status" -ne 0 ] || fail "launch-time injection failure did not block Claude exec"
   assert_contains "$output" "unavailable or locked" "launch-time Vault failure was not classified"
   assert_not_contains "$output" "$SECRET" "launch-time Vault failure exposed raw output"
+
+  native="${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220"
+  before=$(cat "$state/av-inject-count")
+  printf 'changed-after-attestation' >> "$native"
+  output=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+    PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "changed Claude artifact was launched after preflight"
+  assert_contains "$output" "executable changed after preflight" \
+    "launch-time artifact replacement was not actionable"
+  [ "$(cat "$state/av-inject-count")" = "$before" ] \
+    || fail "changed Claude artifact reached Automic Vault injection"
   assert_secret_absent "$dir" "$output"
-  pass "launch-time failures are redacted while successful worker I/O stays interactive"
+  pass "launch-time failures are redacted, identity stays pinned, and successful worker I/O stays interactive"
 }
 
 make_secondmate_home() {  # <home> <id>

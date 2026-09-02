@@ -20,11 +20,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-claude-automic-vault-lib.sh"
 
-[ "$#" -ge 3 ] || exit 2
+[ "$#" -ge 4 ] || exit 2
 av=$1
 claude=$2
-settings=$3
-shift 3
+expected_sha256=$3
+settings=$4
+shift 4
+
+platform=$(fm_claude_av_release_platform) || {
+  printf 'error: could not retain the attested Claude Code identity through launch on this platform.\n' >&2
+  exit 1
+}
+actual_sha256=$(fm_claude_av_artifact_sha256 "$claude" "$platform") || {
+  printf 'error: could not revalidate the attested Claude Code executable immediately before launch.\n' >&2
+  exit 1
+}
+if [ "$actual_sha256" != "$expected_sha256" ]; then
+  printf 'error: refusing Claude launch because the attested Claude Code executable changed after preflight.\n' >&2
+  exit 1
+fi
 
 launch_root=$(mktemp -d "${TMPDIR:-/tmp}/fm-claude-launch.XXXXXX" 2>/dev/null) || {
   printf 'error: could not create the private temporary state required for Claude injection.\n' >&2

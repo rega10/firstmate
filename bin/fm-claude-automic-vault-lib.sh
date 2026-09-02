@@ -10,8 +10,9 @@
 #     endpoint creation, canonicalized through symlinks, and kept as absolute
 #     paths in the launch command;
 #   - the resolved Claude executable must be the canonical native executable in
-#     Claude Code's versioned install tree, then produce Claude Code's structured
-#     auth status from an isolated empty home before any Vault command can run;
+#     Claude Code's versioned install tree, match Anthropic's release-manifest
+#     checksum, and produce structured auth status from an isolated empty home
+#     before any Vault command can run;
 #   - the token value enters only the Claude process environment through
 #     `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`;
 #   - higher-precedence API-key, cloud-provider, and endpoint overrides are
@@ -32,10 +33,13 @@
 FM_CLAUDE_AV_CONFIG_FILE=claude-automic-vault
 FM_CLAUDE_AV_SECRET_NAME=CLAUDE_CODE_OAUTH_TOKEN
 FM_CLAUDE_AV_TIMEOUT=${FM_CLAUDE_AV_TIMEOUT:-45}
+FM_CLAUDE_AV_RELEASE_BASE=https://downloads.claude.ai/claude-code-releases
 FM_CLAUDE_AV_SETTINGS='{"apiKeyHelper":null,"env":{"ANTHROPIC_API_KEY":null,"ANTHROPIC_AUTH_TOKEN":null,"ANTHROPIC_BASE_URL":null,"ANTHROPIC_BEDROCK_BASE_URL":null,"ANTHROPIC_VERTEX_BASE_URL":null,"ANTHROPIC_FOUNDRY_BASE_URL":null,"CLAUDE_CODE_USE_BEDROCK":null,"CLAUDE_CODE_USE_VERTEX":null,"CLAUDE_CODE_USE_FOUNDRY":null,"AWS_BEARER_TOKEN_BEDROCK":null}}'
 FM_CLAUDE_AV_ERROR=
 FM_CLAUDE_AV_BIN=
 FM_CLAUDE_BIN=
+FM_CLAUDE_AV_CURL_BIN=
+FM_CLAUDE_AV_CLAUDE_SHA256=
 FM_CLAUDE_AV_BASH=/bin/bash
 FM_CLAUDE_AV_ENV=/usr/bin/env
 FM_CLAUDE_AV_LAUNCH_RELAY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-claude-automic-vault-launch.sh"
@@ -149,6 +153,97 @@ fm_claude_av_is_native_install_artifact() {  # <resolved-claude>
   return 1
 }
 
+fm_claude_av_release_platform() {
+  local os arch translated=0 ldd_bin=
+  os=$(/usr/bin/uname -s 2>/dev/null) || return 1
+  arch=$(/usr/bin/uname -m 2>/dev/null) || return 1
+  case "$os" in
+    Darwin)
+      if [ "$arch" = x86_64 ] && [ -x /usr/sbin/sysctl ]; then
+        translated=$(/usr/sbin/sysctl -n sysctl.proc_translated 2>/dev/null || true)
+        [ "$translated" != 1 ] || arch=arm64
+      fi
+      os=darwin
+      ;;
+    Linux) os=linux ;;
+    *) return 1 ;;
+  esac
+  case "$arch" in
+    x86_64|amd64) arch=x64 ;;
+    arm64|aarch64) arch=arm64 ;;
+    *) return 1 ;;
+  esac
+  if [ "$os" = linux ]; then
+    if [ -e /lib/libc.musl-x86_64.so.1 ] || [ -e /lib/libc.musl-aarch64.so.1 ]; then
+      os=linux-musl
+    else
+      [ ! -x /usr/bin/ldd ] || ldd_bin=/usr/bin/ldd
+      [ -n "$ldd_bin" ] || [ ! -x /bin/ldd ] || ldd_bin=/bin/ldd
+      if [ -n "$ldd_bin" ]; then
+        case $("$ldd_bin" /bin/ls 2>&1) in *musl*) os=linux-musl ;; esac
+      fi
+    fi
+  fi
+  case "$os" in
+    linux-musl) printf 'linux-%s-musl\n' "$arch" ;;
+    *) printf '%s-%s\n' "$os" "$arch" ;;
+  esac
+}
+
+fm_claude_av_artifact_sha256() {  # <path> <release-platform>
+  local path=$1 platform=$2 hash_output
+  case "$platform" in
+    darwin-*) hash_output=$(/usr/bin/shasum -a 256 "$path" 2>/dev/null) || return 1 ;;
+    linux-*)
+      if [ -x /usr/bin/sha256sum ]; then
+        hash_output=$(/usr/bin/sha256sum "$path" 2>/dev/null) || return 1
+      elif [ -x /bin/sha256sum ]; then
+        hash_output=$(/bin/sha256sum "$path" 2>/dev/null) || return 1
+      else
+        return 1
+      fi
+      ;;
+    *) return 1 ;;
+  esac
+  printf '%s\n' "${hash_output%%[[:space:]]*}"
+}
+
+fm_claude_av_attest_native_artifact() {  # <resolved-claude>
+  local executable=$1 version platform manifest compact expected actual
+  version=${executable##*/}
+  platform=$(fm_claude_av_release_platform) || {
+    printf 'error: Claude Code artifact attestation does not support this operating system or architecture.\n' >&2
+    return 1
+  }
+  manifest=$(fm_run_timed 15 "$FM_CLAUDE_AV_CURL_BIN" -q -fsSL --max-time 10 \
+    --proto '=https' --tlsv1.2 -- "$FM_CLAUDE_AV_RELEASE_BASE/$version/manifest.json" 2>/dev/null) || {
+    printf 'error: could not retrieve Claude Code release attestation for version %s; check network access and retry.\n' "$version" >&2
+    return 1
+  }
+  [ "${#manifest}" -le 131072 ] || {
+    printf 'error: Claude Code release attestation for version %s was unexpectedly large.\n' "$version" >&2
+    return 1
+  }
+  compact=${manifest//$'\n'/}
+  compact=${compact//$'\r'/}
+  compact=${compact//$'\t'/}
+  if [[ ! $compact =~ \"version\"[[:space:]]*:[[:space:]]*\"$version\" ]] \
+     || [[ ! $compact =~ \"$platform\"[[:space:]]*:[[:space:]]*\{[^\{\}]*\"checksum\"[[:space:]]*:[[:space:]]*\"([a-f0-9]{64})\" ]]; then
+    printf 'error: Claude Code release attestation did not contain a valid %s checksum for version %s.\n' "$platform" "$version" >&2
+    return 1
+  fi
+  expected=${BASH_REMATCH[1]}
+  actual=$(fm_claude_av_artifact_sha256 "$executable" "$platform") || {
+    printf 'error: SHA-256 verification is unavailable for Claude Code artifact attestation.\n' >&2
+    return 1
+  }
+  if [ "$actual" != "$expected" ]; then
+    printf 'error: refusing Claude Automic Vault authentication because the resolved claude executable does not match Anthropic release attestation for version %s on %s.\n' "$version" "$platform" >&2
+    return 1
+  fi
+  FM_CLAUDE_AV_CLAUDE_SHA256=$actual
+}
+
 fm_claude_av_probe_identity() {  # <resolved-claude>
   local executable=$1 probe_root output rc=0
   command -v jq >/dev/null 2>&1 || {
@@ -178,6 +273,10 @@ fm_claude_av_probe_identity() {  # <resolved-claude>
 }
 
 fm_claude_av_resolve_tools() {
+  FM_CLAUDE_AV_CURL_BIN=$(fm_claude_av_resolve_named_executable curl) || {
+    printf 'error: Claude Automic Vault authentication requires curl for Claude Code release attestation.\n' >&2
+    return 1
+  }
   FM_CLAUDE_AV_BIN=$(fm_claude_av_resolve_named_executable av) || {
     printf 'error: Claude Automic Vault authentication is enabled, but av is unavailable; install or repair Automic Vault, then run bin/fm-claude-automic-vault.sh preflight.\n' >&2
     return 1
@@ -194,6 +293,7 @@ fm_claude_av_resolve_tools() {
     printf 'error: refusing Claude Automic Vault authentication because the resolved claude executable could not be positively identified as the canonical native Claude Code artifact under .local/share/claude/versions; install Claude Code with the official native installer and retry.\n' >&2
     return 1
   fi
+  fm_claude_av_attest_native_artifact "$FM_CLAUDE_BIN" || return 1
   [ -x "$FM_CLAUDE_AV_BASH" ] || {
     printf 'error: the pinned startup-clean shell required for Claude Automic Vault authentication is unavailable: %s\n' "$FM_CLAUDE_AV_BASH" >&2
     return 1
@@ -358,14 +458,15 @@ fm_claude_av_shell_quote() {
 }
 
 fm_claude_av_build_launch_command() {
-  local env_q bash_q relay_q av_q claude_q settings_q
+  local env_q bash_q relay_q av_q claude_q checksum_q settings_q
   env_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_ENV")
   bash_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_BASH")
   relay_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_LAUNCH_RELAY")
   av_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_BIN")
   claude_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_BIN")
+  checksum_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_CLAUDE_SHA256")
   settings_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_SETTINGS")
-  printf '%s' "$env_q -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_BASE_URL -u ANTHROPIC_BEDROCK_BASE_URL -u ANTHROPIC_VERTEX_BASE_URL -u ANTHROPIC_FOUNDRY_BASE_URL -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX -u CLAUDE_CODE_USE_FOUNDRY -u AWS_BEARER_TOKEN_BEDROCK -u BASH_ENV -u ENV -u SHELLOPTS -u BASHOPTS -u BASH_XTRACEFD -u PROMPT_COMMAND -u CDPATH -u GLOBIGNORE PATH=/usr/bin:/bin:/usr/sbin:/sbin CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 $bash_q --noprofile --norc $relay_q $av_q $claude_q $settings_q"
+  printf '%s' "$env_q -u CLAUDE_CODE_OAUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_BASE_URL -u ANTHROPIC_BEDROCK_BASE_URL -u ANTHROPIC_VERTEX_BASE_URL -u ANTHROPIC_FOUNDRY_BASE_URL -u CLAUDE_CODE_USE_BEDROCK -u CLAUDE_CODE_USE_VERTEX -u CLAUDE_CODE_USE_FOUNDRY -u AWS_BEARER_TOKEN_BEDROCK -u BASH_ENV -u ENV -u SHELLOPTS -u BASHOPTS -u BASH_XTRACEFD -u PROMPT_COMMAND -u CDPATH -u GLOBIGNORE PATH=/usr/bin:/bin:/usr/sbin:/sbin CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 $bash_q --noprofile --norc $relay_q $av_q $claude_q $checksum_q $settings_q"
 }
 
 # Returns 0 with FM_CLAUDE_AV_LAUNCH_COMMAND set for an enabled, authenticated
