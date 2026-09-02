@@ -423,7 +423,8 @@ test_enabled_disabled_and_non_claude_launches() {
   proj=${record%%$'\t'*}
   wt=${record#*$'\t'}
   output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
-    raw-claude-ship "$proj" 'claude --dangerously-skip-permissions' --mode local-only --yolo off 2>&1)
+    raw-claude-ship "$proj" 'claude --dangerously-skip-permissions' \
+    --harness claude --mode local-only --yolo off 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "enabled raw Claude launch bypassed the injection boundary"
   assert_contains "$output" "no supported injection boundary" \
@@ -462,7 +463,7 @@ test_enabled_disabled_and_non_claude_launches() {
       "$id" "$proj" "$raw" --mode local-only --yolo off 2>&1)
     status=$?
     [ "$status" -ne 0 ] || fail "enabled prefixed raw Claude launch bypassed the injection boundary: $raw"
-    assert_contains "$output" "no supported injection boundary" \
+    assert_contains "$output" "must declare a supported harness identity" \
       "enabled prefixed raw Claude refusal was not actionable: $raw"
     [ ! -s "$launchlog" ] || fail "enabled prefixed raw Claude refusal sent a launch command: $raw"
     [ ! -e "$home/state/$id.meta" ] || fail "enabled prefixed raw Claude refusal published worker metadata: $raw"
@@ -486,6 +487,9 @@ test_enabled_disabled_and_non_claude_launches() {
     "$raw_heredoc" \
     "printf '%s\\n' 'claude --dangerously-skip-permissions' | sh" \
     'printf x | xargs claude --dangerously-skip-permissions' \
+    'find . -maxdepth 0 -exec claude --dangerously-skip-permissions \;' \
+    "awk 'BEGIN { system(\"claude --dangerously-skip-permissions\") }'" \
+    'custom-agent --flag' \
     'if true; then claude --dangerously-skip-permissions; fi' \
     'if true; then custom-agent --flag; fi' \
     'while false; do custom-agent --flag; done' \
@@ -504,7 +508,7 @@ test_enabled_disabled_and_non_claude_launches() {
       "$id" "$proj" "$raw" --mode local-only --yolo off 2>&1)
     status=$?
     [ "$status" -ne 0 ] || fail "enabled ambiguous raw launch was accepted: $raw"
-    assert_contains "$output" "cannot be statically resolved" \
+    assert_contains "$output" "must declare a supported harness identity" \
       "enabled ambiguous raw launch refusal was not actionable: $raw"
     [ ! -s "$launchlog" ] || fail "enabled ambiguous raw launch sent a launch command: $raw"
     [ ! -e "$home/state/$id.meta" ] || fail "enabled ambiguous raw launch published worker metadata: $raw"
@@ -526,7 +530,7 @@ test_enabled_disabled_and_non_claude_launches() {
   wt=${record#*$'\t'}
   output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
     raw-prefixed-non-claude "$proj" "env --split-string='custom-agent --flag'" \
-    --mode local-only --yolo off 2>&1)
+    --harness codex --mode local-only --yolo off 2>&1)
   status=$?
   expect_code 0 "$status" "unrelated non-Claude env split-string launch"
   launch=$(last_launch_command "$launchlog")
@@ -543,7 +547,7 @@ test_enabled_disabled_and_non_claude_launches() {
   wt=${record#*$'\t'}
   output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
     raw-multiple-non-claude "$proj" 'true; custom-agent --flag' \
-    --mode local-only --yolo off 2>&1)
+    --harness codex --mode local-only --yolo off 2>&1)
   status=$?
   expect_code 0 "$status" "fully resolved multi-command non-Claude raw launch"
   launch=$(last_launch_command "$launchlog")
@@ -560,7 +564,7 @@ test_enabled_disabled_and_non_claude_launches() {
   wt=${record#*$'\t'}
   output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
     raw-pipeline-non-claude "$proj" 'printf x | custom-agent --flag' \
-    --mode local-only --yolo off 2>&1)
+    --harness codex --mode local-only --yolo off 2>&1)
   status=$?
   expect_code 0 "$status" "fully resolved non-delegating pipeline raw launch"
   launch=$(last_launch_command "$launchlog")
@@ -577,7 +581,7 @@ test_enabled_disabled_and_non_claude_launches() {
   wt=${record#*$'\t'}
   output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
     raw-shell-non-claude "$proj" "/bin/sh -c 'exec custom-agent --flag'" \
-    --mode local-only --yolo off 2>&1)
+    --harness codex --mode local-only --yolo off 2>&1)
   status=$?
   expect_code 0 "$status" "unrelated non-Claude literal shell launch"
   launch=$(last_launch_command "$launchlog")
@@ -605,7 +609,7 @@ SH
     --mode local-only --yolo off 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "Node-unavailable raw Claude launch bypassed the injection boundary"
-  assert_contains "$output" "cannot be statically resolved" \
+  assert_contains "$output" "must declare a supported harness identity" \
     "Node-unavailable raw Claude refusal was not actionable"
   [ ! -s "$launchlog" ] || fail "Node-unavailable raw Claude refusal sent a launch command"
   [ ! -e "$home/state/raw-no-node-claude.meta" ] || fail "Node-unavailable raw Claude refusal published worker metadata"
@@ -629,7 +633,7 @@ SH
     --mode local-only --yolo off 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "enabled Node-unavailable ambiguous non-Claude raw launch was accepted"
-  assert_contains "$output" "cannot be statically resolved" \
+  assert_contains "$output" "must declare a supported harness identity" \
     "enabled Node-unavailable ambiguous non-Claude refusal was not actionable"
   [ ! -s "$launchlog" ] || fail "enabled Node-unavailable ambiguous non-Claude launch sent a launch command"
   [ ! -e "$home/state/raw-no-node-non-claude.meta" ] \

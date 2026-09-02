@@ -33,7 +33,9 @@
 #   worktree, and clears the previous harness's per-task wiring before arming
 #   the new incarnation.
 #   --harness <name> is the explicit per-spawn harness/profile adapter. The old
-#   positional harness arg still works for back-compat.
+#   positional harness arg still works for back-compat. When paired with a raw
+#   launch positional, --harness declares the verified adapter identity while
+#   preserving the raw command.
 #   --model <name> and --effort <low|medium|high|xhigh|max> are concrete profile
 #   axes chosen by firstmate at intake. They are only threaded into harnesses whose
 #   installed CLIs were verified to support that axis; unsupported axes are omitted
@@ -989,6 +991,7 @@ fi
 SPAWN_TASK_LOCK_HELD=1
 PROJ=
 ARG3=
+RAW_HARNESS_IDENTITY=
 FIRSTMATE_HOME=
 
 # --relaunch adoption: every identity axis comes from the task's own validated
@@ -1083,7 +1086,12 @@ else
   PROJ=${POS[1]}
   ARG3=${POS[2]:-}
 fi
-[ -z "$HARNESS_ARG" ] || ARG3=$HARNESS_ARG
+if [ -n "$HARNESS_ARG" ]; then
+  case "$ARG3" in
+    *' '*) RAW_HARNESS_IDENTITY=$HARNESS_ARG ;;
+    *) ARG3=$HARNESS_ARG ;;
+  esac
+fi
 
 shell_quote() {
   printf "'"
@@ -1213,19 +1221,18 @@ case "$ARG3" in
   *' '*)  # raw launch command (unverified-adapter escape hatch)
     LAUNCH=$ARG3
     HARNESS=
-    RAW_LAUNCH_CLASSIFIED=0
-    RAW_LAUNCH_NODE=$(command -v node 2>/dev/null || true)
-    if [ -n "$RAW_LAUNCH_NODE" ]; then
-      if HARNESS=$("$RAW_LAUNCH_NODE" "$FM_ROOT/bin/fm-shell-command-name.mjs" "$LAUNCH" 2>/dev/null); then
-        RAW_LAUNCH_CLASSIFIED=1
-      fi
-    fi
-    if [ "$RAW_LAUNCH_CLASSIFIED" -eq 0 ]; then
+    if [ -n "$RAW_HARNESS_IDENTITY" ]; then
+      launch_template "$RAW_HARNESS_IDENTITY" "$KIND" >/dev/null || {
+        echo "error: unknown harness '$RAW_HARNESS_IDENTITY'; a raw launch identity must name a supported harness adapter" >&2
+        exit 1
+      }
+      HARNESS=$RAW_HARNESS_IDENTITY
+    else
       raw_launch_opt_in=0
       fm_claude_av_enabled "$CONFIG" || raw_launch_opt_in=$?
       case "$raw_launch_opt_in" in
         0)
-          echo "error: Claude Automic Vault authentication is enabled, but this raw launch command position cannot be statically resolved; use a raw launch with a literal executable name or the verified harness template." >&2
+          echo "error: Claude Automic Vault authentication is enabled, so a raw launch must declare a supported harness identity with --harness <name>; declare the verified adapter alongside the raw command or use its canonical harness launch path." >&2
           exit 1
           ;;
         1) ;;
@@ -1235,6 +1242,10 @@ case "$ARG3" in
           exit 1
           ;;
       esac
+      RAW_LAUNCH_NODE=$(command -v node 2>/dev/null || true)
+      if [ -n "$RAW_LAUNCH_NODE" ]; then
+        HARNESS=$("$RAW_LAUNCH_NODE" "$FM_ROOT/bin/fm-shell-command-name.mjs" "$LAUNCH" 2>/dev/null) || HARNESS=
+      fi
     fi
     ;;
   '')
