@@ -1316,7 +1316,7 @@ fi
 CLAUDE_LAUNCH=claude
 if [ "$HARNESS" = claude ]; then
   claude_av_rc=0
-  fm_claude_av_prepare_launch "$CONFIG" || claude_av_rc=$?
+  fm_claude_av_prepare_launch "$CONFIG" "$LAUNCH" || claude_av_rc=$?
   case "$claude_av_rc" in
     0) CLAUDE_LAUNCH=$FM_CLAUDE_AV_LAUNCH_COMMAND ;;
     2) ;;

@@ -28,7 +28,7 @@ sha256_file() {
 }
 
 make_fake_tools() {  # <case-dir>
-  local dir=$1 fakebin native_dir cc_bin
+  local dir=$1 fakebin native_dir cc_bin checksum separator platform
   fakebin=$(fm_fakebin "$dir")
   mkdir -p "$dir/fake-state"
   cat > "$fakebin/av" <<'SH'
@@ -97,18 +97,11 @@ SH
 #!/usr/bin/env bash
 set -u
 state=${FM_FAKE_STATE:?}
-checksum=$(cat "$state/expected-claude-sha256")
 case "${*}" in
   *https://downloads.claude.ai/claude-code-releases/2.1.220/manifest.json) ;;
   *) exit 22 ;;
 esac
-printf '{"version":"2.1.220","platforms":{'
-separator=
-for platform in darwin-arm64 darwin-x64 linux-arm64 linux-x64 linux-arm64-musl linux-x64-musl; do
-  printf '%s"%s":{"checksum":"%s"}' "$separator" "$platform" "$checksum"
-  separator=,
-done
-printf '}}\n'
+cat "$state/release-manifest.json"
 SH
   native_dir="$dir/fake-home/.local/share/claude/versions"
   mkdir -p "$native_dir"
@@ -228,6 +221,18 @@ C
   "$cc_bin" -o "$native_dir/2.1.220" "$dir/fake-claude.c" || fail "could not build native Claude fixture"
   sha256_file "$native_dir/2.1.220" > "$dir/fake-state/expected-claude-sha256" \
     || fail "could not hash native Claude fixture"
+  checksum=$(cat "$dir/fake-state/expected-claude-sha256")
+  {
+    printf '{"version":"2.1.220","platforms":{'
+    separator=
+    for platform in darwin-arm64 darwin-x64 linux-arm64 linux-x64 linux-arm64-musl linux-x64-musl; do
+      printf '%s"%s":{"checksum":"%s"}' "$separator" "$platform" "$checksum"
+      separator=,
+    done
+    printf '}}'
+  } > "$dir/fake-state/release-manifest.json"
+  printf '%s  2.1.220\n' "$(sha256_file "$dir/fake-state/release-manifest.json")" \
+    > "$dir/fake-state/release-manifests.sha256"
   ln -s "$native_dir/2.1.220" "$fakebin/claude"
   cat > "$fakebin/tmux" <<'SH'
 #!/usr/bin/env bash
@@ -266,6 +271,11 @@ exit 0
 SH
   chmod +x "$fakebin/av" "$fakebin/curl" "$fakebin/tmux" "$fakebin/treehouse"
   (cd "$fakebin" && pwd -P)
+}
+
+configure_fake_attestation() {  # <fakebin> <state>
+  export FM_CLAUDE_AV_CURL_BIN=$1/curl
+  export FM_CLAUDE_AV_MANIFEST_CHECKSUMS=$2/release-manifests.sha256
 }
 
 assert_secret_absent() {  # <case-dir> <captured-output>
@@ -307,6 +317,7 @@ test_provision_recovery_renewal_preflight_and_redaction() {
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
   state="$dir/fake-state"
+  configure_fake_attestation "$fakebin" "$state"
   mkdir -p "$home/config"
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
     FM_FAKE_SECRET="$SECRET" FM_FAKE_SETUP_MODE=split PATH="$fakebin:$BASE_PATH" \
@@ -370,6 +381,7 @@ test_enabled_disabled_and_non_claude_launches() {
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
   state="$dir/fake-state"
+  configure_fake_attestation "$fakebin" "$state"
   record=$(make_ship "$dir" "$home" auth-ship)
   proj=${record%%$'\t'*}
   wt=${record#*$'\t'}
@@ -393,6 +405,23 @@ test_enabled_disabled_and_non_claude_launches() {
   assert_not_contains "$executed" "$SECRET" "executed worker launch displayed synthetic secret"
   assert_grep 'interactive=authenticated' "$state/claude-env.log" "launched fake Claude was not authenticated"
   assert_no_grep 'conflict=' "$state/claude-env.log" "higher-precedence auth environment reached Claude"
+
+  : > "$launchlog"
+  before=$(wc -l < "$state/av-argv.log")
+  record=$(make_ship "$dir" "$home" raw-claude-ship)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-claude-ship "$proj" 'claude --dangerously-skip-permissions' --mode local-only --yolo off 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "enabled raw Claude launch bypassed the injection boundary"
+  assert_contains "$output" "no supported injection boundary" \
+    "enabled raw Claude refusal was not actionable"
+  [ ! -s "$launchlog" ] || fail "enabled raw Claude refusal still sent a launch command"
+  [ ! -e "$home/state/raw-claude-ship.meta" ] || fail "enabled raw Claude refusal published worker metadata"
+  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+    || fail "enabled raw Claude refusal contacted Automic Vault"
+  assert_secret_absent "$dir" "$output"
 
   rm -f "$home/config/claude-automic-vault"
   : > "$launchlog"
@@ -434,6 +463,7 @@ test_actionable_fail_closed_paths() {
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
   state="$dir/fake-state"
+  configure_fake_attestation "$fakebin" "$state"
   mkdir -p "$home/config"
   printf 'on\n' > "$home/config/claude-automic-vault"
   for mode in denied missing unavailable; do
@@ -596,6 +626,7 @@ test_launch_time_failure_redaction_and_interactive_io() {
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
   state="$dir/fake-state"
+  configure_fake_attestation "$fakebin" "$state"
   record=$(make_ship "$dir" "$home" launch-boundary)
   proj=${record%%$'\t'*}
   wt=${record#*$'\t'}
@@ -715,6 +746,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   sm="$dir/secondmate-home"
   fakebin=$(make_fake_tools "$dir")
   state="$dir/fake-state"
+  configure_fake_attestation "$fakebin" "$state"
   launchlog="$dir/launch.log"
   mkdir -p "$primary/data" "$primary/state" "$primary/config" "$primary/projects"
   printf 'claude\n' > "$primary/config/crew-harness"

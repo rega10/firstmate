@@ -34,11 +34,12 @@ FM_CLAUDE_AV_CONFIG_FILE=claude-automic-vault
 FM_CLAUDE_AV_SECRET_NAME=CLAUDE_CODE_OAUTH_TOKEN
 FM_CLAUDE_AV_TIMEOUT=${FM_CLAUDE_AV_TIMEOUT:-45}
 FM_CLAUDE_AV_RELEASE_BASE=https://downloads.claude.ai/claude-code-releases
+FM_CLAUDE_AV_MANIFEST_CHECKSUMS=${FM_CLAUDE_AV_MANIFEST_CHECKSUMS:-"$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-claude-automic-vault-manifests.sha256"}
 FM_CLAUDE_AV_SETTINGS='{"apiKeyHelper":null,"env":{"ANTHROPIC_API_KEY":null,"ANTHROPIC_AUTH_TOKEN":null,"ANTHROPIC_BASE_URL":null,"ANTHROPIC_BEDROCK_BASE_URL":null,"ANTHROPIC_VERTEX_BASE_URL":null,"ANTHROPIC_FOUNDRY_BASE_URL":null,"CLAUDE_CODE_USE_BEDROCK":null,"CLAUDE_CODE_USE_VERTEX":null,"CLAUDE_CODE_USE_FOUNDRY":null,"AWS_BEARER_TOKEN_BEDROCK":null}}'
 FM_CLAUDE_AV_ERROR=
 FM_CLAUDE_AV_BIN=
 FM_CLAUDE_BIN=
-FM_CLAUDE_AV_CURL_BIN=
+FM_CLAUDE_AV_CURL_BIN=${FM_CLAUDE_AV_CURL_BIN:-/usr/bin/curl}
 FM_CLAUDE_AV_CLAUDE_SHA256=
 FM_CLAUDE_AV_BASH=/bin/bash
 FM_CLAUDE_AV_ENV=/usr/bin/env
@@ -208,8 +209,43 @@ fm_claude_av_artifact_sha256() {  # <path> <release-platform>
   printf '%s\n' "${hash_output%%[[:space:]]*}"
 }
 
+fm_claude_av_manifest_sha256() {  # <manifest>
+  local manifest=$1 hash_output
+  if [ "$(/usr/bin/uname -s 2>/dev/null)" = Darwin ]; then
+    hash_output=$(printf '%s' "$manifest" | /usr/bin/shasum -a 256 2>/dev/null) || return 1
+  elif [ -x /usr/bin/sha256sum ]; then
+    hash_output=$(printf '%s' "$manifest" | /usr/bin/sha256sum 2>/dev/null) || return 1
+  elif [ -x /bin/sha256sum ]; then
+    hash_output=$(printf '%s' "$manifest" | /bin/sha256sum 2>/dev/null) || return 1
+  else
+    return 1
+  fi
+  printf '%s\n' "${hash_output%%[[:space:]]*}"
+}
+
+fm_claude_av_expected_manifest_sha256() {  # <version>
+  local version=$1 checksum pinned_version extra found=
+  [ -f "$FM_CLAUDE_AV_MANIFEST_CHECKSUMS" ] || return 1
+  while read -r checksum pinned_version extra; do
+    [ -z "$extra" ] || return 1
+    case "$checksum" in
+      *[!a-f0-9]*|'') return 1 ;;
+    esac
+    [ "${#checksum}" -eq 64 ] || return 1
+    case "$pinned_version" in
+      ''|*[!0-9.]*) return 1 ;;
+    esac
+    if [ "$pinned_version" = "$version" ]; then
+      [ -z "$found" ] || return 1
+      found=$checksum
+    fi
+  done < "$FM_CLAUDE_AV_MANIFEST_CHECKSUMS"
+  [ -n "$found" ] || return 1
+  printf '%s\n' "$found"
+}
+
 fm_claude_av_attest_native_artifact() {  # <resolved-claude>
-  local executable=$1 version platform manifest compact expected actual
+  local executable=$1 version platform manifest compact expected actual expected_manifest actual_manifest
   version=${executable##*/}
   platform=$(fm_claude_av_release_platform) || {
     printf 'error: Claude Code artifact attestation does not support this operating system or architecture.\n' >&2
@@ -224,6 +260,18 @@ fm_claude_av_attest_native_artifact() {  # <resolved-claude>
     printf 'error: Claude Code release attestation for version %s was unexpectedly large.\n' "$version" >&2
     return 1
   }
+  expected_manifest=$(fm_claude_av_expected_manifest_sha256 "$version") || {
+    printf 'error: Claude Code version %s has no checked-in release-manifest checksum; update Firstmate before enabling this version.\n' "$version" >&2
+    return 1
+  }
+  actual_manifest=$(fm_claude_av_manifest_sha256 "$manifest") || {
+    printf 'error: SHA-256 verification is unavailable for the Claude Code release manifest.\n' >&2
+    return 1
+  }
+  if [ "$actual_manifest" != "$expected_manifest" ]; then
+    printf 'error: refusing Claude Automic Vault authentication because the downloaded release manifest for version %s does not match Firstmate release attestation.\n' "$version" >&2
+    return 1
+  fi
   compact=${manifest//$'\n'/}
   compact=${compact//$'\r'/}
   compact=${compact//$'\t'/}
@@ -273,8 +321,15 @@ fm_claude_av_probe_identity() {  # <resolved-claude>
 }
 
 fm_claude_av_resolve_tools() {
-  FM_CLAUDE_AV_CURL_BIN=$(fm_claude_av_resolve_named_executable curl) || {
-    printf 'error: Claude Automic Vault authentication requires curl for Claude Code release attestation.\n' >&2
+  case "$FM_CLAUDE_AV_CURL_BIN" in
+    /*) ;;
+    *)
+      printf 'error: Claude Automic Vault authentication requires an absolute curl path for Claude Code release attestation.\n' >&2
+      return 1
+      ;;
+  esac
+  FM_CLAUDE_AV_CURL_BIN=$(fm_claude_av_realpath "$FM_CLAUDE_AV_CURL_BIN") || {
+    printf 'error: Claude Automic Vault authentication requires curl at %s for Claude Code release attestation.\n' "$FM_CLAUDE_AV_CURL_BIN" >&2
     return 1
   }
   FM_CLAUDE_AV_BIN=$(fm_claude_av_resolve_named_executable av) || {
@@ -471,8 +526,8 @@ fm_claude_av_build_launch_command() {
 
 # Returns 0 with FM_CLAUDE_AV_LAUNCH_COMMAND set for an enabled, authenticated
 # home, 1 on a fail-closed blocker, and 2 when the opt-in is absent.
-fm_claude_av_prepare_launch() {  # <config-dir>
-  local config=$1 enabled_rc=0
+fm_claude_av_prepare_launch() {  # <config-dir> <launch-template>
+  local config=$1 launch_template=${2:-__CLAUDELAUNCH__} enabled_rc=0
   fm_claude_av_enabled "$config" || enabled_rc=$?
   case "$enabled_rc" in
     0) ;;
@@ -480,6 +535,13 @@ fm_claude_av_prepare_launch() {  # <config-dir>
     2)
       printf 'error: unsafe or invalid config/%s: %s; remove it to disable the opt-in or recreate it with bin/fm-claude-automic-vault.sh enable.\n' \
         "$FM_CLAUDE_AV_CONFIG_FILE" "$FM_CLAUDE_AV_ERROR" >&2
+      return 1
+      ;;
+  esac
+  case "$launch_template" in
+    *__CLAUDELAUNCH__*) ;;
+    *)
+      printf 'error: Claude Automic Vault authentication is enabled, but this Claude launch has no supported injection boundary; use the verified Claude harness template or disable the opt-in before using a raw command.\n' >&2
       return 1
       ;;
   esac

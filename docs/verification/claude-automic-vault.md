@@ -30,7 +30,7 @@ tests/fm-claude-automic-vault.test.sh
 ```
 
 The test uses fake `av` and fake `claude` executables with synthetic secret bytes held only in process environment.
-It exercises public provisioning, one-time enable recovery, renewal, and preflight, enabled and disabled spawn behavior, Claude versus non-Claude isolation, missing Vault state, Secret Gate denial, a missing secret, revoked-token rejection, unsupported tool surfaces, inconclusive authentication, executable recursion refusal, model and effort argument preservation, redacted output, persistent secondmate launch and relaunch, inherited opt-in, and a nested worker launched from the inherited home.
+It exercises public provisioning, one-time enable recovery, renewal, and preflight, enabled and disabled spawn behavior, opted-in raw Claude refusal before endpoint creation, Claude versus non-Claude isolation, missing Vault state, Secret Gate denial, a missing secret, revoked-token rejection, unsupported tool surfaces, inconclusive authentication, executable recursion refusal, model and effort argument preservation, redacted output, persistent secondmate launch and relaunch, inherited opt-in, and a nested worker launched from the inherited home.
 It executes the captured enabled worker launch and proves the fake Claude process received the injected environment while higher-precedence auth inputs were absent.
 It then scans every fixture file, captured launch command, fake argv log, and command output to prove the synthetic secret bytes were not persisted or displayed.
 
@@ -48,3 +48,4 @@ Do not run `claude setup-token`, `av save CLAUDE_CODE_OAUTH_TOKEN`, or an enable
 The implementation therefore does not prove that a particular captain Vault is unlocked, that Secret Gate policy currently permits a particular launch, that a real `CLAUDE_CODE_OAUTH_TOKEN` exists, or that a real subscription token is presently valid.
 Those facts remain intentionally unproven until the captain runs `bin/fm-claude-automic-vault.sh provision` in an attended terminal after merge.
 Remote Automic Vault availability and remote token provisioning also remain unproven and must be established independently on each remote host before that host can launch a Claude worker with the inherited opt-in.
+The accepted threat model assumes same-user process integrity, so TOCTOU attacks by another process running as the same user remain intentionally unproven and out of scope by captain decision on 2026-09-02.
