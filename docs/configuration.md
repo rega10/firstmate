@@ -293,8 +293,9 @@ The ceremony never accepts the token as an argument and never places it in shell
 The opt-in file is written atomically only after the saved token passes redacted authentication classification and live validation.
 
 Every enabled Firstmate Claude launch and relaunch resolves `av` before endpoint creation, verifies the canonical native executable under `.local/share/claude/versions` against an Anthropic HTTPS release manifest whose checksum is pinned in Firstmate, and executes a private same-filesystem hard link to that attested file object.
-An opted-in raw Claude launch, including one reached through leading assignments, supported `env` options, an `env` split string, a literal `sh`, `bash`, or `zsh -c` payload, or literal `eval`, is refused before endpoint creation because only the verified Claude harness template carries the required injection boundary.
-If semantic command classification is unavailable, a raw command that visibly names Claude is conservatively refused while unrelated non-Claude raw launches remain unchanged.
+An opted-in raw Claude launch, including one reached through leading assignments, supported `env` or `nice` options, an `env` split string, a literal `sh`, `bash`, or `zsh -c` payload, or literal `eval`, is refused before endpoint creation because only the verified Claude harness template carries the required injection boundary.
+While the opt-in is valid, a raw launch is conservatively refused when semantic command classification is unavailable or cannot statically resolve its command position, including when the command may be unrelated to Claude.
+A malformed or unreadable opt-in file applies the same fail-safe refusal to an unresolved raw launch until the file is repaired or removed.
 Install Claude Code with its official native installer before enabling this integration; script wrappers and other distribution layouts fail closed because their artifact identity can be forwarded or substituted.
 This boundary assumes same-user process integrity, and TOCTOU attacks by another process running as the same user are out of scope by captain decision on 2026-09-02.
 The token value enters only the Claude process environment through `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`, while the secret name but never its value appears in argv.
@@ -332,7 +333,7 @@ If the flag is active but the token was deleted or revoked, use `renew`, or disa
 The opt-in flag is primary-authoritative inherited local material under [`secondmate-provisioning`](../.agents/skills/secondmate-provisioning/SKILL.md), so local persistent secondmates and their workers on the same machine apply the same setting on launch and relaunch.
 Only the flag is copied between homes, and the token itself always remains in Automic Vault.
 A remote secondmate receives the same flag through the existing inherited-material allowlist but cannot receive the local Vault value, so its Claude launches fail closed until Automic Vault and the token are provisioned separately on that host.
-Non-Claude harnesses never read the flag, resolve these executables, contact Automic Vault, or change launch behavior.
+Concrete non-Claude harnesses and statically classified non-Claude raw launches never read the flag, resolve these executables, contact Automic Vault, or change launch behavior.
 Maintainer verification and the intentionally skipped live-secret checks are recorded in [`verification/claude-automic-vault.md`](verification/claude-automic-vault.md).
 
 ## Crew dispatch profiles (config/crew-dispatch.json)

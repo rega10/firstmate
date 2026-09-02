@@ -445,7 +445,9 @@ test_enabled_disabled_and_non_claude_launches() {
     "bash -lc 'FOO=bar claude --dangerously-skip-permissions'" \
     "zsh -c 'env FOO=bar claude --dangerously-skip-permissions'" \
     "/bin/bash -c \"env -S 'claude --dangerously-skip-permissions'\"" \
-    "eval 'exec claude --dangerously-skip-permissions'"; do
+    "eval 'exec claude --dangerously-skip-permissions'" \
+    'nice claude --dangerously-skip-permissions' \
+    '/usr/bin/nice -n 5 claude --dangerously-skip-permissions'; do
     raw_index=$((raw_index + 1))
     id="raw-prefixed-$raw_index"
     : > "$launchlog"
@@ -606,6 +608,42 @@ SH
   assert_contains "$launch" "eval 'exec custom-agent --flag'" \
     "disabled Node-unavailable non-Claude raw launch changed"
   rm -f "$fakebin/node"
+
+  printf 'off\n' > "$home/config/claude-automic-vault"
+  for raw in \
+    '"$(printf clau%s de)" --dangerously-skip-permissions' \
+    '"$(printf custom-%s agent)" --flag'; do
+    raw_index=$((raw_index + 1))
+    id="raw-malformed-$raw_index"
+    : > "$launchlog"
+    before=$(wc -l < "$state/av-argv.log")
+    before_claude=$(wc -l < "$state/claude-argv.log")
+    before_endpoint=0
+    [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
+    record=$(make_ship "$dir" "$home" "$id")
+    proj=${record%%$'\t'*}
+    wt=${record#*$'\t'}
+    output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+      "$id" "$proj" "$raw" --mode local-only --yolo off 2>&1)
+    status=$?
+    [ "$status" -ne 0 ] || fail "malformed-state ambiguous raw launch was accepted: $raw"
+    assert_contains "$output" "unsafe or invalid config/claude-automic-vault" \
+      "malformed-state ambiguous raw launch refusal did not identify the opt-in state: $raw"
+    assert_contains "$output" "remove it to disable" \
+      "malformed-state ambiguous raw launch refusal omitted recovery: $raw"
+    [ ! -s "$launchlog" ] || fail "malformed-state ambiguous raw launch sent a launch command: $raw"
+    [ ! -e "$home/state/$id.meta" ] || fail "malformed-state ambiguous raw launch published worker metadata: $raw"
+    [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+      || fail "malformed-state ambiguous raw launch contacted Automic Vault: $raw"
+    [ "$(wc -l < "$state/claude-argv.log")" = "$before_claude" ] \
+      || fail "malformed-state ambiguous raw launch started ordinary Claude: $raw"
+    if [ -f "$state/endpoint.log" ]; then
+      [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+        || fail "malformed-state ambiguous raw launch created an endpoint: $raw"
+    fi
+    assert_secret_absent "$dir" "$output"
+  done
+  rm -f "$home/config/claude-automic-vault"
 
   : > "$launchlog"
   before=$(wc -l < "$state/av-argv.log")
