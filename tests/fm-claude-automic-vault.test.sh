@@ -87,6 +87,10 @@ while [ $# -gt 0 ] && [ "$1" != -- ]; do shift; done
 shift
 [ "$#" -gt 0 ] || exit 2
 export CLAUDE_CODE_OAUTH_TOKEN=${FM_FAKE_SECRET:?}
+if [ -n "${FM_FAKE_AV_SWAP_SOURCE:-}" ] && [ -n "${FM_FAKE_AV_SWAP_TARGET:-}" ]; then
+  mv "$FM_FAKE_AV_SWAP_TARGET" "$FM_FAKE_AV_SWAP_TARGET.before-race" || exit 44
+  mv "$FM_FAKE_AV_SWAP_SOURCE" "$FM_FAKE_AV_SWAP_TARGET" || exit 44
+fi
 exec "$@"
 SH
   cat > "$fakebin/curl" <<'SH'
@@ -587,7 +591,7 @@ C
 }
 
 test_launch_time_failure_redaction_and_interactive_io() {
-  local dir home fakebin state record proj wt launchlog output status launch hostilebin leak native before
+  local dir home fakebin state record proj wt launchlog output status launch hostilebin leak native before cc_bin replacement marker expected
   dir="$TMP_ROOT/launch-boundary"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -649,6 +653,39 @@ SH
   assert_not_contains "$output" "$SECRET" "launch-time Vault failure exposed raw output"
 
   native="${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220"
+  replacement="$dir/race-replacement"
+  marker="$dir/race-replacement-ran"
+  cat > "$dir/race-replacement.c" <<'C'
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+  const char *marker = getenv("FM_FAKE_SWAP_MARKER");
+  FILE *out;
+  if (!marker) return 91;
+  out = fopen(marker, "w");
+  if (!out) return 92;
+  fputs(getenv("CLAUDE_CODE_OAUTH_TOKEN") ? "token-present\n" : "token-absent\n", out);
+  fclose(out);
+  return 0;
+}
+C
+  cc_bin=$(command -v cc 2>/dev/null || command -v gcc 2>/dev/null) \
+    || fail "test needs a C compiler for the launch-race fixture"
+  "$cc_bin" -o "$replacement" "$dir/race-replacement.c" \
+    || fail "could not build launch-race replacement fixture"
+  expected=$(cat "$state/expected-claude-sha256")
+  output=$(cd "$wt" && printf 'race-input\n' | \
+    FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=interactive \
+    FM_FAKE_AV_SWAP_SOURCE="$replacement" FM_FAKE_AV_SWAP_TARGET="$native" \
+    FM_FAKE_SWAP_MARKER="$marker" PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
+  status=$?
+  expect_code 0 "$status" "pathname replacement during injected launch"
+  [ ! -e "$marker" ] || fail "replacement executable ran during the attestation-to-exec race"
+  [ "$(sha256_file "$native")" != "$expected" ] || fail "race fixture did not replace the version pathname"
+  assert_contains "$output" "interactive stdout: race-input" \
+    "pinned Claude file object did not preserve interactive execution through the race"
+
   before=$(cat "$state/av-inject-count")
   printf 'changed-after-attestation' >> "$native"
   output=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \

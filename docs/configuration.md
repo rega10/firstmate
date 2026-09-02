@@ -292,7 +292,7 @@ Complete browser and Automic Vault Secret Gate prompts in their own application 
 The ceremony never accepts the token as an argument and never places it in shell history, a repository file, a log, a report, a status message, the clipboard, or chat.
 The opt-in file is written atomically only after the saved token passes redacted authentication classification and live validation.
 
-Every enabled Firstmate Claude launch and relaunch resolves `av` before endpoint creation, verifies the canonical native executable under `.local/share/claude/versions` against Anthropic's HTTPS release-manifest checksum, and pins the attested absolute path in the launch command.
+Every enabled Firstmate Claude launch and relaunch resolves `av` before endpoint creation, verifies the canonical native executable under `.local/share/claude/versions` against Anthropic's HTTPS release-manifest checksum, and executes a private same-filesystem hard link to that attested file object.
 Install Claude Code with its official native installer before enabling this integration; script wrappers and other distribution layouts fail closed because their artifact identity can be forwarded or substituted.
 The token value enters only the Claude process environment through `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`, while the secret name but never its value appears in argv.
 The launch clears ambient API-key, cloud-provider, and Anthropic endpoint overrides, disables `apiKeyHelper` and matching auth settings inline, and enables Claude Code's subprocess credential scrub.

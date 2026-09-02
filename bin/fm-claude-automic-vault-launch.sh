@@ -27,23 +27,33 @@ expected_sha256=$3
 settings=$4
 shift 4
 
+launch_parent=${claude%/versions/*}
+launch_root=$(mktemp -d "$launch_parent/.firstmate-launch.XXXXXX" 2>/dev/null) || {
+  printf 'error: could not create the private same-filesystem state required for Claude injection.\n' >&2
+  exit 1
+}
+pinned_claude="$launch_root/${claude##*/}"
+if ! ln "$claude" "$pinned_claude" 2>/dev/null; then
+  find "$launch_root" -depth -delete 2>/dev/null || true
+  printf 'error: could not pin the attested Claude Code file object for launch.\n' >&2
+  exit 1
+fi
 platform=$(fm_claude_av_release_platform) || {
+  find "$launch_root" -depth -delete 2>/dev/null || true
   printf 'error: could not retain the attested Claude Code identity through launch on this platform.\n' >&2
   exit 1
 }
-actual_sha256=$(fm_claude_av_artifact_sha256 "$claude" "$platform") || {
+actual_sha256=$(fm_claude_av_artifact_sha256 "$pinned_claude" "$platform") || {
+  find "$launch_root" -depth -delete 2>/dev/null || true
   printf 'error: could not revalidate the attested Claude Code executable immediately before launch.\n' >&2
   exit 1
 }
 if [ "$actual_sha256" != "$expected_sha256" ]; then
+  find "$launch_root" -depth -delete 2>/dev/null || true
   printf 'error: refusing Claude launch because the attested Claude Code executable changed after preflight.\n' >&2
   exit 1
 fi
 
-launch_root=$(mktemp -d "${TMPDIR:-/tmp}/fm-claude-launch.XXXXXX" 2>/dev/null) || {
-  printf 'error: could not create the private temporary state required for Claude injection.\n' >&2
-  exit 1
-}
 ready="$launch_root/injected"
 output_pipe="$launch_root/output"
 mkfifo "$output_pipe" || {
@@ -65,7 +75,7 @@ capture_inject_output < "$output_pipe" >&2 &
 capture_pid=$!
 "$av" inject --replace-existing-env "+$FM_CLAUDE_AV_SECRET_NAME" -- \
   "$FM_CLAUDE_AV_BASH" --noprofile --norc "$0" \
-  --injected "$ready" "$claude" "$settings" "$@" \
+  --injected "$ready" "$pinned_claude" "$settings" "$@" \
   3>&1 4>&2 > "$output_pipe" 2>&1 || status=$?
 wait "$capture_pid" || true
 find "$launch_root" -depth -delete 2>/dev/null || true
