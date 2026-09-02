@@ -223,8 +223,8 @@ int main(int argc, char **argv) {
     }
   }
   {
-    const char *names[] = {"FM_HOME", "FM_SUPERVISION_MODEL", "TRACEPARENT", "CLAUDE_CONFIG_DIR"};
-    for (i = 0; i < 4; i++) if (getenv(names[i])) {
+    const char *names[] = {"FM_HOME", "FM_SUPERVISION_MODEL", "TRACEPARENT", "CLAUDE_CONFIG_DIR", "GOTMPDIR"};
+    for (i = 0; i < 5; i++) if (getenv(names[i])) {
       char line[8192];
       snprintf(line, sizeof(line), "%s=%s", names[i], getenv(names[i]));
       append_line(path, line);
@@ -430,7 +430,7 @@ test_provision_recovery_renewal_preflight_and_redaction() {
 }
 
 test_enabled_disabled_and_non_claude_launches() {
-  local dir home fakebin state record proj wt launchlog output status launch before executed raw id before_claude before_endpoint raw_heredoc raw_index=0
+  local dir home fakebin state record proj wt launchlog output status launch before executed raw id before_claude before_endpoint raw_heredoc tasktmp gotmp raw_index=0
   dir="$TMP_ROOT/launches"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -453,11 +453,16 @@ test_enabled_disabled_and_non_claude_launches() {
     "enabled launch did not pin the redacted injection relay and resolved tools"
   assert_contains "$launch" "--model 'sonnet' --effort 'high'" "enabled launch did not preserve profile arguments"
   assert_not_contains "$launch" "$SECRET" "launch argv contains synthetic secret"
+  tasktmp=$(sed -n 's/^tasktmp=//p' "$home/state/auth-ship.meta")
+  gotmp="$tasktmp/gotmp"
   executed=$(cd "$wt" && FM_FAKE_STATE="$state" \
+    GOTMPDIR="$gotmp" \
     ANTHROPIC_API_KEY=must-be-cleared ANTHROPIC_BASE_URL=https://invalid.example \
     PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1) || fail "captured enabled launch did not execute"
   assert_not_contains "$executed" "$SECRET" "executed worker launch displayed synthetic secret"
   assert_grep 'interactive=authenticated' "$state/claude-env.log" "launched fake Claude was not authenticated"
+  assert_grep "GOTMPDIR=$gotmp" "$state/claude-env.log" \
+    "enabled Claude launch dropped task-managed GOTMPDIR"
   assert_no_grep 'conflict=' "$state/claude-env.log" "higher-precedence auth environment reached Claude"
 
   : > "$launchlog"
@@ -703,10 +708,12 @@ SH
   status=$?
   expect_code 0 "$status" "disabled raw launch with declared harness"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "custom-agent --flag" \
-    "disabled raw launch with declared harness changed"
-  assert_grep 'harness=custom-agent' "$home/state/raw-disabled-declared-harness.meta" \
-    "disabled raw launch with declared harness changed historical metadata"
+  assert_contains "$launch" 'codex --dangerously-bypass-approvals-and-sandbox' \
+    "disabled raw positional did not yield to the declared canonical harness"
+  assert_not_contains "$launch" "custom-agent --flag" \
+    "disabled raw positional overrode the declared canonical harness"
+  assert_grep 'harness=codex' "$home/state/raw-disabled-declared-harness.meta" \
+    "disabled raw positional changed historical declared-harness metadata"
 
   printf 'off\n' > "$home/config/claude-automic-vault"
   for raw in \

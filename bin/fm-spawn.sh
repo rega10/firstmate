@@ -1087,7 +1087,14 @@ else
 fi
 if [ -n "$HARNESS_ARG" ]; then
   case "$ARG3" in
-    *' '*) RAW_HARNESS_CONFLICT=1 ;;
+    *' '*)
+      raw_harness_opt_in=0
+      fm_claude_av_enabled "$CONFIG" || raw_harness_opt_in=$?
+      case "$raw_harness_opt_in" in
+        1) ARG3=$HARNESS_ARG ;;
+        0|2) RAW_HARNESS_CONFLICT=1 ;;
+      esac
+      ;;
     *) ARG3=$HARNESS_ARG ;;
   esac
 fi
