@@ -297,6 +297,7 @@ While the opt-in is valid, every raw launch command is refused before endpoint c
 Pass a supported harness token by itself so `fm-spawn.sh` uses the canonical verified launch template, and do not combine a raw launch positional with `--harness`.
 A malformed or unreadable opt-in file applies the same fail-safe refusal to a raw launch until the file is repaired or removed.
 Install Claude Code with its official native installer before enabling this integration; script wrappers and other distribution layouts fail closed because their artifact identity can be forwarded or substituted.
+The exact installed Claude Code version must also appear in Firstmate's checked-in approval-free credential-scrub qualification list, and maintainers qualify upgrades with the procedure in [`verification/claude-automic-vault.md`](verification/claude-automic-vault.md#claude-version-qualification).
 This boundary assumes same-user process integrity, and TOCTOU attacks by another process running as the same user are out of scope by captain decision on 2026-09-02.
 The token value enters only the Claude process environment through `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`, while the secret name but never its value appears in argv.
 The launch builds its clean explicit environment after task-specific launch values are final, keeps a restricted trusted path through preflight and injection, restores the worker's original tool path only at Claude exec, and carries required home, terminal, locale, temporary-directory, proxy, certificate, SSH-agent, Claude configuration, Firstmate lifecycle, trace, and backend identity context while enabling Claude Code's subprocess credential scrub.
@@ -313,7 +314,7 @@ Run the same supported check at any time with:
 bin/fm-claude-automic-vault.sh preflight
 ```
 
-Missing or locked Vault state, denied Secret Gate access, a missing secret, an invalid or revoked token, unsupported CLI surfaces, a timeout, and inconclusive or conflicting authentication all block the launch with a redacted action.
+Missing or locked Vault state, denied Secret Gate access, a missing secret, an invalid or revoked token, an unqualified version, unsupported CLI surfaces, a timeout, and inconclusive or conflicting authentication all block the launch with a redacted action.
 Inspect Automic Vault Authorization History when an injection failure is not safely classifiable, and never paste credential material into a diagnostic or report.
 
 Renew the token from an attended captain terminal with:

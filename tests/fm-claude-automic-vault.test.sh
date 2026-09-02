@@ -832,7 +832,7 @@ SH
 }
 
 test_actionable_fail_closed_paths() {
-  local dir home fakebin state mode output status expected direct wrapper record proj wt launchlog before cc_bin native
+  local dir home fakebin state mode output status expected direct wrapper record proj wt launchlog before cc_bin native unqualified
   dir="$TMP_ROOT/blockers"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -899,6 +899,31 @@ test_actionable_fail_closed_paths() {
   status=$?
   [ "$status" -ne 0 ] || fail "Claude without explicit permission mode was accepted"
   assert_contains "$output" "permission-mode" "permission-mode blocker was not actionable"
+  assert_secret_absent "$dir" "$output"
+
+  native="${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220"
+  unqualified="${native%/*}/2.1.231"
+  cp "$native" "$unqualified" || fail "could not create unqualified native Claude fixture"
+  rm "$fakebin/claude"
+  ln -s "$unqualified" "$fakebin/claude"
+  record=$(make_ship "$dir" "$home" unqualified-version)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  launchlog="$dir/unqualified-version-launch.log"
+  : > "$launchlog"
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    unqualified-version "$proj" claude --mode local-only --yolo off 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "unqualified Claude version did not block the launch"
+  assert_contains "$output" "version 2.1.231 is not qualified" \
+    "unqualified Claude version blocker did not name the detected version"
+  assert_contains "$output" "docs/verification/claude-automic-vault.md" \
+    "unqualified Claude version blocker omitted the qualification procedure"
+  [ ! -s "$launchlog" ] || fail "unqualified Claude version sent a worker launch command"
+  [ ! -e "$home/state/unqualified-version.meta" ] \
+    || fail "unqualified Claude version published worker metadata"
+  rm "$fakebin/claude"
+  ln -s "$native" "$fakebin/claude"
   assert_secret_absent "$dir" "$output"
 
   mv "$fakebin/claude" "$fakebin/claude-real"

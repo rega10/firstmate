@@ -35,6 +35,7 @@ FM_CLAUDE_AV_SECRET_NAME=CLAUDE_CODE_OAUTH_TOKEN
 FM_CLAUDE_AV_TIMEOUT=${FM_CLAUDE_AV_TIMEOUT:-45}
 FM_CLAUDE_AV_RELEASE_BASE=https://downloads.claude.ai/claude-code-releases
 FM_CLAUDE_AV_MANIFEST_CHECKSUMS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-claude-automic-vault-manifests.sha256"
+FM_CLAUDE_AV_QUALIFIED_VERSIONS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-claude-automic-vault-qualified-versions"
 FM_CLAUDE_AV_SETTINGS='{"apiKeyHelper":null,"env":{"ANTHROPIC_API_KEY":null,"ANTHROPIC_AUTH_TOKEN":null,"ANTHROPIC_BASE_URL":null,"ANTHROPIC_BEDROCK_BASE_URL":null,"ANTHROPIC_VERTEX_BASE_URL":null,"ANTHROPIC_FOUNDRY_BASE_URL":null,"CLAUDE_CODE_USE_BEDROCK":null,"CLAUDE_CODE_USE_VERTEX":null,"CLAUDE_CODE_USE_FOUNDRY":null,"AWS_BEARER_TOKEN_BEDROCK":null}}'
 FM_CLAUDE_AV_ERROR=
 FM_CLAUDE_AV_BIN=
@@ -244,6 +245,23 @@ fm_claude_av_expected_manifest_sha256() {  # <version>
   printf '%s\n' "$found"
 }
 
+fm_claude_av_version_qualified() {  # <version>
+  local version=$1 qualified_version qualification_date extra found=
+  [ -f "$FM_CLAUDE_AV_QUALIFIED_VERSIONS" ] || return 1
+  while read -r qualified_version qualification_date extra; do
+    [ -z "$extra" ] || return 1
+    case "$qualified_version" in
+      ''|*[!0-9.]*) return 1 ;;
+    esac
+    [[ "$qualification_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || return 1
+    if [ "$qualified_version" = "$version" ]; then
+      [ -z "$found" ] || return 1
+      found=$qualification_date
+    fi
+  done < "$FM_CLAUDE_AV_QUALIFIED_VERSIONS"
+  [ -n "$found" ]
+}
+
 fm_claude_av_attest_native_artifact() {  # <resolved-claude>
   local executable=$1 version platform manifest compact expected actual expected_manifest actual_manifest
   version=${executable##*/}
@@ -346,6 +364,11 @@ fm_claude_av_resolve_tools() {
   fi
   if ! fm_claude_av_is_native_install_artifact "$FM_CLAUDE_BIN"; then
     printf 'error: refusing Claude Automic Vault authentication because the resolved claude executable could not be positively identified as the canonical native Claude Code artifact under .local/share/claude/versions; install Claude Code with the official native installer and retry.\n' >&2
+    return 1
+  fi
+  if ! fm_claude_av_version_qualified "${FM_CLAUDE_BIN##*/}"; then
+    printf 'error: Claude Code version %s is not qualified for approval-free credential-scrubbed Firstmate launches; follow the version qualification procedure in docs/verification/claude-automic-vault.md before adding this exact version.\n' \
+      "${FM_CLAUDE_BIN##*/}" >&2
     return 1
   fi
   fm_claude_av_attest_native_artifact "$FM_CLAUDE_BIN" || return 1

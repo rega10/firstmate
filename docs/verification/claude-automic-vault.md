@@ -14,6 +14,15 @@ Verified 2026-08-29 with Claude Code 2.1.231 and Automic Vault 3.18.0 on macOS.
 Automic Vault's documented `av save KEY` path reads the value from the controlling terminal rather than a command argument or ordinary stdin.
 The installed Automic Vault hardener catalog contained no Claude-specific hardener, so this integration deliberately does not alter the ordinary `claude` executable or global shell path.
 
+## Claude version qualification
+
+Claude Code 2.1.220 was qualified on 2026-09-02 for Firstmate's explicit `bypassPermissions` mode with `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1` and restoration of the worker tool path only at final Claude exec.
+The executable admission owner is `bin/fm-claude-automic-vault-qualified-versions`, which contains one exact version and qualification date per evidence-backed entry.
+To qualify an upgrade, set the public behavioral fixture to the exact candidate version, run `tests/fm-claude-automic-vault.test.sh`, and confirm its captured opted-in launch executes the synthetic worker tool without an approval request while credential scrubbing remains enabled.
+Then add that exact version and the check date to the qualification list, pin its official release-manifest checksum separately, and rerun the same public behavioral check before review.
+Do not infer qualification from a newer version number, advertised flags, release-manifest attestation, or another version's result.
+This procedure uses only fake Vault and token inputs; it does not authorize a real Vault, real token, or live authenticated Claude operation.
+
 ## Authentication counterfactual
 
 An isolated run with a synthetic invalid `CLAUDE_CODE_OAUTH_TOKEN` made `claude auth status --json` exit successfully and report `loggedIn=true`, `authMethod=oauth_token`, and `apiProvider=firstParty`.
