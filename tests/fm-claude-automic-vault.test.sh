@@ -87,6 +87,12 @@ while [ $# -gt 0 ] && [ "$1" != -- ]; do shift; done
 [ "${1:-}" = -- ] || exit 2
 shift
 [ "$#" -gt 0 ] || exit 2
+if [ -n "${FM_FAKE_AV_BLOCK_FILE:-}" ]; then
+  : > "$FM_FAKE_AV_BLOCK_FILE"
+  while [ ! -e "$FM_FAKE_AV_BLOCK_FILE.release" ]; do
+    sleep 0.02
+  done
+fi
 export CLAUDE_CODE_OAUTH_TOKEN=${FM_FAKE_SECRET:?}
 if [ -n "${FM_FAKE_AV_SWAP_SOURCE:-}" ] && [ -n "${FM_FAKE_AV_SWAP_TARGET:-}" ]; then
   mv "$FM_FAKE_AV_SWAP_TARGET" "$FM_FAKE_AV_SWAP_TARGET.before-race" || exit 44
@@ -469,6 +475,38 @@ test_enabled_disabled_and_non_claude_launches() {
     assert_secret_absent "$dir" "$output"
   done
 
+  for raw in \
+    '"$(printf clau%s de)" --dangerously-skip-permissions' \
+    '"$(printf custom-%s agent)" --flag'; do
+    raw_index=$((raw_index + 1))
+    id="raw-ambiguous-$raw_index"
+    : > "$launchlog"
+    before=$(wc -l < "$state/av-argv.log")
+    before_claude=$(wc -l < "$state/claude-argv.log")
+    before_endpoint=0
+    [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
+    record=$(make_ship "$dir" "$home" "$id")
+    proj=${record%%$'\t'*}
+    wt=${record#*$'\t'}
+    output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+      "$id" "$proj" "$raw" --mode local-only --yolo off 2>&1)
+    status=$?
+    [ "$status" -ne 0 ] || fail "enabled ambiguous raw launch was accepted: $raw"
+    assert_contains "$output" "cannot be statically resolved" \
+      "enabled ambiguous raw launch refusal was not actionable: $raw"
+    [ ! -s "$launchlog" ] || fail "enabled ambiguous raw launch sent a launch command: $raw"
+    [ ! -e "$home/state/$id.meta" ] || fail "enabled ambiguous raw launch published worker metadata: $raw"
+    [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
+      || fail "enabled ambiguous raw launch contacted Automic Vault: $raw"
+    [ "$(wc -l < "$state/claude-argv.log")" = "$before_claude" ] \
+      || fail "enabled ambiguous raw launch started ordinary Claude: $raw"
+    if [ -f "$state/endpoint.log" ]; then
+      [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+        || fail "enabled ambiguous raw launch created an endpoint: $raw"
+    fi
+    assert_secret_absent "$dir" "$output"
+  done
+
   : > "$launchlog"
   before=$(wc -l < "$state/av-argv.log")
   record=$(make_ship "$dir" "$home" raw-prefixed-non-claude)
@@ -521,7 +559,7 @@ SH
     --mode local-only --yolo off 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "Node-unavailable raw Claude launch bypassed the injection boundary"
-  assert_contains "$output" "no supported injection boundary" \
+  assert_contains "$output" "cannot be statically resolved" \
     "Node-unavailable raw Claude refusal was not actionable"
   [ ! -s "$launchlog" ] || fail "Node-unavailable raw Claude refusal sent a launch command"
   [ ! -e "$home/state/raw-no-node-claude.meta" ] || fail "Node-unavailable raw Claude refusal published worker metadata"
@@ -544,16 +582,31 @@ SH
     raw-no-node-non-claude "$proj" "eval 'exec custom-agent --flag'" \
     --mode local-only --yolo off 2>&1)
   status=$?
-  expect_code 0 "$status" "Node-unavailable non-Claude raw launch"
-  launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "eval 'exec custom-agent --flag'" \
-    "Node-unavailable non-Claude raw launch changed"
+  [ "$status" -ne 0 ] || fail "enabled Node-unavailable ambiguous non-Claude raw launch was accepted"
+  assert_contains "$output" "cannot be statically resolved" \
+    "enabled Node-unavailable ambiguous non-Claude refusal was not actionable"
+  [ ! -s "$launchlog" ] || fail "enabled Node-unavailable ambiguous non-Claude launch sent a launch command"
+  [ ! -e "$home/state/raw-no-node-non-claude.meta" ] \
+    || fail "enabled Node-unavailable ambiguous non-Claude launch published worker metadata"
   [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
-    || fail "Node-unavailable non-Claude raw launch contacted Automic Vault"
+    || fail "enabled Node-unavailable ambiguous non-Claude launch contacted Automic Vault"
   assert_secret_absent "$dir" "$output"
-  rm -f "$fakebin/node"
 
   rm -f "$home/config/claude-automic-vault"
+  : > "$launchlog"
+  record=$(make_ship "$dir" "$home" raw-no-node-disabled-non-claude)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-no-node-disabled-non-claude "$proj" "eval 'exec custom-agent --flag'" \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "disabled Node-unavailable non-Claude raw launch"
+  launch=$(last_launch_command "$launchlog")
+  assert_contains "$launch" "eval 'exec custom-agent --flag'" \
+    "disabled Node-unavailable non-Claude raw launch changed"
+  rm -f "$fakebin/node"
+
   : > "$launchlog"
   before=$(wc -l < "$state/av-argv.log")
   record=$(make_ship "$dir" "$home" bare-ship)
@@ -751,7 +804,7 @@ C
 }
 
 test_launch_time_failure_redaction_and_interactive_io() {
-  local dir home fakebin state record proj wt launchlog output status launch hostilebin leak native before cc_bin replacement marker expected
+  local dir home fakebin state record proj wt launchlog output status launch hostilebin leak native before cc_bin replacement marker expected signal expected_status block relay_pid attempt pidfile watcher_pid watcher_status
   dir="$TMP_ROOT/launch-boundary"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -777,6 +830,57 @@ test_launch_time_failure_redaction_and_interactive_io() {
   expect_code 0 "$status" "interactive relayed launch"
   assert_contains "$output" "interactive stdout: captain-input" "worker stdin or stdout was not preserved"
   assert_contains "$output" "interactive stderr: authenticated" "worker stderr was not preserved"
+
+  native="${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220"
+  for signal in HUP INT TERM; do
+    case "$signal" in
+      HUP) expected_status=129 ;;
+      INT) expected_status=130 ;;
+      TERM) expected_status=143 ;;
+    esac
+    block="$dir/interrupted-$signal"
+    pidfile="$block.pid"
+    rm -f "$block" "$block.release" "$pidfile"
+    (
+      cd "$wt" || exit 1
+      (
+        attempt=0
+        while { [ ! -e "$block" ] || [ ! -e "$pidfile" ]; } && [ "$attempt" -lt 250 ]; do
+          sleep 0.02
+          attempt=$((attempt + 1))
+        done
+        if [ ! -e "$block" ] || [ ! -e "$pidfile" ]; then
+          : > "$block.release"
+          exit 91
+        fi
+        if ! find "${native%/versions/*}" -maxdepth 1 -type d -name '.firstmate-launch.*' -print -quit | grep -q .; then
+          : > "$block.release"
+          exit 92
+        fi
+        relay_pid=$(cat "$pidfile")
+        kill -s "$signal" "$relay_pid" || {
+          : > "$block.release"
+          exit 93
+        }
+        : > "$block.release"
+      ) &
+      watcher_pid=$!
+      FM_TEST_PIDFILE="$pidfile" FM_TEST_LAUNCH="$launch" FM_FAKE_STATE="$state" \
+        FM_FAKE_SECRET="$SECRET" FM_FAKE_AV_BLOCK_FILE="$block" \
+        PATH="$fakebin:$BASE_PATH" bash -c \
+        'printf "%s\n" "$$" > "$FM_TEST_PIDFILE"; exec bash -c "$FM_TEST_LAUNCH"'
+      status=$?
+      wait "$watcher_pid"
+      watcher_status=$?
+      [ "$watcher_status" -eq 0 ] || exit "$watcher_status"
+      exit "$status"
+    ) > "$dir/interrupted-$signal.out" 2>&1
+    status=$?
+    expect_code "$expected_status" "$status" "$signal launch interruption"
+    if find "${native%/versions/*}" -maxdepth 1 -type d -name '.firstmate-launch.*' -print -quit | grep -q .; then
+      fail "$signal launch interruption left private launch state"
+    fi
+  done
 
   hostilebin="$dir/hostile-bin"
   leak="$dir/startup-token-leak"
@@ -813,7 +917,6 @@ SH
   assert_contains "$output" "unavailable or locked" "launch-time Vault failure was not classified"
   assert_not_contains "$output" "$SECRET" "launch-time Vault failure exposed raw output"
 
-  native="${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220"
   replacement="$dir/race-replacement"
   marker="$dir/race-replacement-ran"
   cat > "$dir/race-replacement.c" <<'C'

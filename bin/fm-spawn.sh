@@ -1091,15 +1091,6 @@ shell_quote() {
   printf "'"
 }
 
-raw_launch_suspects_claude() {
-  local launch=" ${1//\"/} "
-  launch=${launch//\'/}
-  case "$launch" in
-    *[!A-Za-z0-9_.-]claude[!A-Za-z0-9_.-]*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 resolve_pi_executable() {
   local candidate dir
   candidate=$(type -P -- "$1" 2>/dev/null) || return 1
@@ -1229,10 +1220,21 @@ case "$ARG3" in
         RAW_LAUNCH_CLASSIFIED=1
       fi
     fi
-    if [ "$RAW_LAUNCH_CLASSIFIED" -eq 0 ] && raw_launch_suspects_claude "$LAUNCH"; then
-      raw_claude_opt_in=0
-      fm_claude_av_enabled "$CONFIG" || raw_claude_opt_in=$?
-      [ "$raw_claude_opt_in" -eq 1 ] || HARNESS=claude
+    if [ "$RAW_LAUNCH_CLASSIFIED" -eq 0 ]; then
+      raw_launch_opt_in=0
+      fm_claude_av_enabled "$CONFIG" || raw_launch_opt_in=$?
+      case "$raw_launch_opt_in" in
+        0)
+          echo "error: Claude Automic Vault authentication is enabled, but this raw launch command position cannot be statically resolved; use a raw launch with a literal executable name or the verified harness template." >&2
+          exit 1
+          ;;
+        1) ;;
+        2)
+          printf 'error: unsafe or invalid config/%s: %s; remove it to disable the opt-in or recreate it with bin/fm-claude-automic-vault.sh enable.\n' \
+            "$FM_CLAUDE_AV_CONFIG_FILE" "$FM_CLAUDE_AV_ERROR" >&2
+          exit 1
+          ;;
+      esac
     fi
     ;;
   '')

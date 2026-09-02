@@ -28,28 +28,37 @@ settings=$4
 shift 4
 
 launch_parent=${claude%/versions/*}
+launch_root=
+cleanup_launch_root() {
+  local status=$?
+  trap - EXIT HUP INT TERM
+  if [ -n "$launch_root" ]; then
+    find "$launch_root" -depth -delete 2>/dev/null || true
+  fi
+  exit "$status"
+}
 launch_root=$(mktemp -d "$launch_parent/.firstmate-launch.XXXXXX" 2>/dev/null) || {
   printf 'error: could not create the private same-filesystem state required for Claude injection.\n' >&2
   exit 1
 }
+trap cleanup_launch_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 pinned_claude="$launch_root/${claude##*/}"
 if ! ln "$claude" "$pinned_claude" 2>/dev/null; then
-  find "$launch_root" -depth -delete 2>/dev/null || true
   printf 'error: could not pin the attested Claude Code file object for launch.\n' >&2
   exit 1
 fi
 platform=$(fm_claude_av_release_platform) || {
-  find "$launch_root" -depth -delete 2>/dev/null || true
   printf 'error: could not retain the attested Claude Code identity through launch on this platform.\n' >&2
   exit 1
 }
 actual_sha256=$(fm_claude_av_artifact_sha256 "$pinned_claude" "$platform") || {
-  find "$launch_root" -depth -delete 2>/dev/null || true
   printf 'error: could not revalidate the attested Claude Code executable immediately before launch.\n' >&2
   exit 1
 }
 if [ "$actual_sha256" != "$expected_sha256" ]; then
-  find "$launch_root" -depth -delete 2>/dev/null || true
   printf 'error: refusing Claude launch because the attested Claude Code executable changed after preflight.\n' >&2
   exit 1
 fi
@@ -57,7 +66,6 @@ fi
 ready="$launch_root/injected"
 output_pipe="$launch_root/output"
 mkfifo "$output_pipe" || {
-  find "$launch_root" -depth -delete 2>/dev/null || true
   printf 'error: could not initialize the private output channel required for Claude injection.\n' >&2
   exit 1
 }
@@ -78,5 +86,4 @@ capture_pid=$!
   --injected "$ready" "$pinned_claude" "$settings" "$@" \
   3>&1 4>&2 > "$output_pipe" 2>&1 || status=$?
 wait "$capture_pid" || true
-find "$launch_root" -depth -delete 2>/dev/null || true
 exit "$status"
