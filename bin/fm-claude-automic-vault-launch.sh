@@ -3,6 +3,29 @@
 # an opted-in Claude Code worker.
 set -u
 
+if [ "${1:-}" = --sanitize ]; then
+  [ "$#" -ge 7 ] || exit 2
+  clean_env=$2
+  clean_bash=$3
+  shift 3
+  clean_environment=(
+    PATH=/usr/bin:/bin:/usr/sbin:/sbin
+    CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1
+  )
+  while IFS= read -r environment_name; do
+    case "$environment_name" in
+      CLAUDE_CODE_OAUTH_TOKEN|ANTHROPIC_API_KEY|ANTHROPIC_AUTH_TOKEN|ANTHROPIC_BASE_URL|ANTHROPIC_BEDROCK_BASE_URL|ANTHROPIC_VERTEX_BASE_URL|ANTHROPIC_FOUNDRY_BASE_URL|CLAUDE_CODE_USE_BEDROCK|CLAUDE_CODE_USE_VERTEX|CLAUDE_CODE_USE_FOUNDRY|BASH_FUNC_*|BASH_ENV|ENV|SHELLOPTS|BASHOPTS|PS4|CDPATH|IFS|PROMPT_COMMAND|LD_*|DYLD_*|PATH|CLAUDE_CODE_SUBPROCESS_ENV_SCRUB) continue ;;
+      HOME|USER|LOGNAME|SHELL|TERM|COLORTERM|TERM_PROGRAM|TERM_PROGRAM_VERSION|COLORFGBG|TMPDIR|TMP|TEMP|LANG|TZ|SSH_AUTH_SOCK|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|NO_PROXY|http_proxy|https_proxy|all_proxy|no_proxy|SSL_CERT_FILE|SSL_CERT_DIR|NODE_EXTRA_CA_CERTS|LC_*|XDG_*|CLAUDE_*|ANTHROPIC_*|FM_*|TRACEPARENT|TRACESTATE|TMUX|TMUX_PANE|HERDR_*|ZELLIJ*|CMUX_*) ;;
+      *) continue ;;
+    esac
+    case "$(declare -p "$environment_name" 2>/dev/null)" in
+      declare\ -x*) clean_environment+=("$environment_name=${!environment_name}") ;;
+    esac
+  done < <(compgen -A variable)
+  builtin exec "$clean_env" -i "${clean_environment[@]}" \
+    "$clean_bash" --noprofile --norc "$0" "$@"
+fi
+
 if [ "${1:-}" = --injected ]; then
   [ "$#" -ge 4 ] || exit 2
   ready=$2

@@ -1220,14 +1220,14 @@ case "$ARG3" in
   *' '*)  # raw launch command (unverified-adapter escape hatch)
     LAUNCH=$ARG3
     HARNESS=
-    if [ "$RAW_HARNESS_CONFLICT" -eq 1 ]; then
-      echo "error: a raw launch command cannot be combined with --harness; pass the supported harness token alone to use its canonical launch template." >&2
-      exit 1
-    fi
     raw_launch_opt_in=0
     fm_claude_av_enabled "$CONFIG" || raw_launch_opt_in=$?
     case "$raw_launch_opt_in" in
       0)
+        if [ "$RAW_HARNESS_CONFLICT" -eq 1 ]; then
+          echo "error: a raw launch command cannot be combined with --harness; pass the supported harness token alone to use its canonical launch template." >&2
+          exit 1
+        fi
         echo "error: Claude Automic Vault authentication is enabled, so raw launch commands are refused; pass a supported harness token to use its canonical launch template." >&2
         exit 1
         ;;

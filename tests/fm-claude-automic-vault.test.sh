@@ -46,7 +46,7 @@ make_fake_tools() {  # <case-dir>
 #!/usr/bin/env bash
 set -u
 state=${FM_FAKE_STATE:?}
-fake_secret=${FM_FAKE_SECRET:-sk-ant-oat01-FM_SYNTHETIC_"SENTINEL"_NEVER_PERSIST}
+fake_secret=${TEST_FAKE_SECRET:-sk-ant-oat01-FM_SYNTHETIC_"SENTINEL"_NEVER_PERSIST}
 fail_at=${FM_FAKE_AV_FAIL_AT:-}
 [ -n "$fail_at" ] || [ ! -f "$state/control-fail-at" ] || fail_at=$(cat "$state/control-fail-at")
 block_file=${FM_FAKE_AV_BLOCK_FILE:-}
@@ -166,7 +166,7 @@ static void append_line(const char *path, const char *line) {
 
 int main(int argc, char **argv) {
   const char *state = getenv("FM_FAKE_STATE");
-  const char *secret = getenv("FM_FAKE_SECRET");
+  const char *secret = getenv("TEST_FAKE_SECRET");
   const char *token = getenv("CLAUDE_CODE_OAUTH_TOKEN");
   const char *mode = getenv("FM_FAKE_CLAUDE_MODE");
   const char *setup_mode = getenv("FM_FAKE_SETUP_MODE");
@@ -219,6 +219,14 @@ int main(int argc, char **argv) {
     for (i = 0; i < 4; i++) if (getenv(names[i]) && *getenv(names[i])) {
       char line[256];
       snprintf(line, sizeof(line), "conflict=%s", names[i]);
+      append_line(path, line);
+    }
+  }
+  {
+    const char *names[] = {"FM_HOME", "FM_SUPERVISION_MODEL", "TRACEPARENT", "CLAUDE_CONFIG_DIR"};
+    for (i = 0; i < 4; i++) if (getenv(names[i])) {
+      char line[8192];
+      snprintf(line, sizeof(line), "%s=%s", names[i], getenv(names[i]));
       append_line(path, line);
     }
   }
@@ -341,7 +349,7 @@ run_spawn() {  # <home> <fakebin> <state> <launchlog> <pane-path> <args...>
   FM_HOME="$home" \
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
     FM_PROJECTS_OVERRIDE="$home/projects" FM_CONFIG_OVERRIDE="$home/config" \
-    FM_SPAWN_NO_GUARD=1 FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+    FM_SPAWN_NO_GUARD=1 FM_FAKE_STATE="$state" TEST_FAKE_SECRET="$SECRET" \
     FM_FAKE_LAUNCH_LOG="$launchlog" FM_FAKE_PANE_PATH="$pane" TMUX='fake,1,0' \
     FM_ROOT_OVERRIDE="$ROOT" \
     PATH="$fakebin:$BASE_PATH" "$SPAWN" "$@"
@@ -352,7 +360,7 @@ run_real_spawn() {  # <home> <fakebin> <state> <launchlog> <pane-path> <args...>
   shift 5
   FM_HOME="$home" FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
     FM_PROJECTS_OVERRIDE="$home/projects" FM_CONFIG_OVERRIDE="$home/config" \
-    FM_SPAWN_NO_GUARD=1 FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+    FM_SPAWN_NO_GUARD=1 FM_FAKE_STATE="$state" TEST_FAKE_SECRET="$SECRET" \
     FM_FAKE_LAUNCH_LOG="$launchlog" FM_FAKE_PANE_PATH="$pane" TMUX='fake,1,0' \
     FM_ROOT_OVERRIDE="$ROOT" PATH="$fakebin:$BASE_PATH" "$REAL_SPAWN" "$@"
 }
@@ -366,7 +374,7 @@ test_provision_recovery_renewal_preflight_and_redaction() {
   configure_fake_attestation "$fakebin" "$state"
   mkdir -p "$home/config"
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" FM_FAKE_SETUP_MODE=split PATH="$fakebin:$BASE_PATH" \
+    TEST_FAKE_SECRET="$SECRET" FM_FAKE_SETUP_MODE=split PATH="$fakebin:$BASE_PATH" \
     "$AUTH" provision 2>&1)
   status=$?
   if [ "$status" -ne 0 ]; then
@@ -387,7 +395,7 @@ test_provision_recovery_renewal_preflight_and_redaction() {
   assert_secret_absent "$dir" "$output"
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" enable 2>&1)
+    TEST_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" enable 2>&1)
   status=$?
   expect_code 0 "$status" "one-time enable recovery"
   [ "$(cat "$home/config/claude-automic-vault")" = on ] || fail "enable recovery did not restore the opt-in"
@@ -395,7 +403,7 @@ test_provision_recovery_renewal_preflight_and_redaction() {
 
   before=$(cat "$state/save-count")
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" FM_FAKE_SETUP_MODE=incomplete PATH="$fakebin:$BASE_PATH" \
+    TEST_FAKE_SECRET="$SECRET" FM_FAKE_SETUP_MODE=incomplete PATH="$fakebin:$BASE_PATH" \
     "$AUTH" renew 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "delimiter-free setup token was accepted"
@@ -406,14 +414,14 @@ test_provision_recovery_renewal_preflight_and_redaction() {
   assert_secret_absent "$dir" "$output"
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" renew 2>&1)
+    TEST_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" renew 2>&1)
   status=$?
   expect_code 0 "$status" "synthetic renewal ceremony"
   assert_contains "$output" "replaced directly" "renewal did not report direct replacement"
   assert_secret_absent "$dir" "$output"
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
+    TEST_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
   status=$?
   expect_code 0 "$status" "redacted public preflight"
   assert_contains "$output" "credential material was not displayed" "preflight omitted its redaction guarantee"
@@ -441,11 +449,11 @@ test_enabled_disabled_and_non_claude_launches() {
   status=$?
   expect_code 0 "$status" "enabled Claude spawn"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' '/bin/bash' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "enabled launch did not pin the redacted injection relay and resolved tools"
   assert_contains "$launch" "--model 'sonnet' --effort 'high'" "enabled launch did not preserve profile arguments"
   assert_not_contains "$launch" "$SECRET" "launch argv contains synthetic secret"
-  executed=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+  executed=$(cd "$wt" && FM_FAKE_STATE="$state" \
     ANTHROPIC_API_KEY=must-be-cleared ANTHROPIC_BASE_URL=https://invalid.example \
     PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1) || fail "captured enabled launch did not execute"
   assert_not_contains "$executed" "$SECRET" "executed worker launch displayed synthetic secret"
@@ -685,6 +693,21 @@ SH
   [ ! -e "$wt/.claude/settings.local.json" ] \
     || fail "disabled shell-wrapped Claude received Claude harness wiring"
 
+  : > "$launchlog"
+  record=$(make_ship "$dir" "$home" raw-disabled-declared-harness)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-disabled-declared-harness "$proj" "custom-agent --flag" --harness codex \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "disabled raw launch with declared harness"
+  launch=$(last_launch_command "$launchlog")
+  assert_contains "$launch" "custom-agent --flag" \
+    "disabled raw launch with declared harness changed"
+  assert_grep 'harness=custom-agent' "$home/state/raw-disabled-declared-harness.meta" \
+    "disabled raw launch with declared harness changed historical metadata"
+
   printf 'off\n' > "$home/config/claude-automic-vault"
   for raw in \
     '"$(printf clau%s de)" --dangerously-skip-permissions' \
@@ -786,7 +809,7 @@ test_actionable_fail_closed_paths() {
   done
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=revoked PATH="$fakebin:$BASE_PATH" \
+    TEST_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=revoked PATH="$fakebin:$BASE_PATH" \
     "$AUTH" preflight 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "revoked token did not block"
@@ -794,7 +817,7 @@ test_actionable_fail_closed_paths() {
   assert_secret_absent "$dir" "$output"
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=inconclusive PATH="$fakebin:$BASE_PATH" \
+    TEST_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=inconclusive PATH="$fakebin:$BASE_PATH" \
     "$AUTH" preflight 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "inconclusive auth did not block"
@@ -802,7 +825,7 @@ test_actionable_fail_closed_paths() {
   assert_secret_absent "$dir" "$output"
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" FM_FAKE_AV_HELP_MODE=old PATH="$fakebin:$BASE_PATH" \
+    TEST_FAKE_SECRET="$SECRET" FM_FAKE_AV_HELP_MODE=old PATH="$fakebin:$BASE_PATH" \
     "$AUTH" preflight 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "unsupported Automic Vault surface did not block"
@@ -810,7 +833,7 @@ test_actionable_fail_closed_paths() {
   assert_secret_absent "$dir" "$output"
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_HELP_MODE=old PATH="$fakebin:$BASE_PATH" \
+    TEST_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_HELP_MODE=old PATH="$fakebin:$BASE_PATH" \
     "$AUTH" preflight 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "unsupported Claude surface did not block"
@@ -827,7 +850,7 @@ SH
   ln -s "$direct" "$fakebin/claude"
   before=$(wc -l < "$state/av-argv.log" | tr -d ' ')
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
+    TEST_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "direct injecting Claude wrapper was accepted"
   assert_contains "$output" "positively identified" "direct wrapper refusal was not actionable"
@@ -848,7 +871,7 @@ SH
   ln -s "$wrapper" "$fakebin/claude"
   before=$(wc -l < "$state/av-argv.log" | tr -d ' ')
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
+    TEST_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "injecting Claude wrapper was accepted"
   assert_contains "$output" "positively identified" "wrapper recursion refusal was not actionable"
@@ -906,7 +929,7 @@ C
   ln -s "$native" "$fakebin/claude"
   before=$(wc -l < "$state/av-argv.log" | tr -d ' ')
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    FM_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
+    TEST_FAKE_SECRET="$SECRET" PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "compiled forwarding Claude wrapper was accepted"
   assert_contains "$output" "does not match Anthropic release attestation" \
@@ -940,7 +963,7 @@ test_launch_time_failure_redaction_and_interactive_io() {
   printf 'interactive\n' > "$state/control-claude-mode"
 
   output=$(cd "$wt" && printf 'captain-input\n' | \
-    FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=interactive \
+    FM_FAKE_STATE="$state" FM_FAKE_CLAUDE_MODE=interactive \
     PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
   status=$?
   expect_code 0 "$status" "interactive relayed launch"
@@ -983,7 +1006,7 @@ test_launch_time_failure_redaction_and_interactive_io() {
       ) &
       watcher_pid=$!
       FM_TEST_PIDFILE="$pidfile" FM_TEST_LAUNCH="$launch" FM_FAKE_STATE="$state" \
-        FM_FAKE_SECRET="$SECRET" FM_FAKE_AV_BLOCK_FILE="$block" \
+        FM_FAKE_AV_BLOCK_FILE="$block" \
         PATH="$fakebin:$BASE_PATH" bash -c \
         'printf "%s\n" "$$" > "$FM_TEST_PIDFILE"; exec bash -c "$FM_TEST_LAUNCH"'
       status=$?
@@ -1019,7 +1042,7 @@ SH
   output=$(cd "$wt" && printf 'startup-clean-input\n' | \
     env BASH_ENV="$dir/hostile-startup.sh" ENV="$dir/hostile-startup.sh" \
       SHELLOPTS=xtrace FM_HOSTILE_LEAK="$leak" FM_FAKE_STATE="$state" \
-      FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=interactive \
+      FM_FAKE_CLAUDE_MODE=interactive \
       PATH="$hostilebin:$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
   status=$?
   expect_code 0 "$status" "startup-clean interactive launch"
@@ -1036,7 +1059,7 @@ SH
   }
   export -f exec
   output=$(cd "$wt" && printf 'function-clean-input\n' | \
-    env FM_HOSTILE_LEAK="$leak" FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+    env FM_HOSTILE_LEAK="$leak" FM_FAKE_STATE="$state" \
       FM_FAKE_CLAUDE_MODE=interactive PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
   status=$?
   unset -f exec
@@ -1048,7 +1071,7 @@ SH
 
   rm -f "$state/av-inject-count"
   printf '1\n' > "$state/control-fail-at"
-  output=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+  output=$(cd "$wt" && FM_FAKE_STATE="$state" \
     FM_FAKE_AV_FAIL_AT=1 PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
   status=$?
   rm -f "$state/control-fail-at"
@@ -1082,7 +1105,7 @@ C
   printf '%s\n' "$native" > "$state/control-swap-target"
   printf '%s\n' "$marker" > "$state/control-swap-marker"
   output=$(cd "$wt" && printf 'race-input\n' | \
-    FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=interactive \
+    FM_FAKE_STATE="$state" FM_FAKE_CLAUDE_MODE=interactive \
     FM_FAKE_AV_SWAP_SOURCE="$replacement" FM_FAKE_AV_SWAP_TARGET="$native" \
     FM_FAKE_SWAP_MARKER="$marker" PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
   status=$?
@@ -1095,7 +1118,7 @@ C
 
   before=$(cat "$state/av-inject-count")
   printf 'changed-after-attestation' >> "$native"
-  output=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+  output=$(cd "$wt" && FM_FAKE_STATE="$state" \
     PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "changed Claude artifact was launched after preflight"
@@ -1116,7 +1139,7 @@ make_secondmate_home() {  # <home> <id>
 }
 
 test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
-  local dir primary sm fakebin state launchlog output status launch record proj wt before after before_endpoint
+  local dir primary sm sm_abs fakebin state launchlog output status launch record proj wt before after before_endpoint traceparent store leak executed
   dir="$TMP_ROOT/secondmate"
   primary="$dir/primary"
   sm="$dir/secondmate-home"
@@ -1130,6 +1153,8 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   printf 'on\n' > "$primary/config/claude-automic-vault"
   make_secondmate_home "$sm" sm-vault
   : > "$launchlog"
+  traceparent=00-0123456789abcdef0123456789abcdef-0123456789abcdef-01
+  store="$dir/claude-store"
 
   before=0
   [ ! -f "$state/av-argv.log" ] || before=$(wc -l < "$state/av-argv.log")
@@ -1151,14 +1176,39 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
       || fail "secondmate inheritance refusal created an endpoint"
   fi
 
-  output=$(run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
-    sm-vault "$sm" claude --secondmate 2>&1)
+  output=$(CLAUDE_CONFIG_DIR="$store" run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
+    sm-vault "$sm" claude --secondmate --traceparent "$traceparent" 2>&1)
   status=$?
   expect_code 0 "$status" "enabled Claude secondmate launch"
   [ "$(cat "$sm/config/claude-automic-vault")" = on ] || fail "secondmate did not inherit opt-in"
+  sm_abs=$(sed -n 's/^home=//p' "$primary/state/sm-vault.meta")
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' '/bin/bash' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "secondmate launch did not use the pinned Vault relay"
+  leak="$dir/secondmate-exported-function-token-leak"
+  exec() {
+    if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+      printf '%s\n' "$CLAUDE_CODE_OAUTH_TOKEN" > "${FM_HOSTILE_LEAK:?}"
+    fi
+    builtin exec "$@"
+  }
+  export -f exec
+  executed=$(cd "$sm" && FM_FAKE_STATE="$state" FM_HOSTILE_LEAK="$leak" \
+    TRACEPARENT="$traceparent" PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
+  status=$?
+  unset -f exec
+  expect_code 0 "$status" "enabled Claude secondmate environment"
+  [ ! -e "$leak" ] || fail "exported exec function observed the secondmate token"
+  assert_grep "FM_HOME=$sm_abs" "$state/claude-env.log" \
+    "secondmate launch dropped FM_HOME"
+  assert_grep 'FM_SUPERVISION_MODEL=autoarm' "$state/claude-env.log" \
+    "secondmate launch dropped FM_SUPERVISION_MODEL"
+  assert_grep "TRACEPARENT=$traceparent" "$state/claude-env.log" \
+    "secondmate launch dropped TRACEPARENT"
+  assert_grep "CLAUDE_CONFIG_DIR=$store" "$state/claude-env.log" \
+    "secondmate launch dropped CLAUDE_CONFIG_DIR"
+  assert_not_contains "$executed" "$SECRET" \
+    "secondmate environment execution exposed the synthetic token"
 
   rm "$sm/config/claude-automic-vault"
   : > "$launchlog"
@@ -1188,7 +1238,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   status=$?
   expect_code 0 "$status" "enabled Claude secondmate relaunch"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' '/bin/bash' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "secondmate relaunch did not reuse the pinned Vault relay"
 
   : > "$launchlog"
@@ -1200,7 +1250,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   status=$?
   expect_code 0 "$status" "nested worker from inherited secondmate home"
   launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
+  assert_contains "$launch" "fm-claude-automic-vault-launch.sh' --sanitize '/usr/bin/env' '/bin/bash' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "nested worker did not use the inherited pinned Vault relay"
   assert_secret_absent "$dir" "$output"
   pass "secondmate launch, relaunch, inheritance, and nested worker all use the same local injection contract"

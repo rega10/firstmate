@@ -512,17 +512,8 @@ fm_claude_av_shell_quote() {
   printf "'"
 }
 
-fm_claude_av_launch_environment_names() {
-  printf '%s\n' \
-    HOME USER LOGNAME SHELL TERM COLORTERM TERM_PROGRAM TERM_PROGRAM_VERSION \
-    COLORFGBG LANG LC_ALL LC_CTYPE LC_MESSAGES TZ TMPDIR TMP TEMP \
-    XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME XDG_STATE_HOME SSH_AUTH_SOCK \
-    HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY http_proxy https_proxy all_proxy no_proxy \
-    SSL_CERT_FILE SSL_CERT_DIR NODE_EXTRA_CA_CERTS
-}
-
 fm_claude_av_build_launch_command() {
-  local env_q bash_q relay_q av_q claude_q checksum_q settings_q environment_name environment_q
+  local env_q bash_q relay_q av_q claude_q checksum_q settings_q
   env_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_ENV")
   bash_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_BASH")
   relay_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_LAUNCH_RELAY")
@@ -530,15 +521,7 @@ fm_claude_av_build_launch_command() {
   claude_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_BIN")
   checksum_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_CLAUDE_SHA256")
   settings_q=$(fm_claude_av_shell_quote "$FM_CLAUDE_AV_SETTINGS")
-  printf '%s' "$env_q -i"
-  while IFS= read -r environment_name; do
-    [ -n "$environment_name" ] || continue
-    if [ "${!environment_name+x}" = x ]; then
-      environment_q=$(fm_claude_av_shell_quote "$environment_name=${!environment_name}")
-      printf ' %s' "$environment_q"
-    fi
-  done < <(fm_claude_av_launch_environment_names)
-  printf '%s' " PATH=/usr/bin:/bin:/usr/sbin:/sbin CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 $bash_q --noprofile --norc $relay_q $av_q $claude_q $checksum_q $settings_q"
+  printf '%s' "$env_q -u CLAUDE_CODE_OAUTH_TOKEN -u BASH_ENV -u ENV -u SHELLOPTS -u BASHOPTS -u PS4 -u CDPATH -u IFS -u PROMPT_COMMAND $bash_q --noprofile --norc -p $relay_q --sanitize $env_q $bash_q $av_q $claude_q $checksum_q $settings_q"
 }
 
 # Returns 0 with FM_CLAUDE_AV_LAUNCH_COMMAND set for an enabled, authenticated
