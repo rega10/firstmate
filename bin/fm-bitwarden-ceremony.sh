@@ -10,6 +10,9 @@
 #   bin/fm-bitwarden-ceremony.sh check <batch-id>
 #   bin/fm-bitwarden-ceremony.sh --help
 #
+# The helper supports stock macOS Bash 3.2 and requires Python 3 with no-follow
+# and directory-relative file I/O support.
+#
 # One record per migration batch at $FM_HOME/data/bitwarden/<batch-id>.ceremony
 # (FM_HOME defaults to the repo root; FM_DATA_OVERRIDE overrides the data root
 # for tests). The record is the auditable no-secret completion evidence for one
@@ -71,8 +74,12 @@
 # owner or collection for a registered item, another --approved-by for a
 # recorded approval - is refused naming the conflicting field instead, so a
 # replay is never reported as success while the evidence says something else.
-# Mutating commands serialize on a per-record lock and replace records
-# atomically, so concurrent retries converge on the same validated evidence.
+# Mutating commands serialize on a per-record lock and publish or replace
+# records atomically, so concurrent retries converge on the same validated
+# evidence. Lock contention waits up to 15 seconds by default;
+# FM_BITWARDEN_LOCK_WAIT_SECONDS may set a finite limit from 0 through 30
+# seconds. A positively dead owner is reclaimed, while malformed ownership or
+# uncertain owner identity or liveness is refused rather than stolen.
 # `check` re-validates any partial record and prints the next required step,
 # which is the recovery entry point after an interruption.
 set -eu
