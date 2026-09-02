@@ -113,11 +113,14 @@ mkdir -p "$INIT_DATE_BIN"
 {
   printf '%s\n' '#!/usr/bin/env bash'
   printf '%s\n' 'count=0'
+  # shellcheck disable=SC2016 # Expansion belongs in the generated fixture.
   printf '%s\n' '[ -z "${FM_INIT_DATE_COUNT:-}" ] || { [ ! -f "$FM_INIT_DATE_COUNT" ] || count=$(cat "$FM_INIT_DATE_COUNT"); count=$((count + 1)); printf "%s\n" "$count" > "$FM_INIT_DATE_COUNT"; }'
+  # shellcheck disable=SC2016 # Expansion belongs in the generated fixture.
   printf '%s\n' 'case ${FM_INIT_DATE_MODE:-value} in'
   printf '%s\n' '  failure) exit 9 ;;'
   printf '%s\n' '  empty) exit 0 ;;'
   printf '%s\n' "  nonascii) printf '2026-08-\\303\\251\\n' ;;"
+  # shellcheck disable=SC2016 # Expansion belongs in the generated fixture.
   printf '%s\n' '  *) printf "%s\n" "$FM_INIT_DATE_VALUE" ;;'
   printf '%s\n' 'esac'
 } > "$INIT_DATE_BIN/date"
@@ -442,7 +445,7 @@ assert_contains "$OUT" 'next: approval' 'concurrent identical marks converge on 
 FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" init retry-item >/dev/null
 pids=()
 for i in $(seq 1 40); do
-  if [ $((i % 2)) -eq 0 ]; then owner=owner-a; else owner=owner-b; fi
+  if [ $((i % 2)) -eq 0 ]; then owner='owner-a'; else owner='owner-b'; fi
   FM_DATA_OVERRIDE="$CONCURRENT_DATA" "$CEREMONY" add-item retry-item prod-db --owner "$owner" --collection prod > "$TMP_ROOT/retry-item-$i.out" 2>&1 &
   pids+=("$!")
 done
@@ -964,9 +967,13 @@ mkdir -p "$CLOCK_BIN"
 {
   printf '%s\n' '#!/usr/bin/env bash'
   printf '%s\n' 'count=0'
+  # shellcheck disable=SC2016 # Expansion belongs in the generated fixture.
   printf '%s\n' '[ ! -f "$FM_CLOCK_COUNT" ] || count=$(cat "$FM_CLOCK_COUNT")'
+  # shellcheck disable=SC2016 # Expansion belongs in the generated fixture.
   printf '%s\n' 'count=$((count + 1))'
+  # shellcheck disable=SC2016 # Expansion belongs in the generated fixture.
   printf '%s\n' 'printf "%s\n" "$count" > "$FM_CLOCK_COUNT"'
+  # shellcheck disable=SC2016 # Expansion belongs in the generated fixture.
   printf '%s\n' 'sed -n "${count}p" "$FM_CLOCK_VALUES"'
 } > "$CLOCK_BIN/date"
 chmod +x "$CLOCK_BIN/date"
