@@ -8,9 +8,19 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-AUTH="$ROOT/bin/fm-claude-automic-vault.sh"
-SPAWN="$ROOT/bin/fm-spawn.sh"
 TMP_ROOT=$(fm_test_tmproot fm-claude-automic-vault)
+TEST_BIN="$TMP_ROOT/executable-boundary/bin"
+mkdir -p "$TEST_BIN"
+for test_target in "$ROOT"/bin/*; do
+  ln -s "$test_target" "$TEST_BIN/${test_target##*/}"
+done
+rm "$TEST_BIN/fm-claude-automic-vault-lib.sh"
+ln -s "$ROOT/tests/fixtures/fm-claude-automic-vault-lib.sh" \
+  "$TEST_BIN/fm-claude-automic-vault-lib.sh"
+AUTH="$TEST_BIN/fm-claude-automic-vault.sh"
+SPAWN="$TEST_BIN/fm-spawn.sh"
+REAL_SPAWN="$ROOT/bin/fm-spawn.sh"
+export FM_CLAUDE_AV_TEST_PRODUCTION_ROOT=$ROOT
 JQ_BIN=$(command -v jq) || fail "test needs jq"
 NODE_BIN=$(command -v node) || fail "test needs node"
 BASE_PATH="$(dirname "$JQ_BIN"):$(dirname "$NODE_BIN"):/usr/bin:/bin:/usr/sbin:/sbin"
@@ -285,8 +295,8 @@ SH
 }
 
 configure_fake_attestation() {  # <fakebin> <state>
-  export FM_CLAUDE_AV_CURL_BIN=$1/curl
-  export FM_CLAUDE_AV_MANIFEST_CHECKSUMS=$2/release-manifests.sha256
+  export FM_CLAUDE_AV_TEST_CURL_BIN=$1/curl
+  export FM_CLAUDE_AV_TEST_MANIFEST_CHECKSUMS=$2/release-manifests.sha256
 }
 
 assert_secret_absent() {  # <case-dir> <captured-output>
@@ -314,12 +324,23 @@ make_ship() {  # <case-dir> <home> <id>
 run_spawn() {  # <home> <fakebin> <state> <launchlog> <pane-path> <args...>
   local home=$1 fakebin=$2 state=$3 launchlog=$4 pane=$5
   shift 5
-  FM_ROOT_OVERRIDE='' FM_HOME="$home" \
+  FM_HOME="$home" \
     FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
     FM_PROJECTS_OVERRIDE="$home/projects" FM_CONFIG_OVERRIDE="$home/config" \
     FM_SPAWN_NO_GUARD=1 FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
     FM_FAKE_LAUNCH_LOG="$launchlog" FM_FAKE_PANE_PATH="$pane" TMUX='fake,1,0' \
+    FM_ROOT_OVERRIDE="$ROOT" \
     PATH="$fakebin:$BASE_PATH" "$SPAWN" "$@"
+}
+
+run_real_spawn() {  # <home> <fakebin> <state> <launchlog> <pane-path> <args...>
+  local home=$1 fakebin=$2 state=$3 launchlog=$4 pane=$5
+  shift 5
+  FM_HOME="$home" FM_STATE_OVERRIDE="$home/state" FM_DATA_OVERRIDE="$home/data" \
+    FM_PROJECTS_OVERRIDE="$home/projects" FM_CONFIG_OVERRIDE="$home/config" \
+    FM_SPAWN_NO_GUARD=1 FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+    FM_FAKE_LAUNCH_LOG="$launchlog" FM_FAKE_PANE_PATH="$pane" TMUX='fake,1,0' \
+    FM_ROOT_OVERRIDE="$ROOT" PATH="$fakebin:$BASE_PATH" "$REAL_SPAWN" "$@"
 }
 
 test_provision_recovery_renewal_preflight_and_redaction() {
@@ -418,16 +439,35 @@ test_enabled_disabled_and_non_claude_launches() {
   assert_no_grep 'conflict=' "$state/claude-env.log" "higher-precedence auth environment reached Claude"
 
   : > "$launchlog"
+  record=$(make_ship "$dir" "$home" production-attestation)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(FM_CLAUDE_AV_CURL_BIN="$fakebin/curl" \
+    FM_CLAUDE_AV_MANIFEST_CHECKSUMS="$state/release-manifests.sha256" \
+    HTTPS_PROXY=http://127.0.0.1:1 ALL_PROXY=http://127.0.0.1:1 NO_PROXY= \
+    https_proxy=http://127.0.0.1:1 all_proxy=http://127.0.0.1:1 no_proxy= \
+    run_real_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+      production-attestation "$proj" claude --mode local-only --yolo off 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "production spawn honored caller-controlled attestation inputs"
+  assert_contains "$output" "could not retrieve Claude Code release attestation" \
+    "production spawn did not use the pinned curl boundary"
+  [ ! -s "$launchlog" ] || fail "production attestation refusal sent a launch command"
+  [ ! -e "$home/state/production-attestation.meta" ] \
+    || fail "production attestation refusal published worker metadata"
+  assert_secret_absent "$dir" "$output"
+
+  : > "$launchlog"
   before=$(wc -l < "$state/av-argv.log")
   record=$(make_ship "$dir" "$home" raw-claude-ship)
   proj=${record%%$'\t'*}
   wt=${record#*$'\t'}
   output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
     raw-claude-ship "$proj" 'claude --dangerously-skip-permissions' \
-    --harness claude --mode local-only --yolo off 2>&1)
+    --harness codex --mode local-only --yolo off 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "enabled raw Claude launch bypassed the injection boundary"
-  assert_contains "$output" "no supported injection boundary" \
+  assert_contains "$output" "cannot be combined with --harness" \
     "enabled raw Claude refusal was not actionable"
   [ ! -s "$launchlog" ] || fail "enabled raw Claude refusal still sent a launch command"
   [ ! -e "$home/state/raw-claude-ship.meta" ] || fail "enabled raw Claude refusal published worker metadata"
@@ -463,7 +503,7 @@ test_enabled_disabled_and_non_claude_launches() {
       "$id" "$proj" "$raw" --mode local-only --yolo off 2>&1)
     status=$?
     [ "$status" -ne 0 ] || fail "enabled prefixed raw Claude launch bypassed the injection boundary: $raw"
-    assert_contains "$output" "must declare a supported harness identity" \
+    assert_contains "$output" "raw launch commands are refused" \
       "enabled prefixed raw Claude refusal was not actionable: $raw"
     [ ! -s "$launchlog" ] || fail "enabled prefixed raw Claude refusal sent a launch command: $raw"
     [ ! -e "$home/state/$id.meta" ] || fail "enabled prefixed raw Claude refusal published worker metadata: $raw"
@@ -508,7 +548,7 @@ test_enabled_disabled_and_non_claude_launches() {
       "$id" "$proj" "$raw" --mode local-only --yolo off 2>&1)
     status=$?
     [ "$status" -ne 0 ] || fail "enabled ambiguous raw launch was accepted: $raw"
-    assert_contains "$output" "must declare a supported harness identity" \
+    assert_contains "$output" "raw launch commands are refused" \
       "enabled ambiguous raw launch refusal was not actionable: $raw"
     [ ! -s "$launchlog" ] || fail "enabled ambiguous raw launch sent a launch command: $raw"
     [ ! -e "$home/state/$id.meta" ] || fail "enabled ambiguous raw launch published worker metadata: $raw"
@@ -528,67 +568,24 @@ test_enabled_disabled_and_non_claude_launches() {
   record=$(make_ship "$dir" "$home" raw-prefixed-non-claude)
   proj=${record%%$'\t'*}
   wt=${record#*$'\t'}
+  before_endpoint=0
+  [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
   output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
     raw-prefixed-non-claude "$proj" "env --split-string='custom-agent --flag'" \
-    --harness codex --mode local-only --yolo off 2>&1)
+    --mode local-only --yolo off 2>&1)
   status=$?
-  expect_code 0 "$status" "unrelated non-Claude env split-string launch"
-  launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "env --split-string='custom-agent --flag'" \
-    "unrelated non-Claude env split-string launch changed"
+  [ "$status" -ne 0 ] || fail "enabled raw non-Claude launch was accepted"
+  assert_contains "$output" "raw launch commands are refused" \
+    "enabled raw non-Claude refusal was not actionable"
+  [ ! -s "$launchlog" ] || fail "enabled raw non-Claude refusal sent a launch command"
+  [ ! -e "$home/state/raw-prefixed-non-claude.meta" ] \
+    || fail "enabled raw non-Claude refusal published worker metadata"
+  if [ -f "$state/endpoint.log" ]; then
+    [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+      || fail "enabled raw non-Claude refusal created an endpoint"
+  fi
   [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
-    || fail "unrelated non-Claude env split-string launch contacted Automic Vault"
-  assert_secret_absent "$dir" "$output"
-
-  : > "$launchlog"
-  before=$(wc -l < "$state/av-argv.log")
-  record=$(make_ship "$dir" "$home" raw-multiple-non-claude)
-  proj=${record%%$'\t'*}
-  wt=${record#*$'\t'}
-  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
-    raw-multiple-non-claude "$proj" 'true; custom-agent --flag' \
-    --harness codex --mode local-only --yolo off 2>&1)
-  status=$?
-  expect_code 0 "$status" "fully resolved multi-command non-Claude raw launch"
-  launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" 'true; custom-agent --flag' \
-    "fully resolved multi-command non-Claude raw launch changed"
-  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
-    || fail "fully resolved multi-command non-Claude raw launch contacted Automic Vault"
-  assert_secret_absent "$dir" "$output"
-
-  : > "$launchlog"
-  before=$(wc -l < "$state/av-argv.log")
-  record=$(make_ship "$dir" "$home" raw-pipeline-non-claude)
-  proj=${record%%$'\t'*}
-  wt=${record#*$'\t'}
-  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
-    raw-pipeline-non-claude "$proj" 'printf x | custom-agent --flag' \
-    --harness codex --mode local-only --yolo off 2>&1)
-  status=$?
-  expect_code 0 "$status" "fully resolved non-delegating pipeline raw launch"
-  launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" 'printf x | custom-agent --flag' \
-    "fully resolved non-delegating pipeline raw launch changed"
-  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
-    || fail "fully resolved non-delegating pipeline contacted Automic Vault"
-  assert_secret_absent "$dir" "$output"
-
-  : > "$launchlog"
-  before=$(wc -l < "$state/av-argv.log")
-  record=$(make_ship "$dir" "$home" raw-shell-non-claude)
-  proj=${record%%$'\t'*}
-  wt=${record#*$'\t'}
-  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
-    raw-shell-non-claude "$proj" "/bin/sh -c 'exec custom-agent --flag'" \
-    --harness codex --mode local-only --yolo off 2>&1)
-  status=$?
-  expect_code 0 "$status" "unrelated non-Claude literal shell launch"
-  launch=$(last_launch_command "$launchlog")
-  assert_contains "$launch" "/bin/sh -c 'exec custom-agent --flag'" \
-    "unrelated non-Claude literal shell launch changed"
-  [ "$(wc -l < "$state/av-argv.log")" = "$before" ] \
-    || fail "unrelated non-Claude literal shell launch contacted Automic Vault"
+    || fail "enabled raw non-Claude refusal contacted Automic Vault"
   assert_secret_absent "$dir" "$output"
 
   cat > "$fakebin/node" <<'SH'
@@ -609,7 +606,7 @@ SH
     --mode local-only --yolo off 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "Node-unavailable raw Claude launch bypassed the injection boundary"
-  assert_contains "$output" "must declare a supported harness identity" \
+  assert_contains "$output" "raw launch commands are refused" \
     "Node-unavailable raw Claude refusal was not actionable"
   [ ! -s "$launchlog" ] || fail "Node-unavailable raw Claude refusal sent a launch command"
   [ ! -e "$home/state/raw-no-node-claude.meta" ] || fail "Node-unavailable raw Claude refusal published worker metadata"
@@ -633,7 +630,7 @@ SH
     --mode local-only --yolo off 2>&1)
   status=$?
   [ "$status" -ne 0 ] || fail "enabled Node-unavailable ambiguous non-Claude raw launch was accepted"
-  assert_contains "$output" "must declare a supported harness identity" \
+  assert_contains "$output" "raw launch commands are refused" \
     "enabled Node-unavailable ambiguous non-Claude refusal was not actionable"
   [ ! -s "$launchlog" ] || fail "enabled Node-unavailable ambiguous non-Claude launch sent a launch command"
   [ ! -e "$home/state/raw-no-node-non-claude.meta" ] \
@@ -1060,7 +1057,7 @@ make_secondmate_home() {  # <home> <id>
 }
 
 test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
-  local dir primary sm fakebin state launchlog output status launch record proj wt
+  local dir primary sm fakebin state launchlog output status launch record proj wt before after before_endpoint
   dir="$TMP_ROOT/secondmate"
   primary="$dir/primary"
   sm="$dir/secondmate-home"
@@ -1075,6 +1072,26 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   make_secondmate_home "$sm" sm-vault
   : > "$launchlog"
 
+  before=0
+  [ ! -f "$state/av-argv.log" ] || before=$(wc -l < "$state/av-argv.log")
+  before_endpoint=0
+  [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
+  output=$(FM_INHERITABLE_CONFIG=crew-harness \
+    run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
+      sm-vault "$sm" claude --secondmate 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "secondmate launched without inherited Claude Vault opt-in"
+  assert_contains "$output" "requires the enabled Claude Automic Vault flag to converge" \
+    "secondmate inheritance refusal was not actionable"
+  [ ! -s "$launchlog" ] || fail "secondmate inheritance refusal sent a launch command"
+  after=0
+  [ ! -f "$state/av-argv.log" ] || after=$(wc -l < "$state/av-argv.log")
+  [ "$after" = "$before" ] || fail "secondmate inheritance refusal contacted Automic Vault"
+  if [ -f "$state/endpoint.log" ]; then
+    [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+      || fail "secondmate inheritance refusal created an endpoint"
+  fi
+
   output=$(run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
     sm-vault "$sm" claude --secondmate 2>&1)
   status=$?
@@ -1083,6 +1100,28 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   launch=$(last_launch_command "$launchlog")
   assert_contains "$launch" "fm-claude-automic-vault-launch.sh' '$fakebin/av' '${fakebin%/fakebin}/fake-home/.local/share/claude/versions/2.1.220'" \
     "secondmate launch did not use the pinned Vault relay"
+
+  rm "$sm/config/claude-automic-vault"
+  : > "$launchlog"
+  before=0
+  [ ! -f "$state/av-argv.log" ] || before=$(wc -l < "$state/av-argv.log")
+  before_endpoint=0
+  [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
+  output=$(FM_INHERITABLE_CONFIG=crew-harness FM_FAKE_WINDOWS=fm-sm-vault \
+    run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
+      sm-vault --relaunch --harness claude 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "secondmate relaunched without inherited Claude Vault opt-in"
+  assert_contains "$output" "requires the enabled Claude Automic Vault flag to converge" \
+    "secondmate relaunch inheritance refusal was not actionable"
+  [ ! -s "$launchlog" ] || fail "secondmate relaunch inheritance refusal sent a launch command"
+  after=0
+  [ ! -f "$state/av-argv.log" ] || after=$(wc -l < "$state/av-argv.log")
+  [ "$after" = "$before" ] || fail "secondmate relaunch inheritance refusal contacted Automic Vault"
+  if [ -f "$state/endpoint.log" ]; then
+    [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+      || fail "secondmate relaunch inheritance refusal created an endpoint"
+  fi
 
   : > "$launchlog"
   output=$(FM_FAKE_WINDOWS=fm-sm-vault run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \

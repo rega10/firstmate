@@ -33,9 +33,8 @@
 #   worktree, and clears the previous harness's per-task wiring before arming
 #   the new incarnation.
 #   --harness <name> is the explicit per-spawn harness/profile adapter. The old
-#   positional harness arg still works for back-compat. When paired with a raw
-#   launch positional, --harness declares the verified adapter identity while
-#   preserving the raw command.
+#   positional harness arg still works for back-compat. A raw launch positional
+#   cannot be combined with --harness; select the canonical adapter instead.
 #   --model <name> and --effort <low|medium|high|xhigh|max> are concrete profile
 #   axes chosen by firstmate at intake. They are only threaded into harnesses whose
 #   installed CLIs were verified to support that axis; unsupported axes are omitted
@@ -991,7 +990,7 @@ fi
 SPAWN_TASK_LOCK_HELD=1
 PROJ=
 ARG3=
-RAW_HARNESS_IDENTITY=
+RAW_HARNESS_CONFLICT=0
 FIRSTMATE_HOME=
 
 # --relaunch adoption: every identity axis comes from the task's own validated
@@ -1088,7 +1087,7 @@ else
 fi
 if [ -n "$HARNESS_ARG" ]; then
   case "$ARG3" in
-    *' '*) RAW_HARNESS_IDENTITY=$HARNESS_ARG ;;
+    *' '*) RAW_HARNESS_CONFLICT=1 ;;
     *) ARG3=$HARNESS_ARG ;;
   esac
 fi
@@ -1221,31 +1220,27 @@ case "$ARG3" in
   *' '*)  # raw launch command (unverified-adapter escape hatch)
     LAUNCH=$ARG3
     HARNESS=
-    if [ -n "$RAW_HARNESS_IDENTITY" ]; then
-      launch_template "$RAW_HARNESS_IDENTITY" "$KIND" >/dev/null || {
-        echo "error: unknown harness '$RAW_HARNESS_IDENTITY'; a raw launch identity must name a supported harness adapter" >&2
+    if [ "$RAW_HARNESS_CONFLICT" -eq 1 ]; then
+      echo "error: a raw launch command cannot be combined with --harness; pass the supported harness token alone to use its canonical launch template." >&2
+      exit 1
+    fi
+    raw_launch_opt_in=0
+    fm_claude_av_enabled "$CONFIG" || raw_launch_opt_in=$?
+    case "$raw_launch_opt_in" in
+      0)
+        echo "error: Claude Automic Vault authentication is enabled, so raw launch commands are refused; pass a supported harness token to use its canonical launch template." >&2
         exit 1
-      }
-      HARNESS=$RAW_HARNESS_IDENTITY
-    else
-      raw_launch_opt_in=0
-      fm_claude_av_enabled "$CONFIG" || raw_launch_opt_in=$?
-      case "$raw_launch_opt_in" in
-        0)
-          echo "error: Claude Automic Vault authentication is enabled, so a raw launch must declare a supported harness identity with --harness <name>; declare the verified adapter alongside the raw command or use its canonical harness launch path." >&2
-          exit 1
-          ;;
-        1) ;;
-        2)
-          printf 'error: unsafe or invalid config/%s: %s; remove it to disable the opt-in or recreate it with bin/fm-claude-automic-vault.sh enable.\n' \
-            "$FM_CLAUDE_AV_CONFIG_FILE" "$FM_CLAUDE_AV_ERROR" >&2
-          exit 1
-          ;;
-      esac
-      RAW_LAUNCH_NODE=$(command -v node 2>/dev/null || true)
-      if [ -n "$RAW_LAUNCH_NODE" ]; then
-        HARNESS=$("$RAW_LAUNCH_NODE" "$FM_ROOT/bin/fm-shell-command-name.mjs" "$LAUNCH" 2>/dev/null) || HARNESS=
-      fi
+        ;;
+      1) ;;
+      2)
+        printf 'error: unsafe or invalid config/%s: %s; remove it to disable the opt-in or recreate it with bin/fm-claude-automic-vault.sh enable.\n' \
+          "$FM_CLAUDE_AV_CONFIG_FILE" "$FM_CLAUDE_AV_ERROR" >&2
+        exit 1
+        ;;
+    esac
+    RAW_LAUNCH_NODE=$(command -v node 2>/dev/null || true)
+    if [ -n "$RAW_LAUNCH_NODE" ]; then
+      HARNESS=$("$RAW_LAUNCH_NODE" "$FM_ROOT/bin/fm-shell-command-name.mjs" "$LAUNCH" 2>/dev/null) || HARNESS=
     fi
     ;;
   '')
@@ -1338,21 +1333,6 @@ if [ "$KIND" = secondmate ] && [ -z "$ARG3" ]; then
       esac
     fi
   fi
-fi
-
-# Preserve the historical launch bytes when the opt-in is absent.
-# When it is present, the owner resolves both executables and validates the
-# injected token before any worker endpoint is created, then supplies one pinned
-# prefix used unchanged by every backend and by fresh and relaunch paths alike.
-CLAUDE_LAUNCH=claude
-if [ "$HARNESS" = claude ]; then
-  claude_av_rc=0
-  fm_claude_av_prepare_launch "$CONFIG" "$LAUNCH" || claude_av_rc=$?
-  case "$claude_av_rc" in
-    0) CLAUDE_LAUNCH=$FM_CLAUDE_AV_LAUNCH_COMMAND ;;
-    2) ;;
-    *) exit 1 ;;
-  esac
 fi
 
 secondmate_registry_value() {
@@ -1706,6 +1686,16 @@ if [ "$KIND" = secondmate ]; then
       propagate_secondmate_inheritance "$FM_HOME" "$PROJ_ABS" "$CONFIG" "$DATA" \
       || echo "warning: secondmate $ID inheritance failed for $PROJ_ABS" >&2
   fi
+  PRIMARY_CLAUDE_AV_STATE=0
+  fm_claude_av_enabled "$CONFIG" || PRIMARY_CLAUDE_AV_STATE=$?
+  if [ "$PRIMARY_CLAUDE_AV_STATE" -eq 0 ]; then
+    SECONDMATE_CLAUDE_AV_STATE=0
+    fm_claude_av_enabled "$PROJ_ABS/config" || SECONDMATE_CLAUDE_AV_STATE=$?
+    if [ "$SECONDMATE_CLAUDE_AV_STATE" -ne 0 ]; then
+      echo "error: secondmate $ID launch requires the enabled Claude Automic Vault flag to converge into its validated local home; repair inheritance and retry." >&2
+      exit 1
+    fi
+  fi
   if [ -f "$PROJ_ABS/data/charter.md" ]; then
     BRIEF="$PROJ_ABS/data/charter.md"
   else
@@ -1717,6 +1707,21 @@ else
   BRIEF="$DATA/$ID/brief.md"
 fi
 [ -f "$BRIEF" ] || { echo "error: no brief at $BRIEF" >&2; exit 1; }
+
+# Preserve the historical launch bytes when the opt-in is absent.
+# When it is present, the owner resolves both executables and validates the
+# injected token before any worker endpoint is created, then supplies one pinned
+# prefix used unchanged by every backend and by fresh and relaunch paths alike.
+CLAUDE_LAUNCH=claude
+if [ "$HARNESS" = claude ]; then
+  claude_av_rc=0
+  fm_claude_av_prepare_launch "$CONFIG" "$LAUNCH" || claude_av_rc=$?
+  case "$claude_av_rc" in
+    0) CLAUDE_LAUNCH=$FM_CLAUDE_AV_LAUNCH_COMMAND ;;
+    2) ;;
+    *) exit 1 ;;
+  esac
+fi
 
 delivery_rigor_rank() {  # <mode> -> 3 (most rigor) .. 1 (least); 0 = not a task mode
   case "$1" in
