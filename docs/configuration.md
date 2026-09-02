@@ -299,7 +299,8 @@ A malformed or unreadable opt-in file applies the same fail-safe refusal to a ra
 Install Claude Code with its official native installer before enabling this integration; script wrappers and other distribution layouts fail closed because their artifact identity can be forwarded or substituted.
 This boundary assumes same-user process integrity, and TOCTOU attacks by another process running as the same user are out of scope by captain decision on 2026-09-02.
 The token value enters only the Claude process environment through `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`, while the secret name but never its value appears in argv.
-The launch clears ambient API-key, cloud-provider, and Anthropic endpoint overrides, disables `apiKeyHelper` and matching auth settings inline, and enables Claude Code's subprocess credential scrub.
+The launch builds a clean explicit environment containing only required home, terminal, locale, temporary-directory, proxy, certificate, and SSH-agent context, disables `apiKeyHelper` and matching auth settings inline, and enables Claude Code's subprocess credential scrub.
+Exported shell functions, startup controls, ambient API-key state, cloud-provider state, and Anthropic endpoint overrides are excluded before injection.
 This prevents a missing or denied Vault value from falling back to stale interactive OAuth, a keychain credential, an API key, a cloud provider, or a different endpoint.
 The captain's normal Claude config directory, Firstmate worktree isolation, lifecycle hooks, model and effort flags, prompt, and runtime-backend behavior remain in place.
 

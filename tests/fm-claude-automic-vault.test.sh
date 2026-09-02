@@ -46,6 +46,17 @@ make_fake_tools() {  # <case-dir>
 #!/usr/bin/env bash
 set -u
 state=${FM_FAKE_STATE:?}
+fake_secret=${FM_FAKE_SECRET:-sk-ant-oat01-FM_SYNTHETIC_"SENTINEL"_NEVER_PERSIST}
+fail_at=${FM_FAKE_AV_FAIL_AT:-}
+[ -n "$fail_at" ] || [ ! -f "$state/control-fail-at" ] || fail_at=$(cat "$state/control-fail-at")
+block_file=${FM_FAKE_AV_BLOCK_FILE:-}
+[ -n "$block_file" ] || [ ! -f "$state/control-block-file" ] || block_file=$(cat "$state/control-block-file")
+swap_source=${FM_FAKE_AV_SWAP_SOURCE:-}
+[ -n "$swap_source" ] || [ ! -f "$state/control-swap-source" ] || swap_source=$(cat "$state/control-swap-source")
+swap_target=${FM_FAKE_AV_SWAP_TARGET:-}
+[ -n "$swap_target" ] || [ ! -f "$state/control-swap-target" ] || swap_target=$(cat "$state/control-swap-target")
+swap_marker=${FM_FAKE_SWAP_MARKER:-}
+[ -n "$swap_marker" ] || [ ! -f "$state/control-swap-marker" ] || swap_marker=$(cat "$state/control-swap-marker")
 case "${1:-} ${2:-}" in
   "help ")
     printf '%s\n' 'Commands: save inject'
@@ -62,7 +73,7 @@ case "${1:-} ${2:-}" in
   "save CLAUDE_CODE_OAUTH_TOKEN")
     printf 'Enter secret value: ' >&2
     IFS= read -r supplied </dev/tty || exit 31
-    [ "$supplied" = "${FM_FAKE_SECRET:?}" ] || exit 32
+    [ "$supplied" = "$fake_secret" ] || exit 32
     save_count=0
     [ ! -f "$state/save-count" ] || save_count=$(cat "$state/save-count")
     printf '%s\n' "$((save_count + 1))" > "$state/save-count"
@@ -84,8 +95,8 @@ count=0
 [ ! -f "$count_file" ] || count=$(cat "$count_file")
 count=$((count + 1))
 printf '%s\n' "$count" > "$count_file"
-if [ "${FM_FAKE_AV_FAIL_AT:-0}" = "$count" ]; then
-  printf 'Vault unavailable: failed to connect %s\n' "${FM_FAKE_SECRET:?}" >&2
+if [ "${fail_at:-0}" = "$count" ]; then
+  printf 'Vault unavailable: failed to connect %s\n' "$fake_secret" >&2
   exit 43
 fi
 case "${FM_FAKE_AV_MODE:-ok}" in
@@ -97,16 +108,18 @@ while [ $# -gt 0 ] && [ "$1" != -- ]; do shift; done
 [ "${1:-}" = -- ] || exit 2
 shift
 [ "$#" -gt 0 ] || exit 2
-if [ -n "${FM_FAKE_AV_BLOCK_FILE:-}" ]; then
-  : > "$FM_FAKE_AV_BLOCK_FILE"
-  while [ ! -e "$FM_FAKE_AV_BLOCK_FILE.release" ]; do
+if [ -n "$block_file" ]; then
+  : > "$block_file"
+  while [ ! -e "$block_file.release" ]; do
     sleep 0.02
   done
 fi
-export CLAUDE_CODE_OAUTH_TOKEN=${FM_FAKE_SECRET:?}
-if [ -n "${FM_FAKE_AV_SWAP_SOURCE:-}" ] && [ -n "${FM_FAKE_AV_SWAP_TARGET:-}" ]; then
-  mv "$FM_FAKE_AV_SWAP_TARGET" "$FM_FAKE_AV_SWAP_TARGET.before-race" || exit 44
-  mv "$FM_FAKE_AV_SWAP_SOURCE" "$FM_FAKE_AV_SWAP_TARGET" || exit 44
+export CLAUDE_CODE_OAUTH_TOKEN=$fake_secret
+[ ! -f "$state/control-claude-mode" ] || export FM_FAKE_CLAUDE_MODE=$(cat "$state/control-claude-mode")
+if [ -n "$swap_source" ] && [ -n "$swap_target" ]; then
+  [ -z "$swap_marker" ] || export FM_FAKE_SWAP_MARKER=$swap_marker
+  mv "$swap_target" "$swap_target.before-race" || exit 44
+  mv "$swap_source" "$swap_target" || exit 44
 fi
 exec "$@"
 SH
@@ -154,6 +167,7 @@ static void append_line(const char *path, const char *line) {
 int main(int argc, char **argv) {
   const char *state = getenv("FM_FAKE_STATE");
   const char *secret = getenv("FM_FAKE_SECRET");
+  const char *token = getenv("CLAUDE_CODE_OAUTH_TOKEN");
   const char *mode = getenv("FM_FAKE_CLAUDE_MODE");
   const char *setup_mode = getenv("FM_FAKE_SETUP_MODE");
   char path[4096];
@@ -195,11 +209,11 @@ int main(int argc, char **argv) {
     printf("%s\n", secret);
     return 0;
   }
-  if (!state || !secret) return 72;
+  if (!state) return 72;
   snprintf(path, sizeof(path), "%s/claude-argv.log", state);
   append_args(path, argc, argv);
   snprintf(path, sizeof(path), "%s/claude-env.log", state);
-  append_line(path, getenv("CLAUDE_CODE_OAUTH_TOKEN") && strcmp(getenv("CLAUDE_CODE_OAUTH_TOKEN"), secret) == 0 ? "oauth=present" : "oauth=missing");
+  append_line(path, token && *token && (!secret || strcmp(token, secret) == 0) ? "oauth=present" : "oauth=missing");
   {
     const char *names[] = {"ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "CLAUDE_CODE_USE_BEDROCK"};
     for (i = 0; i < 4; i++) if (getenv(names[i]) && *getenv(names[i])) {
@@ -654,6 +668,23 @@ SH
     "disabled Node-unavailable non-Claude raw launch changed"
   rm -f "$fakebin/node"
 
+  : > "$launchlog"
+  record=$(make_ship "$dir" "$home" raw-disabled-shell-claude)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    raw-disabled-shell-claude "$proj" "/bin/sh -c 'claude --dangerously-skip-permissions'" \
+    --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "disabled shell-wrapped Claude raw launch"
+  launch=$(last_launch_command "$launchlog")
+  assert_contains "$launch" "/bin/sh -c 'claude --dangerously-skip-permissions'" \
+    "disabled shell-wrapped Claude launch changed"
+  assert_grep 'harness=sh' "$home/state/raw-disabled-shell-claude.meta" \
+    "disabled shell-wrapped Claude metadata changed from historical first-command classification"
+  [ ! -e "$wt/.claude/settings.local.json" ] \
+    || fail "disabled shell-wrapped Claude received Claude harness wiring"
+
   printf 'off\n' > "$home/config/claude-automic-vault"
   for raw in \
     '"$(printf clau%s de)" --dangerously-skip-permissions' \
@@ -906,6 +937,7 @@ test_launch_time_failure_redaction_and_interactive_io() {
   status=$?
   expect_code 0 "$status" "launch-boundary spawn"
   launch=$(last_launch_command "$launchlog")
+  printf 'interactive\n' > "$state/control-claude-mode"
 
   output=$(cd "$wt" && printf 'captain-input\n' | \
     FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=interactive \
@@ -925,6 +957,7 @@ test_launch_time_failure_redaction_and_interactive_io() {
     block="$dir/interrupted-$signal"
     pidfile="$block.pid"
     rm -f "$block" "$block.release" "$pidfile"
+    printf '%s\n' "$block" > "$state/control-block-file"
     (
       cd "$wt" || exit 1
       (
@@ -961,6 +994,7 @@ test_launch_time_failure_redaction_and_interactive_io() {
     ) > "$dir/interrupted-$signal.out" 2>&1
     status=$?
     expect_code "$expected_status" "$status" "$signal launch interruption"
+    rm -f "$state/control-block-file"
     if find "${native%/versions/*}" -maxdepth 1 -type d -name '.firstmate-launch.*' -print -quit | grep -q .; then
       fail "$signal launch interruption left private launch state"
     fi
@@ -993,10 +1027,31 @@ SH
   assert_contains "$output" "interactive stdout: startup-clean-input" "startup-clean launch did not preserve interactive I/O"
   assert_not_contains "$output" "$SECRET" "shell tracing exposed the injected token"
 
+  leak="$dir/exported-function-token-leak"
+  exec() {
+    if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+      printf '%s\n' "$CLAUDE_CODE_OAUTH_TOKEN" > "${FM_HOSTILE_LEAK:?}"
+    fi
+    builtin exec "$@"
+  }
+  export -f exec
+  output=$(cd "$wt" && printf 'function-clean-input\n' | \
+    env FM_HOSTILE_LEAK="$leak" FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
+      FM_FAKE_CLAUDE_MODE=interactive PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
+  status=$?
+  unset -f exec
+  expect_code 0 "$status" "exported-function-clean interactive launch"
+  [ ! -e "$leak" ] || fail "exported exec function observed the injected token"
+  assert_contains "$output" "interactive stdout: function-clean-input" \
+    "exported-function-clean launch did not preserve interactive I/O"
+  assert_not_contains "$output" "$SECRET" "exported exec function exposed the injected token"
+
   rm -f "$state/av-inject-count"
+  printf '1\n' > "$state/control-fail-at"
   output=$(cd "$wt" && FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" \
     FM_FAKE_AV_FAIL_AT=1 PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
   status=$?
+  rm -f "$state/control-fail-at"
   [ "$status" -ne 0 ] || fail "launch-time injection failure did not block Claude exec"
   assert_contains "$output" "unavailable or locked" "launch-time Vault failure was not classified"
   assert_not_contains "$output" "$SECRET" "launch-time Vault failure exposed raw output"
@@ -1023,11 +1078,15 @@ C
   "$cc_bin" -o "$replacement" "$dir/race-replacement.c" \
     || fail "could not build launch-race replacement fixture"
   expected=$(cat "$state/expected-claude-sha256")
+  printf '%s\n' "$replacement" > "$state/control-swap-source"
+  printf '%s\n' "$native" > "$state/control-swap-target"
+  printf '%s\n' "$marker" > "$state/control-swap-marker"
   output=$(cd "$wt" && printf 'race-input\n' | \
     FM_FAKE_STATE="$state" FM_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=interactive \
     FM_FAKE_AV_SWAP_SOURCE="$replacement" FM_FAKE_AV_SWAP_TARGET="$native" \
     FM_FAKE_SWAP_MARKER="$marker" PATH="$fakebin:$BASE_PATH" bash -c "$launch" 2>&1)
   status=$?
+  rm -f "$state/control-swap-source" "$state/control-swap-target" "$state/control-swap-marker"
   expect_code 0 "$status" "pathname replacement during injected launch"
   [ ! -e "$marker" ] || fail "replacement executable ran during the attestation-to-exec race"
   [ "$(sha256_file "$native")" != "$expected" ] || fail "race fixture did not replace the version pathname"

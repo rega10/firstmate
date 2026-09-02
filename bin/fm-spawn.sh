@@ -1238,10 +1238,9 @@ case "$ARG3" in
         exit 1
         ;;
     esac
-    RAW_LAUNCH_NODE=$(command -v node 2>/dev/null || true)
-    if [ -n "$RAW_LAUNCH_NODE" ]; then
-      HARNESS=$("$RAW_LAUNCH_NODE" "$FM_ROOT/bin/fm-shell-command-name.mjs" "$LAUNCH" 2>/dev/null) || HARNESS=
-    fi
+    for word in $LAUNCH; do
+      case "$word" in [A-Za-z_]*=*) continue ;; *) HARNESS=$(basename "$word"); break ;; esac
+    done
     ;;
   '')
     # No explicit harness: resolve from config. A secondmate AGENT launches on the
