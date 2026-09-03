@@ -42,6 +42,81 @@ make_fake_tools() {  # <case-dir>
   local dir=$1 fakebin native_dir cc_bin checksum separator platform
   fakebin=$(fm_fakebin "$dir")
   mkdir -p "$dir/fake-state"
+  if [ "${FM_TEST_FORCE_PORTABLE_EXPECT:-0}" = 1 ] || ! command -v expect >/dev/null 2>&1; then
+    command -v python3 >/dev/null 2>&1 || fail "test needs Expect or Python 3 for the synthetic terminal relay"
+    cat > "$fakebin/expect" <<'PY'
+#!/usr/bin/env python3
+import os
+import pty
+import re
+import select
+import subprocess
+import sys
+import time
+
+if len(sys.argv) != 4:
+    sys.exit(2)
+
+claude = sys.argv[2]
+av = sys.argv[3]
+setup = subprocess.run(
+    [claude, "setup-token"],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    timeout=10,
+    check=False,
+)
+match = re.search(rb"(sk-ant-oat[0-9A-Za-z_-]+)(?:\r?\n)", setup.stdout)
+if match is None:
+    print(
+        "error: Claude setup-token ended without producing a recognizable subscription token",
+        file=sys.stderr,
+    )
+    sys.exit(20)
+if setup.returncode != 0:
+    print("error: Claude setup-token did not complete successfully", file=sys.stderr)
+    sys.exit(20)
+
+token = match.group(1)
+pid, terminal = pty.fork()
+if pid == 0:
+    os.execv(av, [av, "save", "CLAUDE_CODE_OAUTH_TOKEN"])
+
+deadline = time.monotonic() + 10
+prompt = bytearray()
+sent = False
+while time.monotonic() < deadline:
+    ready, _, _ = select.select([terminal], [], [], 0.1)
+    if terminal in ready:
+        try:
+            chunk = os.read(terminal, 4096)
+        except OSError:
+            chunk = b""
+        if not chunk:
+            _, status = os.waitpid(pid, 0)
+            sys.exit(os.waitstatus_to_exitcode(status))
+        if not sent:
+            prompt.extend(chunk)
+            if re.search(rb"(enter|secret|value|token|password)", prompt, re.IGNORECASE):
+                os.write(terminal, token + b"\r")
+                sent = True
+    finished, status = os.waitpid(pid, os.WNOHANG)
+    if finished:
+        sys.exit(os.waitstatus_to_exitcode(status))
+
+try:
+    os.kill(pid, 9)
+except ProcessLookupError:
+    pass
+os.waitpid(pid, 0)
+if not sent:
+    print("error: Automic Vault did not present its terminal value prompt", file=sys.stderr)
+else:
+    print("error: Automic Vault save timed out after receiving the token", file=sys.stderr)
+sys.exit(21)
+PY
+    chmod +x "$fakebin/expect"
+  fi
   cat > "$fakebin/av" <<'SH'
 #!/usr/bin/env bash
 set -u
