@@ -265,6 +265,29 @@ test_concurrent_writers_never_clobber() {
   pass "inbox: concurrent writers serialize on the sequence lock and lose nothing"
 }
 
+test_lock_wait_retries_after_a_lost_create_race() {
+  local state rec
+  state="$TMP_ROOT/lost-create-race/state"; mkdir -p "$state"
+  rec=$(FM_STATE_OVERRIDE="$state" bash -c '
+    . "$1"
+    eval "$(declare -f fm_lock_try_create | sed "1s/fm_lock_try_create/_original_fm_lock_try_create/")"
+    create_attempts=0
+    fm_lock_try_create() {
+      create_attempts=$((create_attempts + 1))
+      if [ "$create_attempts" -eq 1 ]; then
+        return 1
+      fi
+      _original_fm_lock_try_create "$@"
+    }
+    fm_task_inbox_write "$2" t1 "writer whose first lock race was lost"
+  ' _ "$ROOT/bin/fm-task-inbox-lib.sh" "$state") \
+    || fail "an inbox writer did not retry after the contended lock disappeared"
+  [ "$rec" = "$state/t1.inbox/001.msg" ] \
+    || fail "the retried inbox writer returned the wrong record: $rec"
+  [ -f "$rec" ] || fail "the retried inbox writer did not persist its record"
+  pass "inbox: a writer retries when the lock disappears after its first create race"
+}
+
 test_ladder_writes_ignore_vanished_inbox() {
   local state rec
   state="$TMP_ROOT/vanished/state"; mkdir -p "$state"
@@ -484,6 +507,7 @@ test_idempotent_write_dedups_exact_body
 test_idempotent_write_follows_concurrent_ack
 test_handled_mv_dedups_by_sequence
 test_concurrent_writers_never_clobber
+test_lock_wait_retries_after_a_lost_create_race
 test_ladder_writes_ignore_vanished_inbox
 test_ring_ladder_policy
 test_watcher_rerings_idle_pane_quietly
