@@ -16,11 +16,17 @@ The installed Automic Vault hardener catalog contained no Claude-specific harden
 
 ## Claude version qualification
 
-No real Claude Code version is currently admitted because no actual candidate has completed the required non-secret behavioral qualification.
-The executable admission owner is `bin/fm-claude-automic-vault-qualified-versions`, which stays empty until an actual candidate succeeds and then contains one exact version and qualification date per evidence-backed entry.
-To qualify an upgrade, run `bin/fm-claude-automic-vault-qualify.sh /absolute/path/to/.local/share/claude/versions/<version>` against the actual candidate executable that will be admitted.
-The check runs the actual candidate through Firstmate's pinned startup-clean sanitizer, supplies a clearly non-secret placeholder token, directs it to a loopback model fixture, requires approval-free Bash tool execution, and requires the tool subprocess to receive no OAuth token.
-After a successful result, add that exact version and the check date to the qualification list, pin its official release-manifest checksum separately, and rerun `tests/fm-claude-automic-vault.test.sh` before review.
+Claude Code 2.1.258 from the `claude-code@latest` Homebrew cask was qualified on 2026-09-03 at `/opt/homebrew/Caskroom/claude-code@latest/2.1.258/claude`, which reported `2.1.258 (Claude Code)`.
+The recorded command was `bin/fm-claude-automic-vault-qualify.sh /opt/homebrew/Caskroom/claude-code@latest/2.1.258/claude`.
+Its successful output was exactly:
+
+```text
+qualified: 2.1.258 (Claude Code) at /opt/homebrew/Caskroom/claude-code@latest/2.1.258/claude matched Anthropic release attestation and executed one approval-free tool with its OAuth environment scrubbed.
+```
+The executable admission owner is `bin/fm-claude-automic-vault-qualified-versions`, which records the exact reported version, qualification date, and resolved canonical path for each evidence-backed entry.
+To qualify an upgrade, first pin its official release-manifest checksum, then run `bin/fm-claude-automic-vault-qualify.sh /absolute/path/to/supported/canonical/claude-executable` against the actual candidate executable that will be admitted.
+The check attests that exact candidate against the pinned Anthropic release manifest, runs it through Firstmate's pinned startup-clean sanitizer, supplies a clearly non-secret placeholder token, directs it to a loopback model fixture, requires approval-free Bash tool execution, and requires the tool subprocess to receive no OAuth token.
+After a successful result, add that exact reported version, check date, and resolved path to the qualification list, then rerun `tests/fm-claude-automic-vault.test.sh` before review.
 Do not infer qualification from a newer version number, advertised flags, release-manifest attestation, or another version's result.
 This procedure uses no Vault and only a loopback model fixture with a fake token; it does not authorize a real Vault, real token, or live authenticated Claude operation.
 
@@ -58,5 +64,5 @@ That test proves byte-exact propagation, primary-absence convergence, rejection 
 Do not run `claude setup-token`, `av save CLAUDE_CODE_OAUTH_TOKEN`, or an enabled preflight with a real secret as part of automated validation, CI, review, or no-mistakes.
 The implementation therefore does not prove that a particular captain Vault is unlocked, that Secret Gate policy currently permits a particular launch, that a real `CLAUDE_CODE_OAUTH_TOKEN` exists, or that a real subscription token is presently valid.
 Those facts remain intentionally unproven until the captain runs `bin/fm-claude-automic-vault.sh provision` in an attended terminal after merge.
-Remote Automic Vault availability and remote token provisioning also remain unproven and must be established independently on each remote host before that host can launch a Claude worker with the inherited opt-in.
+Remote inheritance omits and removes this Mac-local opt-in, so this integration does not authorize or instruct remote Vault or Claude credential provisioning.
 The accepted threat model assumes same-user process integrity, so TOCTOU attacks by another process running as the same user remain intentionally unproven and out of scope by captain decision on 2026-09-02.

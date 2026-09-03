@@ -246,6 +246,10 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (has_arg(argc, argv, "-p")) {
+    if (mode && strcmp(mode, "revoked-case") == 0) {
+      printf("Invalid OAuth token: %s\n", secret ? secret : "missing");
+      return 1;
+    }
     if (mode && strcmp(mode, "revoked") == 0) {
       puts("{\"type\":\"result\",\"is_error\":true,\"api_error_status\":401,\"error\":\"authentication_error\"}");
       return 1;
@@ -254,7 +258,8 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (getenv("CLAUDE_CODE_SUBPROCESS_ENV_SCRUB")) {
-    if (!has_arg(argc, argv, "--permission-mode") || !has_arg(argc, argv, "bypassPermissions")) {
+    if (!has_arg(argc, argv, "--permission-mode") || !has_arg(argc, argv, "bypassPermissions") ||
+        !has_arg(argc, argv, "--allowedTools") || !has_arg(argc, argv, "Bash")) {
       append_line(path, "approval=required");
       return 52;
     }
@@ -868,6 +873,15 @@ test_actionable_fail_closed_paths() {
   status=$?
   [ "$status" -ne 0 ] || fail "revoked token did not block"
   assert_contains "$output" "invalid or revoked" "revoked token blocker was not actionable"
+  assert_secret_absent "$dir" "$output"
+
+  output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
+    TEST_FAKE_SECRET="$SECRET" FM_FAKE_CLAUDE_MODE=revoked-case PATH="$fakebin:$BASE_PATH" \
+    "$AUTH" preflight 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "mixed-case invalid token did not block"
+  assert_contains "$output" "invalid or revoked" \
+    "mixed-case invalid token blocker was not actionable"
   assert_secret_absent "$dir" "$output"
 
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \

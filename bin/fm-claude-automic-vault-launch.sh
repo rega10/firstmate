@@ -44,7 +44,8 @@ if [ "${1:-}" = --injected ]; then
   exec 1>&3 2>&4 3>&- 4>&-
   PATH=$worker_path
   export PATH
-  exec "$claude" --settings "$settings" --permission-mode bypassPermissions "${worker_args[@]}"
+  exec "$claude" --settings "$settings" --permission-mode bypassPermissions \
+    --allowedTools Bash "${worker_args[@]}"
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -53,6 +54,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-claude-automic-vault-lib.sh"
 
+fm_claude_av_auth_rejected() {
+  local normalized
+  normalized=$(printf '%s' "$1" | /usr/bin/tr '[:upper:]' '[:lower:]')
+  [[ "$normalized" == *'401'* ]] || [[ "$normalized" == *'authentication_error'* ]] \
+    || [[ "$normalized" == *'invalid'*"token"* ]] || [[ "$normalized" == *'revoked'* ]]
+}
+
 fm_claude_av_preflight_auth() {
   local av=$1 claude=$2 jq=$3 settings=$4 secret_name=$5 output rc=0
   set +x
@@ -60,7 +68,11 @@ fm_claude_av_preflight_auth() {
   output=$("$av" inject --replace-existing-env "+$secret_name" -- \
     "$claude" --settings "$settings" auth status --json 2>&1) || rc=$?
   if [ "$rc" -ne 0 ]; then
-    fm_claude_av_classify_inject_failure "$output"
+    if fm_claude_av_auth_rejected "$output"; then
+      printf 'error: Claude rejected the injected subscription token as invalid or revoked; run bin/fm-claude-automic-vault.sh renew before launching a Claude worker.\n' >&2
+    else
+      fm_claude_av_classify_inject_failure "$output"
+    fi
     return 1
   fi
   if ! printf '%s' "$output" | "$jq" -e \
@@ -79,8 +91,7 @@ fm_claude_av_preflight_live() {
     "$claude" --settings "$settings" --safe-mode --no-session-persistence \
     --tools '' --output-format json -p 'Reply with the single word OK.' 2>&1) || rc=$?
   if [ "$rc" -ne 0 ]; then
-    if [[ "$output" == *'401'* ]] || [[ "$output" == *'authentication_error'* ]] \
-      || [[ "$output" == *'invalid'*"token"* ]] || [[ "$output" == *'revoked'* ]]; then
+    if fm_claude_av_auth_rejected "$output"; then
       printf 'error: Claude rejected the injected subscription token as invalid or revoked; run bin/fm-claude-automic-vault.sh renew before launching a Claude worker.\n' >&2
     else
       fm_claude_av_classify_inject_failure "$output"
@@ -112,7 +123,10 @@ expected_sha256=$3
 settings=$4
 shift 4
 
-launch_parent=${claude%/versions/*}
+case "$claude" in
+  */.local/share/claude/versions/*) launch_parent=${claude%/versions/*} ;;
+  *) launch_parent=${claude%/*} ;;
+esac
 launch_root=
 cleanup_launch_root() {
   local status=$?

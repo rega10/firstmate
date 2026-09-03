@@ -9,10 +9,10 @@
 #   - the concrete `av` and `claude` executables are resolved once before
 #     endpoint creation, canonicalized through symlinks, and kept as absolute
 #     paths in the launch command;
-#   - the resolved Claude executable must be the canonical native executable in
-#     Claude Code's versioned install tree, match Anthropic's release-manifest
-#     checksum, and produce structured auth status from an isolated empty home
-#     before any Vault command can run;
+#   - the resolved Claude executable must be a supported canonical native or
+#     Homebrew cask artifact, match Anthropic's release-manifest checksum, and
+#     produce structured auth status from an isolated empty home before any
+#     Vault command can run;
 #   - the token value enters only the Claude process environment through
 #     `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`;
 #   - higher-precedence API-key, cloud-provider, and endpoint overrides are
@@ -163,9 +163,25 @@ fm_claude_av_resolve_named_executable() {  # <name>
   fm_claude_av_realpath "$candidate"
 }
 
+fm_claude_av_artifact_version() {  # <resolved-claude>
+  local executable=$1 version
+  case "$executable" in
+    */.local/share/claude/versions/*) version=${executable##*/} ;;
+    /opt/homebrew/Caskroom/claude-code@latest/*/claude)
+      version=${executable%/claude}
+      version=${version##*/}
+      ;;
+    *) return 1 ;;
+  esac
+  case "$version" in
+    ''|*[!0-9.]*) return 1 ;;
+  esac
+  printf '%s\n' "$version"
+}
+
 fm_claude_av_is_native_install_artifact() {  # <resolved-claude>
   local executable=$1 artifact_type version major minor patch
-  version=${executable##*/}
+  version=$(fm_claude_av_artifact_version "$executable") || return 1
   major=${version%%.*}
   minor=${version#*.}
   [ "$minor" != "$version" ] || return 1
@@ -175,7 +191,7 @@ fm_claude_av_is_native_install_artifact() {  # <resolved-claude>
   [ -n "$major" ] && [ -n "$minor" ] && [ -n "$patch" ] || return 1
   case "$major:$minor:$patch" in *[!0-9:]*|::*|*::|*:*:*:*) return 1 ;; esac
   case "$executable" in
-    */.local/share/claude/versions/"$version") ;;
+    */.local/share/claude/versions/"$version"|/opt/homebrew/Caskroom/claude-code@latest/"$version"/claude) ;;
     *) return 1 ;;
   esac
   artifact_type=$(/usr/bin/file -b -- "$executable" 2>/dev/null) || return 1
@@ -275,18 +291,26 @@ fm_claude_av_expected_manifest_sha256() {  # <version>
   printf '%s\n' "$found"
 }
 
-fm_claude_av_version_qualified() {  # <version>
-  local version=$1 qualified_version qualification_date extra found=
+fm_claude_av_artifact_qualified() {  # <resolved-claude>
+  local executable=$1 version qualified_version qualification_date qualified_path extra found=
+  version=$(fm_claude_av_artifact_version "$executable") || return 1
   [ -f "$FM_CLAUDE_AV_QUALIFIED_VERSIONS" ] || return 1
-  while read -r qualified_version qualification_date extra; do
+  while read -r qualified_version qualification_date qualified_path extra; do
+    case "$qualified_version" in ''|'#'*) continue ;; esac
     [ -z "$extra" ] || return 1
     case "$qualified_version" in
       ''|*[!0-9.]*) return 1 ;;
     esac
     [[ "$qualification_date" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || return 1
+    case "$qualified_path" in
+      "*/.local/share/claude/versions/$qualified_version"|"/opt/homebrew/Caskroom/claude-code@latest/$qualified_version/claude") ;;
+      *) return 1 ;;
+    esac
     if [ "$qualified_version" = "$version" ]; then
       [ -z "$found" ] || return 1
-      found=$qualification_date
+      case "$executable" in
+        $qualified_path) found=$qualification_date ;;
+      esac
     fi
   done < "$FM_CLAUDE_AV_QUALIFIED_VERSIONS"
   [ -n "$found" ]
@@ -294,7 +318,10 @@ fm_claude_av_version_qualified() {  # <version>
 
 fm_claude_av_attest_native_artifact() {  # <resolved-claude>
   local executable=$1 version platform manifest compact expected actual expected_manifest actual_manifest
-  version=${executable##*/}
+  version=$(fm_claude_av_artifact_version "$executable") || {
+    printf 'error: Claude Code artifact path is not a supported canonical installation.\n' >&2
+    return 1
+  }
   platform=$(fm_claude_av_release_platform) || {
     printf 'error: Claude Code artifact attestation does not support this operating system or architecture.\n' >&2
     return 1
@@ -369,6 +396,7 @@ fm_claude_av_probe_identity() {  # <resolved-claude>
 }
 
 fm_claude_av_resolve_tools() {
+  local claude_version
   case "$FM_CLAUDE_AV_CURL_BIN" in
     /*) ;;
     *)
@@ -393,12 +421,13 @@ fm_claude_av_resolve_tools() {
     return 1
   fi
   if ! fm_claude_av_is_native_install_artifact "$FM_CLAUDE_BIN"; then
-    printf 'error: refusing Claude Automic Vault authentication because the resolved claude executable could not be positively identified as the canonical native Claude Code artifact under .local/share/claude/versions; install Claude Code with the official native installer and retry.\n' >&2
+    printf 'error: refusing Claude Automic Vault authentication because the resolved claude executable could not be positively identified as a supported canonical Claude Code native or Homebrew cask artifact; install Claude Code through a supported official distribution and retry.\n' >&2
     return 1
   fi
-  if ! fm_claude_av_version_qualified "${FM_CLAUDE_BIN##*/}"; then
+  claude_version=$(fm_claude_av_artifact_version "$FM_CLAUDE_BIN") || return 1
+  if ! fm_claude_av_artifact_qualified "$FM_CLAUDE_BIN"; then
     printf 'error: Claude Code version %s is not qualified for approval-free credential-scrubbed Firstmate launches; follow the version qualification procedure in docs/verification/claude-automic-vault.md before adding this exact version.\n' \
-      "${FM_CLAUDE_BIN##*/}" >&2
+      "$claude_version" >&2
     return 1
   fi
   fm_claude_av_attest_native_artifact "$FM_CLAUDE_BIN" || return 1

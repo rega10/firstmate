@@ -3,32 +3,40 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source=bin/fm-timeout-lib.sh
+# shellcheck source=bin/fm-claude-automic-vault-lib.sh
 # shellcheck disable=SC1091
-. "$SCRIPT_DIR/fm-timeout-lib.sh"
+. "$SCRIPT_DIR/fm-claude-automic-vault-lib.sh"
 
 [ "$#" -eq 1 ] || {
-  printf 'usage: %s /absolute/path/to/.local/share/claude/versions/<version>\n' "${0##*/}" >&2
+  printf 'usage: %s /absolute/path/to/supported/canonical/claude-executable\n' "${0##*/}" >&2
   exit 2
 }
 
 candidate=$1
-case "$candidate" in
-  /*/.local/share/claude/versions/*) ;;
-  *) printf 'error: candidate must be an absolute native Claude Code version path.\n' >&2; exit 1 ;;
-esac
+case "$candidate" in /*) ;; *) printf 'error: candidate must be an absolute Claude Code path.\n' >&2; exit 1 ;; esac
 [ ! -L "$candidate" ] && [ -f "$candidate" ] && [ -x "$candidate" ] || {
   printf 'error: candidate must be one executable file, not a symlink.\n' >&2
   exit 1
 }
-version=${candidate##*/}
-case "$version" in
-  ''|*[!0-9.]*) printf 'error: candidate path does not end in an exact numeric Claude Code version.\n' >&2; exit 1 ;;
-esac
+fm_claude_av_is_native_install_artifact "$candidate" || {
+  printf 'error: candidate is not a supported canonical Claude Code native or Homebrew cask artifact.\n' >&2
+  exit 1
+}
+version=$(fm_claude_av_artifact_version "$candidate") || exit 1
 case "$(/usr/bin/file -b -- "$candidate" 2>/dev/null)" in
   *Mach-O*executable*|*ELF*executable*|*PE32*executable*) ;;
   *) printf 'error: candidate is not a native executable.\n' >&2; exit 1 ;;
 esac
+reported_version=$(/usr/bin/env -i HOME=/dev/null PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+  "$candidate" --version 2>/dev/null) || {
+  printf 'error: candidate Claude Code %s did not report its version.\n' "$version" >&2
+  exit 1
+}
+[ "$reported_version" = "$version (Claude Code)" ] || {
+  printf 'error: candidate Claude Code version report does not match its canonical path.\n' >&2
+  exit 1
+}
+fm_claude_av_attest_native_artifact "$candidate" || exit 1
 
 python_bin=$(command -v python3 2>/dev/null) || {
   printf 'error: python3 is required for the loopback qualification fixture.\n' >&2
@@ -145,7 +153,7 @@ output=$(fm_run_timed 30 /bin/bash --noprofile --norc -p \
     CLAUDE_CODE_OAUTH_TOKEN=fm-qualification-placeholder-not-a-secret \
     CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
     "$candidate" --settings '{"apiKeyHelper":null}' \
-    --permission-mode bypassPermissions --tools Bash --output-format json \
+    --permission-mode bypassPermissions --allowedTools Bash --tools Bash --output-format json \
     --no-session-persistence -p 'Run the Bash tool exactly once as requested, then report completion.' \
   2>&1) || status=$?
 if [ "$status" -ne 0 ]; then
@@ -166,4 +174,4 @@ case "$output" in
     exit 1
     ;;
 esac
-printf 'qualified: Claude Code %s executed one approval-free tool with its OAuth environment scrubbed.\n' "$version"
+printf 'qualified: %s at %s matched Anthropic release attestation and executed one approval-free tool with its OAuth environment scrubbed.\n' "$reported_version" "$candidate"

@@ -292,18 +292,18 @@ Complete browser and Automic Vault Secret Gate prompts in their own application 
 The ceremony never accepts the token as an argument and never places it in shell history, a repository file, a log, a report, a status message, the clipboard, or chat.
 The opt-in file is written atomically only after the saved token passes redacted authentication classification and live validation.
 
-Every enabled Firstmate Claude launch and relaunch resolves `av` before endpoint creation, verifies the canonical native executable under `.local/share/claude/versions` against an Anthropic HTTPS release manifest whose checksum is pinned in Firstmate, and executes a private same-filesystem hard link to that attested file object.
+Every enabled Firstmate Claude launch and relaunch resolves `av` before endpoint creation, verifies a supported canonical native installer or `claude-code@latest` Homebrew cask executable against an Anthropic HTTPS release manifest whose checksum is pinned in Firstmate, and executes a private same-filesystem hard link to that attested file object.
 While the opt-in is valid, every raw launch command is refused before endpoint creation because arbitrary shell text cannot prove that it matches a caller-supplied harness identity.
 Pass a supported harness token by itself so `fm-spawn.sh` uses the canonical verified launch template, and do not combine a raw launch positional with `--harness`.
 A malformed or unreadable opt-in file applies the same fail-safe refusal to a raw launch until the file is repaired or removed.
-Install Claude Code with its official native installer before enabling this integration; script wrappers and other distribution layouts fail closed because their artifact identity can be forwarded or substituted.
+Install Claude Code with its official native installer or the supported `claude-code@latest` Homebrew cask before enabling this integration; script wrappers and other distribution layouts fail closed because their artifact identity can be forwarded or substituted.
 The exact installed Claude Code version must also appear in Firstmate's checked-in approval-free credential-scrub qualification list, and maintainers qualify upgrades with the procedure in [`verification/claude-automic-vault.md`](verification/claude-automic-vault.md#claude-version-qualification).
 This boundary assumes same-user process integrity, and TOCTOU attacks by another process running as the same user are out of scope by captain decision on 2026-09-02.
 The token value enters only the Claude process environment through `av inject --replace-existing-env +CLAUDE_CODE_OAUTH_TOKEN`, while the secret name but never its value appears in argv.
 The launch builds its clean explicit environment after task-specific launch values are final, keeps a restricted trusted path through preflight and injection, restores the worker's original tool path only at Claude exec, and carries required home, terminal, locale, temporary-directory, proxy, certificate, SSH-agent, Claude configuration, Firstmate lifecycle, trace, and backend identity context while enabling Claude Code's subprocess credential scrub.
 Exported shell functions, shell startup controls, linker controls, ambient API-key state, cloud-provider state, and Anthropic endpoint overrides are excluded before injection.
 This prevents a missing or denied Vault value from falling back to stale interactive OAuth, a keychain credential, an API key, a cloud provider, or a different endpoint.
-The captain's normal Claude config directory, Firstmate worktree isolation, lifecycle hooks, model and effort flags, explicit bypass permission mode, prompt, and runtime-backend behavior remain in place.
+The captain's normal Claude config directory, Firstmate worktree isolation, lifecycle hooks, model and effort flags, qualified approval-free Bash tool execution, prompt, and runtime-backend behavior remain in place.
 
 Each launch preflight first requires Claude to report `oauth_token` against the first-party provider and then makes one minimal safe-mode, tool-free, non-persistent request through the same resolved executables and Vault injection.
 The live request is necessary because Claude Code's local `auth status` accepts an arbitrary non-empty OAuth environment value without proving the service accepts it.
