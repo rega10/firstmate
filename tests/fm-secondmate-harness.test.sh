@@ -15,11 +15,12 @@
 #   B) Inheritance. The primary pushes a declared, extensible set of LOCAL
 #      (gitignored) config items - config/crew-dispatch.json, config/crew-harness,
 #      config/backlog-backend, config/backend, config/herdr-presentation-spaces,
-#      config/startup-memory-budget, and config/trace-context -
+#      config/startup-memory-budget, config/claude-automic-vault, and
+#      config/trace-context -
 #      down into each secondmate home's config/, so the secondmate's OWN crewmates,
 #      dispatch profiles, backlog backend, runtime-backend default, Herdr
-#      presentation choice, startup-memory budget, and trace context inherit the
-#      primary's settings. For config/herdr-presentation-spaces, an absent
+#      presentation choice, startup-memory budget, Claude Vault opt-in, and trace
+#      context inherit the primary's settings. For config/herdr-presentation-spaces, an absent
 #      primary file and an absent destination file both mean the same
 #      unconfigured default, so the generic absence mirror converges that item
 #      without deciding its release-dependent floor.
@@ -278,6 +279,23 @@ SH
 # ===========================================================================
 # B) propagate_inheritable_config unit behavior
 # ===========================================================================
+make_compatible_claude_vault_owner_checkout() {
+  local home=$1 rel
+  mkdir -p "$home/bin" "$home/config" "$home/data" "$home/state"
+  git init -q -b main "$home"
+  printf 'config/\ndata/\nstate/\n' > "$home/.gitignore"
+  for rel in \
+    fm-claude-automic-vault-owner-version \
+    fm-claude-automic-vault-lib.sh \
+    fm-claude-automic-vault-launch.sh \
+    fm-config-inherit-lib.sh \
+    fm-spawn.sh; do
+    cp "$ROOT/bin/$rel" "$home/bin/$rel"
+  done
+  git -C "$home" add .gitignore bin
+  git -C "$home" commit -qm compatible-owner
+}
+
 test_propagate_lib() {
   local d src dest home m1 m2 outside stdout stderr guard_repo err_text
   d="$TMP_ROOT/prop-lib"
@@ -285,6 +303,7 @@ test_propagate_lib() {
   home="$d/home1"
   dest="$home/config"
   mkdir -p "$src" "$dest" "$home/state"
+  make_compatible_claude_vault_owner_checkout "$home"
 
   # 1. present source is copied
   printf '{"default":{"harness":"codex"}}\n' > "$src/crew-dispatch.json"
@@ -292,6 +311,7 @@ test_propagate_lib() {
   printf 'manual\n' > "$src/backlog-backend"
   printf 'tmux\n' > "$src/backend"
   : > "$src/herdr-presentation-spaces"
+  printf 'on\n' > "$src/claude-automic-vault"
   : > "$src/trace-context"
   stdout="$d/clean-copy.out"
   stderr="$d/clean-copy.err"
@@ -303,6 +323,7 @@ test_propagate_lib() {
   [ "$(cat "$dest/backlog-backend")" = manual ] || fail "backlog-backend not propagated"
   [ "$(cat "$dest/backend")" = tmux ] || fail "backend not propagated"
   [ -f "$dest/herdr-presentation-spaces" ] || fail "herdr-presentation-spaces not propagated"
+  [ "$(cat "$dest/claude-automic-vault")" = on ] || fail "claude-automic-vault not propagated"
   printf 'herdr\n' > "$dest/backend"
   propagate_inheritable_config "$src" "$dest"
   [ "$(cat "$dest/backend")" = tmux ] || fail "primary backend did not overwrite a divergent destination"
@@ -343,13 +364,14 @@ test_propagate_lib() {
   # 4. removing the source mirrors absence downstream (primary-authoritative)
   printf 'herdr\n' > "$dest/backend"
   rm -f "$src/crew-dispatch.json" "$src/crew-harness" "$src/backlog-backend" \
-    "$src/backend" "$src/herdr-presentation-spaces" "$src/trace-context"
+    "$src/backend" "$src/herdr-presentation-spaces" "$src/claude-automic-vault" "$src/trace-context"
   propagate_inheritable_config "$src" "$dest"
   [ -e "$dest/crew-dispatch.json" ] && fail "dispatch profile absence not mirrored downstream"
   [ -e "$dest/crew-harness" ] && fail "absence not mirrored downstream"
   [ -e "$dest/backlog-backend" ] && fail "backlog-backend absence not mirrored downstream"
   [ -e "$dest/backend" ] && fail "backend absence not mirrored downstream"
   [ -e "$dest/herdr-presentation-spaces" ] && fail "herdr-presentation-spaces absence not mirrored downstream"
+  [ -e "$dest/claude-automic-vault" ] && fail "claude-automic-vault absence not mirrored downstream"
   [ -e "$dest/trace-context" ] && fail "trace-context absence not mirrored downstream"
 
   rm -f "$dest/crew-harness"
@@ -373,14 +395,16 @@ test_propagate_lib() {
   printf 'codex\n' > "$src/crew-harness"
   printf 'manual\n' > "$src/backlog-backend"
   printf 'herdr\n' > "$src/backend"
+  printf 'on\n' > "$src/claude-automic-vault"
   rm -rf "$d/home2"
-  mkdir -p "$d/home2/config" "$d/home2/state"
+  make_compatible_claude_vault_owner_checkout "$d/home2"
   propagate_inheritable_config "$src" "$d/home2/config"
   [ -e "$d/home2/config/secondmate-harness" ] && fail "secondmate-harness was inherited (must not be)"
   [ "$(cat "$d/home2/config/crew-dispatch.json")" = '{"default":{"harness":"codex"}}' ] || fail "crew-dispatch.json not propagated alongside"
   [ "$(cat "$d/home2/config/crew-harness")" = codex ] || fail "crew-harness not propagated alongside"
   [ "$(cat "$d/home2/config/backlog-backend")" = manual ] || fail "backlog-backend not propagated alongside"
   [ "$(cat "$d/home2/config/backend")" = herdr ] || fail "backend not propagated alongside"
+  [ "$(cat "$d/home2/config/claude-automic-vault")" = on ] || fail "Claude Vault opt-in not propagated alongside"
 
   # 6. nothing to propagate -> destination dir is never created (a true no-op)
   rm -rf "$d/src3" "$d/dest3"
@@ -408,7 +432,17 @@ test_propagate_lib() {
     "guard skip did not emit a stderr warning"
   [ ! -e "$guard_repo/config/crew-dispatch.json" ] || fail "guard skip still copied the unignored item"
 
-  pass "B1 propagate_inheritable_config: copy, idempotence, convergence, absence-mirror, exclusion, no-op, skip diagnostics"
+  printf 'off\n' > "$src/claude-automic-vault"
+  stderr="$d/invalid-claude-vault.err"
+  if propagate_inheritable_config "$src" "$d/home2/config" 2>"$stderr"; then
+    fail "malformed Claude Vault opt-in propagated successfully"
+  fi
+  assert_contains "$(cat "$stderr")" "unsafe or invalid primary source" \
+    "malformed Claude Vault opt-in did not fail with a validation diagnostic"
+  [ "$(cat "$d/home2/config/claude-automic-vault")" = on ] \
+    || fail "malformed primary opt-in changed the last validated destination"
+
+  pass "B1 propagate_inheritable_config: copy, idempotence, convergence, absence-mirror, exclusion, validation, no-op, skip diagnostics"
 }
 
 # ===========================================================================
@@ -988,7 +1022,7 @@ test_spawn_fallback_chain_and_crew_scout_unaffected() {
 # real gitignore (config/crew-harness ignored, so a propagated value never dirties
 # the secondmate worktree on a later sweep). Echoes the world dir.
 new_world() {
-  local name=$1 dispatch_ignore=${2:-yes} w
+  local name=$1 dispatch_ignore=${2:-yes} w rel
   w="$TMP_ROOT/$name"
   mkdir -p "$w/home/state" "$w/home/data" "$w/home/config"
   touch "$w/home/state/.last-watcher-beat"
@@ -997,12 +1031,20 @@ new_world() {
     printf 'projects/\nstate/\ndata/\n.no-mistakes/\n'
     [ "$dispatch_ignore" = no ] || printf 'config/crew-dispatch.json\n'
     printf 'config/crew-harness\nconfig/secondmate-harness\nconfig/backlog-backend\n'
-    printf 'config/backend\nconfig/herdr-presentation-spaces\nconfig/startup-memory-budget\n'
+    printf 'config/backend\nconfig/herdr-presentation-spaces\nconfig/startup-memory-budget\nconfig/claude-automic-vault\n'
   } > "$w/main/.gitignore"
   printf 'v1\n' > "$w/main/AGENTS.md"
   printf 'r1\n' > "$w/main/README.md"
   mkdir -p "$w/main/bin"
   printf 'echo a\n' > "$w/main/bin/tool.sh"
+  for rel in \
+    fm-claude-automic-vault-owner-version \
+    fm-claude-automic-vault-lib.sh \
+    fm-claude-automic-vault-launch.sh \
+    fm-config-inherit-lib.sh \
+    fm-spawn.sh; do
+    cp "$ROOT/bin/$rel" "$w/main/bin/$rel"
+  done
   git -C "$w/main" add -A
   git -C "$w/main" commit -qm c1
   printf '%s\n' "$w"
@@ -1503,6 +1545,86 @@ test_bootstrap_rereads_after_partial_propagation() {
   assert_contains "$(inbox_stream "$w/home/state" sm)" "$pointer" \
     "partial bootstrap propagation did not route the instruction pointer"
   pass "B11 bootstrap rereads completed config writes after partial propagation"
+}
+
+test_claude_vault_owner_compatibility_at_local_convergence_points() {
+  local d primary second err output status w head fakebin second_real rel
+  d="$TMP_ROOT/vault-owner-shared"
+  primary="$d/primary"
+  second="$d/second"
+  mkdir -p "$primary/config" "$primary/data" "$second/config" "$second/data"
+  printf 'on\n' > "$primary/config/claude-automic-vault"
+  printf 'codex\n' > "$primary/config/crew-harness"
+  err="$d/shared.err"
+  if propagate_secondmate_inheritance "$primary" "$second" 2>"$err"; then
+    fail "shared propagation admitted an enabled Vault flag without a compatible destination owner"
+  fi
+  assert_contains "$(cat "$err")" \
+    "destination home $second lacks the compatible tracked authentication owner version 1" \
+    "shared propagation owner refusal did not name the destination and required version"
+  [ ! -e "$second/config/claude-automic-vault" ] \
+    || fail "shared propagation copied the enabled Vault flag into an incompatible home"
+  [ "$(cat "$second/config/crew-harness")" = codex ] \
+    || fail "Vault owner refusal blocked unrelated inherited material"
+
+  git init -q -b main "$second"
+  printf 'config/\ndata/\nstate/\n' > "$second/.gitignore"
+  printf 'stale owner\n' > "$second/README.md"
+  git -C "$second" add .gitignore README.md
+  git -C "$second" commit -qm stale-owner
+  mkdir -p "$second/bin"
+  for rel in \
+    fm-claude-automic-vault-owner-version \
+    fm-claude-automic-vault-lib.sh \
+    fm-claude-automic-vault-launch.sh \
+    fm-config-inherit-lib.sh \
+    fm-spawn.sh; do
+    cp "$ROOT/bin/$rel" "$second/bin/$rel"
+  done
+  if propagate_secondmate_inheritance "$primary" "$second" 2>"$err"; then
+    fail "shared propagation admitted an enabled Vault flag through untracked forged owner files"
+  fi
+  [ ! -e "$second/config/claude-automic-vault" ] \
+    || fail "untracked forged owner files admitted the enabled Vault flag"
+  git -C "$second" add bin
+  git -C "$second" commit -qm compatible-owner
+  propagate_secondmate_inheritance "$primary" "$second" 2>"$err" \
+    || fail "shared propagation refused tracked compatible owner files"
+  [ "$(cat "$second/config/claude-automic-vault")" = on ] \
+    || fail "tracked compatible owner files did not admit the enabled Vault flag"
+
+  w=$(new_world vault-owner-bootstrap)
+  head=$(git -C "$w/main" rev-parse HEAD)
+  add_sm_worktree "$w" sm "$head"
+  rm "$w/sm/bin/fm-claude-automic-vault-owner-version"
+  printf 'on\n' > "$w/home/config/claude-automic-vault"
+  fakebin=$(make_fake_toolchain "$w")
+  output=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$w/home" FM_ROOT_OVERRIDE="$w/main" \
+    FM_SEND_SETTLE=0 "$ROOT/bin/fm-bootstrap.sh" 2>&1); status=$?
+  expect_code 0 "$status" "bootstrap should report an incompatible owner without aborting its sweep"
+  second_real=$(cd "$w/sm" && pwd -P)
+  assert_contains "$output" \
+    "destination home $second_real lacks the compatible tracked authentication owner version 1" \
+    "bootstrap convergence did not surface the shared destination-specific owner refusal"
+  [ ! -e "$w/sm/config/claude-automic-vault" ] \
+    || fail "bootstrap copied the enabled Vault flag into an incompatible home"
+
+  w=$(new_world vault-owner-config-push)
+  head=$(git -C "$w/main" rev-parse HEAD)
+  add_sm_worktree "$w" sm "$head"
+  rm "$w/sm/bin/fm-claude-automic-vault-owner-version"
+  printf 'on\n' > "$w/home/config/claude-automic-vault"
+  output=$(run_config_push "$w" 2>&1); status=$?
+  expect_code 1 "$status" "config push should fail when enabled Vault ownership is incompatible"
+  second_real=$(cd "$w/sm" && pwd -P)
+  assert_contains "$output" \
+    "destination home $second_real lacks the compatible tracked authentication owner version 1" \
+    "config-push convergence did not surface the shared destination-specific owner refusal"
+  assert_contains "$output" "claude-automic-vault: error" \
+    "config push did not report the enabled Vault item as an error"
+  [ ! -e "$w/sm/config/claude-automic-vault" ] \
+    || fail "config push copied the enabled Vault flag into an incompatible home"
+  pass "B12 shared local convergence refuses enabled Vault propagation into incompatible homes"
 }
 
 test_config_push_propagates_reports_without_ff_or_nudge() {
@@ -2578,6 +2700,7 @@ test_backend_inheritance_present_and_absent
 test_presentation_inheritance_default_on_and_opt_out
 test_bootstrap_sweep_surfaces_config_propagation_failure
 test_bootstrap_rereads_after_partial_propagation
+test_claude_vault_owner_compatibility_at_local_convergence_points
 test_config_push_propagates_reports_without_ff_or_nudge
 test_config_push_reports_skips_dirty_and_invalid_home
 test_config_push_exits_nonzero_on_copy_error

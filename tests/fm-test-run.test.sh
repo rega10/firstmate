@@ -107,6 +107,7 @@ init_changed_fixture_repo() {
     fm-pi-watch-extension.test.sh \
     fm-afk-return.test.sh \
     fm-bearings-snapshot.test.sh \
+    fm-claude-automic-vault.test.sh \
     fm-backend-cmux.test.sh \
     fm-backend-zellij.test.sh \
     fm-backend-orca.test.sh; do
@@ -120,12 +121,14 @@ init_changed_fixture_repo() {
   printf '# .claude/settings.json\n# .pi/extensions/fm-primary-turnend-guard.ts\n' \
     >>"$repo/tests/fm-cd-pretool-check.test.sh"
   printf '# .pi/extensions/fm-primary-pi-watch.ts\n' >>"$repo/tests/fm-pi-watch-extension.test.sh"
-  mkdir -p "$repo/.agents/skills/example" "$repo/.claude" "$repo/.pi/extensions" "$repo/src"
+  mkdir -p "$repo/.agents/skills/example" "$repo/.claude" "$repo/.pi/extensions" \
+    "$repo/src" "$repo/tests/fixtures"
   : >"$repo/.agents/skills/example/SKILL.md"
   : >"$repo/.claude/settings.json"
   : >"$repo/.pi/extensions/fm-primary-pi-watch.ts"
   : >"$repo/.pi/extensions/fm-primary-turnend-guard.ts"
   : >"$repo/src/unmapped.ts"
+  : >"$repo/tests/fixtures/fm-claude-automic-vault-lib.sh"
   git -C "$repo" init -q
   git -C "$repo" add .
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm baseline
@@ -169,6 +172,13 @@ test_changed_dependency_selection_and_unmapped_failure() {
   assert_contains "$listed" "tests/fm-pi-watch-extension.test.sh" "Pi source selects watcher coverage"
   git -C "$repo" add .agents .claude .pi
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm non-bin-source-change
+
+  printf '\n' >>"$repo/tests/fixtures/fm-claude-automic-vault-lib.sh"
+  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  [ "$listed" = "tests/fm-claude-automic-vault.test.sh" ] \
+    || fail "Claude Vault fixture must select only its behavioral test: $listed"
+  git -C "$repo" add tests/fixtures/fm-claude-automic-vault-lib.sh
+  git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm claude-vault-fixture-change
 
   printf '\n' >>"$repo/src/unmapped.ts"
   set +e

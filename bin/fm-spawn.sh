@@ -33,7 +33,8 @@
 #   worktree, and clears the previous harness's per-task wiring before arming
 #   the new incarnation.
 #   --harness <name> is the explicit per-spawn harness/profile adapter. The old
-#   positional harness arg still works for back-compat.
+#   positional harness arg still works for back-compat. A raw launch positional
+#   cannot be combined with --harness; select the canonical adapter instead.
 #   --model <name> and --effort <low|medium|high|xhigh|max> are concrete profile
 #   axes chosen by firstmate at intake. They are only threaded into harnesses whose
 #   installed CLIs were verified to support that axis; unsupported axes are omitted
@@ -161,6 +162,8 @@
 #     __OPINPUT__   absolute path to the canonical operational-input encoder
 #     __WORKTREE__  absolute path to the task worktree
 #     __CURSORBIN__ resolved, cursor-verified executable for a cursor launch
+#     __CLAUDELAUNCH__ bare claude when Vault auth is disabled, or the pinned
+#                      Automic Vault injection prefix after redacted preflight
 # Verified per-harness turn-end hooks are installed automatically where enabled; some live outside the worktree.
 # Kimi uses one surgically installed Firstmate region in $HOME/.kimi-code/config.toml,
 # a firstmate-owned global hook and registry, and a gitignored per-task pointer.
@@ -987,6 +990,7 @@ fi
 SPAWN_TASK_LOCK_HELD=1
 PROJ=
 ARG3=
+RAW_HARNESS_CONFLICT=0
 FIRSTMATE_HOME=
 
 # --relaunch adoption: every identity axis comes from the task's own validated
@@ -1081,7 +1085,19 @@ else
   PROJ=${POS[1]}
   ARG3=${POS[2]:-}
 fi
-[ -z "$HARNESS_ARG" ] || ARG3=$HARNESS_ARG
+if [ -n "$HARNESS_ARG" ]; then
+  case "$ARG3" in
+    *' '*)
+      raw_harness_opt_in=0
+      fm_claude_av_enabled "$CONFIG" || raw_harness_opt_in=$?
+      case "$raw_harness_opt_in" in
+        1) ARG3=$HARNESS_ARG ;;
+        0|2) RAW_HARNESS_CONFLICT=1 ;;
+      esac
+      ;;
+    *) ARG3=$HARNESS_ARG ;;
+  esac
+fi
 
 shell_quote() {
   printf "'"
@@ -1138,7 +1154,7 @@ launch_template() {
     # saving while leaving child-session semantics in place, so it is not the chosen
     # firstmate contract. Scoped to this launch line only; non-Claude harnesses and the
     # captain's shell are untouched.
-    claude) printf '%s' 'env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_JOB_DIR CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false claude --dangerously-skip-permissions __MODELFLAG____EFFORTFLAG__"$(__OPINPUT__ encode launch-brief < __BRIEF__)"' ;;
+    claude) printf '%s' 'env -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_JOB_DIR CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false __CLAUDELAUNCH__ --dangerously-skip-permissions __MODELFLAG____EFFORTFLAG__"$(__OPINPUT__ encode launch-brief < __BRIEF__)"' ;;
     codex)
       if [ "$kind" = secondmate ]; then
         printf '%s' 'codex __MODELFLAG____EFFORTFLAG__--dangerously-bypass-approvals-and-sandbox "$(__OPINPUT__ encode launch-brief < __BRIEF__)"'
@@ -1210,7 +1226,25 @@ launch_template() {
 case "$ARG3" in
   *' '*)  # raw launch command (unverified-adapter escape hatch)
     LAUNCH=$ARG3
-    HARNESS=""
+    HARNESS=
+    raw_launch_opt_in=0
+    fm_claude_av_enabled "$CONFIG" || raw_launch_opt_in=$?
+    case "$raw_launch_opt_in" in
+      0)
+        if [ "$RAW_HARNESS_CONFLICT" -eq 1 ]; then
+          echo "error: a raw launch command cannot be combined with --harness; pass the supported harness token alone to use its canonical launch template." >&2
+          exit 1
+        fi
+        echo "error: Claude Automic Vault authentication is enabled, so raw launch commands are refused; pass a supported harness token to use its canonical launch template." >&2
+        exit 1
+        ;;
+      1) ;;
+      2)
+        printf 'error: unsafe or invalid config/%s: %s; remove it to disable the opt-in or recreate it with bin/fm-claude-automic-vault.sh enable.\n' \
+          "$FM_CLAUDE_AV_CONFIG_FILE" "$FM_CLAUDE_AV_ERROR" >&2
+        exit 1
+        ;;
+    esac
     for word in $LAUNCH; do
       case "$word" in [A-Za-z_]*=*) continue ;; *) HARNESS=$(basename "$word"); break ;; esac
     done
@@ -1642,6 +1676,8 @@ if [ "$KIND" = secondmate ]; then
     echo "error: could not create secondmate state directory for $PROJ_ABS" >&2
     exit 1
   }
+  PRIMARY_CLAUDE_AV_STATE=0
+  fm_claude_av_enabled "$CONFIG" || PRIMARY_CLAUDE_AV_STATE=$?
   if [ "${FM_SKIP_SECONDMATE_INHERIT:-0}" != 1 ]; then
     CONFIG_INHERIT_LOCK=$(fm_config_inherit_lock_path "$PROJ_ABS") || {
       echo "error: could not resolve secondmate inheritance lock for $PROJ_ABS" >&2
@@ -1658,6 +1694,18 @@ if [ "$KIND" = secondmate ]; then
       propagate_secondmate_inheritance "$FM_HOME" "$PROJ_ABS" "$CONFIG" "$DATA" \
       || echo "warning: secondmate $ID inheritance failed for $PROJ_ABS" >&2
   fi
+  if [ "$PRIMARY_CLAUDE_AV_STATE" -eq 0 ]; then
+    if ! fm_claude_av_home_owner_compatible "$PROJ_ABS"; then
+      echo "error: secondmate $ID launch requires destination home $PROJ_ABS to retain the compatible tracked authentication owner version $FM_CLAUDE_AV_OWNER_VERSION; synchronize that home and retry." >&2
+      exit 1
+    fi
+    SECONDMATE_CLAUDE_AV_STATE=0
+    fm_claude_av_enabled "$PROJ_ABS/config" || SECONDMATE_CLAUDE_AV_STATE=$?
+    if [ "$SECONDMATE_CLAUDE_AV_STATE" -ne 0 ]; then
+      echo "error: secondmate $ID launch requires the enabled Claude Automic Vault flag to converge into its validated local home; repair inheritance and retry." >&2
+      exit 1
+    fi
+  fi
   if [ -f "$PROJ_ABS/data/charter.md" ]; then
     BRIEF="$PROJ_ABS/data/charter.md"
   else
@@ -1669,6 +1717,21 @@ else
   BRIEF="$DATA/$ID/brief.md"
 fi
 [ -f "$BRIEF" ] || { echo "error: no brief at $BRIEF" >&2; exit 1; }
+
+# Preserve the historical launch bytes when the opt-in is absent.
+# When it is present, the owner resolves both executables and validates the
+# injected token before any worker endpoint is created, then supplies one pinned
+# prefix used unchanged by every backend and by fresh and relaunch paths alike.
+CLAUDE_LAUNCH=claude
+if [ "$HARNESS" = claude ]; then
+  claude_av_rc=0
+  fm_claude_av_prepare_launch "$CONFIG" "$LAUNCH" || claude_av_rc=$?
+  case "$claude_av_rc" in
+    0) CLAUDE_LAUNCH=$FM_CLAUDE_AV_LAUNCH_COMMAND ;;
+    2) ;;
+    *) exit 1 ;;
+  esac
+fi
 
 delivery_rigor_rank() {  # <mode> -> 3 (most rigor) .. 1 (least); 0 = not a task mode
   case "$1" in
@@ -2757,6 +2820,7 @@ case "$HARNESS" in
   pi|pi-signed) LAUNCH=${LAUNCH//__PIBIN__/"$(shell_quote "$PI_BIN")"} ;;
   cursor) LAUNCH=${LAUNCH//__CURSORBIN__/"$(shell_quote "$CURSOR_BIN")"} ;;
 esac
+LAUNCH=${LAUNCH//__CLAUDELAUNCH__/$CLAUDE_LAUNCH}
 LAUNCH=${LAUNCH//__WORKTREE__/$sq_worktree}
 case "$HARNESS" in
   claude|codex|opencode|pi|pi-signed|grok|kimi|muse)

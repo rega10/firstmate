@@ -812,6 +812,10 @@ class Down:
         if kind == frame.NOTICE:
             self.notices.append(obj)
 
+class NeverEnded:
+    def is_set(self):
+        return False
+
 class Stub:
     """A session that records what it was asked, or raises where the model would."""
 
@@ -819,7 +823,7 @@ class Stub:
         self.raises = raises
         self.replies = 0
         self.failed = False
-        self.ended = asyncio.Event()
+        self.ended = NeverEnded()
         self.turn = {}
         self.calls = []
 

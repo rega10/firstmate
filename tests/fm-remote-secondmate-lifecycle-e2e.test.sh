@@ -688,6 +688,18 @@ cmp -s "$TMP_ROOT/inherit-complete" "$PROTOCOL_HOME/config/crew-harness" \
   || fail "superseded inheritance replaced the current payload"
 pass "remote inheritance rejects incomplete and superseded payload generations"
 
+printf 'on\n' > "$TMP_ROOT/inherit-local-vault-flag"
+inherit_local_bytes=$(LC_ALL=C wc -c < "$TMP_ROOT/inherit-local-vault-flag" | tr -d ' ')
+inherit_local_hash=$(sha256_file "$TMP_ROOT/inherit-local-vault-flag")
+if FM_HOME="$PROTOCOL_HOME" "$REMOTE_ROOT/bin/fm-remote-inherit.sh" \
+  put config/claude-automic-vault "$inherit_local_bytes" "$inherit_local_hash" 3 \
+  < "$TMP_ROOT/inherit-local-vault-flag" >/dev/null 2>&1; then
+  fail "remote inheritance published the Mac-local Claude Vault flag"
+fi
+assert_absent "$PROTOCOL_HOME/config/claude-automic-vault" \
+  "refused remote Claude Vault publication left a destination"
+pass "remote inheritance refuses publication of the Mac-local Vault flag"
+
 # Add one local route to prove mixed fleets remain parseable and projected.
 mkdir -p "$LOCAL_HOME/data" "$LOCAL_HOME/state" "$LOCAL_HOME/config" "$LOCAL_HOME/projects" "$LOCAL_HOME/bin"
 printf 'local\n' > "$LOCAL_HOME/.fm-secondmate-home"
@@ -702,6 +714,8 @@ pass "mixed local and remote routes validate without migration"
 # Launch on the remote home's own configured backend. Parent metadata records
 # host placement separately from that backend and arms the reply source.
 printf 'pi\n' > "$PARENT/config/crew-harness"
+printf 'on\n' > "$PARENT/config/claude-automic-vault"
+printf 'on\n' > "$REMOTE_HOME/config/claude-automic-vault"
 launches_before_inherit=0
 [ ! -f "$HERDR_LOG" ] || launches_before_inherit=$(grep -c '^tab create' "$HERDR_LOG" || true)
 if FM_FAKE_SSH_MODE=inherit-partial remote_env "$ROOT/bin/fm-spawn.sh" ios --secondmate \
@@ -713,10 +727,14 @@ launches_after_inherit=0
 [ "$launches_before_inherit" -eq "$launches_after_inherit" ] \
   || fail "remote spawn reached launch after ambiguous partial inheritance"
 assert_absent "$PARENT/state/ios.meta" "failed remote inheritance published launch metadata"
+assert_absent "$REMOTE_HOME/config/claude-automic-vault" \
+  "remote inheritance retained a stale Mac-local Claude Vault flag"
 out=$(remote_env "$ROOT/bin/fm-spawn.sh" ios --secondmate)
 assert_contains "$out" 'remote=remote-mac backend=herdr' "remote spawn did not report separate host and backend dimensions"
 assert_grep 'remote_host=remote-mac' "$PARENT/state/ios.meta" "parent metadata omitted the remote host"
 assert_grep 'remote_backend=herdr' "$PARENT/state/ios.meta" "parent metadata omitted the remote-local backend"
+assert_absent "$REMOTE_HOME/config/claude-automic-vault" \
+  "remote inheritance copied the primary Mac-local Claude Vault flag"
 assert_grep 'remote_herdr_session=fm-remote' "$PARENT/state/ios.meta" "parent metadata omitted the pinned remote Herdr session"
 assert_grep 'remote_target=fm-remote:' "$PARENT/state/ios.meta" "parent metadata did not record an fm-remote endpoint"
 assert_grep 'herdr_session=fm-remote' "$REMOTE_HOME/state/parent-route/ios.meta" "remote metadata did not record the pinned Herdr session"

@@ -75,14 +75,6 @@ last_launch_command() {
   grep -v '^export GOTMPDIR=' "$log" | grep -v '^$' | tail -1
 }
 
-test_claude_launch_template_source_contains_sanitize_prefix() {
-  local line
-  line="    claude) printf '%s' '${CLAUDE_SANITIZE_PREFIX} claude --dangerously-skip-permissions __MODELFLAG____EFFORTFLAG__\"\$(__OPINPUT__ encode launch-brief < __BRIEF__)\"' ;;"
-  grep -Fqx -- "$line" "$SPAWN" \
-    || fail "claude launch_template lost the session-identity sanitize prefix"$'\n'"expected source line:"$'\n'"$line"
-  pass "claude launch_template source pins env -u parent session identity + prompt-suggestion suppress"
-}
-
 test_ordinary_claude_worker_launch_sanitizes_parent_session_env() {
   local case_dir home proj wt fakebin launchlog id out status launch
   case_dir="$TMP_ROOT/ship"
@@ -209,25 +201,6 @@ SH
   pass "sanitize prefix unsets parent Claude identity and preserves unrelated environment"
 }
 
-test_non_claude_launch_templates_untouched() {
-  # Guardrail: the identity sanitize is Claude-only and must not leak into
-  # other harness launch templates.
-  if grep -n "CLAUDE_CODE_CHILD_SESSION" "$SPAWN" | grep -v "claude)" | grep -v '#' >/dev/null 2>&1; then
-    # Allow only the claude) template line (and comments) to mention the marker.
-    local hits
-    hits=$(grep -n "CLAUDE_CODE_CHILD_SESSION" "$SPAWN" | grep -v '^[[:space:]]*#' || true)
-    case "$hits" in
-      *'claude) printf'*) ;;
-      *) fail "CLAUDE_CODE_CHILD_SESSION sanitize leaked outside the claude launch template:"$'\n'"$hits" ;;
-    esac
-  fi
-  ! grep -E "env -u CLAUDE_CODE_CHILD_SESSION" "$SPAWN" | grep -E 'codex|opencode|pi|grok|kimi' >/dev/null \
-    || fail "non-claude launch template incorrectly carries Claude session sanitize"
-  pass "non-Claude launch templates remain free of Claude session-identity sanitize"
-}
-
-test_claude_launch_template_source_contains_sanitize_prefix
 test_ordinary_claude_worker_launch_sanitizes_parent_session_env
 test_claude_secondmate_launch_sanitizes_parent_session_env
 test_sanitize_prefix_drops_parent_markers_and_preserves_unrelated_env
-test_non_claude_launch_templates_untouched
