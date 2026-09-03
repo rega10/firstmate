@@ -58,6 +58,15 @@ tests/fm-secondmate-harness.test.sh
 ```
 
 That test proves byte-exact propagation, primary-absence convergence, rejection of malformed opt-in files, and preservation of the last validated destination.
+It also proves that enabled propagation requires compatible tracked owner files and rejects missing or untracked owner proof.
+
+The remote exclusion regression is covered by:
+
+```sh
+tests/fm-remote-secondmate-lifecycle-e2e.test.sh
+```
+
+That test proves a remote receiver refuses publication of the Mac-local flag and that remote launch convergence removes a stale copy instead of inheriting the primary flag.
 
 ## Intentionally unperformed checks
 
