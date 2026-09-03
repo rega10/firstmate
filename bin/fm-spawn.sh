@@ -1695,6 +1695,10 @@ if [ "$KIND" = secondmate ]; then
       || echo "warning: secondmate $ID inheritance failed for $PROJ_ABS" >&2
   fi
   if [ "$PRIMARY_CLAUDE_AV_STATE" -eq 0 ]; then
+    if ! fm_claude_av_home_owner_compatible "$PROJ_ABS"; then
+      echo "error: secondmate $ID launch requires destination home $PROJ_ABS to retain the compatible tracked authentication owner version $FM_CLAUDE_AV_OWNER_VERSION; synchronize that home and retry." >&2
+      exit 1
+    fi
     SECONDMATE_CLAUDE_AV_STATE=0
     fm_claude_av_enabled "$PROJ_ABS/config" || SECONDMATE_CLAUDE_AV_STATE=$?
     if [ "$SECONDMATE_CLAUDE_AV_STATE" -ne 0 ]; then

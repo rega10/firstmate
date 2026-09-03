@@ -334,7 +334,7 @@ If the flag is active but the token was deleted or revoked, use `renew`, or disa
 
 The opt-in flag is primary-authoritative inherited local material under [`secondmate-provisioning`](../.agents/skills/secondmate-provisioning/SKILL.md), so every local convergence refuses to copy an enabled flag until the destination revision tracks a compatible owner marker and unchanged owner implementation, and local persistent secondmates and their workers on the same machine apply the same setting on launch and relaunch.
 Only the flag is copied between homes, and the token itself always remains in Automic Vault.
-A remote secondmate receives the same flag through the existing inherited-material allowlist but cannot receive the local Vault value, so its Claude launches fail closed until Automic Vault and the token are provisioned separately on that host.
+Remote inheritance omits this Mac-local flag and removes any copy left by an older remote propagation contract, so enabling the primary flag never opts a remote home into this integration.
 Concrete non-Claude harness tokens never read the flag, resolve these executables, contact Automic Vault, or change launch behavior.
 Raw launch commands remain available only when the opt-in file is absent.
 Maintainer verification and the intentionally skipped live-secret checks are recorded in [`verification/claude-automic-vault.md`](verification/claude-automic-vault.md).

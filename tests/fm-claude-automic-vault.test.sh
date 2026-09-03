@@ -1371,6 +1371,24 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   assert_not_contains "$executed" "$SECRET" \
     "secondmate environment execution exposed the synthetic token"
 
+  printf '\n' >> "$sm/bin/fm-spawn.sh"
+  : > "$launchlog"
+  before_endpoint=0
+  [ ! -f "$state/endpoint.log" ] || before_endpoint=$(wc -l < "$state/endpoint.log")
+  output=$(FM_FAKE_WINDOWS=fm-sm-vault run_spawn "$primary" "$fakebin" "$state" "$launchlog" "$sm" \
+    sm-vault --relaunch --harness claude 2>&1)
+  status=$?
+  [ "$status" -ne 0 ] || fail "secondmate relaunched with dirty Vault owner code"
+  assert_contains "$output" \
+    "launch requires destination home $sm_abs to retain the compatible tracked authentication owner version 1" \
+    "secondmate launch did not independently recheck the tracked Vault owner"
+  [ ! -s "$launchlog" ] || fail "dirty secondmate owner sent a relaunch command"
+  if [ -f "$state/endpoint.log" ]; then
+    [ "$(wc -l < "$state/endpoint.log")" = "$before_endpoint" ] \
+      || fail "dirty secondmate owner created an endpoint"
+  fi
+  git -C "$sm" show HEAD:bin/fm-spawn.sh > "$sm/bin/fm-spawn.sh"
+
   rm "$sm/config/claude-automic-vault"
   : > "$launchlog"
   before=0

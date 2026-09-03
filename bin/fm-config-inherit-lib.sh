@@ -13,8 +13,9 @@
 # the same unconfigured default, so the generic absence mirror below converges
 # a secondmate without deciding the release-dependent floor; explicit "on" and
 # "off" preferences propagate as files. Primary config/claude-automic-vault
-# carries the fail-closed opt-in into every secondmate home while the Vault token
-# itself remains machine-local and is never copied. Primary
+# carries the fail-closed opt-in into local secondmate homes while the Vault token
+# itself remains machine-local and is never copied. Remote inheritance converges
+# that Mac-local opt-in absent. Primary
 # config/trace-context is copied at the launch convergence point as part of the
 # default-off W3C trace-context setup, while live convergence leaves it unchanged.
 # The primary passes its frozen home-session decision into a newly launched
@@ -44,10 +45,10 @@
 # secondmates, and a secondmate never spawns secondmates, so it must not flow
 # downstream.
 #
-# That single declaration is also the ONE owner of the inherited-material
-# allowlist for remote routes: bin/fm-remote-inherit-push.sh (sender) and
-# bin/fm-remote-inherit.sh (receiver, executing inside the remote home) both
-# derive their item set from fm_config_inherit_items rather than restating it,
+# This file is also the ONE owner of the inherited-material allowlist for remote
+# routes: bin/fm-remote-inherit-push.sh (sender) and bin/fm-remote-inherit.sh
+# (receiver, executing inside the remote home) both derive their item set from
+# fm_config_remote_inherit_items rather than restating it,
 # so a new inheritable item cannot be accepted by one side and refused by the
 # other. A local and remote code root that disagree about this list must be
 # reconciled by the ordinary remote sync/update path before the transfer
@@ -68,6 +69,10 @@ FM_SHARED_CAPTAIN_MODE="444"
 # Extend here to inherit more of the primary's local config; override via the
 # environment only in tests. Items must not contain whitespace.
 FM_INHERITABLE_CONFIG="${FM_INHERITABLE_CONFIG:-crew-dispatch.json crew-harness backlog-backend backend herdr-presentation-spaces startup-memory-budget claude-automic-vault trace-context}"
+
+# These machine-local config items remain in local inheritance but are always
+# absent from remote homes reached through the remote inheritance contract.
+FM_REMOTE_LOCAL_ONLY_CONFIG="claude-automic-vault"
 
 # Items whose value is a home-SESSION enablement decision rather than durable
 # local configuration. They are inherited at the launch convergence point, where
@@ -95,6 +100,30 @@ fm_config_inherit_items() {
     printf 'config/%s\n' "$item"
   done
   printf '%s\n' "$FM_SHARED_CAPTAIN_REL"
+}
+
+fm_config_inherit_item_remote_local_only() {  # <item>
+  local item=$1 candidate
+  for candidate in $FM_REMOTE_LOCAL_ONLY_CONFIG; do
+    [ "$candidate" = "$item" ] && return 0
+  done
+  return 1
+}
+
+fm_config_remote_inherit_items() {
+  local item
+  for item in $FM_INHERITABLE_CONFIG; do
+    fm_config_inherit_item_remote_local_only "$item" && continue
+    printf 'config/%s\n' "$item"
+  done
+  printf '%s\n' "$FM_SHARED_CAPTAIN_REL"
+}
+
+fm_config_remote_absent_items() {
+  local item
+  for item in $FM_REMOTE_LOCAL_ONLY_CONFIG; do
+    printf 'config/%s\n' "$item"
+  done
 }
 
 fm_inherit_file_mode() {

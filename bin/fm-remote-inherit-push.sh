@@ -2,9 +2,9 @@
 # Push the declared inherited-material allowlist to one remote secondmate route.
 # Usage: fm-remote-inherit-push.sh <secondmate-id> <generation>
 #
-# The item set is derived from the ONE declared owner
-# (FM_INHERITABLE_CONFIG in bin/fm-config-inherit-lib.sh), the same declaration
-# the receiving bin/fm-remote-inherit.sh enforces, so the two implementations in
+# The item set is derived from the ONE declared owner in
+# bin/fm-config-inherit-lib.sh, the same declaration the receiving
+# bin/fm-remote-inherit.sh enforces, so the two implementations in
 # one code revision cannot drift silently. Different local and remote revisions
 # fail closed as documented by that owner. FM_CONFIG_INHERIT_LIVE=1 marks a live
 # convergence push into an already-running home and skips session-scoped items,
@@ -52,7 +52,15 @@ EMPTY="$TMP/empty"
 : > "$EMPTY"
 EMPTY_HASH=$(sha256_file "$EMPTY") || die "cannot hash empty inheritance payload"
 
-ITEMS=$(fm_config_inherit_items)
+while IFS= read -r rel; do
+  [ -n "$rel" ] || continue
+  "$SCRIPT_DIR/fm-on.sh" "$ID" fm-remote-inherit.sh absent \
+    "$rel" 0 "$EMPTY_HASH" "$GENERATION" < /dev/null
+done <<EOF
+$(fm_config_remote_absent_items)
+EOF
+
+ITEMS=$(fm_config_remote_inherit_items)
 while IFS= read -r rel; do
   [ -n "$rel" ] || continue
   if [ "${FM_CONFIG_INHERIT_LIVE:-0}" = 1 ]; then
