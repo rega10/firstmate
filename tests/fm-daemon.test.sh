@@ -173,22 +173,25 @@ test_stale_diagnostic_wedge_survives_busy_housekeeping() {
       PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$win" FM_FAKE_TMUX_CAPTURE="$pane" \
         FM_STATE_OVERRIDE="$state" FM_ESCALATE_BATCH_SECS=999999 housekeeping "$state"
     )
-    [ "$(wc -l < "$state/.subsuper-escalations" | tr -d ' ')" = 1 ] \
-      || fail "$case_name enriched wedge did not produce exactly one escalation"
-    grep -F "${reason#stale: }" "$state/.subsuper-escalations" >/dev/null \
-      || fail "$case_name enriched wedge lost its demand-deep-inspection detail"
-    [ ! -e "$state/.subsuper-stale-$key" ] \
-      || fail "$case_name enriched wedge retained ordinary stale tracking"
-    case "$case_name" in
-      paused) [ -e "$state/.subsuper-paused-$key" ] \
-        || fail "paused enriched wedge erased ordinary pause tracking" ;;
-      *) [ ! -e "$state/.subsuper-paused-$key" ] \
-        || fail "$case_name enriched wedge created pause tracking" ;;
-    esac
+    if [ "$case_name" = paused ]; then
+      [ ! -s "$state/.subsuper-escalations" ] \
+        || fail "parked enriched wedge entered the escalation buffer"
+      [ -e "$state/.subsuper-paused-$key" ] \
+        || fail "parked enriched wedge erased ordinary pause tracking"
+    else
+      [ "$(wc -l < "$state/.subsuper-escalations" | tr -d ' ')" = 1 ] \
+        || fail "$case_name enriched wedge did not produce exactly one escalation"
+      grep -F "${reason#stale: }" "$state/.subsuper-escalations" >/dev/null \
+        || fail "$case_name enriched wedge lost its demand-deep-inspection detail"
+      [ ! -e "$state/.subsuper-stale-$key" ] \
+        || fail "$case_name enriched wedge retained ordinary stale tracking"
+      [ ! -e "$state/.subsuper-paused-$key" ] \
+        || fail "$case_name enriched wedge created pause tracking"
+    fi
     [ ! -s "$action_log" ] \
       || fail "$case_name enriched wedge interrupted or killed the busy worker"
   done
-  pass "enriched stale wedges bypass status absorption without disturbing busy workers"
+  pass "enriched stale wakes preserve normal wedge handling and park declared waits without disturbing workers"
 }
 
 test_stale_terminal_escalates() {
@@ -267,6 +270,21 @@ test_handle_wake_paused_signal_records_pause_marker() {
   [ ! -e "$state/.subsuper-stale-$key" ] || fail "pause signal did not clear the wedge marker"
   [ ! -s "$state/.subsuper-escalations" ] || fail "a declared pause signal escalated instead of self-handling"
   pass "handle_wake records a declared pause from a routine signal for long-cadence rechecks"
+}
+
+test_handle_wake_paused_inbox_escalates() {
+  local dir state win inbox reason
+  dir=$(make_supercase handle-paused-inbox)
+  state="$dir/state"; win="sess:fm-held-w10-inbox"; inbox="$state/held-w10-inbox.inbox"
+  printf 'window=%s\nkind=ship\n' "$win" > "$state/held-w10-inbox.meta"
+  printf 'paused: awaiting the vendor rate-limit reset\n' > "$state/held-w10-inbox.status"
+  mkdir -p "$inbox"
+  printf 'unhandled steer\n' > "$inbox/001.msg"
+  reason="stale: $win (unread firstmate instruction: $inbox/001.msg still unhandled after 3 doorbell delivery attempts with an idle pane; inspect the worker)"
+  FM_STATE_OVERRIDE="$state" handle_wake "$reason" "$state"
+  grep -F "unread firstmate instruction" "$state/.subsuper-escalations" >/dev/null \
+    || fail "daemon suppressed an unhandled inbox on a paused task"
+  pass "away-mode classification preserves the steering-inbox escalation on a parked task"
 }
 
 test_handle_wake_terminal_signal_clears_pause_tracking() {
@@ -1937,6 +1955,7 @@ test_stale_paused_classifies_pause
 test_stale_captain_held_classifies_pause
 test_handle_wake_paused_records_pause_marker
 test_handle_wake_paused_signal_records_pause_marker
+test_handle_wake_paused_inbox_escalates
 test_handle_wake_terminal_signal_clears_pause_tracking
 test_housekeeping_migrates_watcher_pause_marker
 test_housekeeping_migrates_watcher_unpaused_marker_to_clear

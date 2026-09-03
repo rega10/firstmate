@@ -8,6 +8,7 @@
 # provably-working no-verb wakes absorbed (no exit, no queue entry, suppressor
 # advanced, beacon fresh), stopped-crew no-verb wakes surfaced (queue + exit),
 # provably-working stale panes absorbed-then-escalated past the threshold,
+# parked paused and captain-held panes kept off the wedge ladder, inbox override,
 # terminal-looking stale status lines overridden by an active run, the heartbeat
 # backstop fail-safe, and afk coherence (no double-triage while the away-mode
 # daemon owns supervision).
@@ -348,6 +349,26 @@ test_status_is_paused_classifier() {
     && fail "a working line mentioning captain-held false-matched"
   status_is_captain_held '' && fail "empty line classified as captain-held"
   pass "status_is_paused: only the leading paused verb matches, paused is not captain-relevant, and the two declared-wait verbs stay separable"
+}
+
+test_task_is_parked_classifier() {
+  local dir state data
+  dir=$(make_case parked-classifier); state="$dir/state"; data="$dir/data"
+  mkdir -p "$data"
+  printf 'paused: waiting for the review pass\n' > "$state/paused.status"
+  task_is_parked "$state" paused || fail "a latest paused status did not park the task"
+  mkdir -p "$state/paused.inbox"
+  printf 'unhandled steer\n' > "$state/paused.inbox/001.msg"
+  task_is_parked "$state" paused && fail "an unhandled inbox record did not override parked classification"
+  rm -rf "$state/paused.inbox"
+  printf 'working: resumed\n' > "$state/working.status"
+  task_is_parked "$state" working && fail "a non-pause status parked an ordinary task"
+  printf '## Queued\n- [ ] held - Held for review (repo: firstmate) (hold: captain decision pending) (hold-kind: captain)\n## Done\n' > "$data/backlog.md"
+  task_is_captain_held "$state" held || fail "an active captain-held backlog row was not recognized"
+  task_is_parked "$state" held || fail "a captain-held backlog task did not park"
+  printf '## Done\n- [x] held - Held for review (repo: firstmate) (hold: captain decision pending) (hold-kind: captain)\n' > "$data/backlog.md"
+  task_is_captain_held "$state" held && fail "a closed captain-held row remained parked"
+  pass "parked classification combines latest declared waits, active captain holds, and the unhandled-inbox override"
 }
 
 # crew_absorb_class: the single fm-crew-state.sh read that returns BOTH absorb
@@ -947,8 +968,8 @@ test_nonterminal_stale_paused_absorbed_then_resurfaced() {
   pane_hash=$(hash_text "idle, holding for upstream")
   printf '%s' "$pane_hash" > "$state/.hash-$key"
   printf '1\n' > "$state/.count-$key"
-  # crew_absorb_class reads the declared pause from fm-crew-state.sh.
-  export FM_FAKE_CREW_STATE='state: paused · source: status-log · holding for the upstream tool release'
+  # The shared parked predicate reads the latest declared pause directly.
+  export FM_FAKE_CREW_STATE='state: unknown · source: none · idle pane'
 
   # Phase A: a fresh pause (status file just written) under a high re-surface
   # threshold is absorbed - no wake, no wedge timer.
@@ -995,12 +1016,10 @@ test_nonterminal_stale_paused_absorbed_then_resurfaced() {
 
 # A captain-held crew can leave a stable backend endpoint after its agent exits.
 # fm-crew-state then authoritatively reports stopped rather than paused, but the
-# confirmed-dead agent plus the declared wait or captain-held transfer must retain
-# bounded pause handling.
-# A still-live agent at an external-decision gate is the disconfirming case: it
-# must surface once, while the unchanged hash must not append the same wake on
-# every watcher re-arm.
-test_exited_declared_pause_is_bounded_but_live_gate_surfaces() {
+# durable declared wait must retain bounded pause handling.
+# A still-live agent at an external-decision gate is parked by the same predicate,
+# while the unchanged hash must not append an idle wake on every watcher re-arm.
+test_exited_declared_pause_is_bounded_and_live_gate_is_parked() {
   local dir state fakebin out capture_file statusf window key pane_hash sig pid back round wakes bare
   dir=$(make_case exited-declared-pause); state="$dir/state"; fakebin="$dir/fakebin"
   out="$dir/watch.out"; capture_file="$dir/pane.txt"; statusf="$state/held.status"
@@ -1047,6 +1066,8 @@ test_exited_declared_pause_is_bounded_but_live_gate_surfaces() {
   [ "$bare" -eq 0 ] || fail "dead-agent declared pause surfaced as $bare bare stopped-crew wakes"
   grep -F "awaiting external" "$state/.wake-queue" >/dev/null \
     || fail "dead-agent declared pause did not use the bounded paused recheck"
+  grep -F "possible wedge" "$state/.wake-queue" >/dev/null \
+    && fail "dead-agent declared pause entered the wedge ladder"
 
   dir=$(make_case exited-captain-held); state="$dir/state"; fakebin="$dir/fakebin"
   out="$dir/watch.out"; capture_file="$dir/pane.txt"; statusf="$state/held.status"
@@ -1072,6 +1093,8 @@ test_exited_declared_pause_is_bounded_but_live_gate_surfaces() {
     || fail "captain-held dead-agent pane surfaced as a stopped crew instead of a captain-owned recheck: $(cat "$state/.wake-queue")"
   grep -F "awaiting external" "$state/.wake-queue" >/dev/null \
     && fail "captain-held dead-agent pane borrowed the pause verb's external-wait wording"
+  grep -F "possible wedge" "$state/.wake-queue" >/dev/null \
+    && fail "captain-held dead-agent pane entered the wedge ladder"
 
   dir=$(make_case alive-decision-gate); state="$dir/state"; fakebin="$dir/fakebin"
   out="$dir/watch.out"; capture_file="$dir/pane.txt"; statusf="$state/gate.status"
@@ -1085,38 +1108,60 @@ test_exited_declared_pause_is_bounded_but_live_gate_surfaces() {
   printf '%s' "$pane_hash" > "$state/.hash-$key"
   printf '1\n' > "$state/.count-$key"
 
-  # First sight must surface promptly so a live external-decision gate is not
-  # hidden behind the pause cadence.
+  # A live idle agent at the same declared-wait gate is parked immediately, just
+  # like the exited shell above, rather than receiving an initial stale wake.
   PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
     FM_FAKE_TMUX_CURRENT_COMMAND=grok FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting at an active external-decision gate' \
     FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" FM_PAUSE_RESURFACE_SECS=999 FM_POLL=1 FM_SIGNAL_GRACE=1 \
     FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$WATCH" >> "$out" &
   pid=$!
-  wait_for_exit "$pid" 100 || fail "live external-decision gate did not surface immediately"
-  ack_stopped_cycle "$state" || fail "could not acknowledge the immediate external-decision surface"
-
-  # Re-arm with the stale timer already beyond the wedge threshold. This is the
-  # exact unchanged-hash fallback after the immediate surface: it must retain
-  # the pause cadence and discard any residual wedge timer instead of emitting
-  # a second possible-wedge wake.
-  printf '%s\n' $(( $(date +%s) - 500 )) > "$state/.stale-since-$key"
-  PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
-    FM_FAKE_TMUX_CURRENT_COMMAND=grok FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting at an active external-decision gate' \
-    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_POLL=1 FM_SIGNAL_GRACE=1 \
-    FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$WATCH" >> "$out" &
-  pid=$!
-  if ! wait_poll_cycle "$state" "$pid"; then
-    reap "$pid"
-    fail "live external-decision gate escalated on the wedge timer after its immediate surface: $(cat "$out")"
-  fi
+  wait_poll_cycle "$state" "$pid" || { reap "$pid"; fail "live external-decision gate was not parked"; }
+  [ ! -s "$out" ] || { reap "$pid"; fail "live external-decision gate emitted an idle wake: $(cat "$out")"; }
+  [ ! -s "$state/.wake-queue" ] || { reap "$pid"; fail "live external-decision gate queued an idle wake"; }
   [ -e "$state/.paused-$key" ] || { reap "$pid"; fail "live external-decision gate lost its pause cadence marker"; }
   [ ! -e "$state/.stale-since-$key" ] || { reap "$pid"; fail "live external-decision gate retained the wedge timer"; }
+  [ ! -e "$state/.wedge-escalations-$key" ] || { reap "$pid"; fail "live external-decision gate entered the wedge ladder"; }
   reap "$pid"
-  wakes=$(awk -F '\t' -v w="$window" '$3 == "stale" && $4 == w { n++ } END { print n + 0 }' "$state/.wake-queue" 2>/dev/null || echo 0)
-  bare=$(awk -F '\t' -v w="$window" '$3 == "stale" && $4 == w && $5 == "stale: " w { n++ } END { print n + 0 }' "$state/.wake-queue" 2>/dev/null || echo 0)
-  [ "$wakes" -eq 0 ] || fail "acknowledged external-decision surface replayed $wakes wakes"
-  [ "$bare" -eq 0 ] || fail "acknowledged external-decision bare stale remained queued"
-  pass "exited declared-pause and captain-held panes use bounded pause cadence while a live decision gate still surfaces once"
+  pass "live and exited declared-pause and captain-held panes use bounded pause cadence without idle wedge wakes"
+}
+
+# The parked predicate must yield to a durable steering record. Once the inbox
+# ladder has spent its ring budget, the watcher emits its inbox escalation instead
+# of silently treating the paused pane as parked or inventing a wedge.
+test_paused_stale_with_unhandled_inbox_escalates_through_inbox_ladder() {
+  local dir state fakebin out capture_file window statusf inbox key pane_hash pid
+  dir=$(make_case paused-stale-inbox); state="$dir/state"; fakebin="$dir/fakebin"
+  out="$dir/watch.out"; capture_file="$dir/pane.txt"; window="test:fm-inbox-parked"
+  statusf="$state/inbox-parked.status"; inbox="$state/inbox-parked.inbox"
+  printf 'idle paused pane\n' > "$capture_file"
+  printf 'window=%s\nkind=ship\nharness=grok\nbackend=tmux\n' "$window" > "$state/inbox-parked.meta"
+  printf 'paused: awaiting the captain review pass\n' > "$statusf"
+  mkdir -p "$inbox"
+  # The record is intentionally old and its first delivery attempt is already
+  # spent, so the next idle poll must take the existing escalation path.
+  printf 'schema=fm-task-inbox.v1\nat=2026-09-02T00:00:00Z\n--\nresume the review\n' > "$inbox/001.msg"
+  touch -t 202001010000 "$inbox/001.msg"
+  printf '001.msg\t1\t1\n' > "$inbox/.ring-state"
+  printf '%s' "$(seen_sig "$statusf")" > "$state/.seen-inbox-parked_status"
+  key=$(printf '%s' "$window" | tr ':/.' '___')
+  pane_hash=$(hash_text "idle paused pane")
+  printf '%s' "$pane_hash" > "$state/.hash-$key"
+  printf '1\n' > "$state/.count-$key"
+
+  PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
+    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" \
+    FM_TASK_INBOX_GRACE_SECS=1 FM_TASK_INBOX_RING_MAX=1 FM_POLL=1 FM_SIGNAL_GRACE=1 \
+    FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$WATCH" > "$out" &
+  pid=$!
+  wait_for_exit "$pid" 100 || fail "an unhandled inbox on a paused pane was suppressed as parked"
+  grep -F "unread firstmate instruction" "$out" >/dev/null \
+    || fail "the parked pane did not escalate its unhandled inbox: $(cat "$out")"
+  grep -F "possible wedge" "$out" >/dev/null \
+    && fail "the inbox escalation was mislabeled as a wedge: $(cat "$out")"
+  [ "$(grep -cF "unread firstmate instruction" "$state/.wake-queue" 2>/dev/null || true)" = 1 ] \
+    || fail "the unhandled inbox did not queue exactly one ladder escalation"
+  [ -f "$inbox/001.msg" ] || fail "the inbox escalation lost its unhandled record"
+  pass "an unhandled inbox record overrides parked suppression and uses the existing ladder"
 }
 
 test_secondmate_paused_resurfaces_in_normal_mode() {
@@ -1290,7 +1335,7 @@ test_nonterminal_stale_pause_transitions_reclassify_unchanged_hash() {
   pass "unchanged stale hashes reclassify when a crew enters or leaves pause"
 }
 
-test_nonterminal_paused_rechecks_authoritative_state() {
+test_nonterminal_paused_stays_parked_with_authoritative_working() {
   local dir state fakebin out capture_file window key pane_hash sig pid
   dir=$(make_case nonterminal-paused-recheck); state="$dir/state"; fakebin="$dir/fakebin"
   out="$dir/watch.out"; capture_file="$dir/pane.txt"; window="test:fm-pause-recheck"
@@ -1307,58 +1352,49 @@ test_nonterminal_paused_rechecks_authoritative_state() {
   export FM_FAKE_CREW_STATE='state: working · source: run-step · validating (running)'
 
   PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
-    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" FM_STALE_ESCALATE_SECS=999 FM_POLL=1 FM_SIGNAL_GRACE=1 \
+    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=999 FM_POLL=1 FM_SIGNAL_GRACE=1 \
     FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$WATCH" > "$out" &
   pid=$!
   if ! wait_poll_cycle "$state" "$pid"; then
-    reap "$pid"; fail "an active run behind a declared pause surfaced instead of resuming wedge tracking: $(cat "$out")"
+    reap "$pid"; fail "an idle agent behind a declared pause was not parked: $(cat "$out")"
   fi
-  [ ! -e "$state/.paused-$key" ] || { reap "$pid"; fail "authoritative active run retained paused mode"; }
-  [ -s "$state/.stale-since-$key" ] || { reap "$pid"; fail "authoritative active run did not resume wedge tracking"; }
+  [ -e "$state/.paused-$key" ] || { reap "$pid"; fail "parked task lost its pause marker"; }
+  [ ! -e "$state/.stale-since-$key" ] || { reap "$pid"; fail "parked task retained a wedge timer"; }
+  [ ! -e "$state/.wedge-escalations-$key" ] || { reap "$pid"; fail "parked task entered the wedge ladder"; }
+  [ ! -s "$out" ] || { reap "$pid"; fail "parked task emitted an idle wake: $(cat "$out")"; }
   reap "$pid"
   unset FM_FAKE_CREW_STATE
-  pass "a declared pause is periodically rechecked against authoritative active-run state"
+  pass "a paused task stays parked even when current state reports an active run"
 }
 
-test_paused_authoritative_working_preserves_wedge_timer() {
-  local dir state fakebin out capture_file window key pane_hash sig pid since
-  dir=$(make_case paused-working-preserves-wedge-timer); state="$dir/state"; fakebin="$dir/fakebin"
-  out="$dir/watch.out"; capture_file="$dir/pane.txt"; window="test:fm-paused-working"
-  printf 'idle awaiting external\n' > "$capture_file"
-  printf 'window=%s\nkind=ship\n' "$window" > "$state/paused-working.meta"
-  printf 'paused: awaiting the upstream release\n' > "$state/paused-working.status"
-  sig=$(seen_sig "$state/paused-working.status"); printf '%s' "$sig" > "$state/.seen-paused-working_status"
+test_captain_held_backlog_task_stays_parked() {
+  local dir state data fakebin out capture_file window key pane_hash sig pid
+  dir=$(make_case captain-held-backlog-parked); state="$dir/state"; data="$dir/data"; fakebin="$dir/fakebin"
+  mkdir -p "$data"
+  out="$dir/watch.out"; capture_file="$dir/pane.txt"; window="test:fm-captain-held-backlog"
+  printf 'idle awaiting captain review\n' > "$capture_file"
+  printf 'window=%s\nkind=ship\n' "$window" > "$state/captain-held-backlog.meta"
+  printf 'working: review is complete\n' > "$state/captain-held-backlog.status"
+  printf '## Queued\n- [ ] captain-held-backlog - Review (repo: firstmate) (hold: captain review) (hold-kind: captain)\n## Done\n' > "$data/backlog.md"
+  sig=$(seen_sig "$state/captain-held-backlog.status"); printf '%s' "$sig" > "$state/.seen-captain-held-backlog_status"
   key=$(printf '%s' "$window" | tr ':/.' '___')
-  pane_hash=$(hash_text "idle awaiting external")
+  pane_hash=$(hash_text "idle awaiting captain review")
   printf '%s' "$pane_hash" > "$state/.hash-$key"
-  printf '%s' "$pane_hash" > "$state/.stale-$key"
   printf '1\n' > "$state/.count-$key"
-  : > "$state/.paused-$key"
-  export FM_FAKE_CREW_STATE='state: working · source: run-step · validating (running)'
+  export FM_FAKE_CREW_STATE='state: unknown · source: none · parked for review'
 
   PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
-    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" FM_STALE_ESCALATE_SECS=999 FM_POLL=1 FM_SIGNAL_GRACE=1 \
+    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=999 FM_POLL=1 FM_SIGNAL_GRACE=1 \
     FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$WATCH" > "$out" &
   pid=$!
-  wait_numeric_file "$state/.stale-since-$key" 30 || { reap "$pid"; fail "authoritative working state did not start wedge tracking"; }
-  since=$(cat "$state/.stale-since-$key")
-  sleep 2
-  [ "$(cat "$state/.stale-since-$key" 2>/dev/null || true)" = "$since" ] \
-    || { reap "$pid"; fail "repeat authoritative working recheck reset the wedge timer"; }
+  wait_poll_cycle "$state" "$pid" || { reap "$pid"; fail "a captain-held backlog task was not parked"; }
+  [ ! -s "$out" ] || { reap "$pid"; fail "a captain-held backlog task emitted an idle wake: $(cat "$out")"; }
+  [ -e "$state/.paused-$key" ] || { reap "$pid"; fail "a captain-held backlog task did not record pause tracking"; }
+  [ ! -e "$state/.stale-since-$key" ] || { reap "$pid"; fail "a captain-held backlog task entered the wedge timer"; }
+  [ ! -e "$state/.wedge-escalations-$key" ] || { reap "$pid"; fail "a captain-held backlog task entered the escalation ladder"; }
   reap "$pid"
-  ack_stopped_cycle "$state" || fail "could not acknowledge the intentional authoritative-working stop"
-
-  echo $(( $(date +%s) - 500 )) > "$state/.stale-since-$key"
-  : > "$out"
-  PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
-    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" FM_STALE_ESCALATE_SECS=240 FM_POLL=1 FM_SIGNAL_GRACE=1 \
-    FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$WATCH" > "$out" &
-  pid=$!
-  wait_for_exit "$pid" 100 || fail "authoritative working state did not wedge-escalate past the threshold"
-  grep -F "possible wedge" "$out" >/dev/null || fail "authoritative working wedge escalation omitted its reason"
-  [ ! -e "$state/.stale-since-$key" ] || fail "wedge timer remained after authoritative working escalation"
   unset FM_FAKE_CREW_STATE
-  pass "a paused status overridden by authoritative working preserves its wedge timer and escalates"
+  pass "an active captain-held backlog task parks an idle pane even without a pause status line"
 }
 
 # --- consecutive wedge escalations on the same pane demand deep inspection ----
@@ -2619,6 +2655,7 @@ test_scan_captain_relevant_statuses_classifier
 test_classifier_primitives
 test_crew_is_provably_working_classifier
 test_status_is_paused_classifier
+test_task_is_parked_classifier
 test_crew_absorb_class_classifier
 test_crew_worktree_written_since_classifier
 test_empty_write_prune_widens_the_probe
@@ -2647,14 +2684,15 @@ test_busy_pane_default_turn_age_bound_is_3600s
 test_busy_declared_pause_is_rechecked_not_wedge_escalated
 test_nonterminal_stale_not_working_surfaced
 test_nonterminal_stale_paused_absorbed_then_resurfaced
-test_exited_declared_pause_is_bounded_but_live_gate_surfaces
+test_exited_declared_pause_is_bounded_and_live_gate_is_parked
+test_paused_stale_with_unhandled_inbox_escalates_through_inbox_ladder
 test_secondmate_paused_resurfaces_in_normal_mode
 test_secondmate_captain_held_resurfaces_in_normal_mode
 test_secondmate_nonpaused_stale_remains_suppressed
 test_secondmate_unpause_clears_pause_tracking
 test_nonterminal_stale_pause_transitions_reclassify_unchanged_hash
-test_nonterminal_paused_rechecks_authoritative_state
-test_paused_authoritative_working_preserves_wedge_timer
+test_nonterminal_paused_stays_parked_with_authoritative_working
+test_captain_held_backlog_task_stays_parked
 test_nonterminal_stale_repairs_missing_or_corrupt_timer
 test_wedge_escalation_deferred_while_worktree_is_written
 test_write_deferral_resurfaces_on_the_bounded_cadence

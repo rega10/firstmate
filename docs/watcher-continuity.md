@@ -45,6 +45,8 @@ No adapter starts a replacement with shell `&`.
 
 The turn-end guard remains the final backstop rather than the normal continuity mechanism and cooperates with the auto-arm in its `--claude` mode.
 
+Idle-pane wedge escalation, parked-task suppression, and the steering-inbox override are owned by `bin/fm-classify-lib.sh` and its watcher/daemon consumers, not by this continuity layer.
+
 ## Recovery episode acknowledgement
 
 A recovery episode is one generation of `state/.watcher-down`, and it is retired only by the generation-bound acknowledgement the drain prints as `WAKE_ACK_REQUIRED`.

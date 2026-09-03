@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # Shared wake classifier: the common source of truth for captain-relevant status
-# tests, declared-external-wait vocabulary, and the working/paused absorb
-# classification that makes no-verb signal and stale-pane wakes safe to absorb.
+# tests, declared-external-wait vocabulary, parked-task detection, and the
+# working/paused absorb classification that makes no-verb signal and stale-pane
+# wakes safe to absorb.
 # Sourced by BOTH the always-on watcher
 # (bin/fm-watch.sh) and the away-mode daemon (bin/fm-supervise-daemon.sh) so the
 # overlapping triage policy lives in one place instead of two copies that can
 # drift apart.
 #
-# Most functions are pure, side-effect-free reads of status files: each takes
-# what it needs as arguments and touches no globals beyond the optional
-# FM_CAPTAIN_RE override. Consumers layer their own dedup/marker state on top (the
-# daemon keeps its escalation-digest seen-markers; the watcher keeps its .seen-*
-# signatures).
+# Most functions are pure, side-effect-free reads of status, backlog, and inbox
+# records: each takes what it needs as arguments and touches no globals beyond the
+# optional FM_CAPTAIN_RE override. Consumers layer their own dedup/marker state on
+# top (the daemon keeps its escalation-digest seen-markers; the watcher keeps its
+# .seen-* signatures).
 #
 # There are three documented exceptions. The absorb classification
 # (crew_absorb_class and its working/paused wrappers) is NOT a pure status-file
@@ -164,11 +165,108 @@ status_is_captain_held() {  # <status-line>
 # Both declarations can intentionally leave a crew's endpoint idle, so both
 # supervisors give them one cadence: the away-mode daemon defers the wedge and
 # ages a pause marker instead, and the watcher applies its bounded pause cadence
-# once pause_state_class has admitted the wait (fm-watch.sh owns which liveness
-# evidence each kind of crew must supply for that).
+# through task_is_parked when the steering inbox is empty.
 status_is_paused_or_captain_held() {  # <status-line>
   local line=$1
   status_is_paused "$line" || status_is_captain_held "$line"
+}
+
+# 0 when <state>/<task>.inbox has an unhandled .msg record.
+# The steering-inbox library owns the ladder and acknowledgement mechanics; this
+# small read lets the shared parked predicate avoid hiding an outstanding steer.
+task_has_unhandled_inbox() {  # <state> <task>
+  local state=$1 task=$2 f dir
+  dir="$state/$task.inbox"
+  for f in "$dir"/*.msg; do
+    [ -e "$f" ] || continue
+    return 0
+  done
+  return 1
+}
+
+# Print the backlog path paired with a classifier state directory.
+# FM_DATA_OVERRIDE is authoritative; a test-only state override otherwise keeps
+# its sibling data directory local instead of consulting the source checkout.
+_fm_classify_backlog_path() {  # <state>
+  local state=$1 home
+  if [ -n "${FM_DATA_OVERRIDE:-}" ]; then
+    printf '%s/backlog.md' "${FM_DATA_OVERRIDE%/}"
+    return 0
+  fi
+  case "$state" in
+    */state) home=${state%/state} ;;
+    *) home=${FM_HOME:-$_FM_CLASSIFY_LIB_DIR/..} ;;
+  esac
+  printf '%s/data/backlog.md' "$home"
+}
+
+# 0 when the active backlog row for <task> carries the captain hold metadata.
+# The Done section is excluded because tasks-axi preserves hold annotations on a
+# closed row for answer provenance without leaving that row held.
+task_is_captain_held() {  # <state> <task>
+  local state=$1 task=$2 backlog
+  [ -n "$task" ] || return 1
+  backlog=$(_fm_classify_backlog_path "$state")
+  [ -f "$backlog" ] && [ -r "$backlog" ] && [ ! -L "$backlog" ] || return 1
+  awk -v wanted="$task" '
+    function is_captain_hold(row, id) {
+      if (row ~ /^[-*][[:space:]]+\[[ xX]\][[:space:]]+/) {
+        sub(/^[-*][[:space:]]+\[[ xX]\][[:space:]]+/, "", row)
+        id = row
+        sub(/[[:space:]].*$/, "", id)
+      } else if (row ~ /^[-*][[:space:]]+\*\*[^*]+\*\*[[:space:]]+-/) {
+        sub(/^[-*][[:space:]]+\*\*/, "", row)
+        id = row
+        sub(/\*\*.*/, "", id)
+      } else {
+        return 0
+      }
+      if (id != wanted) return 0
+      if (row !~ /\(hold-kind:[[:space:]]*captain[[:space:]]*\)/) return 0
+      return row ~ /\(hold:[^)]*\)/
+    }
+    /^##[[:space:]]+/ {
+      section = $0
+      sub(/^##[[:space:]]+/, "", section)
+      sub(/[[:space:]]+$/, "", section)
+      next
+    }
+    section == "Done" { next }
+    { if (is_captain_hold($0)) found = 1 }
+    END { exit found ? 0 : 1 }
+  ' "$backlog"
+}
+
+# Print the parked kind for <task>, or return 1 when normal classification applies.
+# A latest paused/captain-held status or active captain backlog hold parks only
+# while no unhandled steering record is waiting for the worker.
+task_parked_class() {  # <state> <task>
+  local state=$1 task=$2 last
+  [ -n "$task" ] || return 1
+  task_has_unhandled_inbox "$state" "$task" && return 1
+  last=$(last_status_line "$state/$task.status")
+  if status_is_captain_held "$last"; then
+    printf 'captain-held'
+    return 0
+  elif status_is_paused "$last"; then
+    printf 'paused'
+    return 0
+  fi
+  task_is_captain_held "$state" "$task" && { printf 'captain-held'; return 0; }
+  return 1
+}
+
+# 0 when the task's idle pane is parked rather than on the normal stale ladder.
+task_is_parked() {  # <state> <task>
+  task_parked_class "$1" "$2" >/dev/null
+}
+
+# 0 when a stale wake is the steering-inbox ladder's already-durable escalation.
+stale_reason_is_inbox_escalation() {  # <stale-detail>
+  case "$1" in
+    unread\ firstmate\ instruction:*|steering-inbox\ ladder\ bookkeeping\ unwritable:*) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 # --- durable keyed decisions ------------------------------------------------
@@ -1319,16 +1417,16 @@ crew_worktree_written_since() {  # <id> <state> <anchor-file>
 }
 
 # 0 (benign/absorb) if EVERY task referenced by a no-verb "signal:" wake is provably
-# working; 1 (actionable/surface) if any is not, or no task can be resolved. Pass the
-# same space-separated file list as signal_reason_is_actionable. Files are mapped to
-# task ids by stripping the .status / .turn-ended suffix; a no-verb wake with nothing
-# provably working must surface, so an empty/unresolvable list returns 1.
+# working or parked with no unhandled steering record; 1 (actionable/surface) if any
+# is not, or no task can be resolved. Pass the same space-separated file list as
+# signal_reason_is_actionable. Files are mapped to task ids by stripping the
+# .status / .turn-ended suffix; a no-verb wake with nothing absorbable must surface,
+# so an empty/unresolvable list returns 1.
 # A kind=secondmate task's .status signal is never absorbable here regardless of
-# busy evidence: that stream is the mate's routed-reply channel, so every append
-# is parent-directed content the supervisor must read (a routed reply, a newly
-# raised decision, a mirrored remote line), and a busy mate agent makes its note
-# more current, not less deliverable. Scoped to .status files - a mate's bare
-# turn-ended ping still uses the ordinary provably-working absorb.
+# busy or parked evidence: that stream is the mate's routed-reply channel, so every
+# append is parent-directed content the supervisor must read. Scoped to .status
+# files - a mate's bare turn-ended ping still uses the ordinary absorb or parked
+# classification.
 signal_crew_provably_working() {  # <file> ...
   local f base dir task seen=""
   for f in "$@"; do
@@ -1350,6 +1448,7 @@ signal_crew_provably_working() {  # <file> ...
     esac
     case " $seen " in *" $task "*) continue ;; esac
     seen="$seen $task"
+    task_is_parked "$dir" "$task" && continue
     crew_is_provably_working "$task" || return 1
   done
   [ -n "$seen" ] || return 1
@@ -1357,12 +1456,15 @@ signal_crew_provably_working() {  # <file> ...
 }
 
 # 0 (terminal/actionable) if a stale window's last status line is
-# captain-relevant; 1 otherwise, including the no-status case. A 1 only means
-# "non-terminal"; the always-on watcher then applies crew_is_provably_working,
-# while the away-mode daemon applies its persistence recheck.
+# captain-relevant and the task is not parked; 1 otherwise, including the no-status
+# case. A 1 only means "non-terminal"; the always-on watcher then applies its
+# shared parked/working classification, while the away-mode daemon applies its
+# persistence recheck.
 stale_is_terminal() {  # <window> <state>
-  local win=$1 state=$2 last
-  last=$(last_status_line "$state/$(window_to_task "$win" "$state").status")
+  local win=$1 state=$2 task last
+  task=$(window_to_task "$win" "$state")
+  task_is_parked "$state" "$task" && return 1
+  last=$(last_status_line "$state/$task.status")
   [ -n "$last" ] && status_is_captain_relevant "$last"
 }
 
