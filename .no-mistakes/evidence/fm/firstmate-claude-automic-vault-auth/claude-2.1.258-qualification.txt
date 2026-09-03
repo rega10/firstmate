@@ -1,0 +1,1 @@
+qualified: 2.1.258 (Claude Code) at /opt/homebrew/Caskroom/claude-code@latest/2.1.258/claude matched Anthropic release attestation and executed one approval-free tool with its OAuth environment scrubbed.
