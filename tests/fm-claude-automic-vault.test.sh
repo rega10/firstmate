@@ -461,11 +461,12 @@ test_provision_recovery_renewal_preflight_and_redaction() {
   assert_contains "$output" "replaced directly" "renewal did not report direct replacement"
   assert_secret_absent "$dir" "$output"
 
+  # shellcheck disable=SC2329 # Exported to verify startup-clean function removal.
   preflight_probe() { :; }
   export -f preflight_probe
   rm -f "$state/unsafe-inject-environment"
   output=$(FM_HOME="$home" FM_CONFIG_OVERRIDE="$home/config" FM_FAKE_STATE="$state" \
-    TEST_FAKE_SECRET="$SECRET" LD_PRELOAD= PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
+    TEST_FAKE_SECRET="$SECRET" LD_PRELOAD='' PATH="$fakebin:$BASE_PATH" "$AUTH" preflight 2>&1)
   status=$?
   unset -f preflight_probe
   expect_code 0 "$status" "redacted public preflight"
@@ -523,8 +524,8 @@ test_enabled_disabled_and_non_claude_launches() {
   output=$(FM_CLAUDE_AV_CURL_BIN="$fakebin/curl" \
     FM_CLAUDE_AV_MANIFEST_CHECKSUMS="$state/release-manifests.sha256" \
     FM_CLAUDE_AV_QUALIFIED_VERSIONS="$ROOT/tests/fixtures/fm-claude-automic-vault-qualified-versions" \
-    HTTPS_PROXY=http://127.0.0.1:1 ALL_PROXY=http://127.0.0.1:1 NO_PROXY= \
-    https_proxy=http://127.0.0.1:1 all_proxy=http://127.0.0.1:1 no_proxy= \
+    HTTPS_PROXY=http://127.0.0.1:1 ALL_PROXY=http://127.0.0.1:1 NO_PROXY='' \
+    https_proxy=http://127.0.0.1:1 all_proxy=http://127.0.0.1:1 no_proxy='' \
     run_real_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
       production-attestation "$proj" claude --mode local-only --yolo off 2>&1)
   status=$?
@@ -598,6 +599,7 @@ test_enabled_disabled_and_non_claude_launches() {
   done
 
   raw_heredoc=$'/bin/sh <<\'EOF\'\nclaude --dangerously-skip-permissions\nEOF'
+  # shellcheck disable=SC2016 # These raw commands must reach the parser without expansion.
   for raw in \
     '"$(printf clau%s de)" --dangerously-skip-permissions' \
     '"$(printf custom-%s agent)" --flag' \
@@ -768,6 +770,7 @@ SH
     "disabled raw positional changed historical declared-harness metadata"
 
   printf 'off\n' > "$home/config/claude-automic-vault"
+  # shellcheck disable=SC2016 # These raw commands must reach the parser without expansion.
   for raw in \
     '"$(printf clau%s de)" --dangerously-skip-permissions' \
     '"$(printf custom-%s agent)" --flag' \
@@ -1057,7 +1060,7 @@ test_preflight_xtrace_redaction() {
     stderr="$dir/preflight-$fail_at.err"
     trace="$dir/preflight-$fail_at.trace"
     (
-      exec 9>"$trace"
+      builtin exec 9>"$trace"
       BASH_XTRACEFD=9
       export BASH_XTRACEFD SHELLOPTS
       set -x
@@ -1187,6 +1190,7 @@ SH
   assert_not_contains "$output" "$SECRET" "shell tracing exposed the injected token"
 
   leak="$dir/exported-function-token-leak"
+  # shellcheck disable=SC2329 # Exported for indirect invocation by the child shell.
   exec() {
     if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
       printf '%s\n' "$CLAUDE_CODE_OAUTH_TOKEN" > "${FM_HOSTILE_LEAK:?}"
@@ -1361,6 +1365,7 @@ test_secondmate_inheritance_launch_relaunch_and_nested_worker() {
   launch=$(last_launch_command "$launchlog")
   assert_sanitized_launch "$launch" "$fakebin"
   leak="$dir/secondmate-exported-function-token-leak"
+  # shellcheck disable=SC2120,SC2329 # Exported for indirect invocation by the child shell.
   exec() {
     if [ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
       printf '%s\n' "$CLAUDE_CODE_OAUTH_TOKEN" > "${FM_HOSTILE_LEAK:?}"

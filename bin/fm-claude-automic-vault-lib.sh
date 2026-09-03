@@ -309,7 +309,7 @@ fm_claude_av_artifact_qualified() {  # <resolved-claude>
     if [ "$qualified_version" = "$version" ]; then
       [ -z "$found" ] || return 1
       case "$executable" in
-        $qualified_path) found=$qualification_date ;;
+        "$qualified_path") found=$qualification_date ;;
       esac
     fi
   done < "$FM_CLAUDE_AV_QUALIFIED_VERSIONS"

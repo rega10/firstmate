@@ -54,6 +54,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-claude-automic-vault-lib.sh"
 
+# shellcheck disable=SC2329 # Invoked indirectly by the selected preflight function.
 fm_claude_av_auth_rejected() {
   local normalized
   normalized=$(printf '%s' "$1" | /usr/bin/tr '[:upper:]' '[:lower:]')
@@ -61,6 +62,7 @@ fm_claude_av_auth_rejected() {
     || [[ "$normalized" == *'invalid'*"token"* ]] || [[ "$normalized" == *'revoked'* ]]
 }
 
+# shellcheck disable=SC2329 # Invoked indirectly from the preflight mode dispatcher.
 fm_claude_av_preflight_auth() {
   local av=$1 claude=$2 jq=$3 settings=$4 secret_name=$5 output rc=0
   set +x
@@ -83,6 +85,7 @@ fm_claude_av_preflight_auth() {
   fi
 }
 
+# shellcheck disable=SC2329 # Invoked indirectly from the preflight mode dispatcher.
 fm_claude_av_preflight_live() {
   local av=$1 claude=$2 jq=$3 settings=$4 secret_name=$5 output rc=0
   set +x
@@ -128,6 +131,7 @@ case "$claude" in
   *) launch_parent=${claude%/*} ;;
 esac
 launch_root=
+# shellcheck disable=SC2329 # Invoked by the EXIT trap.
 cleanup_launch_root() {
   local status=$?
   trap - EXIT HUP INT TERM
