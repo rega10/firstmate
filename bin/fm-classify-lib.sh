@@ -252,6 +252,7 @@ task_parked_class() {  # <state> <task>
     printf 'paused'
     return 0
   fi
+  [ "$(status_line_verb "$last")" = blocked ] && return 1
   task_is_captain_held "$state" "$task" && { printf 'captain-held'; return 0; }
   return 1
 }

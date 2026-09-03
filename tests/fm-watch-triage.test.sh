@@ -188,8 +188,9 @@ test_signal_reason_is_actionable_classifier() {
 }
 
 test_stale_is_terminal_classifier() {
-  local dir state
-  dir=$(make_case classify-stale); state="$dir/state"
+  local dir state data
+  dir=$(make_case classify-stale); state="$dir/state"; data="$dir/data"
+  mkdir -p "$data"
   printf 'done: ready in branch fm/x\n' > "$state/term.status"
   stale_is_terminal "sess:fm-term" "$state" || fail "terminal stale status not classified terminal"
   fm_write_meta "$state/herdr-term.meta" "window=default:w1:p2" "backend=herdr"
@@ -197,8 +198,12 @@ test_stale_is_terminal_classifier() {
   stale_is_terminal "default:w1:p2" "$state" || fail "terminal herdr stale status not resolved through metadata"
   printf 'working: compiling\n' > "$state/nonterm.status"
   stale_is_terminal "sess:fm-nonterm" "$state" && fail "non-terminal stale classified terminal"
+  printf 'blocked: credentials unavailable\n' > "$state/blocked-held.status"
+  printf '## Queued\n- [ ] blocked-held - Await credentials (repo: firstmate) (hold: captain review) (hold-kind: captain)\n## Done\n' > "$data/backlog.md"
+  stale_is_terminal "sess:fm-blocked-held" "$state" \
+    || fail "an active captain hold overrode the task's blocked status"
   stale_is_terminal "sess:fm-missing" "$state" && fail "stale with no status classified terminal"
-  pass "stale_is_terminal: terminal status surfaces, non-terminal and no-status are benign"
+  pass "stale_is_terminal: terminal and blocked-held statuses surface while non-terminal and no-status cases remain benign"
 }
 
 test_scan_captain_relevant_statuses_classifier() {
@@ -1393,8 +1398,20 @@ test_captain_held_backlog_task_stays_parked() {
   [ ! -e "$state/.stale-since-$key" ] || { reap "$pid"; fail "a captain-held backlog task entered the wedge timer"; }
   [ ! -e "$state/.wedge-escalations-$key" ] || { reap "$pid"; fail "a captain-held backlog task entered the escalation ladder"; }
   reap "$pid"
+  ack_stopped_cycle "$state" || fail "could not acknowledge the intentional backlog-hold phase stop"
+
+  touch -t 202001010000 "$state/.paused-$key"
+  PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
+    FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" FM_PAUSE_RESURFACE_SECS=1 FM_POLL=1 FM_SIGNAL_GRACE=1 \
+    FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$WATCH" > "$out" &
+  pid=$!
+  wait_for_exit "$pid" 100 || fail "a backlog-only captain hold never reached its long-cadence recheck"
+  grep -F "captain-held" "$out" >/dev/null \
+    || fail "a backlog-only captain hold did not emit its captain-owned recheck: $(cat "$out")"
+  grep -F "possible wedge" "$out" >/dev/null \
+    && fail "a backlog-only captain hold recheck entered the wedge ladder"
   unset FM_FAKE_CREW_STATE
-  pass "an active captain-held backlog task parks an idle pane even without a pause status line"
+  pass "an active captain-held backlog task parks without a status event and retains its bounded recheck"
 }
 
 # --- consecutive wedge escalations on the same pane demand deep inspection ----

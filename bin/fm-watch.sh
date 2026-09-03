@@ -576,25 +576,34 @@ busy_turn_over_age() {  # <task>
 # Absorb a stale pane under the shared parked-task predicate and re-surface it once
 # every PAUSE_RESURFACE_SECS for a recheck so it cannot rot invisibly. Called on any
 # stale poll once the predicate admits the bounded cadence, so it must be cheap: it
-# never re-reads crew state. The re-surface age is anchored on the status file mtime,
-# not a per-hash marker, so a churny idle pane cannot keep resetting the cadence.
+# never re-reads crew state. A declared wait's re-surface age is anchored on the
+# status file mtime. A backlog-only captain hold has no matching status event, so
+# its age is anchored on the stable per-window parked marker instead. Neither
+# depends on a pane hash, so a churny idle pane cannot keep resetting the cadence.
 # The bounded re-surface itself is shared with worktree-write deferral and is
 # throttled by this window's own .paused-resurfaced-<key> marker.
 #
 # The recheck names the human the declaration waits on: an external dependency for
 # paused:, and the captain for an active captain-held backlog item or transfer.
 handle_paused_stale() {  # <window> <task> <hash>
-  local win=$1 task=$2 h=$3 key statusf mtime age detail reason
+  local win=$1 task=$2 h=$3 key statusf marker last mtime age detail reason parked_class
   key=$(window_key "$win")
   printf '%s' "$h" > "$STATE/.stale-$key"
-  : > "$STATE/.paused-$key"
+  marker="$STATE/.paused-$key"
+  [ -e "$marker" ] || : > "$marker"
   rm -f "$STATE/.stale-since-$key" "$STATE/.wedge-escalations-$key"
   clear_write_tracking "$key"
   statusf="$STATE/$task.status"
-  mtime=$(stat_mtime "$statusf")
+  last=$(last_status_line "$statusf")
+  if status_is_paused_or_captain_held "$last"; then
+    mtime=$(stat_mtime "$statusf")
+  else
+    mtime=$(stat_mtime "$marker")
+  fi
   case "$mtime" in ''|*[!0-9]*) mtime=$(date +%s) ;; esac
   age=$(( $(date +%s) - mtime ))
-  if [ "$(task_parked_class "$STATE" "$task" 2>/dev/null || true)" = captain-held ]; then
+  parked_class=$(task_parked_class "$STATE" "$task" 2>/dev/null || true)
+  if [ "$parked_class" = captain-held ]; then
     detail="captain-held, awaiting the captain"
     reason="captain-held ${age}s, awaiting the captain - verified hold transfer, rechecked on a long cadence not a wedge; answer the held decision or release the hold"
   else
