@@ -124,18 +124,22 @@ mark_surfaced() {  # <status-file>
 
 # Act on a fresh actionable transition from a push-capable backend.
 handle_push_transition() {  # <backend> <session> <record>
-  local backend=$1 session=$2 record=$3 pane_id to window task reason
+  local backend=$1 session=$2 record=$3 pane_id to window task reason absorb_reason
   pane_id=$(fm_transition_pane_id "$record")
   to=$(fm_transition_to_status "$record")
   [ -n "$pane_id" ] || { sleep 1; return; }
   window="$session:$pane_id"
   task=$(window_to_task "$window" "$STATE")
-  # A declared wait already names the human this transition would report: an
-  # external dependency, or the captain a verified hold transferred the work to.
-  # Either way the wait is durably recorded, so absorb the immediate escalation
-  # and leave the bounded re-surface to the watcher's own pause cadence.
-  if status_is_paused_or_captain_held "$(last_status_line "$STATE/$task.status")"; then
-    triage_log "absorbed push $to (declared wait, awaiting external or captain): $window"
+  # A durable inbox ladder or parked state already owns this transition's
+  # supervision cadence.
+  absorb_reason=
+  if task_has_unhandled_inbox "$STATE" "$task"; then
+    absorb_reason="unhandled inbox, deferred to steering ladder"
+  elif task_is_parked "$STATE" "$task"; then
+    absorb_reason="parked declared wait, awaiting external or captain"
+  fi
+  if [ -n "$absorb_reason" ]; then
+    triage_log "absorbed push $to ($absorb_reason): $window"
     fm_backend_commit_transition "$backend" "$STATE" "$session" "$record" || exit 1
     return
   fi

@@ -375,14 +375,10 @@ classify_stale() {  # <window> <state>
   local win=$1 state=$2 task last seen
   task=$(window_to_task "$win" "$state")
   last=$(last_status_line "$state/$task.status")
-  if [ -n "$last" ] && status_is_paused_or_captain_held "$last"; then
-    # A DECLARED external-wait pause or a verified captain-held transfer
-    # (fm-classify-lib.sh owns which declarations qualify): an idle pane is
-    # EXPECTED, so this is not a wedge. The caller records a pause marker (long
-    # re-surface cadence in housekeeping) rather than a wedge stale marker. Cheap:
-    # reuses the status line already read, no fm-crew-state.sh call, mirroring the
-    # daemon's existing status-log classification.
-    printf 'pause|paused (awaiting external), rechecked on a long cadence: %s' "$last"
+  if task_is_parked "$state" "$task"; then
+    # The shared predicate admits a declared wait only when its steering inbox is
+    # empty, so an idle parked pane never enters the wedge ladder.
+    printf 'pause|parked (rechecked on a long cadence): %s' "$last"
     return
   fi
   if [ -n "$last" ] && status_is_captain_relevant "$last"; then
@@ -486,7 +482,7 @@ reconcile_pause_tracking() {  # <window> <state> <last-status-line>
   key=$(_stale_key "$task")
   marker="$state/.subsuper-paused-$key"
   watcher_key=$(_stale_key "$win")
-  if status_is_paused_or_captain_held "$last"; then
+  if task_is_parked "$state" "$task"; then
     stale_marker_remove "$win" "$state"
     pause_marker_record "$win" "$state"
   elif [ -e "$marker" ] || [ -e "$state/.paused-$watcher_key" ]; then
@@ -504,7 +500,7 @@ migrate_watcher_pause_markers() {  # <state>
     key=$(_stale_key "$task")
     watcher_key=$(_stale_key "$win")
     last=$(last_status_line "$state/$task.status")
-    if status_is_paused_or_captain_held "$last" || [ -e "$state/.subsuper-paused-$key" ] || [ -e "$state/.paused-$watcher_key" ]; then
+    if task_is_parked "$state" "$task" || [ -e "$state/.subsuper-paused-$key" ] || [ -e "$state/.paused-$watcher_key" ]; then
       reconcile_pause_tracking "$win" "$state" "$last"
     fi
   done
@@ -966,7 +962,7 @@ _oldest_line_age() {  # <buf> -> seconds since the oldest buffered item first ar
 #  3) heartbeat scan: every HEARTBEAT_SCAN_SECS, grep state/*.status for a
 #     captain-relevant line the per-wake classifier missed and escalate it.
 housekeeping() {  # <state>
-  local state=$1 now due f key task win marker age last max_defer oldest pause_secs
+  local state=$1 now due f key task win marker age last max_defer oldest pause_secs parked_class
   now=$(_now)
   migrate_watcher_pause_markers "$state"
 
@@ -1012,8 +1008,15 @@ housekeeping() {  # <state>
       rm -f "$marker"; continue
     fi
     task=$(window_to_task "$win" "$state")
+    if task_has_unhandled_inbox "$state" "$task"; then
+      # An unhandled steer has its own bounded ladder and must not be aged as a
+      # competing wedge while that ladder is still active.
+      rm -f "$marker"
+      pause_marker_remove "$win" "$state"
+      continue
+    fi
     last=$(last_status_line "$state/$task.status")
-    if [ -n "$last" ] && status_is_paused_or_captain_held "$last"; then
+    if task_is_parked "$state" "$task"; then
       reconcile_pause_tracking "$win" "$state" "$last"
       continue
     fi
@@ -1028,15 +1031,15 @@ housekeeping() {  # <state>
     esac
   done
 
-  # (2b) pause re-surface recheck. A declared wait idles by design (fm-classify-lib.sh's
-  # status_is_paused_or_captain_held owns which declarations qualify), so it is
-  # rechecked on a much longer cadence than a wedge (PAUSE_RESURFACE_SECS) and never
-  # escalated as one - but it MUST re-surface, so neither a forgotten pause nor a
-  # forgotten captain hold can rot invisibly. Past the window: busy (resumed) or gone
-  # -> drop; still idle and still declaring the wait -> escalate a recheck digest and
-  # reset the marker so the window repeats. The digest names WHICH human the wait is
-  # on, because the captain is the one reading it: an external dependency for a
-  # paused: declaration, and the captain themself for a verified hold transfer.
+  # (2b) pause re-surface recheck. A task admitted by the shared
+  # task_is_parked predicate idles by design, so it is rechecked on a much longer
+  # cadence than a wedge (PAUSE_RESURFACE_SECS) and never escalated as one - but it
+  # MUST re-surface, so neither a forgotten pause nor a forgotten captain hold can
+  # rot invisibly. Past the window: busy (resumed) or gone -> drop; still idle and
+  # still parked -> escalate a recheck digest and reset the marker so the window
+  # repeats. The digest names which human the wait is on, because the captain is
+  # the one reading it: an external dependency for paused:, and the captain themself
+  # for an active captain-held backlog item or transfer.
   pause_secs=${FM_PAUSE_RESURFACE_SECS:-$FM_PAUSE_RESURFACE_SECS_DEFAULT}
   for marker in "$state"/.subsuper-paused-*; do
     [ -e "$marker" ] || continue
@@ -1047,7 +1050,7 @@ housekeeping() {  # <state>
     fi
     task=$(window_to_task "$win" "$state")
     last=$(last_status_line "$state/$task.status")
-    if [ -z "$last" ] || ! status_is_paused_or_captain_held "$last"; then
+    if ! task_is_parked "$state" "$task"; then
       reconcile_pause_tracking "$win" "$state" "$last"
       continue
     fi
@@ -1058,11 +1061,11 @@ housekeeping() {  # <state>
       0) rm -f "$marker" ;;
       2) rm -f "$marker" ;;
       *)
-        last=$(last_status_line "$state/$task.status")
-        if [ -n "$last" ] && status_is_captain_held "$last"; then
+        parked_class=$(task_parked_class "$state" "$task" 2>/dev/null || true)
+        if [ "$parked_class" = captain-held ]; then
           escalate_add "$state" "captain-held ${age}s (awaiting the captain, answer the held decision or release the hold): $win"
           _now > "$marker"
-        elif [ -n "$last" ] && status_is_paused "$last"; then
+        elif [ "$parked_class" = paused ]; then
           escalate_add "$state" "paused ${age}s (awaiting external, recheck whether the wait still holds): $win"
           _now > "$marker"
         else
@@ -1229,7 +1232,15 @@ handle_wake() {  # <reason> <state>
               decision=$(classify_stale "$arg" "$state")
               case "$stale_detail" in
                 idle\ *s,\ possible\ wedge,\ escalation\ *)
-                  decision="escalate|${reason#stale: }" ;;
+                  if ! task_is_parked "$state" "$(window_to_task "$arg" "$state")"; then
+                    decision="escalate|${reason#stale: }"
+                  fi
+                  ;;
+                *)
+                  if stale_reason_is_inbox_escalation "$stale_detail"; then
+                    decision="escalate|${reason#stale: }"
+                  fi
+                  ;;
               esac ;;
     check:*)  decision=$(classify_check "$reason") ;;
     heartbeat|heartbeat:*) decision=$(classify_heartbeat) ;;
@@ -1266,26 +1277,33 @@ handle_wake() {  # <reason> <state>
       # wake, escalates a wedge.
       if [ "$kind" = "stale" ]; then
         task=$(window_to_task "$arg" "$state")
-        last=$(last_status_line "$state/$task.status")
-        # Clear wedge aging only for terminal (or legacy free-text) captain lines.
-        # Nonterminal progress verbs keep possible-wedge markers even if free text
-        # once looked captain-relevant or was written into a seen marker.
-        _clear_wedge=0
-        if [ -n "$last" ] && status_is_captain_relevant "$last"; then
-          if status_is_terminal_verb "$last"; then
-            _clear_wedge=1
-          else
-            case "$(status_line_verb "$last")" in
-              working|resolved|captain-held) _clear_wedge=0 ;;
-              *) _clear_wedge=1 ;;
-            esac
-          fi
-        fi
-        if [ "$_clear_wedge" = 1 ]; then
+        if task_has_unhandled_inbox "$state" "$task"; then
+          # The inbox ladder owns an unhandled steer; do not start competing stale
+          # tracking while its next ring or escalation is still due.
           stale_marker_remove "$arg" "$state"
-        else
           pause_marker_remove "$arg" "$state"
-          stale_marker_record "$arg" "$state"
+        else
+          last=$(last_status_line "$state/$task.status")
+          # Clear wedge aging only for terminal (or legacy free-text) captain lines.
+          # Nonterminal progress verbs keep possible-wedge markers even if free text
+          # once looked captain-relevant or was written into a seen marker.
+          _clear_wedge=0
+          if [ -n "$last" ] && status_is_captain_relevant "$last"; then
+            if status_is_terminal_verb "$last"; then
+              _clear_wedge=1
+            else
+              case "$(status_line_verb "$last")" in
+                working|resolved|captain-held) _clear_wedge=0 ;;
+                *) _clear_wedge=1 ;;
+              esac
+            fi
+          fi
+          if [ "$_clear_wedge" = 1 ]; then
+            stale_marker_remove "$arg" "$state"
+          else
+            pause_marker_remove "$arg" "$state"
+            stale_marker_record "$arg" "$state"
+          fi
         fi
       fi
       log "self-handle: $reason -> $distilled"

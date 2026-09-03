@@ -35,6 +35,7 @@ reset_state() {
   rm -f "$STATE_DIR"/*.meta "$STATE_DIR"/*.status "$STATE_DIR"/.wake-queue \
     "$STATE_DIR"/.wake-queue.seq "$STATE_DIR"/.watch-triage.log \
     "$STATE_DIR"/.herdr-escalated-* "$TMP"/panes "$TMP"/wtcalls "$TMP"/wtcalled 2>/dev/null || true
+  rm -rf "$STATE_DIR"/*.inbox
   : > "$WAKE_LOG"
   : > "$SLEEP_LOG"
   _event_cap_key=""
@@ -81,6 +82,22 @@ fi
 [ ! -s "$WAKE_LOG" ] || fail "a declared-pause crew must not wake the supervisor from the event fast-path"
 grep -q 'absorbed push' "$STATE_DIR/.watch-triage.log" 2>/dev/null || fail "the paused absorb should be logged to the triage log"
 pass "handle_push_transition: a declared-pause crew is absorbed (no fast wake), left to the poll loop's long cadence"
+
+# --- handle_push_transition: preserve the steering-inbox ladder ---------------
+
+reset_state
+fm_write_meta "$STATE_DIR/tk2i.meta" "window=default:wG:pQ" "backend=herdr" "kind=ship"
+printf 'paused: waiting on the upstream release\n' > "$STATE_DIR/tk2i.status"
+mkdir -p "$STATE_DIR/tk2i.inbox"
+printf 'unhandled steer\n' > "$STATE_DIR/tk2i.inbox/001.msg"
+handle_push_transition herdr default "$(mkrec wG:pQ blocked)"
+if [ -e "$STATE_DIR/.wake-queue" ] && grep -q 'stale' "$STATE_DIR/.wake-queue"; then
+  fail "an unhandled inbox must retain its ladder instead of receiving a generic fast wake: $(cat "$STATE_DIR/.wake-queue")"
+fi
+[ ! -s "$WAKE_LOG" ] || fail "an unhandled inbox must not wake the supervisor from the event fast-path"
+[ -e "$STATE_DIR/.herdr-escalated-default_wG_pQ" ] || fail "the inbox-owned transition must still commit backend dedupe"
+[ -e "$STATE_DIR/tk2i.inbox/001.msg" ] || fail "the transition fast-path removed the durable inbox record"
+pass "handle_push_transition: an unhandled inbox retains sole ownership of its escalation ladder"
 
 # --- handle_push_transition: absorb for a verified captain-held transfer -------
 
