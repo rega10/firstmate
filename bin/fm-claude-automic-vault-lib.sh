@@ -308,8 +308,15 @@ fm_claude_av_artifact_qualified() {  # <resolved-claude>
     esac
     if [ "$qualified_version" = "$version" ]; then
       [ -z "$found" ] || return 1
-      case "$executable" in
-        "$qualified_path") found=$qualification_date ;;
+      case "$qualified_path" in
+        "*/.local/share/claude/versions/$qualified_version")
+          case "$executable" in
+            */.local/share/claude/versions/"$qualified_version") found=$qualification_date ;;
+          esac
+          ;;
+        *)
+          [ "$executable" != "$qualified_path" ] || found=$qualification_date
+          ;;
       esac
     fi
   done < "$FM_CLAUDE_AV_QUALIFIED_VERSIONS"
