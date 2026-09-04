@@ -1,0 +1,155 @@
+<h1>Bitwarden rollout for production and team credentials</h1>
+<p>This runbook is the staged path from temporary local-only credential custody to organization-owned Bitwarden custody for production and team credentials.<br>
+It is written for a normal operator: every routine action is a short checklist step, and engineering is only needed when a step says so.<br>
+Current access is preserved throughout: every move requires captain approval for its specific batch, and old custody remains unchanged after post-move verification as part of the intended Bitwarden and Automic Vault coexistence end state.</p>
+<h2>Custody boundaries this rollout does not change</h2>
+<ul>
+<li>Local secrets stay in the hardened local vault (Automic Vault).<br>
+This rollout covers production and team credentials only; it never weakens, duplicates, or replaces hardened local access.</li>
+<li>Machine and unattended secrets are out of the initial migration.<br>
+Bitwarden Password Manager (human and team credentials) and Bitwarden Secrets Manager (machine and unattended access) are separate custody models with separate consequences.<br>
+Secrets Manager is deliberately not selected or enabled here; see the open decisions below.</li>
+<li>No secret value ever appears in this repo, in ceremony records, in task reports, or in chat.<br>
+Every record names credentials through the helper's identifier-only fields; its <code class="notranslate">--help</code> owns the exact grammar and secondary credential-shape refusals.</li>
+</ul>
+<h2>Roles</h2>
+<ul>
+<li><strong>Owner (captain)</strong>: approves phase gates and migration batches; holds one organization owner account.</li>
+<li><strong>Second owner/admin</strong>: an independent person or independently held account that can recover the organization if the captain's account is lost.</li>
+<li><strong>Batch operator</strong>: runs a migration batch's checklist; may be the captain or a delegate; never approves their own batch when dual control applies.</li>
+</ul>
+<h2>Open decisions the captain must make before phase 1</h2>
+<p>These are recorded here because the rollout cannot choose them on anyone's behalf:</p>
+<ol>
+<li><strong>Subscription and plan</strong>: which Bitwarden plan and billing arrangement, chosen and purchased by the captain.</li>
+<li><strong>Owner identities</strong>: which two (or more) independent people or independently held accounts hold owner/admin recovery, so no single person is a recovery dependency.</li>
+<li><strong>Retention and compliance</strong>: any legal or contractual retention requirements that constrain export retention and deletion evidence.</li>
+<li><strong>Machine-access architecture</strong>: whether machine and unattended secrets later adopt Bitwarden Secrets Manager (bringing service accounts and access tokens that themselves become credentials to custody), stay on their current mechanisms, or use another store.<br>
+Until this is decided, machine and unattended secrets remain on their current access paths, and nothing in the interim may copy them into Password Manager items as a workaround.</li>
+</ol>
+<h2>Credential class inventory</h2>
+<p>Inventory classes and owners before the first batch; never enumerate or record secret values while doing it.</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>Class</th>
+<th>Examples</th>
+<th>Initial migration?</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Human interactive</td>
+<td>a person's own logins to production consoles and forges</td>
+<td>yes</td>
+<td>core Password Manager fit</td>
+</tr>
+<tr>
+<td>Shared team</td>
+<td>credentials several people legitimately share</td>
+<td>yes</td>
+<td>collections give least-privilege sharing</td>
+</tr>
+<tr>
+<td>Production service</td>
+<td>database and service passwords humans hold today</td>
+<td>yes, human copies only</td>
+<td>the human-held copy moves; the deployed configuration is untouched</td>
+</tr>
+<tr>
+<td>CI/CD tokens</td>
+<td>pipeline and deploy tokens</td>
+<td>deferred</td>
+<td>machine-access decision above owns their target</td>
+</tr>
+<tr>
+<td>Break-glass</td>
+<td>emergency access used when normal paths fail</td>
+<td>yes, last batch, dual control</td>
+<td>highest blast radius; migrate only after the process is proven on lower-risk batches</td>
+</tr>
+<tr>
+<td>Local development</td>
+<td>developer-machine secrets</td>
+<td>no</td>
+<td>stays in the hardened local vault</td>
+</tr>
+<tr>
+<td>Machine/unattended</td>
+<td>service-to-service secrets no human types</td>
+<td>no</td>
+<td>Secrets Manager decision not made</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h2>Phases and gates</h2>
+<p>Each phase has an entry gate; do not start a phase until the previous phase's exit condition is met and the captain has approved moving on.</p>
+<h3>Phase 0 - decisions and inventory (no Bitwarden footprint)</h3>
+<ul>
+<li>Captain resolves the open decisions above.</li>
+<li>Inventory the credential classes and owners (labels only).</li>
+<li>Exit: decisions recorded, inventory exists, captain approves phase 1.</li>
+</ul>
+<h3>Phase 1 - organization hardening (no credentials migrated)</h3>
+<ul>
+<li>Captain creates the organization on the chosen plan.</li>
+<li>Both owner/admin recovery paths are established and independently tested: each owner proves they can sign in, and account recovery (or an equivalent second path) is confirmed before any credential arrives.</li>
+<li>Hardware-backed MFA is enrolled on every privileged account, with a documented MFA-loss recovery that does not depend on a single person.</li>
+<li>Collections and groups are created least-privilege: one collection per team or system boundary, no default all-access group, admin roles held only by the named owners.</li>
+<li>Joiner/mover/leaver procedure is written into the organization's own documentation: joiners get group membership only, movers change groups not items, leavers lose access by group removal and trigger rotation of anything they could have exported.</li>
+<li>Exit: a second owner has demonstrated recovery access, MFA is verified on all privileged accounts, and the captain approves the pilot.</li>
+</ul>
+<h3>Phase 2 - pilot batch (lowest-risk shared team credentials)</h3>
+<ul>
+<li>Run one full migration ceremony (below) on a small, low-risk batch.</li>
+<li>Run one full recovery drill (below) while the stakes are low.</li>
+<li>Exit: pilot batch verified, drill passed, captain approves production batches.</li>
+</ul>
+<h3>Phase 3 - production batches</h3>
+<ul>
+<li>Migrate remaining in-scope classes in captain-approved batches, riskiest last.</li>
+<li>Break-glass credentials move only under dual control: one person moves, a different person verifies, the captain approves.</li>
+<li>Exit: all in-scope classes migrated or explicitly deferred with a recorded reason.</li>
+</ul>
+<h3>Phase 4 - routine operation</h3>
+<ul>
+<li>Joiner/mover/leaver runs as written; drills run on the recovery cadence below; deferred classes wait on their owning decision.</li>
+</ul>
+<h2>Migration ceremony (per batch)</h2>
+<p>Every batch follows the same ordered ceremony, and its auditable no-secret record is kept with <code class="notranslate">bin/fm-bitwarden-ceremony.sh</code> (its <code class="notranslate">--help</code> owns the identifier-only record format and step gates; the tool validates structure and status only and must never be given a secret value):</p>
+<ol>
+<li><strong>Init and plan</strong>: initialize the batch record; register every item as label, owner, and target collection.</li>
+<li><strong>Preflight</strong>: confirm each item's current custody still works, its target collection exists with the right group access, and its owner is available for verification.</li>
+<li><strong>Captain approval</strong>: the captain approves this exact batch; the approval is recorded with the approver's identity.</li>
+<li><strong>Move</strong>: the owner (or batch operator, with the owner for dual control) creates each item in Bitwarden by signing into both sides directly; values pass through no intermediate file, chat, or tool.</li>
+<li><strong>Verify coexistence</strong>: each item's intended users prove real access through Bitwarden (an actual sign-in or connection using the migrated item), anyone who should not see it confirms they cannot, and the operator confirms the old custody remains intact and usable.</li>
+<li><strong>Rollback point</strong>: if Bitwarden verification fails, the old custody is still intact; fix or remove the Bitwarden item and re-verify - nothing has been lost.</li>
+<li><strong>Record</strong>: the verified batch record (labels, owners, collections, dates, approver - never values) is the completion evidence for coexistence.</li>
+</ol>
+<p>The record tool has no retirement transition: verification completes the batch as coexistence evidence, and neither batch approval nor completion authorizes deletion, invalidation, rotation, or retirement of old custody.<br>
+It also refuses to read any record it cannot fully validate - a hand-edited, truncated, or misfiled history is never reported as progress - and its <code class="notranslate">--help</code> owns the exact record rules.<br>
+When a record is refused, correct it back to its last valid prefix (delete only the trailing lines that are not yet true) or quarantine it outside the record directory and start a new batch; never edit it into a shape that merely satisfies the tool.</p>
+<h2>Encrypted export and recovery drills</h2>
+<p>Design only until phase 2; no export is created outside a drill or the operational cadence.</p>
+<ul>
+<li><strong>What</strong>: the organization's encrypted export (password-protected, account-independent format), never a plaintext export, with no plaintext staging step at any point.</li>
+<li><strong>Custody</strong>: stored offline on dedicated media, at least two copies in separate physical locations.</li>
+<li><strong>Split ownership</strong>: the export file and its encryption passphrase are held by different people, so neither holder can read it alone; the passphrase itself is written down once per holder and stored with their personal recovery material, not in any vault the export is meant to recover.</li>
+<li><strong>Restore verification</strong>: a drill is passed only when a restore into a scratch client proves a sampled item actually opens; an unverified export is treated as no export.</li>
+<li><strong>Rotation after exposure</strong>: if an export or passphrase may have been exposed, rotate the credentials it contained, not just the export.</li>
+<li><strong>Cadence</strong>: refresh the export and run a restore drill at least quarterly, and immediately after any owner/admin change.</li>
+<li><strong>Retention and deletion</strong>: superseded exports are destroyed (media erased or physically destroyed), and the drill evidence records export date, holders, restore result, and destruction of the superseded copy - never contents.</li>
+</ul>
+<p>Drill evidence template (copy per drill, no secret values):</p>
+<pre class="notranslate"><code class="notranslate">drill: &lt;YYYY-MM-DD&gt;
+export-created: &lt;YYYY-MM-DD&gt; by &lt;label&gt;
+copies: &lt;location-label-1&gt;, &lt;location-label-2&gt;
+passphrase-holder: &lt;label&gt; (distinct from export holder: &lt;label&gt;)
+restore-verified: &lt;YYYY-MM-DD&gt; by &lt;label&gt;, sampled item opened: yes/no
+superseded-copy-destroyed: &lt;YYYY-MM-DD&gt; by &lt;label&gt;
+notes: &lt;free text, labels only&gt;
+</code></pre>
+<h2>What this runbook never authorizes</h2>
+<p>Migration-batch approval or completion never authorizes deleting, invalidating, rotating, or retiring existing custody or credentials as part of the migration, including old-custody retirement; the independently triggered <a href="#phase-1---organization-hardening-no-credentials-migrated">joiner/mover/leaver rotation procedure</a> and <a href="#encrypted-export-and-recovery-drills">rotation-after-exposure procedure</a> remain in force.<br>
+Creating accounts or organizations, choosing or purchasing a plan, inviting users, changing billing, reading or moving secret values, or changing production access require the captain's direct participation or explicit approval at the gate that names them.</p>
