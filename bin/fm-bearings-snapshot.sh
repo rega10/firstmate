@@ -336,7 +336,10 @@ MODEL=$(printf '%s' "$SNAP" | jq \
        | select(length > $i)
        | .[$i]][:$n];
   (.projects // []) as $projects
-  | def project_record($repo):
+  | (.tasks // []) as $tasks
+  | def task_project($id):
+      first($tasks[] | select(.id == $id) | (.backlog.repo // .project)) // null;
+    def project_record($repo):
       first($projects[] | select($repo != null and (.repo == $repo or .name == $repo))) // null;
     def project_archived($repo):
       (project_record($repo) | .posture == "archived");
@@ -463,22 +466,23 @@ MODEL=$(printf '%s' "$SNAP" | jq \
       else [] end)
      + [ .backlog.records[]
          | . as $record
+         | (.repo // task_project(.id)) as $repo
          | select(.structured and
              (.state == "queued" or
               (.state == "in_flight" and
-               (project_parked(.repo) or
+               (project_parked($repo) or
                 (.current_role == "held" and ($working_ids | index($record.id) | not))))))
-         | select(project_archived(.repo) | not)
-         | select(project_parked(.repo) or .captain_actionable != true)
-         | select(project_parked(.repo) or ($all_queued == 1) or (.deferred_marker != true)
+         | select(project_archived($repo) | not)
+         | select(project_parked($repo) or .captain_actionable != true)
+         | select(project_parked($repo) or ($all_queued == 1) or (.deferred_marker != true)
                   or ((.hold_until // null) != null and .hold_until > $today))
          | {id, title:(.title | trunc(60)),
             blocked_by:((.unresolved_blocker_ids // []) | if length > 0 then join(",") else "-" end | trunc(120)),
-            reason:((if project_parked(.repo) then project_park_reason(.repo)
+            reason:((if project_parked($repo) then project_park_reason($repo)
                      elif (.hold_until // null) != null and .hold_until > $today
                      then ("until " + .hold_until + ": " + (.hold_reason // .blocked_reason // "-"))
                      else (.hold_reason // .blocked_reason // "-") end) | trunc(40)),owner:"(main)",
-            _project_rank:project_gate_rank(.repo)} ]
+            _project_rank:project_gate_rank($repo)} ]
      + [ (.secondmate_current.records // [])[] as $m
          | select($m.provenance.selected == "structured-home")
          | $m.queued[]?

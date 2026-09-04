@@ -1944,7 +1944,8 @@ test_project_lifecycle_surface_and_bearings_projection() {
   local home fakebin canonical json toon
   home=$(make_home project-lifecycle)
   : > "$home/data/secondmates.md"
-  mkdir -p "$home/projects/due-live" "$home/projects/permanent-live" "$home/projects/future-live"
+  mkdir -p "$home/projects/due-live" "$home/projects/permanent-live" \
+    "$home/projects/permanent-meta-live" "$home/projects/future-live"
   cat > "$home/data/projects.md" <<'EOF'
 - active [no-mistakes +yolo] - Active project (added 2026-07-01)
 - due [direct-PR parked:2026-07-11] - Due project (added 2026-07-01)
@@ -1956,6 +1957,7 @@ EOF
 ## In flight
 - [ ] due-live - Due parked work is underway (repo: due) (kind: ship) (since 2026-07-10)
 - [ ] permanent-live - Permanently parked live work (repo: permanent) (kind: ship) (since 2026-07-10)
+- [ ] permanent-meta-live - Parked work identified by task metadata (kind: ship) (since 2026-07-10)
 - [ ] future-live - Future parked live work (repo: future) (kind: ship) (since 2026-07-10)
 
 ## Queued
@@ -1977,6 +1979,10 @@ EOF
     "window=firstmate:fm-permanent-live" "worktree=$home/projects/permanent-live" "project=permanent" \
     "harness=codex" "kind=ship" "mode=local-only"
   printf 'working: permanently parked task still has a live status\n' > "$home/state/permanent-live.status"
+  fm_write_meta "$home/state/permanent-meta-live.meta" \
+    "window=firstmate:fm-permanent-meta-live" "worktree=$home/projects/permanent-meta-live" "project=permanent" \
+    "harness=codex" "kind=ship" "mode=local-only"
+  printf 'working: metadata identifies this parked project\n' > "$home/state/permanent-meta-live.status"
   fm_write_meta "$home/state/future-live.meta" \
     "window=firstmate:fm-future-live" "worktree=$home/projects/future-live" "project=future" \
     "harness=codex" "kind=ship" "mode=no-mistakes"
@@ -2002,8 +2008,9 @@ EOF
   printf '%s' "$json" | jq -e '
     [.projects[].name] == ["active", "due", "permanent", "future", "archived"]
       and ([.in_flight[].id] == ["due-live"])
-      and ([.gates[].id] == ["active-next", "due-next", "permanent-live", "permanent-next", "future-call", "future-live"])
+      and ([.gates[].id] == ["active-next", "due-next", "permanent-live", "permanent-meta-live", "permanent-next", "future-call", "future-live"])
       and (.gates | any(.id == "permanent-live" and .reason == "project parked"))
+      and (.gates | any(.id == "permanent-meta-live" and .reason == "project parked"))
       and (.gates | any(.id == "permanent-next" and .reason == "project parked"))
       and (.gates | any(.id == "future-call" and .reason == "project parked until 2026-08-01"))
       and (.gates | any(.id == "future-live" and .reason == "project parked until 2026-08-01"))
