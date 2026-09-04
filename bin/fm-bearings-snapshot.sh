@@ -423,6 +423,7 @@ MODEL=$(printf '%s' "$SNAP" | jq \
   | ([ .tasks[]
        | select(.kind != "secondmate")
        | select(project_archived(.backlog.repo // .project) | not)
+       | select(project_parked(.backlog.repo // .project) | not)
        | select(.backlog.current_role != "program")
        | select(.backlog.current_role != "held" or .current_state.state == "working")
        | {id, kind,
@@ -464,7 +465,9 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | . as $record
          | select(.structured and
              (.state == "queued" or
-              (.state == "in_flight" and .current_role == "held" and ($working_ids | index($record.id) | not))))
+              (.state == "in_flight" and
+               (project_parked(.repo) or
+                (.current_role == "held" and ($working_ids | index($record.id) | not))))))
          | select(project_archived(.repo) | not)
          | select(project_parked(.repo) or .captain_actionable != true)
          | select(project_parked(.repo) or ($all_queued == 1) or (.deferred_marker != true)
