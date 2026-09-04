@@ -368,6 +368,28 @@ test_project_posture_rejects_unknown_values_and_bad_dates() {
   pass "fm-project-posture: unknown values, malformed dates, and unknown projects fail closed"
 }
 
+test_project_posture_rejects_duplicate_projects_for_every_command() {
+  local home before after command status
+  home="$TMP_ROOT/project-posture-duplicate/home"
+  mkdir -p "$home/data" "$home/state"
+  cat > "$home/data/projects.md" <<'EOF'
+- app [direct-PR] - first fixture (added 2026-01-01)
+- app [direct-PR parked] - duplicate fixture (added 2026-01-02)
+EOF
+  before=$(cat "$home/data/projects.md")
+  for command in get set clear; do
+    case "$command" in
+      set) FM_HOME="$home" "$PROJECT_POSTURE" set app archived >/dev/null 2>&1 ;;
+      *) FM_HOME="$home" "$PROJECT_POSTURE" "$command" app >/dev/null 2>&1 ;;
+    esac
+    status=$?
+    [ "$status" -ne 0 ] || fail "$command accepted a duplicate project registration"
+    after=$(cat "$home/data/projects.md")
+    [ "$before" = "$after" ] || fail "$command changed a duplicate project registry"
+  done
+  pass "fm-project-posture: get, set, and clear reject duplicate projects without mutation"
+}
+
 test_project_posture_expiry_check_fires_once_per_registration() {
   local home check first second third watcher_out watcher_err status
   home="$TMP_ROOT/project-posture-expiry/home"
@@ -415,5 +437,6 @@ test_project_mode_maps_the_conditional_policy
 test_project_mode_ignores_lifecycle_for_every_registry_form
 test_project_posture_round_trips_without_touching_delivery
 test_project_posture_rejects_unknown_values_and_bad_dates
+test_project_posture_rejects_duplicate_projects_for_every_command
 test_project_posture_expiry_check_fires_once_per_registration
 echo "# all fm-task-delivery tests passed"
