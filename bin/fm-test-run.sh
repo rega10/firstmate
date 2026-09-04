@@ -1038,6 +1038,11 @@ families_for_changed_path() {
     bin/fm-bearings-snapshot.sh|bin/fm-fleet-snapshot.sh|bin/fm-fleet-view.sh)
       printf '%s\n' snapshot-bearings
       ;;
+    bin/fm-project-posture.sh)
+      printf '%s\n' pure-contract-unit
+      printf '%s\n' watcher-wake-lock
+      printf '%s\n' snapshot-bearings
+      ;;
     bin/fm-install-herdr.sh|bin/fm-install-treehouse.sh|bin/fm-herdr-ci-cleanup.sh)
       printf '%s\n' pure-contract-unit
       # Pin or cleanup changes also select the real-Herdr family so the required

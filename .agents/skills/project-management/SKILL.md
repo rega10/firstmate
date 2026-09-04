@@ -2,7 +2,7 @@
 name: project-management
 description: >-
   Agent-only procedure for Firstmate project management.
-  Use before adding, creating, removing, or initializing a project.
+  Use before adding, creating, removing, initializing, parking, un-parking, or archiving a project.
   Cloning or registering a project is add intake and uses the same trigger.
   Owns project add, create, clone, remove, initialization, registry, delivery-mode, autonomy, and outward-consent decisions.
 user-invocable: false
@@ -12,7 +12,7 @@ metadata:
 
 # project-management
 
-Use this procedure before adding, creating, removing, or initializing a project.
+Use this procedure before adding, creating, removing, initializing, parking, un-parking, or archiving a project.
 Cloning or registering a project is add intake and uses the same trigger.
 This skill is the single owner of Firstmate's project-management procedure.
 It does not replace `secondmate-provisioning`, which owns project clones inside persistent secondmate homes.
@@ -29,9 +29,13 @@ Apply `AGENTS.md` section 7's authoritative secondmate routing rules; if an exis
 Absence from the main `data/projects.md` registry is never evidence that no second mate owns the domain.
 If the owning second mate cannot accept the route, report that concrete blocker or obtain an explicit captain redirection rather than silently duplicating the project in the main home.
 
-Resolve the project name, destination, delivery posture, and autonomy posture before changing local or remote state.
+Resolve the project name, destination, delivery posture, lifecycle posture, and autonomy posture before changing local or remote state.
 Keep a newly added clone and its registry entry consistent, and roll back only artifacts created by the incomplete operation when a later initialization step fails and that rollback is safe.
 Do not overwrite or repurpose an existing path.
+
+Lifecycle posture is orthogonal to delivery and merge authority.
+An absent token means active, `parked` removes the project from dispatch indefinitely, `parked:YYYY-MM-DD` removes it until that date, and `archived` removes its work from default Bearings views with disclosure.
+Use `bin/fm-project-posture.sh` for lifecycle changes; its header owns command mechanics and the expiry-wake path.
 
 ## Delivery posture
 
@@ -54,7 +58,8 @@ Default it off for every project and every posture, and enable it only on the ca
 
 ## Add or clone an existing project
 
-Confirm the source URL, local project name, delivery posture, and autonomy posture, stating the resolved default for each rather than asking the captain to invent one.
+Confirm the source URL, local project name, delivery posture, lifecycle posture, and autonomy posture, stating the resolved default for each rather than asking the captain to invent one.
+The lifecycle default is active.
 Clone into `projects/<name>` and add the registry entry only after the destination is known to be unused.
 A `no-mistakes` or `no-mistakes-prod-only` project must have an `origin` remote and must complete the initialization procedure below, because a conditional policy's product-facing work runs the pipeline while its internal-only work still takes the direct PR.
 A `direct-PR` project needs an `origin` remote but skips no-mistakes initialization.

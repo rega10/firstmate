@@ -1940,6 +1940,71 @@ EOF
   pass "main and secondmate captain actionability use the same blocker readiness"
 }
 
+test_project_lifecycle_surface_and_bearings_projection() {
+  local home fakebin canonical json toon
+  home=$(make_home project-lifecycle)
+  : > "$home/data/secondmates.md"
+  cat > "$home/data/projects.md" <<'EOF'
+- active [no-mistakes +yolo] - Active project (added 2026-07-01)
+- due [direct-PR parked:2026-07-11] - Due project (added 2026-07-01)
+- permanent [local-only parked] - Permanent park (added 2026-07-01)
+- future [no-mistakes parked:2026-08-01] - Future park (added 2026-07-01)
+- archived [direct-PR archived] - Archived project (added 2026-07-01)
+EOF
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+- [ ] active-next - Active queued work (repo: active) (kind: ship)
+- [ ] due-next - Due parked work resurfaces (repo: due) (kind: ship)
+- [ ] permanent-next - Permanent parked work (repo: permanent) (kind: ship)
+- [ ] future-call - Future parked captain work (repo: future) (kind: captain) (hold: captain chooses route) (hold-kind: captain)
+- [ ] archived-next - Archived queued work (repo: archived) (kind: ship)
+
+## Done
+- [x] active-done - Active completion (repo: active) (kind: ship) (done 2026-07-10)
+- [x] archived-done - Archived completion (repo: archived) (kind: ship) (done 2026-07-10)
+EOF
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
+    "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    [.projects[].name] == ["active", "due", "permanent", "future", "archived"]
+      and (.projects[] | select(.name == "active")
+        | .posture == "active" and .parked_until == null and .repo == "active"
+          and .delivery == "no-mistakes +yolo")
+      and (.projects[] | select(.name == "due")
+        | .posture == "parked" and .parked_until == "2026-07-11"
+          and .repo == "due" and .delivery == "direct-PR")
+      and (.projects[] | select(.name == "permanent")
+        | .posture == "parked" and .parked_until == null and .delivery == "local-only")
+      and (.projects[] | select(.name == "archived")
+        | .posture == "archived" and .parked_until == null and .delivery == "direct-PR")
+  ' >/dev/null || fail "canonical project lifecycle surface was incomplete or unordered: $canonical"
+
+  json=$(run "$home" "$fakebin" --json)
+  printf '%s' "$json" | jq -e '
+    [.projects[].name] == ["active", "due", "permanent", "future", "archived"]
+      and ([.gates[].id] == ["active-next", "due-next", "permanent-next", "future-call"])
+      and (.gates | any(.id == "permanent-next" and .reason == "project parked"))
+      and (.gates | any(.id == "future-call" and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "due-next" and .reason == "-"))
+      and (.decisions_open | any(.id == "future-call") | not)
+      and (.gates | any(.id == "archived-next") | not)
+      and (.landed | any(.id == "active-done"))
+      and (.landed | any(.id == "archived-done") | not)
+      and (.omitted | any(.surface == "archived project work omitted: archived"))
+  ' >/dev/null || fail "Bearings did not gate parks, resurface due work, or disclose archives: $json"
+  toon=$(run "$home" "$fakebin")
+  assert_contains "$toon" 'projects[5]{name,posture,parked_until,repo,delivery}:' \
+    "TOON omitted the project lifecycle surface"
+  assert_contains "$toon" 'project parked until 2026-08-01' \
+    "TOON omitted the dated park reason"
+  assert_contains "$toon" 'archived project work omitted: archived' \
+    "TOON omitted the archived-project disclosure"
+  pass "project lifecycle is one canonical snapshot surface for Bearings ordering and disclosure"
+}
+
 test_domain_alpha_stale_parent_event_does_not_become_current_work
 test_gnu_stat_uses_file_formats_without_bsd_fallback_pollution
 test_parent_activity_evidence_is_bounded_and_disclosed
@@ -1970,6 +2035,7 @@ test_main_unstructured_current_is_disclosed_with_structured_sibling
 test_main_orphan_counterfactual_meta_clears_inventory_warning
 test_mixed_secondmate_roles_partial_state_and_captain_readiness
 test_main_captain_readiness_matches_secondmate_projection
+test_project_lifecycle_surface_and_bearings_projection
 test_completed_scout_report_not_pending
 test_open_decision_surfaces_end_to_end
 test_report_pointers_surface

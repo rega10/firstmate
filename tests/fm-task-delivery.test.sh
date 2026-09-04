@@ -20,6 +20,7 @@ set -u
 SPAWN="$ROOT/bin/fm-spawn.sh"
 PROMOTE="$ROOT/bin/fm-promote.sh"
 PROJECT_MODE="$ROOT/bin/fm-project-mode.sh"
+PROJECT_POSTURE="$ROOT/bin/fm-project-posture.sh"
 TMP_ROOT=$(fm_test_tmproot fm-task-delivery)
 
 # A home with one registered project, one project directory, and a fake tmux that
@@ -272,6 +273,138 @@ EOF
   pass "fm-project-mode: the conditional policy is accepted, mapped for mechanical callers, and readable raw"
 }
 
+test_project_mode_ignores_lifecycle_for_every_registry_form() {
+  local home output expected project
+  home="$TMP_ROOT/project-mode-lifecycle/home"
+  mkdir -p "$home/data"
+  cat > "$home/data/projects.md" <<'EOF'
+- legacy - fixture (added 2026-01-01)
+- flat [direct-PR] - fixture (added 2026-01-01)
+- yolo [local-only +yolo] - fixture (added 2026-01-01)
+- parked-default [parked] - fixture (added 2026-01-01)
+- parked-mode [direct-PR parked] - fixture (added 2026-01-01)
+- parked-yolo [no-mistakes +yolo parked:2026-10-01] - fixture (added 2026-01-01)
+- archived [local-only archived] - fixture (added 2026-01-01)
+- conditional [no-mistakes-prod-only parked] - fixture (added 2026-01-01)
+EOF
+  while IFS='|' read -r project expected; do
+    output=$(FM_HOME="$home" "$PROJECT_MODE" "$project" 2>/dev/null)
+    [ "$output" = "$expected" ] || fail "$project changed delivery output to '$output', expected '$expected'"
+  done <<'ROWS'
+legacy|no-mistakes off
+flat|direct-PR off
+yolo|local-only on
+parked-default|no-mistakes off
+parked-mode|direct-PR off
+parked-yolo|no-mistakes on
+archived|local-only off
+conditional|no-mistakes off
+ROWS
+  pass "fm-project-mode: lifecycle tokens leave every legacy delivery output unchanged"
+}
+
+test_project_posture_round_trips_without_touching_delivery() {
+  local home before after output inode_before inode_after
+  home="$TMP_ROOT/project-posture-roundtrip/home"
+  mkdir -p "$home/data" "$home/state"
+  cat > "$home/data/projects.md" <<'EOF'
+- legacy - legacy fixture (added 2026-01-01)
+- app [direct-PR +yolo] - app fixture (added 2026-01-01)
+EOF
+  [ "$(FM_HOME="$home" "$PROJECT_POSTURE" get app)" = active ] \
+    || fail "missing lifecycle token did not read as active"
+  inode_before=$(stat -f '%i' "$home/data/projects.md" 2>/dev/null || stat -c '%i' "$home/data/projects.md")
+  output=$(FM_HOME="$home" "$PROJECT_POSTURE" set app parked:2026-10-01)
+  inode_after=$(stat -f '%i' "$home/data/projects.md" 2>/dev/null || stat -c '%i' "$home/data/projects.md")
+  [ "$inode_before" != "$inode_after" ] || fail "registry update did not publish by atomic replacement"
+  assert_contains "$output" 'previous: - app [direct-PR +yolo] - app fixture' \
+    "posture mutation did not retain the previous line in output"
+  assert_contains "$output" 'current: - app [direct-PR +yolo parked:2026-10-01] - app fixture' \
+    "posture mutation did not print the current line"
+  [ "$(FM_HOME="$home" "$PROJECT_POSTURE" get app)" = parked:2026-10-01 ] \
+    || fail "dated park did not round trip"
+  [ "$(FM_HOME="$home" "$PROJECT_MODE" app)" = 'direct-PR on' ] \
+    || fail "dated park changed delivery mode or yolo"
+
+  FM_HOME="$home" "$PROJECT_POSTURE" set app archived >/dev/null
+  [ "$(FM_HOME="$home" "$PROJECT_POSTURE" get app)" = archived ] \
+    || fail "archived posture did not round trip"
+  [ "$(FM_HOME="$home" "$PROJECT_MODE" app)" = 'direct-PR on' ] \
+    || fail "archive changed delivery mode or yolo"
+
+  FM_HOME="$home" "$PROJECT_POSTURE" clear app >/dev/null
+  [ "$(FM_HOME="$home" "$PROJECT_POSTURE" get app)" = active ] \
+    || fail "clear did not restore active"
+  assert_grep '- app [direct-PR +yolo] - app fixture' "$home/data/projects.md" \
+    "clear changed or removed the delivery annotation"
+
+  FM_HOME="$home" "$PROJECT_POSTURE" set legacy parked >/dev/null
+  assert_grep '- legacy [parked] - legacy fixture' "$home/data/projects.md" \
+    "a legacy line did not gain a lifecycle-only annotation"
+  [ "$(FM_HOME="$home" "$PROJECT_MODE" legacy)" = 'no-mistakes off' ] \
+    || fail "lifecycle-only annotation changed the legacy delivery default"
+  FM_HOME="$home" "$PROJECT_POSTURE" set legacy active >/dev/null
+  assert_grep '- legacy - legacy fixture' "$home/data/projects.md" \
+    "set active did not remove the lifecycle-only annotation cleanly"
+  pass "fm-project-posture: set, get, active, and clear preserve delivery bytes and defaults"
+}
+
+test_project_posture_rejects_unknown_values_and_bad_dates() {
+  local home before after value status
+  home="$TMP_ROOT/project-posture-invalid/home"
+  mkdir -p "$home/data" "$home/state"
+  printf '%s\n' '- app [no-mistakes +yolo] - fixture (added 2026-01-01)' > "$home/data/projects.md"
+  before=$(cat "$home/data/projects.md")
+  for value in waiting parked:2026-2-03 parked:2026-02-30 parked:hello; do
+    FM_HOME="$home" "$PROJECT_POSTURE" set app "$value" >/dev/null 2>&1
+    status=$?
+    [ "$status" -ne 0 ] || fail "invalid lifecycle value was accepted: $value"
+  done
+  FM_HOME="$home" "$PROJECT_POSTURE" set missing parked >/dev/null 2>&1
+  status=$?
+  [ "$status" -ne 0 ] || fail "unknown project was accepted"
+  after=$(cat "$home/data/projects.md")
+  [ "$before" = "$after" ] || fail "a rejected lifecycle mutation changed the registry"
+  pass "fm-project-posture: unknown values, malformed dates, and unknown projects fail closed"
+}
+
+test_project_posture_expiry_check_fires_once_per_registration() {
+  local home check first second third watcher_out watcher_err status
+  home="$TMP_ROOT/project-posture-expiry/home"
+  mkdir -p "$home/data" "$home/state"
+  printf '%s\n' '- app [direct-PR +yolo] - fixture (added 2026-01-01)' > "$home/data/projects.md"
+  FM_HOME="$home" "$PROJECT_POSTURE" set app parked:2026-10-01 >/dev/null
+  check="$home/state/project-posture-expiry.check.sh"
+  assert_present "$check" "dated park did not arm the custom check"
+  assert_present "$home/state/project-posture-expiry.check-trust" \
+    "dated park did not register the custom check bytes"
+  first=$(FM_PROJECT_POSTURE_TODAY=2026-09-30 "$check")
+  [ -z "$first" ] || fail "future park woke early: $first"
+  watcher_out="$home/watcher.out"
+  watcher_err="$home/watcher.err"
+  FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_POLL=0 FM_CHECK_INTERVAL=0 FM_SIGNAL_GRACE=0 \
+    FM_PROJECT_POSTURE_TODAY=2026-10-01 "$ROOT/bin/fm-watch.sh" > "$watcher_out" 2> "$watcher_err"
+  status=$?
+  [ "$status" -eq 0 ] || fail "watcher did not execute the registered expiry check: $(cat "$watcher_err")"
+  assert_grep "check: $check: project posture expired: app (parked until 2026-10-01)" "$watcher_out" \
+    "due park did not become a check wake"
+  second=$(FM_PROJECT_POSTURE_TODAY=2026-10-02 "$check")
+  [ -z "$second" ] || fail "expired park repeated on a later poll: $second"
+
+  FM_HOME="$home" "$PROJECT_POSTURE" set app parked:2026-10-01 >/dev/null
+  third=$(FM_PROJECT_POSTURE_TODAY=2026-10-02 "$check")
+  assert_contains "$third" 'project posture expired: app (parked until 2026-10-01)' \
+    "explicit re-registration did not reset the once-only receipt"
+  [ -z "$(FM_PROJECT_POSTURE_TODAY=2026-10-02 "$check")" ] \
+    || fail "re-registered park emitted more than once"
+
+  FM_HOME="$home" "$PROJECT_POSTURE" clear app >/dev/null
+  assert_absent "$check" "clearing the final dated park left its check armed"
+  assert_absent "$home/state/project-posture-expiry.check-trust" \
+    "clearing the final dated park left its trust binding"
+  pass "fm-project-posture: a due park emits one registered check wake and stays quiet"
+}
+
 test_ship_spawn_requires_a_valid_delivery_contract
 test_scout_and_secondmate_refuse_delivery_flags
 test_spawn_refuses_a_brief_mode_mismatch
@@ -279,4 +412,8 @@ test_spawn_notices_a_rigor_downgrade_against_the_registry
 test_scout_records_no_delivery_posture
 test_promote_requires_and_records_the_delivery_contract
 test_project_mode_maps_the_conditional_policy
+test_project_mode_ignores_lifecycle_for_every_registry_form
+test_project_posture_round_trips_without_touching_delivery
+test_project_posture_rejects_unknown_values_and_bad_dates
+test_project_posture_expiry_check_fires_once_per_registration
 echo "# all fm-task-delivery tests passed"
