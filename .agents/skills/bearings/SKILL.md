@@ -87,7 +87,7 @@ Compose the payload from the same snapshot with the same ranking judgment as the
 - When the card's task is a captain-gated WORK item (the answer should free it to proceed rather than complete it), set the card's `close: "release"` so the answer lifts the hold instead of closing the task; question-shaped items omit it.
 - Every Captain's Call item and every Underway, Recently Landed, and Charted Next row carries an explicit `repo` field. Fill it from the snapshot and task records wherever known; use null or an empty string only as the deliberate genuinely-no-repo marker, in which case the template may show the internal id. Ids otherwise stay in the payload only as the routing channel, and composed reasons name blockers in plain words.
 - Keep permanently parked and future dated project work in the board payload's Charted Next rows with the snapshot's park reason, and do not offer those rows in `dispatch.charted` until the park is due or cleared.
-- Omit archived project work from the board payload and preserve the snapshot's named `omitted` disclosure in the board's disclosure surface.
+- Set the board payload's optional `omitted` array to snapshot-shaped `{surface,reveal}` rows for every snapshot disclosure that names archived project work, plus a named row for any parked project work omitted from the bounded board projection; omit the field when neither applies.
 
 Run `build` once after composing the payload.
 Its serve-first sequence publishes the board, establishes or resumes its Lavish session with `lavish-axi`, and only then binds and arms the polling source; use the session URL it prints in the chat digest.

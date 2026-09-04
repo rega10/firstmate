@@ -256,6 +256,14 @@ a { color: inherit; text-decoration: none; }
   font-size: var(--fs-xs); font-weight: 800; color: var(--text-muted);
   border: 1.5px dashed var(--ink-300); border-radius: var(--radius-pill); padding: 5px 12px; width: fit-content;
 }
+.bb-omitted {
+  padding: 8px 18px; border-top: 1px solid var(--border-soft);
+  font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.35;
+}
+.bb-omitted__label {
+  font-family: var(--font-mono); font-size: var(--fs-2xs); font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.07em; color: var(--rust-600);
+}
 .bb-empty { padding: 18px; font-size: var(--fs-sm); color: var(--text-muted); }
 
 /* ---- Charted Next dispatch picker ---- */
@@ -331,6 +339,7 @@ a { color: inherit; text-decoration: none; }
     </div>
     <div class="fm-card fm-card--warm">
       <div class="bb-rows" id="bb-charted"></div>
+__FM_BEARINGS_BOARD_OMITTED__
       <div class="bb-dispatch" id="bb-dispatch" hidden>
         <span class="bb-dispatch__count" id="bb-dispatch-count">nothing picked</span>
         <span class="bb-queued" id="bb-dispatch-queued">
