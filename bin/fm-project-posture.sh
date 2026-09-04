@@ -108,7 +108,26 @@ write_registry() { # <project> <active|parked|parked:date|archived>
   mode=$(file_mode "$REG")
   trap 'rm -f -- "$tmp"' EXIT HUP INT TERM
   if ! awk -v target="$project" -v posture="$posture" '
-    function append(value, token) { return value == "" ? token : value " " token }
+    function find_lifecycle(value,    i, start, char, token) {
+      lifecycle_start=0
+      lifecycle_length=0
+      start=0
+      for (i=1; i<=length(value)+1; i++) {
+        char=substr(value, i, 1)
+        if (i <= length(value) && char !~ /[[:space:]]/) {
+          if (start == 0) start=i
+        } else if (start != 0) {
+          token=substr(value, start, i-start)
+          if (token == "parked" || token == "archived" || token == "active" || token ~ /^parked:/) {
+            lifecycle_start=start
+            lifecycle_length=i-start
+            return 1
+          }
+          start=0
+        }
+      }
+      return 0
+    }
     $1 == "-" && $2 == target {
       line=$0
       has_annotation=($3 ~ /^\[/)
@@ -117,18 +136,33 @@ write_registry() { # <project> <active|parked|parked:date|archived>
         before=substr(line, 1, RSTART - 1)
         after=substr(line, RSTART + RLENGTH)
         annotation=substr(line, RSTART + 1, RLENGTH - 2)
-        kept=""
-        n=split(annotation, token, /[[:space:]]+/)
-        for (i=1; i<=n; i++) {
-          if (token[i] == "parked" || token[i] == "archived" || token[i] == "active" || token[i] ~ /^parked:/) continue
-          if (token[i] != "") kept=append(kept, token[i])
+        if (find_lifecycle(annotation)) {
+          prefix=substr(annotation, 1, lifecycle_start - 1)
+          suffix=substr(annotation, lifecycle_start + lifecycle_length)
+          if (posture != "active") {
+            annotation=prefix posture suffix
+          } else if (prefix ~ /[^[:space:]]/) {
+            if (substr(prefix, length(prefix), 1) ~ /[[:space:]]/) prefix=substr(prefix, 1, length(prefix) - 1)
+            annotation=prefix suffix
+          } else if (suffix ~ /[^[:space:]]/) {
+            if (substr(suffix, 1, 1) ~ /[[:space:]]/) suffix=substr(suffix, 2)
+            annotation=prefix suffix
+          } else {
+            annotation=""
+          }
+        } else if (posture != "active") {
+          if (annotation ~ /[^[:space:]]/) {
+            match(annotation, /[[:space:]]*$/)
+            annotation=substr(annotation, 1, RSTART - 1) " " posture substr(annotation, RSTART)
+          } else {
+            annotation=posture annotation
+          }
         }
-        if (posture != "active") kept=append(kept, posture)
-        if (kept == "") {
+        if (annotation !~ /[^[:space:]]/) {
           match(before, /^[[:space:]]*-[[:space:]]+[^[:space:]]+/)
           line=substr(before, 1, RLENGTH) after
         } else {
-          line=before "[" kept "]" after
+          line=before "[" annotation "]" after
         }
       } else if (posture != "active") {
         match(line, /^[[:space:]]*-[[:space:]]+[^[:space:]]+/)

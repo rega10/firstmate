@@ -349,6 +349,35 @@ EOF
   pass "fm-project-posture: set, get, active, and clear preserve delivery bytes and defaults"
 }
 
+test_project_posture_preserves_exact_legacy_annotation_bytes() {
+  local home before output expected
+  home="$TMP_ROOT/project-posture-exact-bytes/home"
+  mkdir -p "$home/data" "$home/state"
+  cat > "$home/data/projects.md" <<'EOF'
+- spaced [direct-PR   +yolo] - irregular spacing fixture (added 2026-01-01)
+- bare - no annotation fixture (added 2026-01-01)
+EOF
+  before=$(cat "$home/data/projects.md")
+
+  output=$(FM_HOME="$home" "$PROJECT_POSTURE" set spaced parked)
+  expected='previous: - spaced [direct-PR   +yolo] - irregular spacing fixture (added 2026-01-01)
+current: - spaced [direct-PR   +yolo parked] - irregular spacing fixture (added 2026-01-01)'
+  [ "$output" = "$expected" ] || fail "set normalized irregular delivery annotation bytes: $output"
+  FM_HOME="$home" "$PROJECT_POSTURE" clear spaced >/dev/null
+  [ "$(sed -n '1p' "$home/data/projects.md")" = \
+    '- spaced [direct-PR   +yolo] - irregular spacing fixture (added 2026-01-01)' ] \
+    || fail "clear did not restore irregular delivery annotation bytes"
+
+  output=$(FM_HOME="$home" "$PROJECT_POSTURE" set bare archived)
+  expected='previous: - bare - no annotation fixture (added 2026-01-01)
+current: - bare [archived] - no annotation fixture (added 2026-01-01)'
+  [ "$output" = "$expected" ] || fail "set changed bytes around a legacy annotation-free line: $output"
+  FM_HOME="$home" "$PROJECT_POSTURE" clear bare >/dev/null
+  [ "$(cat "$home/data/projects.md")" = "$before" ] \
+    || fail "posture round trips changed legacy registry bytes"
+  pass "fm-project-posture: lifecycle edits preserve exact legacy annotation bytes"
+}
+
 test_project_posture_rejects_unknown_values_and_bad_dates() {
   local home before after value status
   home="$TMP_ROOT/project-posture-invalid/home"
@@ -436,6 +465,7 @@ test_promote_requires_and_records_the_delivery_contract
 test_project_mode_maps_the_conditional_policy
 test_project_mode_ignores_lifecycle_for_every_registry_form
 test_project_posture_round_trips_without_touching_delivery
+test_project_posture_preserves_exact_legacy_annotation_bytes
 test_project_posture_rejects_unknown_values_and_bad_dates
 test_project_posture_rejects_duplicate_projects_for_every_command
 test_project_posture_expiry_check_fires_once_per_registration
