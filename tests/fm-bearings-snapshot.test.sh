@@ -1941,7 +1941,7 @@ EOF
 }
 
 test_project_lifecycle_surface_and_bearings_projection() {
-  local home fakebin canonical json toon
+  local home fakebin canonical json bounded toon
   home=$(make_home project-lifecycle)
   : > "$home/data/secondmates.md"
   mkdir -p "$home/projects/due-live" "$home/projects/permanent-live" \
@@ -2021,6 +2021,13 @@ EOF
       and (.landed | any(.id == "archived-done") | not)
       and (.omitted | any(.surface == "archived project work omitted: archived"))
   ' >/dev/null || fail "Bearings did not gate parks, resurface due work, or disclose archives: $json"
+  bounded=$(FM_BEARINGS_GATES=2 run "$home" "$fakebin" --json)
+  printf '%s' "$bounded" | jq -e '
+    [.gates[].id] == ["active-next", "due-next"]
+      and ([.omitted[] | select(
+        .surface == "parked project work omitted by gates bound: future, permanent"
+          and .reveal == "--all-queued")] | length) == 1
+  ' >/dev/null || fail "bounded gates did not name omitted parked projects: $bounded"
   toon=$(run "$home" "$fakebin")
   assert_contains "$toon" 'projects[5]{name,posture,parked_until,repo,delivery}:' \
     "TOON omitted the project lifecycle surface"

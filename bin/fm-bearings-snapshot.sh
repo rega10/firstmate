@@ -482,7 +482,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
                      elif (.hold_until // null) != null and .hold_until > $today
                      then ("until " + .hold_until + ": " + (.hold_reason // .blocked_reason // "-"))
                      else (.hold_reason // .blocked_reason // "-") end) | trunc(40)),owner:"(main)",
-            _project_rank:project_gate_rank($repo)} ]
+            _project_rank:project_gate_rank($repo),
+            _parked_project:(if project_parked($repo) then (project_record($repo) | .name) else null end)} ]
      + [ (.secondmate_current.records // [])[] as $m
          | select($m.provenance.selected == "structured-home")
          | $m.queued[]?
@@ -496,9 +497,13 @@ MODEL=$(printf '%s' "$SNAP" | jq \
                      elif (.hold_until // null) != null and .hold_until > $today
                      then ("until " + .hold_until + ": " + (.hold_reason // .blocked_reason // "-"))
                      else (.hold_reason // .blocked_reason // "-") end) | trunc(40)),owner:$m.id,
-            _project_rank:project_gate_rank(.repo)} ]
-     | sort_by(._project_rank, .id)
-     | map(del(._project_rank))) as $gates_all
+            _project_rank:project_gate_rank(.repo),
+            _parked_project:(if project_parked(.repo) then (project_record(.repo) | .name) else null end)} ]
+     | sort_by(._project_rank, .id)) as $gates_ranked
+  | ($gates_ranked | map(del(._project_rank, ._parked_project))) as $gates_all
+  | (if $all_queued == 1 then []
+     else [$gates_ranked[$gates_n:][] | ._parked_project // empty] | unique
+     end) as $bounded_parked_projects
   | ([ .scout_reports[]
        | . as $r
        | select(($archived_work_ids | index($r.id)) | not)
@@ -534,6 +539,7 @@ MODEL=$(printf '%s' "$SNAP" | jq \
   | . + {omitted: (
       [ (if $f_bodies then empty else {surface:"backlog item bodies", reveal:"--fields bodies"} end),
         (if ($archived_projects | length) > 0 then {surface:("archived project work omitted: " + ($archived_projects | join(", "))), reveal:"bin/fm-project-posture.sh set <project> active"} else empty end),
+        (if ($bounded_parked_projects | length) > 0 then {surface:("parked project work omitted by gates bound: " + ($bounded_parked_projects | join(", "))), reveal:"--all-queued"} else empty end),
         (if $f_paths then empty else {surface:"task paths", reveal:"--fields paths"} end),
         (if $f_actions then empty else {surface:"watch/steer actions", reveal:"--fields actions"} end),
         (if $f_endpoints then empty else {surface:"healthy endpoint detail", reveal:"--fields endpoints"} end),
