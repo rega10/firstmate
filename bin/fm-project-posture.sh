@@ -329,11 +329,11 @@ case "${1:-}" in
       *) echo "error: unknown lifecycle posture: $value" >&2; exit 2 ;;
     esac
     project_preflight "$project" || exit 1
+    existing=$(line_posture "$(registry_line "$project")") || {
+      echo "error: project has multiple lifecycle posture tokens: $project" >&2
+      exit 1
+    }
     if [ "$value" != active ]; then
-      existing=$(line_posture "$(registry_line "$project")") || {
-        echo "error: project has multiple lifecycle posture tokens: $project" >&2
-        exit 1
-      }
       case "$existing" in
         active|parked|archived) ;;
         parked:*) valid_date "${existing#parked:}" || { echo "error: malformed parked-until date for $project: ${existing#parked:}" >&2; exit 1; } ;;
@@ -343,7 +343,9 @@ case "${1:-}" in
     case "$value" in parked:*) arm_expiry_check || { echo "error: could not arm project posture expiry check" >&2; exit 1; } ;; esac
     output=$(write_registry "$project" "$value") || { echo "error: could not update project registry" >&2; exit 1; }
     printf '%s\n' "$output"
-    forget_receipt "$project" || { echo "error: could not reset project posture expiry receipt" >&2; exit 1; }
+    if [ "$existing" != "$value" ]; then
+      forget_receipt "$project" || { echo "error: could not reset project posture expiry receipt" >&2; exit 1; }
+    fi
     sync_expiry_check || { echo "error: could not reconcile project posture expiry check" >&2; exit 1; }
     ;;
   clear)

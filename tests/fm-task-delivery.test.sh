@@ -419,8 +419,8 @@ EOF
   pass "fm-project-posture: get, set, and clear reject duplicate projects without mutation"
 }
 
-test_project_posture_expiry_check_fires_once_per_registration() {
-  local home check first second third watcher_out watcher_err status
+test_project_posture_expiry_check_fires_once_per_effective_date() {
+  local home check first second third fourth watcher_out watcher_err status
   home="$TMP_ROOT/project-posture-expiry/home"
   mkdir -p "$home/data" "$home/state"
   printf '%s\n' '- app [direct-PR +yolo] - fixture (added 2026-01-01)' > "$home/data/projects.md"
@@ -444,16 +444,20 @@ test_project_posture_expiry_check_fires_once_per_registration() {
 
   FM_HOME="$home" "$PROJECT_POSTURE" set app parked:2026-10-01 >/dev/null
   third=$(FM_PROJECT_POSTURE_TODAY=2026-10-02 "$check")
-  assert_contains "$third" 'project posture expired: app (parked until 2026-10-01)' \
-    "explicit re-registration did not reset the once-only receipt"
-  [ -z "$(FM_PROJECT_POSTURE_TODAY=2026-10-02 "$check")" ] \
-    || fail "re-registered park emitted more than once"
+  [ -z "$third" ] || fail "an unchanged dated park emitted a second wake: $third"
+
+  FM_HOME="$home" "$PROJECT_POSTURE" set app parked:2026-10-03 >/dev/null
+  fourth=$(FM_PROJECT_POSTURE_TODAY=2026-10-03 "$check")
+  assert_contains "$fourth" 'project posture expired: app (parked until 2026-10-03)' \
+    "a changed park date did not reset the once-only receipt"
+  [ -z "$(FM_PROJECT_POSTURE_TODAY=2026-10-04 "$check")" ] \
+    || fail "the changed park date emitted more than once"
 
   FM_HOME="$home" "$PROJECT_POSTURE" clear app >/dev/null
   assert_absent "$check" "clearing the final dated park left its check armed"
   assert_absent "$home/state/project-posture-expiry.check-trust" \
     "clearing the final dated park left its trust binding"
-  pass "fm-project-posture: a due park emits one registered check wake and stays quiet"
+  pass "fm-project-posture: each effective due date emits exactly one registered check wake"
 }
 
 test_ship_spawn_requires_a_valid_delivery_contract
@@ -468,5 +472,5 @@ test_project_posture_round_trips_without_touching_delivery
 test_project_posture_preserves_exact_legacy_annotation_bytes
 test_project_posture_rejects_unknown_values_and_bad_dates
 test_project_posture_rejects_duplicate_projects_for_every_command
-test_project_posture_expiry_check_fires_once_per_registration
+test_project_posture_expiry_check_fires_once_per_effective_date
 echo "# all fm-task-delivery tests passed"
