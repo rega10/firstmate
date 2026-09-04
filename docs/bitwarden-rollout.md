@@ -121,5 +121,5 @@ notes: <free text, labels only>
 
 ## What this runbook never authorizes
 
-This runbook never authorizes deleting, invalidating, rotating, or retiring existing custody or credentials, and no migration-batch approval can authorize those actions.
+Migration-batch approval or completion never authorizes deleting, invalidating, rotating, or retiring existing custody or credentials as part of the migration, including old-custody retirement; the independently triggered [joiner/mover/leaver rotation procedure](#phase-1---organization-hardening-no-credentials-migrated) and [rotation-after-exposure procedure](#encrypted-export-and-recovery-drills) remain in force.
 Creating accounts or organizations, choosing or purchasing a plan, inviting users, changing billing, reading or moving secret values, or changing production access require the captain's direct participation or explicit approval at the gate that names them.
