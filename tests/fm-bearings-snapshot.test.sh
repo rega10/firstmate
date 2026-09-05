@@ -3833,10 +3833,10 @@ EOF
     FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
     NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-queued)
   printf '%s' "$json" | jq -e '
-    (.gates | any(.id == "z-future-park" and .owner == "inventory-mate"
-      and .reason == "project parked until 2026-09-01"))
+    (.gates | any(.id == "z-future-park" and .owner == "inventory-mate") | not)
       and ([.in_flight[] | select(.id == "inventory-mate/a-expired-live")] | length) == 1
-  ' >/dev/null || fail "future park was hidden behind expired lifecycle rows: $json"
+      and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: future-app"))
+  ' >/dev/null || fail "bounded future parks bypassed their summary disclosure: $json"
   pass "lifecycle inventory is complete beyond projection bounds"
 }
 
@@ -3909,12 +3909,11 @@ EOF
     FM_BEARINGS_NOW=2026-07-31T18:00:00Z NET_LOG="$home/net.log" \
     "$BEARINGS" --json --all-queued)
   printf '%s' "$json" | jq -e '
-    (.gates | any(.id == "z-parked-live" and .owner == "expiry-mate"
-      and .reason == "project parked until 2026-08-01"))
-      and (.gates | any(.id == "z-parked-queued" and .owner == "expiry-mate"
-        and .reason == "project parked until 2026-08-01"))
+    (.gates | any(.id == "z-parked-live" and .owner == "expiry-mate") | not)
+      and (.gates | any(.id == "z-parked-queued" and .owner == "expiry-mate") | not)
       and (.in_flight | any(.id == "expiry-mate/z-parked-live") | not)
-  ' >/dev/null || fail "bounded parked task was absent from cached-ledger Charted Next: $json"
+      and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: parked-app"))
+  ' >/dev/null || fail "bounded parked task bypassed its cached-ledger disclosure: $json"
   mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
   json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
     FM_SSH_BIN="$sshbin/fake-ssh" FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" \

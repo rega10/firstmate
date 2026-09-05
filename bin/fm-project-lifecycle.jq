@@ -109,10 +109,6 @@ def fm_secondmate_summary_at($today):
   | ([ $expired[]
        | select(.child_state == "unknown")
        | .id] | unique) as $expired_unknown
-  | ([ $inventory[]?
-      | fm_project_lifecycle(.repo; $projects; $today) as $life
-      | select($life.parked)
-      | select(.backlog_state == "queued" or .backlog_state == "in_flight")]) as $parked
   | (.queued // []) as $queued
   | ([$expired[]
       | select(.backlog_state == "in_flight" and .current_role != "program" and .child_state == "working")
@@ -136,7 +132,7 @@ def fm_secondmate_summary_at($today):
      | unique) as $expired_dequeued_ids
   | (.queued // []
      | map(. as $row | select(any($expired[]; .id == $row.id) | not))) as $retained_queued
-  | fm_merge_by_id($retained_queued; ($parked + $expired_queueable)) as $lifecycle_queued
+  | fm_merge_by_id($retained_queued; $expired_queueable) as $lifecycle_queued
   | .queued = $lifecycle_queued
   | .counts.queued = ([0, ((.counts.queued // ($queued | length))
       - ($expired_dequeued_ids | length))] | max)
