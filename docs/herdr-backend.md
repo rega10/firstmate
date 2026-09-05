@@ -290,11 +290,7 @@ Capability matching checks the bounded schema in-process, avoiding the early-exi
 Polling runs every cycle and remains the permanent fallback when protocol 16, the event schema, Python, connection, subscription, or repeated reader execution is unavailable.
 There is still one watcher process; the event reader is a bounded child of that watcher.
 
-`fm_backend_herdr_events_capable` gates the push path on the ~220KB `herdr api schema --json` payload.
-It matches the two event needles in-process with `case "$schema" in *needle*)`, never by streaming the payload into an early-exit consumer such as `grep -Fq`: an early-exit match closes the pipe while the producer is still writing and prints `printf: write error: Broken pipe` on a watcher TTY every probe cycle, training operators to ignore real errors on that stream.
-
-`tests/fm-backend-herdr-eventwait-smoke.test.sh`, `tests/fm-transition-lib.test.sh`, and `tests/fm-supervision-events.test.sh` cover capability, subscribe-then-reconcile ordering, dedupe, exemptions, and polling fallback.
-The `test_events_capable_*` cases in `tests/fm-backend-herdr.test.sh` drive the gate against a large synthetic schema under a PTY and fail on any broken-pipe write error.
+`tests/fm-backend-herdr.test.sh`, `tests/fm-backend-herdr-eventwait-smoke.test.sh`, `tests/fm-transition-lib.test.sh`, and `tests/fm-supervision-events.test.sh` cover capability, subscribe-then-reconcile ordering, dedupe, exemptions, broken-pipe regressions, and polling fallback.
 
 ## Away-mode supervisor support
 
