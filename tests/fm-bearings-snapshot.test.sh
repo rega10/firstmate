@@ -3547,6 +3547,89 @@ test_expired_unknown_park_replaces_stale_primary_invalidity() {
   pass "newly active expiry invalidity replaces a stale cached primary"
 }
 
+test_expiry_preserves_fatal_cached_invalidity() {
+  local home mate sshbin json
+  home=$(make_home expiry-preserves-fatal)
+  mate="$TMP_ROOT/expiry-preserves-fatal-mate"
+  mkdir -p "$mate/state"
+  printf -- '- fatal-mate - fixture domain (host: fatal-host; root: /remote/root; home: %s; scope: fixture; projects: parked-app; added 2026-07-31)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/fatal-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=fatal-host" "remote_root=/remote/root" "home=$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    lifecycle_inventory:[{id:"fatal-expired-unknown",title:"Unknown task-only child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:null,
+      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    valid:false,reason:"missing structured backlog",invalidity:{kind:"missing_backlog",ids:[]},
+    state:"unknown",active_children:[],decisions_open:[],holds:[],queued:[],landed:[],endpoints:[],
+    counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:1,
+      queued:0,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z \
+    run_remote_ledger_bearings "$home" "$sshbin" 1785520800 >/dev/null
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    run_remote_ledger_bearings "$home" "$sshbin" 1785607200)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "fatal-mate" and .state == "unknown"
+      and .provenance == "unknown" and (.reason | contains("missing structured backlog"))))
+      and (.secondmate_reconcile | any(.id == "fatal-mate"
+        and .kind == "missing_backlog" and .ids == []))
+      and (.in_flight | any(.id == "fatal-mate/fatal-expired-unknown") | not)
+      and (.gates | any(.id == "fatal-expired-unknown") | not)
+  ' >/dev/null || fail "expiry rehabilitated a structurally invalid cached ledger: $json"
+  pass "expiry preserves fatal cached ledger invalidity"
+}
+
+test_expired_queued_worker_is_unowned() {
+  local home mate fakebin canonical
+  home=$(make_home expired-queued-worker)
+  mate="$TMP_ROOT/expired-queued-worker-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home queued-worker-mate "$mate"
+  append_secondmate_registry "$home" queued-worker-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    lifecycle_inventory:[{id:"queued-live-child",title:"Queued row with live child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"queued",
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"working",
+      child_source:"status-log",child_doing:"running without ownership"}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],queued:[],landed:[],endpoints:[],
+    counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:1,
+      queued:0,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "queued-worker-mate")
+    | .provenance.summary_valid == false
+      and .provenance.trust == "partial-structured"
+      and .invalidity == {kind:"unowned_current",ids:["queued-live-child"]}
+      and (.current.reason | contains("queued-live-child"))
+      and (.queued | any(.id == "queued-live-child"))
+  ' >/dev/null || fail "expired queued worker hid its live ownership contradiction: $canonical"
+  pass "expired queued workers are classified as unowned"
+}
+
 test_expired_held_park_stays_valid() {
   local home mate fakebin canonical
   home=$(make_home expired-held-park)
@@ -4011,6 +4094,8 @@ test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
 test_project_aware_v1_parked_work_sinks_to_gates
 test_expired_unknown_park_revalidates_cached_summary
 test_expired_unknown_park_replaces_stale_primary_invalidity
+test_expiry_preserves_fatal_cached_invalidity
+test_expired_queued_worker_is_unowned
 test_expired_held_park_stays_valid
 test_cached_legacy_ledger_discloses_unidentified_posture
 test_archived_legacy_invalidity_is_reconciled

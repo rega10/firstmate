@@ -167,7 +167,7 @@ def fm_secondmate_summary_at($today):
        | select(.child_state == null or .child_state == "")
        | .id] | unique) as $expired_orphans
   | ([ $expired[]
-       | select(.backlog_state == null and .kind != "secondmate")
+       | select(.backlog_state != "in_flight" and .kind != "secondmate")
        | select(.child_state != null and .child_state != "")
        | .id] | unique) as $expired_unowned
   | ([ $expired[]
@@ -220,7 +220,12 @@ def fm_secondmate_summary_at($today):
   | .counts.active_children += ($active | length)
   | .counts.decisions_open += ($decisions | length)
   | .counts.holds += ($holds | length)
-  | (if $expiry_invalidity != null then $expiry_invalidity else $retained_invalidity end) as $current_invalidity
+  | (if $expiry_invalidity != null
+        and ($prior_invalid_kind == null
+          or (["orphan_in_flight","unowned_current","terminal_in_flight"]
+            | index($prior_invalid_kind)) != null)
+     then $expiry_invalidity
+     else $retained_invalidity end) as $current_invalidity
   | if $current_invalidity == null then
       .valid = true
       | .invalidity = {kind:null,ids:[]}
