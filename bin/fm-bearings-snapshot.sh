@@ -294,7 +294,7 @@ if [ "$INCLUDE_PRS" = 1 ]; then
   if ! command -v gh >/dev/null 2>&1; then
     PR_STATUS='unavailable (gh not found)'
   else
-    SUPPRESSED_PR_REFS=$(printf '%s' "$SNAP" | jq -c --arg today "$BEARINGS_TODAY" '
+    SUPPRESSED_PR_REFS_RAW=$(printf '%s' "$SNAP" | jq -c --arg today "$BEARINGS_TODAY" '
       (.projects // []) as $projects
       | . as $root
       | [($root.tasks[]
@@ -303,17 +303,38 @@ if [ "$INCLUDE_PRS" = 1 ]; then
               (.repo == $repo or .name == $repo)
               and (.posture == "archived"
                 or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))))
-          | {id,url:(.pr.url // null),project:$repo}),
+          | {id,url:(.pr.url // null),project:$repo,worktree:(.paths.worktree.path // null)}),
          ($root.backlog.records[]
           | .repo as $repo
           | select(any($projects[];
               (.repo == $repo or .name == $repo)
               and (.posture == "archived"
                 or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))))
-          | {id,url:(.pr_url // null),project:$repo})]
+          | {id,url:(.pr_url // null),project:$repo,worktree:null})]
       | group_by(.id)
-      | map({id:.[0].id,url:([.[].url | select(. != null)][0] // null),project:.[0].project})') \
+      | map({id:.[0].id,
+             url:([.[].url | select(. != null)][0] // null),
+             project:.[0].project,
+             worktree:([.[].worktree | select(. != null)][0] // null)})') \
       || { echo "fm-bearings-snapshot: could not classify PR lifecycle" >&2; exit 1; }
+    SUPPRESSED_PR_REF_LINES=$(
+      while IFS= read -r ref; do
+        [ -n "$ref" ] || continue
+        ref_url=$(printf '%s' "$ref" | jq -r '.url // empty')
+        ref_worktree=$(printf '%s' "$ref" | jq -r '.worktree // empty')
+        ref_repo=$(repo_slug "$ref_url")
+        if [ -z "$ref_repo" ] && [ -n "$ref_worktree" ] && [ -d "$ref_worktree" ]; then
+          ref_origin=$(git -C "$ref_worktree" remote get-url origin 2>/dev/null || true)
+          ref_repo=$(repo_slug "$ref_origin")
+        fi
+        printf '%s' "$ref" | jq -c --arg repository "$ref_repo" \
+          '. + {repository:($repository | if . == "" then null else . end)} | del(.worktree)'
+      done <<EOF
+$(printf '%s' "$SUPPRESSED_PR_REFS_RAW" | jq -c '.[]')
+EOF
+    ) || { echo "fm-bearings-snapshot: could not resolve PR lifecycle repositories" >&2; exit 1; }
+    SUPPRESSED_PR_REFS=$(printf '%s\n' "$SUPPRESSED_PR_REF_LINES" | jq -s '.') \
+      || { echo "fm-bearings-snapshot: could not resolve PR lifecycle repositories" >&2; exit 1; }
     # Candidate repos: recorded pr= URLs plus live worktree origins. Deduped.
     repos=""
     while IFS= read -r u; do
@@ -358,8 +379,8 @@ EOF
       repo_suppressed_count=$(printf '%s' "$SUPPRESSED_PR_REFS" | jq --arg repo "$repo" '
         [$repo | split("/") | last] as $repo_name
         | [.[] | select(
-            (.url != null and (.url | startswith("https://github.com/" + $repo + "/")))
-            or (.url == null and .project == $repo_name))]
+            .repository == $repo
+            or (.repository == null and .project == $repo_name))]
         | length') || { nwarn=$((nwarn + 1)); continue; }
       pr_fetch_limit=$((FM_BEARINGS_PR_LIMIT + repo_suppressed_count + 1))
       out=$(gh_bounded pr list --repo "$repo" --state open --limit "$pr_fetch_limit" \

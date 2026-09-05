@@ -1440,14 +1440,15 @@ EOF
 - [ ] archived-other-task - Archived work in another repository (repo: archived-other) (kind: ship)\
 ' "$home/data/backlog.md" > "$home/data/backlog.next"
   mv "$home/data/backlog.next" "$home/data/backlog.md"
+  git -C "$home/projects/ship-wt" init -q
+  git -C "$home/projects/ship-wt" remote add origin https://github.com/kunchenguid/firstmate.git
   fm_write_meta "$home/state/parked-task.meta" \
     "window=firstmate:fm-parked-task" \
     "worktree=$home/projects/ship-wt" \
     "project=parked-app" \
     "harness=claude" \
     "kind=ship" \
-    "mode=no-mistakes" \
-    "pr=https://github.com/kunchenguid/firstmate/pull/10"
+    "mode=no-mistakes"
   record_claude_state "$home/state" parked-task busy
   printf 'working: parked project task\n' > "$home/state/parked-task.status"
   fm_write_meta "$home/state/archived-other-task.meta" \
