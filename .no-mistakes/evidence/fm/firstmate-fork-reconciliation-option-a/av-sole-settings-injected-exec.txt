@@ -1,28 +1,38 @@
-### Case A: worker template carries '--settings <json>' (space form) + --dangerously-skip-permissions
---settings
-{"apiKeyHelper":null,"feedbackDrafts":"off","env":{"ANTHROPIC_API_KEY":null,"ANTHROPIC_AUTH_TOKEN":null}}
---permission-mode
-bypassPermissions
---allowedTools
-Bash
---model
-sonnet
--p
-do the task
---settings occurrences: 1
+Executable under test: bin/fm-claude-automic-vault-launch.sh --injected
+Expected: one authoritative --settings; both worker-provided spellings removed.
 
-### Case B: worker template carries inline '--settings=<json>' form
---settings
-{"apiKeyHelper":null,"feedbackDrafts":"off","env":{"ANTHROPIC_API_KEY":null,"ANTHROPIC_AUTH_TOKEN":null}}
---permission-mode
-bypassPermissions
---allowedTools
-Bash
---model
-opus
--p
-do the task
---settings (space form) occurrences: 1
-inline --settings= occurrences: 0
+CASE A INPUT: --settings {"worker":"separated"} --model sonnet launch-brief
+<--settings>
+<{"apiKeyHelper":null,"feedbackDrafts":"off","env":{"ANTHROPIC_API_KEY":null,"ANTHROPIC_AUTH_TOKEN":null,"ANTHROPIC_BASE_URL":null,"ANTHROPIC_BEDROCK_BASE_URL":null,"ANTHROPIC_VERTEX_BASE_URL":null,"ANTHROPIC_FOUNDRY_BASE_URL":null,"CLAUDE_CODE_USE_BEDROCK":null,"CLAUDE_CODE_USE_VERTEX":null,"CLAUDE_CODE_USE_FOUNDRY":null,"AWS_BEARER_TOKEN_BEDROCK":null}}>
+<--permission-mode>
+<bypassPermissions>
+<--allowedTools>
+<Bash>
+<--model>
+<sonnet>
+<launch-brief>
 
-Both cases: exactly one authoritative --settings (the AV credential-scrubbing JSON) reaches the injected claude; the worker template's own --settings is stripped.
+CASE B INPUT: --settings={"worker":"equals"} --model opus launch-brief
+<--settings>
+<{"apiKeyHelper":null,"feedbackDrafts":"off","env":{"ANTHROPIC_API_KEY":null,"ANTHROPIC_AUTH_TOKEN":null,"ANTHROPIC_BASE_URL":null,"ANTHROPIC_BEDROCK_BASE_URL":null,"ANTHROPIC_VERTEX_BASE_URL":null,"ANTHROPIC_FOUNDRY_BASE_URL":null,"CLAUDE_CODE_USE_BEDROCK":null,"CLAUDE_CODE_USE_VERTEX":null,"CLAUDE_CODE_USE_FOUNDRY":null,"AWS_BEARER_TOKEN_BEDROCK":null}}>
+<--permission-mode>
+<bypassPermissions>
+<--allowedTools>
+<Bash>
+<--model>
+<opus>
+<launch-brief>
+
+BASE-COMMIT REPRODUCTION (89e550a): same separated worker input
+<--settings>
+<{"apiKeyHelper":null,"feedbackDrafts":"off","env":{"ANTHROPIC_API_KEY":null,"ANTHROPIC_AUTH_TOKEN":null,"ANTHROPIC_BASE_URL":null,"ANTHROPIC_BEDROCK_BASE_URL":null,"ANTHROPIC_VERTEX_BASE_URL":null,"ANTHROPIC_FOUNDRY_BASE_URL":null,"CLAUDE_CODE_USE_BEDROCK":null,"CLAUDE_CODE_USE_VERTEX":null,"CLAUDE_CODE_USE_FOUNDRY":null,"AWS_BEARER_TOKEN_BEDROCK":null}}>
+<--permission-mode>
+<bypassPermissions>
+<--allowedTools>
+<Bash>
+<--settings>
+<{"worker":"separated"}>
+<--model>
+<sonnet>
+<launch-brief>
+Observed at base: a second <--settings> plus <{"worker":"separated"}> reaches Claude. The target cases above remove it.
