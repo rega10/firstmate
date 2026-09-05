@@ -52,6 +52,17 @@ SH
 echo "gh $*" >> "$NET_LOG"
 if [ "${FAKE_GH_FAIL:-0}" = 1 ]; then exit 1; fi
 if [ "${FAKE_GH_SLEEP:-0}" = 1 ]; then sleep 30; fi
+if [ "${FAKE_GH_CROSS_REPO:-0}" = 1 ]; then
+  case " $* " in
+    *" --repo kunchenguid/firstmate "*)
+      printf '%s\n' '[{"number":10,"title":"Parked work","url":"https://github.com/kunchenguid/firstmate/pull/10","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]'
+      ;;
+    *" --repo acme/other "*)
+      printf '%s\n' '[{"number":21,"title":"Unrelated release","url":"https://github.com/acme/other/pull/21","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]'
+      ;;
+  esac
+  exit 0
+fi
 if [ "${FAKE_GH_SUPPRESSED_CAP:-0}" = 1 ]; then
   limit=0
   previous=
@@ -1427,7 +1438,7 @@ test_include_prs_is_the_only_fetch_path() {
 }
 
 test_shared_origin_prs_respect_project_lifecycle() {
-  local home fakebin json capped
+  local home fakebin json capped cross_repo
   home=$(make_home shared-origin-prs)
   write_fixture "$home"
   cat > "$home/data/projects.md" <<'EOF'
@@ -1477,6 +1488,21 @@ EOF
   ' >/dev/null || fail "suppressed PRs consumed the visible cap lookahead: $capped"
   grep -q -- '--repo kunchenguid/firstmate .*--limit 4 ' "$home/net.log" \
     || fail "unrelated lifecycle suppression inflated the repository fetch bound: $(<"$home/net.log")"
+  fm_write_meta "$home/state/ship-task.meta" \
+    "window=firstmate:fm-ship-task" \
+    "worktree=$home/projects/ship-wt" \
+    "project=firstmate" \
+    "harness=claude" \
+    "kind=ship" \
+    "mode=no-mistakes" \
+    "pr=https://github.com/acme/other/pull/20"
+  cross_repo=$(FAKE_GH_CROSS_REPO=1 run "$home" "$fakebin" --include-prs --json)
+  printf '%s' "$cross_repo" | jq -e '
+    [.candidate_prs[] | select(.task == "parked-task")]
+      == [{num:"21",repo:"acme/other",task:"parked-task",
+           url:"https://github.com/acme/other/pull/21",review:"APPROVED",
+           mergeable:"MERGEABLE",checks:"none"}]
+  ' >/dev/null || fail "parked branch suppression crossed repository boundaries: $cross_repo"
   pass "shared-origin PR discovery keeps parked work in Charted Next"
 }
 

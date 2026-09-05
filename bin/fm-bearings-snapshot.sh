@@ -393,7 +393,8 @@ EOF
           | . as $pr
           | select(any($suppressed[];
               (.url != null and .url == ($pr.url // null))
-              or (.id != null and ("fm/" + .id) == ($pr.headRefName // ""))) | not)
+              or (.repository == $repo and .id != null
+                  and ("fm/" + .id) == ($pr.headRefName // ""))) | not)
           | {
           num:(.number|tostring),
           repo:$repo,
