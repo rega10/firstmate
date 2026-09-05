@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Resolve a project's REGISTERED delivery posture from the data/projects.md registry.
+# Resolve a project's REGISTERED delivery mode from the data/projects.md registry.
 # Prints two words to stdout: "<mode> <yolo>" where mode is one of
 # no-mistakes|direct-PR|local-only and yolo is on|off.
 #
@@ -12,9 +12,18 @@
 # bin/fm-spawn.sh's advisory registry-deviation notice.
 #
 # Registry line format (data/projects.md):
-#   - <name> - <desc> (added <date>)                  -> no-mistakes off  (legacy default)
-#   - <name> [<mode>] - <desc> (added <date>)          -> <mode> off
-#   - <name> [<mode> +yolo] - <desc> (added <date>)    -> <mode> on
+#   - <name> - <desc> (added <date>)
+#   - <name> [<mode> [ +yolo ] [ <lifecycle> ]] - <desc> (added <date>)
+#
+# The optional tokens inside the one annotation are orthogonal:
+#   <mode>       no-mistakes|direct-PR|local-only|no-mistakes-prod-only
+#   +yolo        standing merge authority
+#   <lifecycle>  parked|parked:YYYY-MM-DD|archived
+#
+# A missing mode remains the legacy `no-mistakes` default, a missing +yolo
+# remains off, and a missing lifecycle token means active. Lifecycle tokens do
+# not change this command's historical "<mode> <yolo>" output. The only writer
+# of lifecycle tokens is bin/fm-project-posture.sh.
 #
 # Registered modes:
 #   no-mistakes            full pipeline -> PR -> configured merge authority (default)
@@ -64,8 +73,11 @@ parsed=$(awk -v n="$NAME" '
       for (i=3; i<=NF; i++) { s = s (s==""?"":" ") $i; if ($i ~ /\]$/) break }
       gsub(/^\[|\]$/, "", s);           # strip the surrounding brackets
       k = split(s, a, " ");
-      if (a[1] != "" && a[1] != "+yolo") mode = a[1];
-      for (j=1; j<=k; j++) if (a[j]=="+yolo") yolo="on";
+      for (j=1; j<=k; j++) {
+        if (a[j]=="+yolo") yolo="on";
+        else if (a[j]=="parked" || a[j]=="archived" || a[j]=="active" || a[j] ~ /^parked:/) { }
+        else if (a[j] != "" && mode == "no-mistakes") mode=a[j];
+      }
     }
     print mode, yolo; exit
   }

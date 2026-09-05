@@ -38,6 +38,10 @@ Board answers are acted on later under the normal authority rules; this skill's 
    It is the single bounded, deterministic fleet-state source for Bearings and renders TOON by default.
    Do not create or consult a second fleet-state reader, parser contract, status-event-tail interpretation, visible-session recap, ad-hoc project probe, or ad-hoc `gh-axi`/`gh` query.
    The command's header and `--help` output own its exact fields, bounds, opt-ins, and output contract.
+   Read project lifecycle only from its `projects` rows.
+   A permanent or future dated park keeps that project's queued work under Charted Next with `project parked` or `project parked until <date>` as its reason, even when the item would otherwise be Captain's Call.
+   A dated park is due and active on its date, so the work resurfaces without waiting for a registry edit.
+   Archived project work stays out of every default Bearings work bucket and the snapshot's `omitted` row names each archived project whose work is suppressed.
    Keep the default local-only read unless the captain asks to include PRs.
    For registered secondmates, use the snapshot's structured-home classification and provenance.
    A parent event or bounded terminal contradiction is fallback evidence, never authority over readable structured home state.
@@ -82,6 +86,8 @@ Compose the payload from the same snapshot with the same ranking judgment as the
 - Card `type` (decision, merge, credential) is your composing judgment from the row's content; no backlog field types a card for you.
 - When the card's task is a captain-gated WORK item (the answer should free it to proceed rather than complete it), set the card's `close: "release"` so the answer lifts the hold instead of closing the task; question-shaped items omit it.
 - Every Captain's Call item and every Underway, Recently Landed, and Charted Next row carries an explicit `repo` field. Fill it from the snapshot and task records wherever known; use null or an empty string only as the deliberate genuinely-no-repo marker, in which case the template may show the internal id. Ids otherwise stay in the payload only as the routing channel, and composed reasons name blockers in plain words.
+- Keep permanently parked and future dated project work in the board payload's Charted Next rows with the snapshot's park reason, and do not offer those rows in `dispatch.charted` until the park is due or cleared.
+- Set the board payload's optional `omitted` array to snapshot-shaped `{surface,reveal}` rows for every snapshot disclosure that names archived project work, plus a named row for any parked project work omitted from the bounded board projection; omit the field when neither applies.
 
 Run `build` once after composing the payload.
 Its serve-first sequence publishes the board, establishes or resumes its Lavish session with `lavish-axi`, and only then binds and arms the polling source; use the session URL it prints in the chat digest.
@@ -125,6 +131,7 @@ Rules that keep the contract unambiguous:
 - Every chat digest and file-mode report is a complete current snapshot, never a delta against a prior report.
 - Recently Landed always renders the bounded current baseline, even when the same completions appeared in an earlier report.
 - The four buckets are mutually exclusive, so every item is forced into exactly one: needs-your-action is Captain's Call, done is Recently Landed, self-progressing is Underway, and not-yet-started work or an action-free fleet-integrity warning is Charted Next.
+- Project lifecycle refines that split: parked queued work remains Charted Next with its park reason, a due dated park behaves as active, and archived project work is omitted with a named disclosure.
 - The strict boundary keeps action-free items OUT of Captain's Call: a working or validating task, a queued item blocked on another task or a date, landed work, a completed scout's report pointer, a declared `paused:` external wait, and a bare recorded PR with no merge-ready signal each belong to one of the other three sections, never Captain's Call.
 - A secondmate's own row appears Underway only for `active_child_work`; `externally_held` belongs in Charted Next, and `unknown` belongs there as an unavailable-state gate unless its reason requires the captain's action.
 - Do not suppress separately projected decisions, landed records, or gates from a `partial-structured` home merely because that secondmate's own row is `unknown`.

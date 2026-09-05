@@ -226,6 +226,42 @@ test_build_injects_binds_then_arms() {
   pass "build injects the payload, binds any-origin, then arms the source"
 }
 
+test_build_renders_and_validates_omitted_disclosures() {
+  local home data board rendered malformed_home malformed_data rc
+  home=$(make_home omitted)
+  data="$home/payload.json"
+  board="$home/.lavish/bearings-board.html"
+  write_valid_payload "$data"
+  jq '.omitted = [
+    {"surface":"archived project work omitted: archive-app","reveal":"bin/fm-project-posture.sh set archive-app active"},
+    {"surface":"parked project work omitted: parked-app","reveal":"ask firstmate for the full chart"}
+  ]' "$data" > "$data.tmp" && mv "$data.tmp" "$data"
+
+  run_board "$home" build "$data" >/dev/null || fail "a valid omitted disclosure did not build"
+  rendered=$(sed -n 's/.*<div class="bb-omitted"[^>]*>\(.*\)<\/div>.*/\1/p' "$board" \
+    | sed 's/<[^>]*>//g')
+  assert_contains "$rendered" "archived project work omitted: archive-app" \
+    "the board did not render the archived-project disclosure"
+  assert_contains "$rendered" "parked project work omitted: parked-app" \
+    "the board did not render the parked-project disclosure"
+  assert_contains "$rendered" "bin/fm-project-posture.sh set archive-app active" \
+    "the board did not render the disclosure reveal action"
+
+  malformed_home=$(make_home omitted-malformed)
+  malformed_data="$malformed_home/payload.json"
+  write_valid_payload "$malformed_data"
+  jq '.omitted = [{"surface":"archived project work omitted: archive-app","reveal":false}]' \
+    "$malformed_data" > "$malformed_data.tmp" && mv "$malformed_data.tmp" "$malformed_data"
+  set +e
+  run_board "$malformed_home" build "$malformed_data" >/dev/null 2>&1
+  rc=$?
+  set -e
+  [ "$rc" -ne 0 ] || fail "a malformed omitted disclosure was accepted"
+  assert_absent "$malformed_home/.lavish/bearings-board.html" \
+    "a malformed omitted disclosure still produced a board"
+  pass "build renders valid omitted disclosures and refuses malformed entries"
+}
+
 test_registration_cannot_consume_before_any_origin_binding() {
   local home data runtime origin key hold board sid show
   home=$(make_home order-proof)
@@ -373,6 +409,7 @@ test_build_refuses_a_template_without_exactly_one_slot() {
 test_path_is_stable_and_home_scoped
 test_build_refuses_malformed_payloads_before_touching_the_board
 test_build_injects_binds_then_arms
+test_build_renders_and_validates_omitted_disclosures
 test_registration_cannot_consume_before_any_origin_binding
 test_build_does_not_bind_or_arm_when_session_start_fails
 test_rebuild_is_idempotent_and_does_not_double_arm

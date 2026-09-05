@@ -33,8 +33,9 @@
 # Captain's Call item explicitly carries `repo`; the composer fills it from the
 # snapshot and task records wherever known, and uses null or an empty string
 # only as the deliberate genuinely-no-repo marker. In that exceptional case
-# the template may display the routing id. Anything else refuses before the
-# existing board is touched.
+# the template may display the routing id. The optional `omitted` array carries
+# snapshot-shaped `{surface,reveal}` disclosures. Anything else refuses before
+# the existing board is touched.
 #
 # The board path is stable - $FM_HOME/.lavish/bearings-board.html - so a
 # re-invocation rebuilds the same file in place, which keeps the same Lavish
@@ -51,6 +52,7 @@ FM_HOME="${FM_HOME:-$FM_ROOT}"
 
 TEMPLATE="${FM_BEARINGS_BOARD_TEMPLATE:-$SCRIPT_DIR/../.agents/skills/bearings/assets/board-template.html}"
 PLACEHOLDER='__FM_BEARINGS_BOARD_DATA__'
+OMITTED_PLACEHOLDER='__FM_BEARINGS_BOARD_OMITTED__'
 BOARD_SCHEMA=fm-bearings-board.v1
 
 usage() {
@@ -114,6 +116,8 @@ validate_payload() {  # <data.json>
       type == "object" and repo_marker and (.id | slug(128))
       and (.title | nonempty_string) and (.reason | type == "string")
       and (.dispatchable | type == "boolean");
+    def omitted_item:
+      type == "object" and (.surface | nonempty_string) and (.reveal | nonempty_string);
     type == "object"
     and (.schema == $schema)
     and (.home | nonempty_string)
@@ -123,6 +127,8 @@ validate_payload() {  # <data.json>
     and (.underway | type == "array")
     and (.landed | type == "array")
     and (.charted | type == "array")
+    and ((has("omitted") | not)
+      or ((.omitted | type == "array") and ([.omitted[] | omitted_item] | all)))
     and ((has("charted_more") | not)
       or ((.charted_more | type == "number") and (.charted_more >= 0) and (.charted_more | floor == .)))
     and ([.captains_call[] | call_item] | all)
@@ -133,7 +139,7 @@ validate_payload() {  # <data.json>
 }
 
 command_build() {
-  local data=${1-} board json tmp sid extracted
+  local data=${1-} board json omitted tmp sid extracted
   [ "$#" -eq 1 ] || { usage >&2; exit 2; }
   command -v jq >/dev/null 2>&1 || fail "jq is required"
   [ -f "$data" ] || fail "board data does not exist: $data"
@@ -142,20 +148,32 @@ command_build() {
   [ -f "$TEMPLATE" ] && [ ! -L "$TEMPLATE" ] || fail "board template is missing: $TEMPLATE"
   [ "$(grep -cxF "$PLACEHOLDER" "$TEMPLATE")" -eq 1 ] \
     || fail "board template does not carry exactly one data slot: $TEMPLATE"
+  [ "$(grep -cxF "$OMITTED_PLACEHOLDER" "$TEMPLATE")" -eq 1 ] \
+    || fail "board template does not carry exactly one omitted-disclosure slot: $TEMPLATE"
 
   json=$(jq -c . "$data") || fail "cannot compact the board data"
   # `<` never appears in JSON syntax outside strings, so escaping every
   # occurrence keeps the payload valid JSON while making </script> inert.
   json=${json//</\\u003c}
+  omitted=$(jq -jr '
+    (.omitted // []) as $items
+    | if ($items | length) == 0 then ""
+      else "<div class=\"bb-omitted\" id=\"bb-omitted\" role=\"note\"><span class=\"bb-omitted__label\">Omitted</span> "
+        + ($items | map((.surface | @html) + " - " + (.reveal | @html)) | join(" · "))
+        + "</div>"
+      end
+  ' "$data") || fail "cannot render the board disclosures"
 
   board=$(board_path)
   (umask 077; mkdir -p "${board%/*}") || fail "cannot create ${board%/*}"
   tmp=$(umask 077; mktemp "${board%/*}/.board.XXXXXX") || fail "cannot stage the board"
-  if ! BOARD_JSON="$json" perl -pe "s/^\\Q$PLACEHOLDER\\E\$/\$ENV{BOARD_JSON}/" "$TEMPLATE" > "$tmp"; then
+  if ! BOARD_JSON="$json" BOARD_OMITTED="$omitted" perl -pe \
+    "s/^\\Q$PLACEHOLDER\\E\$/\$ENV{BOARD_JSON}/; s/^\\Q$OMITTED_PLACEHOLDER\\E\$/\$ENV{BOARD_OMITTED}/" \
+    "$TEMPLATE" > "$tmp"; then
     rm -f -- "$tmp"
     fail "cannot inject the board data"
   fi
-  if grep -qxF "$PLACEHOLDER" "$tmp"; then
+  if grep -qxF "$PLACEHOLDER" "$tmp" || grep -qxF "$OMITTED_PLACEHOLDER" "$tmp"; then
     rm -f -- "$tmp"
     fail "the board data slot survived injection"
   fi

@@ -28,6 +28,10 @@
 # gate with its date; a row the canonical snapshot marks prose-deferred
 # (deferred_marker) leaves the default decisions and gates views and is
 # disclosed in omitted[], revealed by --all-decisions / --all-queued.
+# Registered project lifecycle comes from the canonical snapshot's projects[]
+# surface. Future or permanent project parks keep queued work in Charted Next
+# with the park reason, due parks resurface, and archived project work is omitted
+# with an explicit disclosure. Lifecycle never changes delivery or merge authority.
 #
 # Main-home inventory validity comes from the canonical snapshot's main_inventory
 # object (orphan structured in-flight without meta, unstructured current rows).
@@ -111,7 +115,8 @@ usage: fm-bearings-snapshot.sh [--json] [--include-prs] [--fields <list>]
 Compact bearings projection over fm-fleet-snapshot.sh. TOON by default.
 Default is LOCAL-ONLY (no network); --include-prs is the only path that fetches.
 
-Default fields: schema, home, generated, prs, in_flight{id,kind,state,doing},
+Default fields: schema, home, generated, prs,
+  projects{name,posture,parked_until,repo,delivery}, in_flight{id,kind,state,doing},
   secondmates{id,state,doing,provenance,freshness,age_seconds,contradiction,reason},
   decisions_open{id,key,verb,summary,owner}, landed{id,what,artifact,owner},
   gates{id,title,blocked_by,reason,owner}, reports{id,path}, recorded_prs{id,url},
@@ -184,6 +189,28 @@ else
 fi
 HOME_LABEL=$(printf '%s' "$SNAP" | jq -er '.fm_home | strings | split("/") | (.[-2:] | join("/"))') \
   || { echo "fm-bearings-snapshot: invalid canonical snapshot" >&2; exit 1; }
+SNAP=$(printf '%s' "$SNAP" | jq '
+  (.projects // []) as $projects
+  | .fm_home as $fm_home
+  | def normalized_project($value):
+      if $value == null or $value == "" then $value
+      else
+        ([$projects[]
+          | select(.name == $value or .repo == $value
+              or .path? == $value or .clone_path? == $value
+              or ($fm_home + "/projects/" + (.name // "")) == $value
+              or ($fm_home + "/projects/" + (.repo // "")) == $value)
+          | .name] | unique) as $direct
+        | if ($direct | length) == 1 then $direct[0]
+          elif ($direct | length) > 1 then $value
+          else
+            ($value | split("/") | map(select(. != "")) | .[-1] // "") as $base
+            | ([$projects[] | select(.name == $base or .repo == $base) | .name] | unique) as $basename
+            | if ($basename | length) == 1 then $basename[0] else $value end
+          end
+      end;
+  .tasks |= map(.project = normalized_project(.project))
+') || { echo "fm-bearings-snapshot: could not normalize project metadata" >&2; exit 1; }
 
 # --- optional live PR enrichment (the ONLY network path) --------------------
 PR_STATUS='not_requested (run: /bearings include PRs)'
@@ -216,7 +243,12 @@ if [ "$INCLUDE_PRS" = 1 ]; then
       s=$(repo_slug "$u"); [ -n "$s" ] || continue
       case " $repos " in *" $s "*) : ;; *) repos="$repos $s" ;; esac
     done <<EOF
-$(printf '%s' "$SNAP" | jq -r '.tasks[].pr.url // empty')
+$(printf '%s' "$SNAP" | jq -r '
+  (.projects // []) as $projects
+  | .tasks[]
+  | (.backlog.repo // .project) as $repo
+  | select(any($projects[]; (.repo == $repo or .name == $repo) and .posture == "archived") | not)
+  | .pr.url // empty')
 EOF
     while IFS= read -r wt; do
       [ -n "$wt" ] || continue
@@ -225,7 +257,13 @@ EOF
       s=$(repo_slug "$u"); [ -n "$s" ] || continue
       case " $repos " in *" $s "*) : ;; *) repos="$repos $s" ;; esac
     done <<EOF
-$(printf '%s' "$SNAP" | jq -r '.tasks[] | select(.kind != "secondmate") | .paths.worktree.path // empty')
+$(printf '%s' "$SNAP" | jq -r '
+  (.projects // []) as $projects
+  | .tasks[]
+  | select(.kind != "secondmate")
+  | (.backlog.repo // .project) as $repo
+  | select(any($projects[]; (.repo == $repo or .name == $repo) and .posture == "archived") | not)
+  | .paths.worktree.path // empty')
 EOF
 
     for repo in $repos; do PR_REPOS_TOTAL=$((PR_REPOS_TOTAL + 1)); done
@@ -319,14 +357,59 @@ MODEL=$(printf '%s' "$SNAP" | jq \
        | $groups[]
        | select(length > $i)
        | .[$i]][:$n];
+  (.projects // []) as $projects
+  | (.tasks // []) as $tasks
+  | def task_project($id):
+      first($tasks[] | select(.id == $id) | (.backlog.repo // .project)) // null;
+    def project_record($repo):
+      first($projects[] | select($repo != null and (.repo == $repo or .name == $repo))) // null;
+    def project_archived($repo):
+      (project_record($repo) | .posture == "archived");
+    def project_parked($repo):
+      (project_record($repo) as $project
+       | $project != null and $project.posture == "parked"
+         and ($project.parked_until == null or $project.parked_until > $today));
+    def project_park_reason($repo):
+      (project_record($repo) as $project
+       | if $project.parked_until == null then "project parked"
+         else "project parked until " + $project.parked_until end);
+    def project_gate_rank($repo):
+      (project_record($repo) as $project
+       | if $project == null or $project.posture == "active"
+            or ($project.posture == "parked" and $project.parked_until != null and $project.parked_until <= $today) then 0
+         elif $project.posture == "parked" and $project.parked_until == null then 1
+         elif $project.posture == "parked" then 2
+         else 3 end);
   ($fields | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(. != ""))) as $fl
   | (($fl | index("bodies")) != null) as $f_bodies
   | (($fl | index("paths")) != null) as $f_paths
   | (($fl | index("actions")) != null) as $f_actions
   | (($fl | index("endpoints")) != null) as $f_endpoints
+  | (([.backlog.records[] | select(.structured and project_archived(.repo)) | .id]
+      + [.tasks[] | select(project_archived(.backlog.repo // .project)) | .id]) | unique) as $archived_work_ids
+  | (([.backlog.records[]
+        | (.repo // task_project(.id)) as $repo
+        | select(.structured and project_archived($repo))
+        | (project_record($repo) | .name)]
+      + [.tasks[]
+         | (.backlog.repo // .project) as $repo
+         | select(project_archived($repo))
+         | (project_record($repo) | .name)]
+      + [((.secondmate_landed.records // [])[])
+         | .repo as $repo
+         | select(project_archived($repo))
+         | (project_record($repo) | .name)]
+      + [(.secondmate_current.records // [])[]
+         | (.queued[]?, .decisions_open[]?)
+         | .repo as $repo
+         | select(project_archived($repo))
+         | (project_record($repo) | .name)])
+     | map(select(. != null)) | unique) as $archived_projects
   | ([ .backlog.records[] | select(.state == "done" and .structured and .hold_kind != "captain")
-       | {id, title, pr_url, report_path, local_note, completion, home:"(main)", home_id:"(main)"} ]) as $main_done
-  | ((.secondmate_landed.records) // []) as $mate_done
+       | (.repo // task_project(.id)) as $repo
+       | select(project_archived($repo) | not)
+       | {id, title, repo:$repo, pr_url, report_path, local_note, completion, home:"(main)", home_id:"(main)"} ]) as $main_done
+  | ([ ((.secondmate_landed.records) // [])[] | select(project_archived(.repo) | not) ]) as $mate_done
   | ($main_done + $mate_done) as $all_landed_rows
   | ([ $all_landed_rows | group_by(.home_id)[]
        | sort_by([(.completion.date // ""), .id]) | reverse
@@ -336,10 +419,12 @@ MODEL=$(printf '%s' "$SNAP" | jq \
   | ($per_home_capped | sort_by([(.completion.date // ""), .id]) | reverse) as $landed_sorted
   | (if $all_landed == 1 then $landed_sorted else ($per_home_groups | round_robin_landed($landed_n)) end) as $done
   | ($done | map(.id)) as $done_ids
-  | ([.tasks[] | select(.kind != "secondmate") | .id]) as $live_ids
+  | ([.tasks[] | select(.kind != "secondmate")
+       | select(project_archived(.backlog.repo // .project) | not) | .id]) as $live_ids
   | ([.tasks[] | select(.kind != "secondmate" and .current_state.state == "working") | .id]) as $working_ids
   | ($live_ids + $done_ids) as $rel_ids
   | ([ .tasks[]
+       | select(project_archived(.backlog.repo // .project) | not)
        | select(.endpoint.exists == false or .endpoint.agent_alive == "dead")
        | {id, backend, target:(.endpoint.target // "-"), exists:.endpoint.exists, agent:.endpoint.agent_alive} ]
      + [ (.secondmate_current.records // [])[] as $m | $m.endpoints[]?
@@ -381,6 +466,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
           reason:(.current.reason // "-")} ]) as $secondmates_all
   | ([ .tasks[]
        | select(.kind != "secondmate")
+       | select(project_archived(.backlog.repo // .project) | not)
+       | select(project_parked(.backlog.repo // .project) | not)
        | select(.backlog.current_role != "program")
        | select(.backlog.current_role != "held" or .current_state.state == "working")
        | {id, kind,
@@ -394,11 +481,16 @@ MODEL=$(printf '%s' "$SNAP" | jq \
             doing:([.active_children[] | .id + ": " + (.doing // .state)] | join("; ") | trunc(90))} ]) as $in_flight_all
   | ([ .backlog.records[]
          | select(.structured and .captain_actionable == true)
+         | (.repo // task_project(.id)) as $repo
+         | select(project_archived($repo) | not)
+         | select(project_parked($repo) | not)
          | select(($all_decisions == 1) or (.deferred_marker != true))
          | {id,key:.id,verb:"captain-hold",
             summary:((.title + ": " + .hold_reason) | trunc(90)),owner:"(main)"} ]
      + [ (.secondmate_current.records // [])[] as $m | $m.decisions_open[]?
          | select(.source == "backlog" and .verb == "captain-hold")
+         | select(project_archived(.repo) | not)
+         | select(project_parked(.repo) | not)
          | select(($all_decisions == 1) or (.deferred_marker != true))
          | {id:($m.id + "/" + .id),key,verb,
             summary:(((.summary // .id) + ": " + (.reason // "captain decision pending")) | trunc(90)),owner:$m.id} ]) as $decisions_all
@@ -416,39 +508,58 @@ MODEL=$(printf '%s' "$SNAP" | jq \
       else [] end)
      + [ .backlog.records[]
          | . as $record
+         | (.repo // task_project(.id)) as $repo
          | select(.structured and
              (.state == "queued" or
-              (.state == "in_flight" and .current_role == "held" and ($working_ids | index($record.id) | not))))
-         | select(.captain_actionable != true)
-         | select(($all_queued == 1) or (.deferred_marker != true)
+              (.state == "in_flight" and
+               (project_parked($repo) or
+                (.current_role == "held" and ($working_ids | index($record.id) | not))))))
+         | select(project_archived($repo) | not)
+         | select(project_parked($repo) or .captain_actionable != true)
+         | select(project_parked($repo) or ($all_queued == 1) or (.deferred_marker != true)
                   or ((.hold_until // null) != null and .hold_until > $today))
          | {id, title:(.title | trunc(60)),
             blocked_by:((.unresolved_blocker_ids // []) | if length > 0 then join(",") else "-" end | trunc(120)),
-            reason:((if (.hold_until // null) != null and .hold_until > $today
+            reason:((if project_parked($repo) then project_park_reason($repo)
+                     elif (.hold_until // null) != null and .hold_until > $today
                      then ("until " + .hold_until + ": " + (.hold_reason // .blocked_reason // "-"))
-                     else (.hold_reason // .blocked_reason // "-") end) | trunc(40)),owner:"(main)"} ]
+                     else (.hold_reason // .blocked_reason // "-") end) | trunc(40)),owner:"(main)",
+            _project_rank:project_gate_rank($repo),
+            _parked_project:(if project_parked($repo) then (project_record($repo) | .name) else null end)} ]
      + [ (.secondmate_current.records // [])[] as $m
          | select($m.provenance.selected == "structured-home")
          | $m.queued[]?
-         | select(.captain_actionable != true)
-         | select(($all_queued == 1) or (.deferred_marker != true)
+         | select(project_archived(.repo) | not)
+         | select(project_parked(.repo) or .captain_actionable != true)
+         | select(project_parked(.repo) or ($all_queued == 1) or (.deferred_marker != true)
                   or ((.hold_until // null) != null and .hold_until > $today))
          | {id,title:(.title | trunc(60)),
             blocked_by:((.unresolved_blocker_ids // []) | if length > 0 then join(",") else "-" end | trunc(120)),
-            reason:((if (.hold_until // null) != null and .hold_until > $today
+            reason:((if project_parked(.repo) then project_park_reason(.repo)
+                     elif (.hold_until // null) != null and .hold_until > $today
                      then ("until " + .hold_until + ": " + (.hold_reason // .blocked_reason // "-"))
-                     else (.hold_reason // .blocked_reason // "-") end) | trunc(40)),owner:$m.id} ]) as $gates_all
+                     else (.hold_reason // .blocked_reason // "-") end) | trunc(40)),owner:$m.id,
+            _project_rank:project_gate_rank(.repo),
+            _parked_project:(if project_parked(.repo) then (project_record(.repo) | .name) else null end)} ]
+     | sort_by(._project_rank, .id)) as $gates_ranked
+  | ($gates_ranked | map(del(._project_rank, ._parked_project))) as $gates_all
+  | (if $all_queued == 1 then []
+     else [$gates_ranked[$gates_n:][] | ._parked_project // empty] | unique
+     end) as $bounded_parked_projects
   | ([ .scout_reports[]
        | . as $r
+       | select(($archived_work_ids | index($r.id)) | not)
        | select(($all_reports == 1) or (($rel_ids | index($r.id)) != null))
        | {id, path} ]) as $reports_all
-  | ([ .tasks[] | select(.kind != "secondmate" and .pr.url != null and .pr.source == "meta") | {id, url:.pr.url} ]) as $recorded_prs_all
+  | ([ .tasks[] | select(.kind != "secondmate" and .pr.url != null and .pr.source == "meta")
+       | select(project_archived(.backlog.repo // .project) | not) | {id, url:.pr.url} ]) as $recorded_prs_all
   | . as $snap
   | {
       schema: "fm-bearings.v1",
       home: $home,
       generated: $now,
       prs: $prs,
+      projects: $projects,
       in_flight: (if $all_in_flight == 1 then $in_flight_all else $in_flight_all[:$in_flight_n] end),
       secondmates: (if $all_secondmates == 1 then $secondmates_all else $secondmates_all[:$secondmates_n] end),
       decisions_open: (if $all_decisions == 1 then $decisions_all else $decisions_all[:$decisions_n] end),
@@ -462,12 +573,14 @@ MODEL=$(printf '%s' "$SNAP" | jq \
            {unhealthy_endpoints:(if $all_unhealthy == 1 then $unhealthy_all else $unhealthy_all[:$unhealthy_n] end)}
          else {} end)
   | . + (if $include_prs == 1 then {candidate_prs:$candidate_prs} else {} end)
-  | . + (if $f_bodies then {bodies:[ $snap.backlog.records[] | select(.structured and (.state == "queued" or .state == "done")) | {id, body:((.body_excerpt // .raw // "-") | trunc(200))} ]} else {} end)
-  | . + (if $f_paths then {paths:[ $snap.tasks[] | {id, worktree:(.paths.worktree.path // "-"), home:(.paths.home.path // "-"), status:.paths.status_log.path, report:.paths.report.path} ]} else {} end)
-  | . + (if $f_actions then {actions:[ $snap.tasks[] | {id, watch:(.actions.watch // .actions.send // "-"), steer:(.actions.steer // .actions.send // "-")} ]} else {} end)
-  | . + (if $f_endpoints then {endpoints:[ $snap.tasks[] | {id, backend, target:(.endpoint.target // "-"), exists:.endpoint.exists, agent:.endpoint.agent_alive} ]} else {} end)
+  | . + (if $f_bodies then {bodies:[ $snap.backlog.records[] | select(.structured and (.state == "queued" or .state == "done")) | (.repo // task_project(.id)) as $repo | select(project_archived($repo) | not) | {id, body:((.body_excerpt // .raw // "-") | trunc(200))} ]} else {} end)
+  | . + (if $f_paths then {paths:[ $snap.tasks[] | select(project_archived(.backlog.repo // .project) | not) | {id, worktree:(.paths.worktree.path // "-"), home:(.paths.home.path // "-"), status:.paths.status_log.path, report:.paths.report.path} ]} else {} end)
+  | . + (if $f_actions then {actions:[ $snap.tasks[] | select(project_archived(.backlog.repo // .project) | not) | {id, watch:(.actions.watch // .actions.send // "-"), steer:(.actions.steer // .actions.send // "-")} ]} else {} end)
+  | . + (if $f_endpoints then {endpoints:[ $snap.tasks[] | select(project_archived(.backlog.repo // .project) | not) | {id, backend, target:(.endpoint.target // "-"), exists:.endpoint.exists, agent:.endpoint.agent_alive} ]} else {} end)
   | . + {omitted: (
       [ (if $f_bodies then empty else {surface:"backlog item bodies", reveal:"--fields bodies"} end),
+        (if ($archived_projects | length) > 0 then {surface:("archived project work omitted: " + ($archived_projects | join(", "))), reveal:"bin/fm-project-posture.sh set <project> active"} else empty end),
+        (if ($bounded_parked_projects | length) > 0 then {surface:("parked project work omitted by gates bound: " + ($bounded_parked_projects | join(", "))), reveal:"--all-queued"} else empty end),
         (if $f_paths then empty else {surface:"task paths", reveal:"--fields paths"} end),
         (if $f_actions then empty else {surface:"watch/steer actions", reveal:"--fields actions"} end),
         (if $f_endpoints then empty else {surface:"healthy endpoint detail", reveal:"--fields endpoints"} end),
