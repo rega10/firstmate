@@ -460,6 +460,39 @@ test_project_posture_expiry_check_fires_once_per_effective_date() {
   pass "fm-project-posture: each effective due date emits exactly one registered check wake"
 }
 
+test_project_posture_expiry_check_scans_bounded_registry_completely() {
+  local home check first second oversized_home oversized_check oversized_first oversized_second
+  home="$TMP_ROOT/project-posture-expiry-tail/home"
+  mkdir -p "$home/data" "$home/state"
+  awk 'BEGIN {
+    for (i=1; i<=1001; i++) print "# filler " i
+    print "- tail [direct-PR] - tail fixture (added 2026-01-01)"
+  }' > "$home/data/projects.md"
+  FM_HOME="$home" "$PROJECT_POSTURE" set tail parked:2026-09-01 >/dev/null
+  check="$home/state/project-posture-expiry.check.sh"
+  first=$(FM_PROJECT_POSTURE_TODAY=2026-09-04 "$check")
+  assert_contains "$first" 'project posture expired: tail (parked until 2026-09-01)' \
+    "a due project beyond the former scan bound did not wake"
+  second=$(FM_PROJECT_POSTURE_TODAY=2026-09-04 "$check")
+  [ -z "$second" ] || fail "a tail project emitted more than one wake: $second"
+
+  oversized_home="$TMP_ROOT/project-posture-expiry-oversized/home"
+  mkdir -p "$oversized_home/data" "$oversized_home/state"
+  awk 'BEGIN {
+    print "- app [direct-PR] - app fixture (added 2026-01-01)"
+    for (i=1; i<=10000; i++) print "# filler " i
+  }' > "$oversized_home/data/projects.md"
+  FM_HOME="$oversized_home" "$PROJECT_POSTURE" set app parked:2026-09-01 >/dev/null
+  oversized_check="$oversized_home/state/project-posture-expiry.check.sh"
+  oversized_first=$(FM_PROJECT_POSTURE_TODAY=2026-09-04 "$oversized_check")
+  [ "$oversized_first" = \
+    'project posture registry oversized: data/projects.md exceeds 10000 lines' ] \
+    || fail "an oversized registry did not emit its bounded disclosure: $oversized_first"
+  oversized_second=$(FM_PROJECT_POSTURE_TODAY=2026-09-04 "$oversized_check")
+  [ -z "$oversized_second" ] || fail "an oversized registry disclosed more than once: $oversized_second"
+  pass "fm-project-posture: bounded expiry scans cover every accepted registry line"
+}
+
 test_ship_spawn_requires_a_valid_delivery_contract
 test_scout_and_secondmate_refuse_delivery_flags
 test_spawn_refuses_a_brief_mode_mismatch
@@ -473,4 +506,5 @@ test_project_posture_preserves_exact_legacy_annotation_bytes
 test_project_posture_rejects_unknown_values_and_bad_dates
 test_project_posture_rejects_duplicate_projects_for_every_command
 test_project_posture_expiry_check_fires_once_per_effective_date
+test_project_posture_expiry_check_scans_bounded_registry_completely
 echo "# all fm-task-delivery tests passed"

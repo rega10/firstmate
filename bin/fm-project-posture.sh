@@ -18,8 +18,9 @@
 # A dated park arms state/project-posture-expiry.check.sh through
 # fm-check-register.sh. The check is finite and local-only. On or after the date
 # it records a private receipt before printing one line, so the watcher emits one
-# check wake for that project and later polls remain quiet. FM_PROJECT_POSTURE_TODAY
-# and FM_PROJECT_POSTURE_MAX_LINES are test/diagnostic overrides.
+# check wake for that project and later polls remain quiet. Registries up to
+# 10,000 lines are scanned completely; a larger registry emits one disclosure
+# wake instead. FM_PROJECT_POSTURE_TODAY is a test/diagnostic override.
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -244,39 +245,45 @@ sync_expiry_check() {
 }
 
 check_expiry() {
-  local today max_lines marker_input due tmp combined descriptions first project date
+  local today max_lines oversized marker_input due tmp combined descriptions first project date
   [ -f "$REG" ] || return 0
   today=${FM_PROJECT_POSTURE_TODAY:-$(date -u +%Y-%m-%d)}
   valid_date "$today" || return 0
-  max_lines=${FM_PROJECT_POSTURE_MAX_LINES:-1000}
-  case "$max_lines" in ''|*[!0-9]*|0) max_lines=1000 ;; esac
+  max_lines=10000
+  oversized=$(awk -v max="$max_lines" 'NR > max { print 1; exit }' "$REG")
   mkdir -p "$STATE" || return 0
   marker_input=/dev/null
   [ -f "$RECEIPTS" ] && marker_input=$RECEIPTS
   due=$(mktemp "$STATE/.project-posture-due.XXXXXX") || return 0
   tmp=$(mktemp "$STATE/.project-posture-receipts.XXXXXX") || { rm -f -- "$due"; return 0; }
-  awk -F '\t' -v registry="$REG" -v today="$today" -v max="$max_lines" '
-    FILENAME != registry { seen[$1 SUBSEP $2]=1; next }
-    FNR > max { next }
-    {
-      fields=split($0, field, /[[:space:]]+/)
-    }
-    fields >= 3 && field[1] == "-" && field[3] ~ /^\[/ {
-      annotation=""
-      for (i=3; i<=fields; i++) {
-        annotation = annotation (annotation == "" ? "" : " ") field[i]
-        if (field[i] ~ /\]$/) break
+  if [ -n "$oversized" ]; then
+    awk -F '\t' '
+      $1 == "@registry-oversized" && $2 == "data/projects.md" { seen=1 }
+      END { if (!seen) print "@registry-oversized\tdata/projects.md" }
+    ' "$marker_input" > "$due"
+  else
+    awk -F '\t' -v registry="$REG" -v today="$today" '
+      FILENAME != registry { seen[$1 SUBSEP $2]=1; next }
+      {
+        fields=split($0, field, /[[:space:]]+/)
       }
-      gsub(/^\[|\]$/, "", annotation)
-      n=split(annotation, token, /[[:space:]]+/)
-      for (i=1; i<=n; i++) {
-        if (token[i] ~ /^parked:[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/) {
-          date=substr(token[i], 8)
-          if (date <= today && !seen[field[2] SUBSEP date]) print field[2] "\t" date
+      fields >= 3 && field[1] == "-" && field[3] ~ /^\[/ {
+        annotation=""
+        for (i=3; i<=fields; i++) {
+          annotation = annotation (annotation == "" ? "" : " ") field[i]
+          if (field[i] ~ /\]$/) break
+        }
+        gsub(/^\[|\]$/, "", annotation)
+        n=split(annotation, token, /[[:space:]]+/)
+        for (i=1; i<=n; i++) {
+          if (token[i] ~ /^parked:[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/) {
+            date=substr(token[i], 8)
+            if (date <= today && !seen[field[2] SUBSEP date]) print field[2] "\t" date
+          }
         }
       }
-    }
-  ' "$marker_input" "$REG" > "$due"
+    ' "$marker_input" "$REG" > "$due"
+  fi
   if [ ! -s "$due" ]; then
     rm -f -- "$due" "$tmp"
     return 0
@@ -287,6 +294,11 @@ check_expiry() {
   chmod 0600 "$tmp" || { rm -f -- "$due" "$tmp" "$combined"; return 0; }
   mv -f -- "$tmp" "$RECEIPTS" || { rm -f -- "$due" "$tmp" "$combined"; return 0; }
   rm -f -- "$combined"
+  if [ -n "$oversized" ]; then
+    rm -f -- "$due"
+    printf 'project posture registry oversized: data/projects.md exceeds %s lines\n' "$max_lines"
+    return 0
+  fi
   descriptions=""
   first=1
   while IFS=$'\t' read -r project date; do
