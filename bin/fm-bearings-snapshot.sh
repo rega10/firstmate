@@ -384,8 +384,9 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | (project_record($repo) | .name)])
      | map(select(. != null)) | unique) as $archived_projects
   | ([ .backlog.records[] | select(.state == "done" and .structured and .hold_kind != "captain")
-       | select(project_archived(.repo) | not)
-       | {id, title, repo, pr_url, report_path, local_note, completion, home:"(main)", home_id:"(main)"} ]) as $main_done
+       | (.repo // task_project(.id)) as $repo
+       | select(project_archived($repo) | not)
+       | {id, title, repo:$repo, pr_url, report_path, local_note, completion, home:"(main)", home_id:"(main)"} ]) as $main_done
   | ([ ((.secondmate_landed.records) // [])[] | select(project_archived(.repo) | not) ]) as $mate_done
   | ($main_done + $mate_done) as $all_landed_rows
   | ([ $all_landed_rows | group_by(.home_id)[]

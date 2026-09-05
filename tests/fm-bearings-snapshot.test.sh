@@ -1945,7 +1945,8 @@ test_project_lifecycle_surface_and_bearings_projection() {
   home=$(make_home project-lifecycle)
   : > "$home/data/secondmates.md"
   mkdir -p "$home/projects/due-live" "$home/projects/permanent-live" \
-    "$home/projects/permanent-meta-live" "$home/projects/future-live"
+    "$home/projects/permanent-meta-live" "$home/projects/future-live" \
+    "$home/projects/archived-meta-done"
   cat > "$home/data/projects.md" <<'EOF'
 - active [no-mistakes +yolo] - Active project (added 2026-07-01)
 - due [direct-PR parked:2026-07-11] - Due project (added 2026-07-01)
@@ -1971,6 +1972,7 @@ EOF
 ## Done
 - [x] active-done - Active completion (repo: active) (kind: ship) (done 2026-07-10)
 - [x] archived-done - Archived completion (repo: archived) (kind: ship) (done 2026-07-10)
+- [x] archived-meta-done - Archived completion identified by metadata (kind: ship) (done 2026-07-10)
 EOF
   fm_write_meta "$home/state/due-live.meta" \
     "window=firstmate:fm-due-live" "worktree=$home/projects/due-live" "project=due" \
@@ -1988,6 +1990,10 @@ EOF
     "window=firstmate:fm-future-live" "worktree=$home/projects/future-live" "project=future" \
     "harness=codex" "kind=ship" "mode=no-mistakes"
   printf 'working: future parked task still has a live status\n' > "$home/state/future-live.status"
+  fm_write_meta "$home/state/archived-meta-done.meta" \
+    "window=firstmate:fm-archived-meta-done" "worktree=$home/projects/archived-meta-done" "project=archived" \
+    "harness=codex" "kind=ship" "mode=direct-PR"
+  printf 'done: archived metadata completion\n' > "$home/state/archived-meta-done.status"
   fakebin=$(make_fakebin "$home")
   canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
     "$ROOT/bin/fm-fleet-snapshot.sh" --json)
@@ -2022,6 +2028,7 @@ EOF
       and (.gates | any(.id == "archived-next") | not)
       and (.landed | any(.id == "active-done"))
       and (.landed | any(.id == "archived-done") | not)
+      and (.landed | any(.id == "archived-meta-done") | not)
       and (.omitted | any(.surface == "archived project work omitted: archived"))
       and ([.omitted[].surface] | any(contains("empty-archived")) | not)
   ' >/dev/null || fail "Bearings did not gate parks, resurface due work, or disclose archives: $json"
