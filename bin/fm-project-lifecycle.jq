@@ -26,6 +26,35 @@ def fm_merge_by_id($base; $extra):
 
 def fm_secondmate_summary_at($today):
   (.projects // []) as $projects
+  | (has("projects") and (has("lifecycle_inventory") | not)) as $legacy_summary
+  | (((.active_children // []) + (.holds // []) + (.decisions_open // [])
+      + (.queued // []) + (.landed // []) + (.endpoints // [])
+      + (.lifecycle_inventory // []))) as $identified_rows
+  | def resolved_repo($row):
+      $row.repo // first($identified_rows[]?
+        | select(.id == $row.id and .repo != null and .repo != "") | .repo) // null;
+  def with_resolved_repo:
+      . as $row | resolved_repo($row) as $repo
+      | if $repo == null or $repo == "" then . else . + {repo:$repo} end;
+  ([{surface:"active_children",rows:(.active_children // [])},
+       {surface:"holds",rows:(.holds // [])},
+       {surface:"decisions_open",rows:(.decisions_open // [])},
+       {surface:"queued",rows:(.queued // [])},
+       {surface:"landed",rows:(.landed // [])},
+       {surface:"endpoints",rows:(.endpoints // [])}]
+      | [.[] as $group
+         | $group.rows[]?
+         | select($legacy_summary and resolved_repo(.) == null)
+         | {surface:$group.surface,id}]) as $unidentified_legacy_rows
+  | .active_children |= map(with_resolved_repo)
+  | .holds |= map(with_resolved_repo)
+  | .decisions_open |= map(with_resolved_repo)
+  | .queued |= map(with_resolved_repo)
+  | .landed |= map(with_resolved_repo)
+  | .endpoints |= map(with_resolved_repo)
+  | {active_children:(.active_children | length),holds:(.holds | length),
+     decisions_open:(.decisions_open | length),queued:(.queued | length),
+     landed:(.landed | length),endpoints:(.endpoints | length)} as $before
   | ([((.active_children // []), (.holds // []), (.decisions_open // []),
        (.queued // []), (.landed // []), (.endpoints // []), (.lifecycle_inventory // []))[]?
       | fm_project_lifecycle(.repo; $projects; $today)
@@ -39,11 +68,28 @@ def fm_secondmate_summary_at($today):
   | .queued |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
   | .landed |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
   | .endpoints |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
-  | .omitted = ([.omitted[]? | select(.surface != "project_lifecycle")]
+  | .counts.active_children = ([0, ((.counts.active_children // $before.active_children)
+      - ($before.active_children - (.active_children | length)))] | max)
+  | .counts.holds = ([0, ((.counts.holds // $before.holds)
+      - ($before.holds - (.holds | length)))] | max)
+  | .counts.decisions_open = ([0, ((.counts.decisions_open // $before.decisions_open)
+      - ($before.decisions_open - (.decisions_open | length)))] | max)
+  | .counts.queued = ([0, ((.counts.queued // $before.queued)
+      - ($before.queued - (.queued | length)))] | max)
+  | .counts.landed = ([0, ((.counts.landed // $before.landed)
+      - ($before.landed - (.landed | length)))] | max)
+  | .counts.endpoints = ([0, ((.counts.endpoints // $before.endpoints)
+      - ($before.endpoints - (.endpoints | length)))] | max)
+  | .omitted = ([.omitted[]?
+        | select(.surface != "project_lifecycle" and .surface != "legacy_posture_unknown")]
       + [if ($archived_projects | length) > 0 or $lifecycle_omission != null then
            {surface:"project_lifecycle",
             archived_projects:((($lifecycle_omission.archived_projects // []) + $archived_projects) | unique),
             parked_projects:($lifecycle_omission.parked_projects // [])}
+         else empty end]
+      + [if ($unidentified_legacy_rows | length) > 0 then
+           {surface:"legacy_posture_unknown",count:($unidentified_legacy_rows | length),
+            surfaces:([$unidentified_legacy_rows[].surface] | unique)}
          else empty end])
   | (.lifecycle_inventory // .queued // []) as $inventory
   | ([ $inventory[]?
@@ -68,7 +114,8 @@ def fm_secondmate_summary_at($today):
       | select(.captain_actionable == true)
       | {id, key:.id, verb:"captain-hold", summary:.title, reason:.hold_reason, repo,
          hold_until, hold_bucket, hold_age_days, source:"backlog"}]) as $decisions
-  | .queued = fm_merge_by_id($queued; $parked)
+  | ([$expired[] | select(.backlog_state == "queued")]) as $expired_queued
+  | .queued = fm_merge_by_id($queued; ($parked + $expired_queued))
   | .active_children = fm_merge_by_id((.active_children // []); $active)
   | .holds = fm_merge_by_id((.holds // []); $holds)
   | .decisions_open = fm_merge_by_id((.decisions_open // []); $decisions)

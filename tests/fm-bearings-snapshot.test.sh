@@ -3379,7 +3379,7 @@ EOF
   pass "project-aware v1 ledgers remain visible without lifecycle inventory"
 }
 
-test_cached_legacy_ledger_filters_archived_landed_work() {
+test_cached_legacy_ledger_discloses_unidentified_posture() {
   local home mate sshbin json
   home=$(make_home cached-legacy-archived-landed)
   mate="$TMP_ROOT/cached-legacy-archived-landed-mate"
@@ -3394,29 +3394,74 @@ test_cached_legacy_ledger_filters_archived_landed_work() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-09-01T22:00:00Z",generated_epoch:1000,home:$home,
     projects:[{name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null}],
-    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
-    active_children:[],decisions_open:[],holds:[],queued:[],
-    landed:[{id:"legacy-archived-done",title:"Archived legacy completion",repo:"archived-app",
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"externally_held",
+    active_children:[],
+    decisions_open:[{id:"legacy-decision",key:"legacy-decision",verb:"needs-decision",
+      summary:"Legacy decision",reason:null,source:"status",captain_actionable:true}],
+    holds:[{id:"legacy-hold",title:"Legacy hold",blocked_by:null,blocked_by_ids:[],
+      unresolved_blocker_ids:[],reason:"waiting",source:"child-state"}],queued:[],
+    landed:[{id:"legacy-archived-done",title:"Archived legacy completion",
       pr_url:null,report_path:null,local_note:"done",completion:{date:"2026-08-31"}}],
-    endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,queued:0,landed:1,endpoints:0},omitted:[]
+    endpoints:[{id:"legacy-endpoint",state:"working",source:"status-log",
+      endpoint:{target:"legacy-target",exists:false,agent_alive:"dead"}}],
+    counts:{active_children:0,decisions_open:1,holds:1,queued:0,landed:1,endpoints:1},omitted:[]
   }' > "$mate/state/home-summary.json"
   sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
   mkdir -p "$home/ledger-active"
   : > "$home/ledger-calls.log"
   : > "$home/ledger-pids.log"
-  json=$(run_remote_ledger_bearings "$home" "$sshbin" 1100)
+  json=$(FM_BEARINGS_UNHEALTHY=20 FM_BEARINGS_DECISIONS=20 \
+    run_remote_ledger_bearings "$home" "$sshbin" 1100)
   printf '%s' "$json" | jq -e '
-    (.landed | any(.id == "legacy-archived-done") | not)
-      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
-  ' >/dev/null || fail "live legacy ledger exposed archived landed work: $json"
+    (.landed | any(.id == "legacy-archived-done"))
+      and (.unhealthy_endpoints | any(.id == "legacy-mate/legacy-endpoint"))
+      and (.secondmates | any(.id == "legacy-mate" and .doing == "Legacy decision"))
+      and (.omitted | any(.surface == "secondmate legacy-mate posture unknown for 4 unidentified legacy rows: decisions_open, endpoints, holds, landed"))
+  ' >/dev/null || fail "live legacy ledger did not disclose unidentified posture: $json"
   mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
-  json=$(run_remote_ledger_bearings "$home" "$sshbin" 1100)
+  json=$(FM_BEARINGS_UNHEALTHY=20 FM_BEARINGS_DECISIONS=20 \
+    run_remote_ledger_bearings "$home" "$sshbin" 1100)
   printf '%s' "$json" | jq -e '
-    (.landed | any(.id == "legacy-archived-done") | not)
+    (.landed | any(.id == "legacy-archived-done"))
       and (.secondmates | any(.id == "legacy-mate" and .provenance == "structured-home-cache"))
+      and (.omitted | any(.surface == "secondmate legacy-mate posture unknown for 4 unidentified legacy rows: decisions_open, endpoints, holds, landed"))
+  ' >/dev/null || fail "cached legacy ledger did not disclose unidentified posture: $json"
+  pass "legacy ledgers preserve and disclose unidentified posture rows"
+}
+
+test_archive_filter_updates_summary_counts() {
+  local home mate fakebin canonical json
+  home=$(make_home archive-filter-counts)
+  mate="$TMP_ROOT/archive-filter-counts-mate"
+  make_valid_secondmate_home count-mate "$mate"
+  append_secondmate_registry "$home" count-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-11T18:00:00Z",generated_epoch:1783792800,home:$home,
+    projects:[{name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null}],
+    lifecycle_inventory:[],valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],queued:[],
+    landed:[{id:"identified-archived-done",title:"Identified archived completion",repo:"archived-app",
+      pr_url:null,report_path:null,local_note:"done",completion:{date:"2026-07-10"}}],
+    endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:0,
+      queued:0,landed:1,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
+    "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "count-mate")
+    | (.landed | length) == 0 and .counts.landed == 0
+  ' >/dev/null || fail "archive filtering left stale secondmate landed totals: $canonical"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json)
+  printf '%s' "$json" | jq -e '
+    (.landed | any(.id == "identified-archived-done") | not)
+      and (.omitted | any(.surface == "secondmate home Done capped at the snapshot layer for 1 home(s)") | not)
       and (.omitted | any(.surface == "archived project work omitted: archived-app"))
-  ' >/dev/null || fail "cached legacy ledger exposed archived landed work: $json"
-  pass "legacy ledger lifecycle normalization filters archived landed work"
+  ' >/dev/null || fail "archive filtering emitted a false landed-bound disclosure: $json"
+  pass "archive filtering keeps summary counts consistent"
 }
 
 test_archived_main_orphan_does_not_emit_inventory_gate() {
@@ -3543,6 +3588,8 @@ EOF
       >> "$mate/data/backlog.md"
     i=$((i + 1))
   done
+  printf -- '- [ ] z-parked-queued - Parked queue beyond queue bound (repo: parked-app) (kind: ship)\n' \
+    >> "$mate/data/backlog.md"
   printf '\n## Done\n' >> "$mate/data/backlog.md"
   fm_write_meta "$mate/state/z-parked-live.meta" \
     "window=firstmate:fm-z-parked-live" "worktree=$mate/projects/parked-app" \
@@ -3557,9 +3604,12 @@ EOF
   printf '%s' "$summary" | jq -e '
     (.queued | length) == 20
       and (.queued | any(.id == "z-parked-live") | not)
+      and (.queued | any(.id == "z-parked-queued") | not)
       and (.lifecycle_inventory | any(.id == "z-parked-live"
         and .repo == "parked-app" and .project_posture == "parked"
         and .parked_until == "2026-08-01" and .child_state == "working"))
+      and (.lifecycle_inventory | any(.id == "z-parked-queued"
+        and .backlog_state == "queued" and .parked_until == "2026-08-01"))
   ' >/dev/null || fail "parked task facts were lost behind the owning-summary bound: $summary"
   sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
   mkdir -p "$home/ledger-active"
@@ -3575,6 +3625,8 @@ EOF
   printf '%s' "$json" | jq -e '
     (.gates | any(.id == "z-parked-live" and .owner == "expiry-mate"
       and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "z-parked-queued" and .owner == "expiry-mate"
+        and .reason == "project parked until 2026-08-01"))
       and (.in_flight | any(.id == "expiry-mate/z-parked-live") | not)
   ' >/dev/null || fail "bounded parked task was absent from cached-ledger Charted Next: $json"
   mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
@@ -3588,6 +3640,8 @@ EOF
   printf '%s' "$json" | jq -e '
     (.in_flight | any(.id == "expiry-mate/z-parked-live"))
       and (.gates | any(.id == "z-parked-live") | not)
+      and (.gates | any(.id == "z-parked-queued" and .owner == "expiry-mate"
+        and .reason == "-"))
       and (.secondmates | any(.id == "expiry-mate" and .freshness == "cached"
         and .provenance == "structured-home-cache"))
   ' >/dev/null || fail "cached bounded park did not resurface after expiry: $json"
@@ -3692,7 +3746,8 @@ test_project_lifecycle_surface_and_bearings_projection
 test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
-test_cached_legacy_ledger_filters_archived_landed_work
+test_cached_legacy_ledger_discloses_unidentified_posture
+test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate
 test_expired_parks_do_not_consume_lifecycle_inventory
 test_expired_secondmate_park_survives_summary_bounds_and_cache
