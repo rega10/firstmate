@@ -52,6 +52,10 @@
 # Flags:
 #   (default)        compact projection, TOON, local-only
 #   --json           the same projected model as JSON (machine/debug; parity form)
+#   --contract       print the machine-readable contract describing the --json
+#                    output (schema fm-bearings.v1): every surface, field, enum,
+#                    bound, and identity rule an external consumer needs. Static:
+#                    no fleet read, no network. Owned by fm-bearings-contract-lib.sh.
 #   --include-prs    ALSO do live open-PR discovery + checks (the only network path)
 #   --fields <list>  opt in to dropped surfaces: bodies,paths,actions,endpoints
 #   --all-in-flight  include every in-flight task
@@ -70,6 +74,23 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FLEET="$SCRIPT_DIR/fm-fleet-snapshot.sh"
+
+# --contract is a static description of the --json output. Handle it before any
+# argument accumulation, fleet read, guard, or network path: it needs none of
+# them and must stay deterministic. It is a first-position dispatch, not a flag
+# that composes with the projection flags.
+if [ "${1:-}" = "--contract" ]; then
+  if [ "$#" -ne 1 ]; then
+    echo "fm-bearings-snapshot: --contract takes no other arguments" >&2
+    exit 2
+  fi
+  # shellcheck source=bin/fm-bearings-contract-lib.sh
+  # shellcheck disable=SC1091
+  . "$SCRIPT_DIR/fm-bearings-contract-lib.sh"
+  fm_bearings_emit_contract || exit 1
+  exit 0
+fi
+
 # shellcheck source=bin/fm-timeout-lib.sh
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
@@ -112,8 +133,12 @@ usage: fm-bearings-snapshot.sh [--json] [--include-prs] [--fields <list>]
                                [--all-recorded-prs] [--all-unhealthy]
                                [--all-pr-repos]
 
+       fm-bearings-snapshot.sh --contract
+
 Compact bearings projection over fm-fleet-snapshot.sh. TOON by default.
 Default is LOCAL-ONLY (no network); --include-prs is the only path that fetches.
+--contract prints the machine-readable contract for the --json output (schema,
+surfaces, fields, enums, bounds, identity rules) and takes no other arguments.
 
 Default fields: schema, home, generated, prs,
   projects{name,posture,parked_until,repo,delivery}, in_flight{id,kind,state,doing},
