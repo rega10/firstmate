@@ -38,6 +38,11 @@ if [ "${1:-}" = --injected ]; then
   unset FM_CLAUDE_AV_WORKER_PATH
   worker_args=()
   drop_settings_value=0
+  # Drop any --settings the worker template carries so the credential-scrubbing
+  # AV settings ($settings, exec'd below) is the sole --settings Claude sees:
+  # a duplicate could win last and silently drop the apiKeyHelper/auth-env
+  # neutralization, breaking the "no fallback credential" guarantee in
+  # fm-claude-automic-vault-lib.sh. That AV settings also carries feedbackDrafts:off.
   for worker_arg in "$@"; do
     if [ "$drop_settings_value" = 1 ]; then
       drop_settings_value=0
