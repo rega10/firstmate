@@ -25,7 +25,7 @@
 # decisions from report or visual-review prose or reimplements snapshot semantics.
 # Underway (in_flight) projects every main live worker plus every active child
 # from every readable secondmate ledger, independently of that home's
-# bearings_state. A home classified captain_decision because it has an open
+# current state. A home classified captain_decision because it has an open
 # captain hold still contributes each working child as its own Underway row;
 # the home row on secondmates[] keeps the decision and gate classification.
 # Captain-hold placement follows the canonical snapshot's hold_bucket and
@@ -257,50 +257,12 @@ SNAP=$(printf '%s' "$SNAP" | jq '
             | if ($basename | length) == 1 then $basename[0] else $value end
           end
       end;
-  def archived($repo; $plist):
-    any($plist[]?; (.name == $repo or .repo == $repo) and .posture == "archived");
-  def mate_item_repo($m; $id):
-    first(($m.queued[]?, $m.active_children[]?, $m.holds[]?, $m.decisions_open[]?, $m.landed[]?, $m.endpoints[]?)
-      | select(.id == $id) | .repo) // null;
-  def reconcile_reason($kind; $ids):
-    if ($ids | length) == 0 then null
-    elif $kind == "orphan_in_flight" then "in-flight backlog item has no child metadata: " + ($ids | join(", "))
-    elif $kind == "unowned_current" then "live child state has no in-flight backlog item: " + ($ids | join(", "))
-    elif $kind == "terminal_in_flight" then "in-flight backlog item has terminal child state: " + ($ids | join(", "))
-    elif $kind == "child_current_unavailable" then "child current state unavailable: " + ($ids | join(", "))
-    else $kind end;
   .tasks |= map(
     .project = normalized_project(.project; $projects)
     | if has("backlog") and (.backlog | type) == "object"
       then .backlog.repo = normalized_project(.backlog.repo; $projects)
       else . end)
   | .backlog.records |= map(.repo = normalized_project(.repo; $projects))
-  | .secondmate_current.records |= map(
-      . as $m
-      | (.projects // []) as $plist
-      | .queued |= map(.repo = normalized_project(.repo; $plist))
-      | .active_children |= map(.repo = normalized_project(.repo; $plist))
-      | .landed |= map(.repo = normalized_project(.repo; $plist))
-      | .holds |= map(.repo = normalized_project(.repo; $plist))
-      | .decisions_open |= map(.repo = normalized_project(.repo; $plist))
-      | .endpoints |= map(.repo = normalized_project(.repo; $plist))
-      | . as $normalized
-      | [(.reconcile_inventory.ids // [])[] as $id
-          | select(archived(mate_item_repo($normalized; $id); $plist) | not)
-          | $id] as $visible_ids
-      | .bearings_reconcile_inventory =
-          (if .reconcile_inventory == null then null else (.reconcile_inventory | .ids = $visible_ids) end)
-      | .bearings_reconcile_archived_only =
-          (.reconcile_inventory != null and ((.reconcile_inventory.ids // []) | length) > 0 and ($visible_ids | length) == 0)
-      | .bearings_reason =
-          (if ($visible_ids | length) == ((.reconcile_inventory.ids // []) | length)
-           then .current.reason
-           else reconcile_reason((.reconcile_inventory.kind // null); $visible_ids) end))
-  | (.secondmate_current.records // []) as $mates
-  | .secondmate_landed.records |= map(
-      . as $row
-      | ((first($mates[] | select(.id == $row.home_id) | .projects)) // []) as $plist
-      | .repo = normalized_project(.repo; $plist))
 ') || { echo "fm-bearings-snapshot: could not normalize project metadata" >&2; exit 1; }
 
 # --- optional live GitHub PR enrichment -------------------------------------
@@ -509,14 +471,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
       else
         {archived:false, parked:false, rank:0, reason:null, name:$p.name}
       end;
-  def mate_projects($m):
-    if (($m.projects | type) == "array") then $m.projects else [] end;
   def task_repo($id; $tasks):
     first($tasks[]? | select(.id == $id) | (.backlog.repo // .project)) // null;
-  def mate_item_repo($m; $id):
-    first($m.queued[]? | select(.id == $id) | .repo)
-    // first($m.active_children[]? | select(.id == $id) | .repo)
-    // null;
   def with_lifecycle($repo; $plist):
     (lifecycle($repo; $plist)) as $life
     | . + {
@@ -544,10 +500,7 @@ MODEL=$(printf '%s' "$SNAP" | jq \
        | select(lifecycle($repo; $projects).archived | not)
        | {id, title, repo:$repo, pr_url, report_path, local_note, completion, home:"(main)", home_id:"(main)"} ]) as $main_done
   | ([ ($root.secondmate_landed.records // [])[]
-       | . as $row
-       | (first(($root.secondmate_current.records // [])[] | select(.id == $row.home_id)) // {}) as $m
-       | select(lifecycle($row.repo; mate_projects($m)).archived | not)
-       | $row ]) as $mate_done
+       | . ]) as $mate_done
   | ($main_done + $mate_done) as $all_landed_rows
   | ([ $all_landed_rows | group_by(.home_id)[]
        | sort_by([(.completion.date // ""), .id]) | reverse
@@ -566,40 +519,10 @@ MODEL=$(printf '%s' "$SNAP" | jq \
        | select(.endpoint.exists == false or .endpoint.agent_alive == "dead")
        | {id, backend, target:(.endpoint.target // "-"), exists:.endpoint.exists, agent:.endpoint.agent_alive} ]
      + [ (.secondmate_current.records // [])[] as $m
-         | mate_projects($m) as $plist
          | $m.endpoints[]?
-         | select(lifecycle((mate_item_repo($m; .id) // .repo); $plist).archived | not)
          | select(.endpoint.exists == false or .endpoint.agent_alive == "dead")
          | {id:($m.id + "/" + .id),backend:"secondmate-home",target:(.endpoint.target // "-"),exists:.endpoint.exists,agent:.endpoint.agent_alive} ]) as $unhealthy_all
-  | ([ (.secondmate_current.records // [])[]
-       | . as $m
-       | mate_projects($m) as $plist
-       | ([.active_children[]?
-            | lifecycle(.repo; $plist) as $life
-            | select($life.archived | not) | select($life.parked | not)]) as $active_children
-       | ([.decisions_open[]?
-            | lifecycle((.repo // mate_item_repo($m; .id)); $plist) as $life
-            | select($life.archived | not) | select($life.parked | not)
-            | select(.source == "backlog" and .verb == "captain-hold" and live_captain_call)]) as $captain_holds
-       | ([.holds[]? | lifecycle(.repo; $plist) as $life
-            | select($life.archived | not) | select($life.parked | not)]) as $visible_holds
-       | ([$visible_holds[] | select(.source == "backlog")]) as $backlog_holds
-       | (if .current.state == "unknown" and .bearings_reconcile_archived_only
-          then "no_active_work" else .current.state end) as $current_state
-       | (if $current_state == "captain_decision" then $backlog_holds else $visible_holds end) as $state_holds
-       | . + {
-           bearings_active_children:$active_children,
-           bearings_captain_holds:$captain_holds,
-           bearings_holds:$state_holds,
-           bearings_state:(
-             if $current_state == "unknown" then "unknown"
-             elif ($captain_holds | length) > 0 then "captain_decision"
-             elif ($active_children | length) > 0 then "active_child_work"
-             elif ($state_holds | length) > 0 then "externally_held"
-             elif (["captain_decision","active_child_work","externally_held","no_active_work"] | index($current_state)) != null
-             then "no_active_work"
-             else $current_state end)
-         } ]) as $secondmate_views
+  | ((.secondmate_current.records // [])) as $secondmate_views
   | ([ if .secondmate_current.registry.available == false then
          {id:"(registry)",state:"unknown",doing:(.secondmate_current.registry.reason // "Registered secondmate table unavailable"),
           provenance:(.secondmate_current.registry.provenance // "registered-table"),
@@ -607,19 +530,19 @@ MODEL=$(printf '%s' "$SNAP" | jq \
           age_seconds:null,contradiction:false,reason:(.secondmate_current.registry.reason // "Registered secondmate table unavailable")}
        else empty end ]
      + [ $secondmate_views[]
-       | {id,state:.bearings_state,
-          doing:((if .bearings_state == "active_child_work" then
-                    ([.bearings_active_children[] | .id + ": " + (.doing // .state)] | join("; "))
-                  elif .bearings_state == "captain_decision" then
-                    ([.bearings_captain_holds[] | .summary] | join("; "))
-                  elif .bearings_state == "externally_held" then
-                    ([.bearings_holds[] | .id + ": " + (.reason // "held")] | join("; "))
-                  elif .bearings_state == "no_active_work" then "No active child work"
-                  else (.bearings_reason // "Current home state unavailable") end) | trunc(120)),
+       | {id,state:.current.state,
+          doing:((if .current.state == "active_child_work" then
+                    ([.active_children[] | .id + ": " + (.doing // .state)] | join("; "))
+                  elif .current.state == "captain_decision" then
+                    ([.decisions_open[] | .summary] | join("; "))
+                  elif .current.state == "externally_held" then
+                    ([.holds[] | .id + ": " + (.reason // "held")] | join("; "))
+                  elif .current.state == "no_active_work" then "No active child work"
+                  else (.current.reason // "Current home state unavailable") end) | trunc(120)),
           provenance:(if .provenance.summary_source == "remote-ledger-cache" then "structured-home-cache"
                       else .provenance.selected end),freshness:.freshness.status,
           age_seconds:.freshness.age_seconds,contradiction:(.contradiction // false),
-          reason:(.bearings_reason // "-")} ]) as $secondmates_all
+          reason:(.current.reason // "-")} ]) as $secondmates_all
   | ([ .tasks[]
        | select(.kind != "secondmate")
        | lifecycle((.backlog.repo // .project); $projects) as $life
@@ -634,11 +557,7 @@ MODEL=$(printf '%s' "$SNAP" | jq \
                 | (if $d != "" then $d else (.hints.last_event_text // "") end) | trunc(90))
       } ]
      + [ $secondmate_views[] as $m
-         | mate_projects($m) as $plist
-         | $m.bearings_active_children[]?
-         | lifecycle(.repo; $plist) as $life
-         | select($life.archived | not)
-         | select($life.parked | not)
+         | $m.active_children[]?
          | {id:($m.id + "/" + .id),
             kind:(.kind // "secondmate"),
             state:(.state // "working"),
@@ -655,21 +574,15 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | {id,key:.id,verb:"captain-hold",
             summary:hold_summary(.title; .hold_reason),owner:"(main)"} ]
      + [ (.secondmate_current.records // [])[] as $m
-         | mate_projects($m) as $plist
          | ([ $m.decisions_open[]?
               | select(.source == "backlog" and .verb == "captain-hold")
-              | lifecycle(mate_item_repo($m; .id); $plist) as $life
-              | select($life.archived | not)
-              | select($life.parked | not)
               | select(($all_decisions == 1) or live_captain_call)
               | {id:($m.id + "/" + .id),key,verb,
                  summary:hold_summary((.summary // .id);
                                       (.reason // "captain decision pending")),owner:$m.id} ]
             + [ $m.queued[]?
                 | select($all_decisions == 1 and .hold_kind == "captain")
-                | lifecycle(.repo; $plist) as $life
-                | select($life.archived | not)
-                | select($life.parked | not)
+                | select(.project_posture != "parked")
                 | select(.id as $id
                          | [$m.decisions_open[]?
                             | select(.source == "backlog" and .verb == "captain-hold")
@@ -685,11 +598,9 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | select(lifecycle($repo; $projects).archived | not)
          | select(lifecycle($repo; $projects).parked | not) ]
      + [ (.secondmate_current.records // [])[] as $m
-         | mate_projects($m) as $plist
          | $m.queued[]?
          | select(.hold_kind == "captain" and projected_deferred_hold)
-         | select(lifecycle(.repo; $plist).archived | not)
-         | select(lifecycle(.repo; $plist).parked | not) ]
+         | select(.project_posture != "parked") ]
      | length) as $decisions_marked_deferred
   | ((if (.main_inventory.valid == false) then
         [{id:"(main-inventory)",
@@ -713,38 +624,18 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | as_gate("(main)") | with_lifecycle($repo; $projects) ]
      + [ (.secondmate_current.records // [])[] as $m
          | select($m.provenance.selected == "structured-home")
-         | mate_projects($m) as $plist
          | $m.queued[]?
-         | .repo as $repo
-         | lifecycle($repo; $plist) as $life
-         | select($life.archived | not)
-         | select($life.parked or .captain_actionable != true)
-         | select($life.parked or (.hold_bucket == null) or ($all_decisions == 0))
-         | as_gate($m.id) | with_lifecycle($repo; $plist) ]
-     + [ (.secondmate_current.records // [])[] as $m
-         | select($m.provenance.selected == "structured-home")
-         | mate_projects($m) as $plist
-         | $m.active_children[]?
-         | . as $child
-         | lifecycle($child.repo; $plist) as $life
-         | select($life.parked)
-         | select($life.archived | not)
-         | select([$m.queued[]? | .id] | index($child.id) | not)
-         | {id:$child.id, title:(($child.doing // $child.id) | trunc(60)),
-            blocked_by:"-", reason:($life.reason | trunc(40)), owner:$m.id,
-            _project_rank:$life.rank, _parked_project:$life.name} ]
-     + [ (.secondmate_current.records // [])[] as $m
-         | select($m.provenance.selected == "structured-home")
-         | mate_projects($m) as $plist
-         | $m.holds[]?
-         | . as $hold
-         | lifecycle($hold.repo; $plist) as $life
-         | select($life.parked)
-         | select($life.archived | not)
-         | select(([$m.queued[]?.id] + [$m.active_children[]?.id]) | index($hold.id) | not)
-         | {id:$hold.id, title:(($hold.title // $hold.id) | trunc(60)),
-            blocked_by:"-", reason:($life.reason | trunc(40)), owner:$m.id,
-            _project_rank:$life.rank, _parked_project:$life.name} ]) as $gates_ranked
+         | . as $row
+         | (.project_posture == "parked") as $parked
+         | select($parked or .captain_actionable != true)
+         | select($parked or (.hold_bucket == null) or ($all_decisions == 0))
+         | as_gate($m.id)
+         | if $parked then
+             .reason = (if $row.parked_until == null then "project parked"
+                        else "project parked until " + $row.parked_until end)
+             | ._project_rank = (if $row.parked_until == null then 1 else 2 end)
+             | ._parked_project = $row.repo
+           else ._project_rank = 0 | ._parked_project = null end ]) as $gates_ranked
   | ($gates_ranked | to_entries | sort_by(.value._project_rank, .key) | map(.value)) as $gates_sorted
   | ($gates_sorted | map(del(._project_rank, ._parked_project))) as $gates_all
   | (if $all_queued == 1 then []
@@ -762,24 +653,6 @@ MODEL=$(printf '%s' "$SNAP" | jq \
         | $life.name]
       + [.tasks[]
          | lifecycle((.backlog.repo // .project); $projects) as $life
-         | select($life.archived)
-         | $life.name]
-      + [($root.secondmate_current.records // [])[] as $m
-         | mate_projects($m) as $plist
-         | ($m.queued[]?, $m.active_children[]?, $m.landed[]?)
-         | lifecycle(.repo; $plist) as $life
-         | select($life.archived)
-         | $life.name]
-      + [($root.secondmate_landed.records // [])[]
-         | . as $row
-         | (first(($root.secondmate_current.records // [])[] | select(.id == $row.home_id)) // {}) as $m
-         | lifecycle($row.repo; mate_projects($m)) as $life
-         | select($life.archived)
-         | $life.name]
-      + [($root.secondmate_current.records // [])[] as $m
-         | mate_projects($m) as $plist
-         | $m.endpoints[]?
-         | lifecycle((mate_item_repo($m; .id) // .repo); $plist) as $life
          | select($life.archived)
          | $life.name]
       + [($root.secondmate_current.records // [])[] | (.omitted // [])[]
@@ -803,8 +676,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
       in_flight: (if $all_in_flight == 1 then $in_flight_all else $in_flight_all[:$in_flight_n] end),
       secondmates: (if $all_secondmates == 1 then $secondmates_all else $secondmates_all[:$secondmates_n] end),
       secondmate_reconcile: [ (.secondmate_current.records // [])[]
-        | select(.bearings_reconcile_inventory != null)
-        | {id, spawn_gen:(.spawn_gen // null), host:(.host // null), kind:(.bearings_reconcile_inventory.kind // null), ids:((.bearings_reconcile_inventory.ids // []) | map(select(type == "string")) | sort)} ],
+        | select(.reconcile_inventory != null)
+        | {id, spawn_gen:(.spawn_gen // null), host:(.host // null), kind:(.reconcile_inventory.kind // null), ids:((.reconcile_inventory.ids // []) | map(select(type == "string")) | sort)} ],
       decisions_open: (if $all_decisions == 1 then $decisions_all else $decisions_all[:$decisions_n] end),
       landed: ($done | map({id, what:(.title | trunc(70)),
                             artifact:(.pr_url // .report_path // .local_note // "-"),owner:.home_id})),

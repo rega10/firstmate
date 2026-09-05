@@ -3150,7 +3150,7 @@ EOF
 }
 
 test_secondmate_project_posture_is_honored_from_structured_state() {
-  local home mate fakebin json summary_tmp
+  local home mate fakebin json summary summary_tmp
   home=$(make_home secondmate-posture)
   mate="$TMP_ROOT/secondmate-posture-mate"
   : > "$home/data/secondmates.md"
@@ -3210,6 +3210,13 @@ EOF
   printf 'done: archived metadata completion\n' > "$mate/state/mate-meta-archived-done.status"
   fakebin=$(make_fakebin "$home")
   PATH="$fakebin:$PATH" refresh_local_secondmate_ledgers "$home"
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e '
+    .state == "no_active_work"
+      and (.holds | any(.id == "mate-parked-call") | not)
+      and (.queued | any(.id == "mate-parked-call" and .project_posture == "parked"
+        and .parked_until == "2026-08-01"))
+  ' >/dev/null || fail "a parked queued hold changed the owning-home state: $summary"
   summary_tmp="$mate/state/home-summary.json.tmp"
   jq '.endpoints |= map(
         if .id == "mate-parked-live" or .id == "mate-archived-live"
@@ -3281,7 +3288,7 @@ EOF
 EOF
   fm_write_meta "$mate/state/a-archived-live.meta" \
     "window=firstmate:fm-a-archived-live" "worktree=$mate/projects/archived-app" \
-    "project=$mate/projects/archived-app" "harness=claude" "kind=ship" "mode=local-only"
+    "project=$mate/projects/active-app" "harness=claude" "kind=ship" "mode=local-only"
   record_claude_state "$mate/state" a-archived-live busy
   printf 'working: archived first\n' > "$mate/state/a-archived-live.status"
   fm_write_meta "$mate/state/z-active-live.meta" \
