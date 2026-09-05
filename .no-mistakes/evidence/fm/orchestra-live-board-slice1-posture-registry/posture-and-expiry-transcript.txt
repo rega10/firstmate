@@ -1,0 +1,50 @@
+############ POSTURE ROUND-TRIP (real bin/fm-project-posture.sh) ############
+
+--- registry before ---
+- alpha [no-mistakes +yolo] - active flagship
+- bravo [direct-PR] - plain direct-PR
+- gamma [direct-PR   +yolo] - irregular interior spacing
+- delta [no-mistakes parked +yolo] - middle-position posture already present
+
+--- get: every legacy line defaults to active ---
+  alpha  -> active
+  bravo  -> active
+  gamma  -> active
+  delta  -> parked
+
+--- set alpha parked:2027-01-01 (dated), bravo archived ---
+previous: - alpha [no-mistakes +yolo] - active flagship
+current: - alpha [no-mistakes +yolo parked:2027-01-01] - active flagship
+previous: - bravo [direct-PR] - plain direct-PR
+current: - bravo [direct-PR archived] - plain direct-PR
+
+--- byte preservation: set on gamma with irregular interior spacing ---
+previous: - gamma [direct-PR   +yolo] - irregular interior spacing
+current: - gamma [direct-PR   +yolo parked] - irregular interior spacing
+
+--- byte preservation: clear delta (remove ONLY middle-position 'parked') ---
+previous: - delta [no-mistakes parked +yolo] - middle-position posture already present
+current: - delta [no-mistakes +yolo] - middle-position posture already present
+
+--- registry after (delivery bytes + irregular spacing intact) ---
+- alpha [no-mistakes +yolo parked:2027-01-01] - active flagship
+- bravo [direct-PR archived] - plain direct-PR
+- gamma [direct-PR   +yolo parked] - irregular interior spacing
+- delta [no-mistakes +yolo] - middle-position posture already present
+
+--- fail-closed: unknown value / malformed date / unknown project ---
+error: unknown lifecycle posture: frozen
+  refused rc=2
+error: malformed parked-until date: 2027-99-99
+  refused rc=2
+error: project not registered: nosuch
+  refused rc=1
+
+############ EXPIRY WAKE: fires EXACTLY ONCE for an expired dated park ############
+  armed check script present: yes
+  first poll  -> project posture expired: gamma (parked until 2026-05-01)
+  second poll ->    (empty = no re-fire)
+  re-set identical dated park (should NOT re-arm the wake)
+  poll after identical re-set ->    (empty = receipt preserved)
+  change the date -> fresh wake
+  poll after date change -> project posture expired: gamma (parked until 2026-06-01)

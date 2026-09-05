@@ -1,0 +1,55 @@
+==========================================================================
+SCENARIO registry (data/projects.md) - postures via fm-project-posture.sh
+==========================================================================
+- active [no-mistakes +yolo] - Active project (added 2026-07-01)
+- due [direct-PR parked:2026-07-11] - Due project (added 2026-07-01)
+- permanent [local-only parked] - Permanent park (added 2026-07-01)
+- future [no-mistakes parked:2026-08-01] - Future park (added 2026-07-01)
+- archived [direct-PR archived] - Archived project (added 2026-07-01)
+- empty-archived [local-only archived] - Archived project without work (added 2026-07-01)
+
+==========================================================================
+BEARINGS DIGEST (real fm-bearings-snapshot.sh, TOON default), NOW=2026-07-11
+  Expect: due (park expired today) resurfaces to Underway/Charted;
+  permanent + future parked work -> Charted Next with park reason;
+  archived work omitted with a named disclosure; empty-archived silent.
+==========================================================================
+schema: fm-bearings.v1
+home: fm-evidence-lifecycle.yuW1Yq/home
+generated: "2026-07-11T18:00:00Z"
+prs: "not_requested (run: /bearings include PRs)"
+projects[6]{name,posture,parked_until,repo,delivery}:
+  active,active,null,active,no-mistakes +yolo
+  due,parked,2026-07-11,due,direct-PR
+  permanent,parked,null,permanent,local-only
+  future,parked,2026-08-01,future,no-mistakes
+  archived,archived,null,archived,direct-PR
+  empty-archived,archived,null,empty-archived,local-only
+in_flight: []
+secondmates: []
+decisions_open: []
+landed[1]{id,what,artifact,owner}:
+  active-done,Active completion,"-",(main)
+gates[9]{id,title,blocked_by,reason,owner}:
+  (main-inventory),in-flight backlog item has no child metadata,"-",main inventory,(main)
+  active-next,Active queued work,"-","-",(main)
+  due-next,Due parked work resurfaces,"-","-",(main)
+  permanent-live,Permanently parked live work,"-",project parked,(main)
+  permanent-meta-call,Permanent parked captain work by metadata,"-",project parked,(main)
+  permanent-meta-live,Permanently parked live work by metadata,"-",project parked,(main)
+  permanent-next,Permanent parked work,"-",project parked,(main)
+  future-call,Future parked captain work,"-",project parked until 2026-08-01,(main)
+  future-live,Future parked live work,"-",project parked until 2026-08-01,(main)
+reports: []
+recorded_prs[1]{id,url}:
+  permanent-meta-call,"https://github.com/acme/parked/pull/1"
+omitted[9]{surface,reveal}:
+  backlog item bodies,"--fields bodies"
+  "archived project work omitted: archived",bin/fm-project-posture.sh set <project> active
+  task paths,"--fields paths"
+  watch/steer actions,"--fields actions"
+  healthy endpoint detail,"--fields endpoints"
+  full scout-report inventory,"--all-reports"
+  superseded or prose-deferred queued items,"--all-queued"
+  "main in-flight backlog item(s) have no child metadata: 4",inspect main data/backlog.md In flight vs state/*.meta
+  live PR discovery + checks,"--include-prs"
