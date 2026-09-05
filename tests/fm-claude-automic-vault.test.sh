@@ -20,6 +20,7 @@ ln -s "$ROOT/tests/fixtures/fm-claude-automic-vault-lib.sh" \
 AUTH="$TEST_BIN/fm-claude-automic-vault.sh"
 SPAWN="$TEST_BIN/fm-spawn.sh"
 REAL_SPAWN="$ROOT/bin/fm-spawn.sh"
+AV_LAUNCH="$TEST_BIN/fm-claude-automic-vault-launch.sh"
 export FM_CLAUDE_AV_TEST_PRODUCTION_ROOT=$ROOT
 JQ_BIN=$(command -v jq) || fail "test needs jq"
 NODE_BIN=$(command -v node) || fail "test needs node"
@@ -553,7 +554,7 @@ test_provision_recovery_renewal_preflight_and_redaction() {
 }
 
 test_enabled_disabled_and_non_claude_launches() {
-  local dir home fakebin state record proj wt launchlog output status launch before executed raw id before_claude before_endpoint raw_heredoc tasktmp gotmp raw_index=0
+  local dir home fakebin state record proj wt launchlog output status launch before executed raw id before_claude before_endpoint raw_heredoc tasktmp gotmp injected_argv injected_settings injected_worker_args direct_settings settings_count ready raw_index=0
   dir="$TMP_ROOT/launches"
   home="$dir/home"
   fakebin=$(make_fake_tools "$dir")
@@ -598,12 +599,42 @@ test_enabled_disabled_and_non_claude_launches() {
     || fail "injected Claude exec carried $settings_count --settings flags, expected exactly one authoritative --settings"
   injected_settings=$(printf '%s\n' "$injected_argv" | sed -n 's/.*<--settings> <\([^>]*\)>.*/\1/p')
   printf '%s' "$injected_settings" | "$JQ_BIN" -e \
-    'has("apiKeyHelper") and .apiKeyHelper == null and .feedbackDrafts == "off" and (.env | has("ANTHROPIC_API_KEY")) and .env.ANTHROPIC_API_KEY == null' \
+    'has("apiKeyHelper") and .apiKeyHelper == null and .feedbackDrafts == "off" and
+      (.env | keys | sort) == ([
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_AUTH_TOKEN",
+        "ANTHROPIC_BASE_URL",
+        "ANTHROPIC_BEDROCK_BASE_URL",
+        "ANTHROPIC_FOUNDRY_BASE_URL",
+        "ANTHROPIC_VERTEX_BASE_URL",
+        "AWS_BEARER_TOKEN_BEDROCK",
+        "CLAUDE_CODE_USE_BEDROCK",
+        "CLAUDE_CODE_USE_FOUNDRY",
+        "CLAUDE_CODE_USE_VERTEX"
+      ] | sort) and all(.env[]; . == null)' \
     >/dev/null 2>&1 \
     || fail "authoritative injected --settings did not both null the credential keys and set feedbackDrafts off"
+
+  ready="$dir/injected-ready"
+  FM_FAKE_STATE="$state" TEST_FAKE_SECRET="$SECRET" \
+    "$AV_LAUNCH" --injected "$ready" "$fakebin/claude" "$injected_settings" \
+      --settings '{"worker":"separated"}' --model sonnet \
+      '--settings={"worker":"equals"}' launch-brief \
+      3>&1 4>&2 >/dev/null 2>&1 \
+    || fail "direct injected launch with worker settings did not execute"
+  [ -e "$ready" ] || fail "direct injected launch did not signal readiness"
+  injected_argv=$(grep '^claude ' "$state/claude-argv.log" | tail -1)
+  settings_count=$(printf '%s\n' "$injected_argv" | grep -oE '<--settings(>|=)' | wc -l | tr -d ' ')
+  [ "$settings_count" = 1 ] \
+    || fail "injected Claude exec carried $settings_count --settings flags after filtering both worker forms"
+  direct_settings=$(printf '%s\n' "$injected_argv" | sed -n 's/.*<--settings> <\([^>]*\)>.*/\1/p')
+  [ "$direct_settings" = "$injected_settings" ] \
+    || fail "injected Claude exec replaced the authoritative settings with worker settings"
   injected_worker_args=${injected_argv#*<--allowedTools> <Bash>}
-  if printf '%s\n' "$injected_worker_args" | grep -qE '<--settings(>|=)'; then
-    fail "worker template --settings survived into the injected Claude exec worker arguments"
+  assert_contains "$injected_worker_args" '<--model> <sonnet> <launch-brief>' \
+    "injected Claude exec dropped worker arguments adjacent to settings"
+  if printf '%s\n' "$injected_worker_args" | grep -qE '<--settings(>|=)|worker'; then
+    fail "worker settings survived into the injected Claude exec arguments"
   fi
 
   : > "$launchlog"
