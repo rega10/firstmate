@@ -204,6 +204,18 @@ Valid cleanup removed only the exact task-bound target and left the control wind
 The metadata-only validation covers tmux, Herdr, Zellij, Orca, and cmux before backend dispatch.
 Claude, Codex, OpenCode, Pi, pi-signed, Grok, Kimi, Cursor, and Muse share that backend cleanup boundary; their harness-specific hook files, tokens, transcript bindings, and session-log sidecars are cleaned only after it, so no harness needs a separate endpoint parser.
 
+### Legacy Herdr binding repair
+
+The guarded `bin/fm-herdr-legacy-repair.sh` restores the missing `endpoint_task_id=` binding on a legacy primary-home Herdr record only when its full evidence conjunction agrees, and never issues a mutating Herdr command.
+Its complete contract is covered deterministically without a live harness:
+
+```sh
+bin/fm-test-run.sh tests/fm-herdr-legacy-repair.test.sh
+```
+
+`tests/fm-herdr-legacy-repair.test.sh` drives the tool against a real origin/project/worktree git triad and a fake `herdr` that returns structured `pane get`/`agent get`/`tab list` payloads, covering the modern-bound no-op, repair-exactly-once, idempotent rerun, every topology and identity mismatch class, dirty and unlanded refusals, the unbound-teardown-then-repaired-teardown handoff, unrelated-record and default-session preservation, and refusal before any lifecycle mutation.
+The repair is harness-neutral: it reads only the shared metadata shape, git state, and Herdr's structured topology and agent-status responses, never a harness-specific surface, so `tests/fm-herdr-legacy-repair-e2e.test.sh` (real-Herdr-gated) exercises the same conjunction against a live lab session with the default-session tripwire when the Herdr lane runs.
+
 ## Claude workspace trust
 
 Verified 2026-09-03 on Claude Code 2.1.259.
