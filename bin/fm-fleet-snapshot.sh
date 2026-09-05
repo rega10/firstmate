@@ -1468,8 +1468,8 @@ length == 1 and (.[0] |
   and (.holds | type) == "array" and (.queued | type) == "array"
   and (.landed | type) == "array" and (.endpoints | type) == "array"
   and (.counts | type) == "object" and (.omitted | type) == "array"
-  and ((has("projects") and has("lifecycle_inventory"))
-       or ((has("projects") | not) and (has("lifecycle_inventory") | not)))
+  and ((has("projects") and has("lifecycle_inventory") and has("bounds"))
+       or ((has("projects") | not) and (has("lifecycle_inventory") | not) and (has("bounds") | not)))
   and (if has("bounds") then
          (.bounds | type) == "object"
          and all([.bounds.active_children,.bounds.decisions_open,.bounds.holds,.bounds.queued][];

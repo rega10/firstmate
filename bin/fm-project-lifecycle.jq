@@ -24,12 +24,6 @@ def fm_merge_by_id($base; $extra):
   reduce $extra[] as $row ($base;
     if any(.[]; .id == $row.id) then . else . + [$row] end);
 
-def fm_surface_limit($surface; $before; $total; $bounds; $omitted):
-  if ($bounds[$surface] | type) == "number" then $bounds[$surface]
-  elif $total > $before or any($omitted[]?; .surface == $surface) then $before
-  else null
-  end;
-
 def fm_set_surface_omission($surface; $count):
   .omitted = ([.omitted[]? | select(.surface != $surface)]
     + [if $count > 0 then {surface:$surface,count:$count} else empty end]);
@@ -50,7 +44,7 @@ def fm_secondmate_summary_at($today):
   if (has("projects") and has("lifecycle_inventory")) | not then .
   else
   (.projects // []) as $projects
-  | (.bounds // {}) as $bounds
+  | .bounds as $bounds
   | {active_children:(.active_children | length),holds:(.holds | length),
      decisions_open:(.decisions_open | length),queued:(.queued | length),
      landed:(.landed | length),endpoints:(.endpoints | length)} as $before
@@ -124,14 +118,10 @@ def fm_secondmate_summary_at($today):
        | select(.child_state == "unknown")
        | .id] | unique) as $expired_unknown
   | (.queued // []) as $queued
-  | fm_surface_limit("active_children"; $before.active_children;
-      .counts.active_children; $bounds; .omitted) as $active_limit
-  | fm_surface_limit("holds"; $before.holds;
-      .counts.holds; $bounds; .omitted) as $holds_limit
-  | fm_surface_limit("decisions_open"; $before.decisions_open;
-      .counts.decisions_open; $bounds; .omitted) as $decisions_limit
-  | fm_surface_limit("queued"; $before.queued;
-      .counts.queued; $bounds; .omitted) as $queued_limit
+  | $bounds.active_children as $active_limit
+  | $bounds.holds as $holds_limit
+  | $bounds.decisions_open as $decisions_limit
+  | $bounds.queued as $queued_limit
   | ([$expired[]
       | select(.backlog_state == "in_flight" and .current_role != "program" and .child_state == "working")
       | {id, kind:(.kind // "secondmate"), state:.child_state, repo,

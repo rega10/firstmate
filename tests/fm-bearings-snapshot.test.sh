@@ -3131,8 +3131,8 @@ EOF
   ' >/dev/null || fail "optional detail exposed archived absolute-path project metadata: $details"
   : > "$home/net.log"
   run "$home" "$fakebin" --json --include-prs >/dev/null
-  assert_grep 'gh pr list --repo acme/parked ' "$home/net.log" \
-    "PR discovery did not retain parked absolute-path project metadata"
+  assert_no_grep 'gh pr list --repo acme/parked ' "$home/net.log" \
+    "PR discovery exposed parked absolute-path project metadata"
   assert_no_grep 'gh pr list --repo acme/archived ' "$home/net.log" \
     "PR discovery exposed archived absolute-path project metadata"
   bounded=$(FM_BEARINGS_GATES=2 run "$home" "$fakebin" --json)
@@ -3349,7 +3349,7 @@ EOF
 }
 
 test_expired_unknown_park_revalidates_cached_summary() {
-  local home mate sshbin json
+  local home mate sshbin json cache_file tmp
   home=$(make_home expired-unknown-park)
   mate="$TMP_ROOT/expired-unknown-park-mate"
   mkdir -p "$mate/state"
@@ -3363,6 +3363,7 @@ test_expired_unknown_park_revalidates_cached_summary() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"expired-unknown",title:"Unknown parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
       current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
@@ -3394,6 +3395,33 @@ test_expired_unknown_park_revalidates_cached_summary() {
     (.gates | any(.id == "expired-unknown" and .reason == "project parked until 2026-08-01"))
       and (.secondmates | any(.id == "unknown-mate" and .state == "no_active_work"))
   ' >/dev/null || fail "future parked unknown child was not safely gated: $json"
+  cache_file=
+  for tmp in "$home/state/summary-cache"/*.json; do
+    [ -f "$tmp" ] || continue
+    cache_file=$tmp
+    break
+  done
+  [ -n "$cache_file" ] || fail "future parked summary did not populate its cache"
+  tmp="$mate/state/home-summary.json.tmp"
+  jq 'del(.bounds)' "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  tmp="$cache_file.tmp"
+  jq 'del(.bounds)' "$cache_file" > "$tmp" && mv "$tmp" "$cache_file"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785520800 FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "unknown-mate" and .state == "unknown"
+      and .provenance == "unknown" and (.reason | contains("no valid cached copy"))))
+  ' >/dev/null || fail "lifecycle-aware summary without bounds remained trusted: $json"
+  tmp="$mate/state/home-summary.json.tmp"
+  jq '.bounds={active_children:10,decisions_open:10,holds:20,queued:20}' \
+    "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  tmp="$cache_file.tmp"
+  jq '.bounds={active_children:10,decisions_open:10,holds:20,queued:20}' \
+    "$cache_file" > "$tmp" && mv "$tmp" "$cache_file"
   mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
   json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
     FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
@@ -3428,6 +3456,7 @@ test_expired_unknown_park_preserves_strict_primary_invalidity() {
     projects:[
       {name:"active-app",repo:"active-app",posture:"active",parked_until:null},
       {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"newly-active-unknown",title:"Unknown parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
       current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
@@ -3483,6 +3512,7 @@ test_expired_orphan_replaces_cached_unknown_primary() {
     projects:[
       {name:"active-app",repo:"active-app",posture:"active",parked_until:null},
       {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"newly-active-orphan",title:"Orphaned parked worker",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
       current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
@@ -3524,6 +3554,7 @@ test_expiry_preserves_fatal_cached_invalidity() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"fatal-expired-unknown",title:"Unknown task-only child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:null,
       current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
@@ -3567,6 +3598,7 @@ test_expired_queued_worker_is_unowned() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"queued-live-child",title:"Queued row with live child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"queued",
       current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
@@ -3610,6 +3642,7 @@ test_expired_unknown_preserves_unknown_with_orphan_primary() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[row("expired-orphan";null),row("expired-unknown";"unknown")],
     valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
     active_children:[],decisions_open:[],holds:[],
@@ -3642,6 +3675,7 @@ test_bounded_unknown_child_preserves_unknown_home_state() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[{name:"active-app",repo:"active-app",posture:"active",parked_until:null}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[],valid:false,
     reason:"in-flight backlog item has no child metadata: visible-orphan",
     invalidity:{kind:"orphan_in_flight",ids:["visible-orphan"]},state:"unknown",
@@ -3730,6 +3764,7 @@ test_expired_active_worker_leaves_cached_queue() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[row],valid:true,reason:null,invalidity:{kind:null,ids:[]},
     state:"no_active_work",active_children:[],decisions_open:[],holds:[],queued:[row],
     landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
@@ -3761,6 +3796,7 @@ test_expired_held_park_stays_valid() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"expired-held",title:"Held parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
       current_role:"held",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
@@ -3803,6 +3839,7 @@ test_archive_filter_updates_summary_counts() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-11T18:00:00Z",generated_epoch:1783792800,home:$home,
     projects:[{name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[],valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
     active_children:[],decisions_open:[],holds:[],queued:[],
     landed:[{id:"identified-archived-done",title:"Identified archived completion",repo:"archived-app",

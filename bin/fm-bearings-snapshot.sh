@@ -224,6 +224,11 @@ command -v jq >/dev/null 2>&1 || { echo "fm-bearings-snapshot: jq not found" >&2
 "$SCRIPT_DIR/fm-afk-return.sh" guard || exit $?
 
 NOW=${FM_BEARINGS_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}
+BEARINGS_TODAY=${NOW%%T*}
+case "$BEARINGS_TODAY" in
+  [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) : ;;
+  *) BEARINGS_TODAY=$(date -u +%Y-%m-%d) ;;
+esac
 if [ "$ALL_LANDED" = 1 ] || [ "$ALL_SECONDMATES" = 1 ]; then
   if [ "$ALL_LANDED" = 1 ]; then
     SNAP=$(FM_SNAPSHOT_NOW="$NOW" FM_SNAPSHOT_SECONDMATES=0 FM_SNAPSHOT_SECONDMATE_LANDED_PER_HOME=0 "$FLEET" --json) || exit $?
@@ -296,11 +301,14 @@ if [ "$INCLUDE_PRS" = 1 ]; then
       s=$(repo_slug "$u"); [ -n "$s" ] || continue
       case " $repos " in *" $s "*) : ;; *) repos="$repos $s" ;; esac
     done <<EOF
-$(printf '%s' "$SNAP" | jq -r '
+$(printf '%s' "$SNAP" | jq -r --arg today "$BEARINGS_TODAY" '
   (.projects // []) as $projects
   | .tasks[]
   | (.backlog.repo // .project) as $repo
-  | select(any($projects[]; (.repo == $repo or .name == $repo) and .posture == "archived") | not)
+  | select(any($projects[];
+      (.repo == $repo or .name == $repo)
+      and (.posture == "archived"
+        or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))) | not)
   | .pr.url // empty')
 EOF
     while IFS= read -r wt; do
@@ -310,12 +318,15 @@ EOF
       s=$(repo_slug "$u"); [ -n "$s" ] || continue
       case " $repos " in *" $s "*) : ;; *) repos="$repos $s" ;; esac
     done <<EOF
-$(printf '%s' "$SNAP" | jq -r '
+$(printf '%s' "$SNAP" | jq -r --arg today "$BEARINGS_TODAY" '
   (.projects // []) as $projects
   | .tasks[]
   | select(.kind != "secondmate")
   | (.backlog.repo // .project) as $repo
-  | select(any($projects[]; (.repo == $repo or .name == $repo) and .posture == "archived") | not)
+  | select(any($projects[];
+      (.repo == $repo or .name == $repo)
+      and (.posture == "archived"
+        or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))) | not)
   | .paths.worktree.path // empty')
 EOF
 
@@ -368,11 +379,6 @@ EOF
 fi
 
 # --- projection: canonical snapshot -> fm-bearings.v1 model (JSON) ----------
-BEARINGS_TODAY=${NOW%%T*}
-case "$BEARINGS_TODAY" in
-  [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) : ;;
-  *) BEARINGS_TODAY=$(date -u +%Y-%m-%d) ;;
-esac
 MODEL=$(printf '%s' "$SNAP" | jq -L "$SCRIPT_DIR" \
   --arg home "$HOME_LABEL" \
   --arg now "$NOW" \
