@@ -706,15 +706,6 @@ MODEL=$(printf '%s' "$SNAP" | jq -L "$SCRIPT_DIR" \
         (($snap.secondmate_current.records // [])[] as $m
          | ([($m.omitted // [])[] | select(.surface == "active_children") | .count] | add // 0) as $n
          | if $n > 0 then {surface:("secondmate " + $m.id + " active children omitted by snapshot bound: \($n)"), reveal:"raise FM_SNAPSHOT_SECONDMATE_CHILDREN"} else empty end),
-        (($snap.secondmate_current.records // [])[] as $m
-         | ([($m.omitted // [])[] | select(.surface == "lifecycle_inventory") | .count] | add // 0) as $n
-         | if $n > 0 then {surface:("secondmate " + $m.id + " lifecycle inventory omitted by snapshot bound: \($n)"), reveal:"inspect the home ledger publication and remote route"} else empty end),
-        (($snap.secondmate_current.records // [])[] as $m
-         | first(($m.omitted // [])[]? | select(.surface == "legacy_posture_unknown")) as $unknown
-         | if $unknown != null then
-             {surface:("secondmate " + $m.id + " posture unknown for \($unknown.count) unidentified legacy rows: "
-               + ($unknown.surfaces | join(", "))),reveal:"refresh that secondmate home summary"}
-           else empty end),
         (if $all_secondmates == 0 and ($secondmates_all | length) > $secondmates_n then {surface:("secondmates showing \($secondmates_n) of \($secondmates_all | length)"), reveal:"--all-secondmates"} else empty end),
         (if (($snap.secondmate_current.truncated // 0) > 0) then {surface:("registered secondmates omitted by snapshot bound: \($snap.secondmate_current.truncated)"), reveal:"raise FM_SNAPSHOT_SECONDMATES"} else empty end),
         (if $snap.secondmate_current.registry.input_truncated == true then {surface:"secondmate registry input truncated by bounded read", reveal:"raise FM_SNAPSHOT_REGISTRY_LINES or FM_SNAPSHOT_REGISTRY_BYTES"} else empty end),
@@ -723,10 +714,6 @@ MODEL=$(printf '%s' "$SNAP" | jq -L "$SCRIPT_DIR" \
         (($snap.secondmate_current.records // [])[]
          | select(.provenance.selected == "structured-home" and .projects_published != true)
          | {surface:("secondmate " + .id + " posture registry not published"),reveal:"refresh that secondmate home summary"}),
-        (($snap.secondmate_current.records // [])[]
-         | select(.provenance.selected == "structured-home" and .projects_published == true
-           and .lifecycle_inventory_published != true)
-         | {surface:("secondmate " + .id + " lifecycle inventory not published"),reveal:"refresh that secondmate home summary"}),
         (($snap.secondmate_current.records // [])[]
          | select(.provenance.summary_source == "remote-ledger-cache")
          | {surface:("secondmate " + .id + " served from cached home ledger"),reveal:"inspect the home ledger publication and remote route"}),

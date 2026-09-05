@@ -241,9 +241,10 @@ Its invalidity object names the normalized failure kind and affected ids.
 Actionable tasks-axi captain holds appear as decisions_open and stay visible in
 queued with hold_reason, hold_kind, hold_until,
 hold_bucket, hold_age_days, and plural blocker fields for downstream
-projections. Each summary also publishes a separately bounded lifecycle_inventory
-of parked and archived task facts so dated posture is evaluated when read without
-depending on ordinary projection bounds.
+projections. Each summary also publishes a complete lifecycle_inventory of parked
+and archived task facts so dated posture is evaluated when read without depending
+on ordinary projection bounds. Its size is bounded by the parked and archived
+task inventory rather than a separate snapshot cap.
 A captain hold is actionable only when every blocker is Done, any
 hold-until date has arrived, and an undated hold remains below the aging threshold.
 Cross-home collection uses FM_SNAPSHOT_SECONDMATES (default 20, 0 lifts the
@@ -981,7 +982,6 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     --argjson queued_n "$FM_SNAPSHOT_SECONDMATE_QUEUED" \
     --argjson decisions_n "$FM_SNAPSHOT_SECONDMATE_DECISIONS" \
     --argjson landed_n "$FM_SNAPSHOT_SECONDMATE_LANDED_PER_HOME" \
-    --argjson lifecycle_n 200 \
     --slurpfile backlog "$1" \
     --slurpfile tasks "$2" \
     --slurpfile projects "$3" '
@@ -1175,7 +1175,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         active_children:$active_all[:$child_n],
         decisions_open:$decisions_all[:$decisions_n],
         holds:$holds_all[:$queued_n],
-        lifecycle_inventory:$lifecycle_inventory_all[:$lifecycle_n],
+        lifecycle_inventory:$lifecycle_inventory_all,
         queued:([$queued_all[] as $row
           | lifecycle($row.repo) as $life
           | (first($tasks[]? | select(.id == $row.id)) // null) as $task
@@ -1224,7 +1224,6 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
            else empty end),
           (if ($active_all | length) > $child_n then {surface:"active_children",count:(($active_all | length) - $child_n)} else empty end),
           (if ($decisions_all | length) > $decisions_n then {surface:"decisions_open",count:(($decisions_all | length) - $decisions_n)} else empty end),
-          (if ($lifecycle_inventory_all | length) > $lifecycle_n then {surface:"lifecycle_inventory",count:(($lifecycle_inventory_all | length) - $lifecycle_n)} else empty end),
           (if ($queued_all | length) > $queued_n then {surface:"queued",count:(($queued_all | length) - $queued_n)} else empty end),
           (if ($visible_tasks | length) > $child_n then {surface:"endpoints",count:(($visible_tasks | length) - $child_n)} else empty end),
           (if $landed_n > 0 and ($landed_all | length) > $landed_n then {surface:"landed",count:(($landed_all | length) - $landed_n)} else empty end)
@@ -1467,6 +1466,8 @@ length == 1 and (.[0] |
   and (.holds | type) == "array" and (.queued | type) == "array"
   and (.landed | type) == "array" and (.endpoints | type) == "array"
   and (.counts | type) == "object" and (.omitted | type) == "array"
+  and ((has("projects") and has("lifecycle_inventory"))
+       or ((has("projects") | not) and (has("lifecycle_inventory") | not)))
   and (if has("lifecycle_inventory") then
          (.lifecycle_inventory | type) == "array"
          and all(.queued[]?;

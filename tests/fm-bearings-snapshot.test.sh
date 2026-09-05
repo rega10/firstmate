@@ -3275,9 +3275,9 @@ EOF
     (.in_flight | any(.id == "posture-mate/mate-parked-live"))
       and (.gates | any(.id == "mate-parked-live") | not)
       and (.secondmates | any(.id == "posture-mate" and .state == "captain_decision"
-        and (.reason | contains("mate-parked-live"))))
+        and (.reason | contains("unrelated-orphan"))))
       and (.secondmate_reconcile | any(.id == "posture-mate"
-        and .kind == "unowned_current" and (.ids | index("mate-parked-live") != null)))
+        and .kind == "orphan_in_flight" and .ids == ["unrelated-orphan"]))
   ' >/dev/null || fail "a stale secondmate summary kept an expired live park hidden: $json"
   first=$(FM_PROJECT_POSTURE_TODAY=2026-08-01 "$check")
   assert_contains "$first" 'project posture expired: parked-app (parked until 2026-08-01)' \
@@ -3348,84 +3348,6 @@ EOF
   pass "secondmate lifecycle filtering precedes every owning-summary bound"
 }
 
-test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible() {
-  local home mate fakebin json
-  home=$(make_home project-aware-v1-ledger)
-  mate="$TMP_ROOT/project-aware-v1-ledger-mate"
-  : > "$home/data/secondmates.md"
-  make_valid_secondmate_home v1-mate "$mate"
-  append_secondmate_registry "$home" v1-mate "$mate"
-  jq -n --arg home "$mate" '{
-    schema:"fm-secondmate-home-summary.v1",
-    hold_classifier_schema:"fm-captain-hold-buckets.v1",
-    generated:"2026-07-11T18:00:00Z",generated_epoch:1783792800,home:$home,
-    projects:[{name:"active-app",repo:"active-app",posture:"active",parked_until:null}],
-    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
-    active_children:[],decisions_open:[],holds:[],
-    queued:[{id:"v1-visible",title:"Visible pre-inventory work",blocked_by:null,
-      blocked_by_ids:[],unresolved_blocker_ids:[],blocked_reason:null,hold_reason:null,
-      hold_kind:null,hold_until:null,hold_bucket:null,hold_age_days:null,
-      captain_actionable:false,repo:"active-app",kind:"ship"}],
-    landed:[],endpoints:[],
-    counts:{active_children:0,decisions_open:0,holds:0,queued:1,landed:0,endpoints:0},
-    omitted:[]
-  }' > "$mate/state/home-summary.json"
-  fakebin=$(make_fakebin "$home")
-  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
-    FM_SNAPSHOT_NOW_EPOCH=1783792800 FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
-    NET_LOG="$home/net.log" "$BEARINGS" --json --all-queued)
-  printf '%s' "$json" | jq -e '
-    (.gates | any(.id == "v1-visible" and .owner == "v1-mate"))
-      and (.secondmates | any(.id == "v1-mate" and .provenance == "structured-home"))
-      and (.omitted | any(.surface == "secondmate v1-mate lifecycle inventory not published"))
-  ' >/dev/null || fail "project-aware v1 ledger without lifecycle inventory was hidden: $json"
-  pass "project-aware v1 ledgers remain visible without lifecycle inventory"
-}
-
-test_project_aware_v1_parked_work_sinks_to_gates() {
-  local home mate fakebin canonical json
-  home=$(make_home project-aware-v1-parked-work)
-  mate="$TMP_ROOT/project-aware-v1-parked-work-mate"
-  : > "$home/data/secondmates.md"
-  make_valid_secondmate_home v1-parked-mate "$mate"
-  append_secondmate_registry "$home" v1-parked-mate "$mate"
-  jq -n --arg home "$mate" '{
-    schema:"fm-secondmate-home-summary.v1",
-    hold_classifier_schema:"fm-captain-hold-buckets.v1",
-    generated:"2026-07-11T18:00:00Z",generated_epoch:1783792800,home:$home,
-    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
-    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"captain_decision",
-    active_children:[{id:"legacy-parked-active",kind:"ship",state:"working",
-      repo:"parked-app",source:"status-log",doing:"Building parked work"}],
-    decisions_open:[{id:"legacy-parked-decision",key:"legacy-parked-decision",
-      verb:"captain-hold",summary:"Choose parked route",reason:"captain input",
-      hold_until:null,hold_bucket:"live",hold_age_days:0,source:"backlog",repo:"parked-app"}],
-    holds:[],queued:[],landed:[],endpoints:[],
-    counts:{active_children:1,decisions_open:1,holds:0,queued:0,landed:0,endpoints:0},
-    omitted:[]
-  }' > "$mate/state/home-summary.json"
-  fakebin=$(make_fakebin "$home")
-  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
-    FM_SNAPSHOT_NOW_EPOCH=1783792800 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
-  printf '%s' "$canonical" | jq -e '
-    .secondmate_current.records[] | select(.id == "v1-parked-mate")
-    | (.queued | length) == 2 and .counts.queued == 2
-  ' >/dev/null || fail "legacy parked queue count did not match reclassified rows: $canonical"
-  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
-    FM_SNAPSHOT_NOW_EPOCH=1783792800 FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
-    NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-decisions --all-queued)
-  printf '%s' "$json" | jq -e '
-    (.in_flight | any(.id == "v1-parked-mate/legacy-parked-active") | not)
-      and (.decisions_open | any(.id == "v1-parked-mate/legacy-parked-decision") | not)
-      and (.gates | any(.id == "legacy-parked-active" and .owner == "v1-parked-mate"
-        and .reason == "project parked until 2026-08-01"))
-      and (.gates | any(.id == "legacy-parked-decision" and .owner == "v1-parked-mate"
-        and .reason == "project parked until 2026-08-01"))
-      and (.secondmates | any(.id == "v1-parked-mate" and .state == "no_active_work"))
-  ' >/dev/null || fail "legacy parked work leaked active projections: $json"
-  pass "project-aware v1 parked work sinks to Charted Next"
-}
-
 test_expired_unknown_park_revalidates_cached_summary() {
   local home mate sshbin json
   home=$(make_home expired-unknown-park)
@@ -3489,7 +3411,7 @@ test_expired_unknown_park_revalidates_cached_summary() {
   pass "expired unknown parks revalidate cached summaries"
 }
 
-test_expired_unknown_park_replaces_stale_primary_invalidity() {
+test_expired_unknown_park_preserves_strict_primary_invalidity() {
   local home mate sshbin json
   home=$(make_home expired-unknown-secondary)
   mate="$TMP_ROOT/expired-unknown-secondary-mate"
@@ -3538,13 +3460,53 @@ test_expired_unknown_park_replaces_stale_primary_invalidity() {
   printf '%s' "$json" | jq -e '
     (.secondmates | any(.id == "secondary-mate" and .state == "unknown"
       and .provenance == "structured-home-cache"
-      and (.reason | contains("newly-active-unknown"))))
+      and (.reason | contains("existing-orphan"))))
       and (.secondmate_reconcile | any(.id == "secondary-mate"
-        and .kind == "child_current_unavailable"
-        and .ids == ["newly-active-unknown"]))
+        and .kind == "orphan_in_flight"
+        and .ids == ["existing-orphan"]))
       and (.gates | any(.id == "newly-active-unknown") | not)
-  ' >/dev/null || fail "newly active invalidity was masked by the cached primary: $json"
-  pass "newly active expiry invalidity replaces a stale cached primary"
+  ' >/dev/null || fail "expired unknown child displaced the strict cached contradiction: $json"
+  pass "expired unknown children preserve strict cached contradictions"
+}
+
+test_expired_orphan_replaces_cached_unknown_primary() {
+  local home mate fakebin canonical
+  home=$(make_home expired-orphan-secondary)
+  mate="$TMP_ROOT/expired-orphan-secondary-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home inverse-expiry-mate "$mate"
+  append_secondmate_registry "$home" inverse-expiry-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[
+      {name:"active-app",repo:"active-app",posture:"active",parked_until:null},
+      {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    lifecycle_inventory:[{id:"newly-active-orphan",title:"Orphaned parked worker",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:null,
+      child_source:null,child_doing:null}],
+    valid:false,reason:"child current state unavailable: existing-unknown",
+    invalidity:{kind:"child_current_unavailable",ids:["existing-unknown"]},state:"unknown",
+    active_children:[],decisions_open:[],holds:[],queued:[],landed:[],
+    endpoints:[{id:"existing-unknown",repo:"active-app",state:"unknown",source:"unavailable",
+      endpoint:{target:"unknown-target",exists:false,agent_alive:"dead"}}],
+    counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:1,
+      queued:0,landed:0,endpoints:1},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "inverse-expiry-mate")
+    | .current.state == "unknown"
+      and .invalidity == {kind:"orphan_in_flight",ids:["newly-active-orphan"]}
+      and (.current.reason | contains("newly-active-orphan"))
+  ' >/dev/null || fail "expired orphan was masked by the cached unknown primary: $canonical"
+  pass "expired strict contradictions replace cached unknown primaries"
 }
 
 test_expiry_preserves_fatal_cached_invalidity() {
@@ -3749,106 +3711,6 @@ test_expired_held_park_stays_valid() {
   pass "expired held parks stay valid without child metadata"
 }
 
-test_cached_legacy_ledger_discloses_unidentified_posture() {
-  local home mate sshbin json
-  home=$(make_home cached-legacy-archived-landed)
-  mate="$TMP_ROOT/cached-legacy-archived-landed-mate"
-  mkdir -p "$mate/state"
-  printf -- '- legacy-mate - fixture domain (host: legacy-host; root: /remote/root; home: %s; scope: fixture; projects: archived-app; added 2026-09-01)\n' \
-    "$mate" > "$home/data/secondmates.md"
-  fm_write_meta "$home/state/legacy-mate.meta" \
-    "kind=secondmate" "mode=secondmate" "harness=pi" \
-    "remote_host=legacy-host" "remote_root=/remote/root" "home=$mate"
-  jq -n --arg home "$mate" '{
-    schema:"fm-secondmate-home-summary.v1",
-    hold_classifier_schema:"fm-captain-hold-buckets.v1",
-    generated:"2026-09-01T22:00:00Z",generated_epoch:1000,home:$home,
-    projects:[{name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null}],
-    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"externally_held",
-    active_children:[],
-    decisions_open:[{id:"legacy-decision",key:"legacy-decision",verb:"needs-decision",
-      summary:"Legacy decision",reason:null,source:"status",captain_actionable:true}],
-    holds:[{id:"legacy-hold",title:"Legacy hold",blocked_by:null,blocked_by_ids:[],
-      unresolved_blocker_ids:[],reason:"waiting",source:"child-state"}],queued:[],
-    landed:[{id:"legacy-archived-done",title:"Archived legacy completion",
-      pr_url:null,report_path:null,local_note:"done",completion:{date:"2026-08-31"}}],
-    endpoints:[{id:"legacy-endpoint",state:"working",source:"status-log",
-      endpoint:{target:"legacy-target",exists:false,agent_alive:"dead"}}],
-    counts:{active_children:0,decisions_open:1,holds:1,queued:0,landed:1,endpoints:1},omitted:[]
-  }' > "$mate/state/home-summary.json"
-  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
-  mkdir -p "$home/ledger-active"
-  : > "$home/ledger-calls.log"
-  : > "$home/ledger-pids.log"
-  json=$(FM_BEARINGS_UNHEALTHY=20 FM_BEARINGS_DECISIONS=20 \
-    run_remote_ledger_bearings "$home" "$sshbin" 1100)
-  printf '%s' "$json" | jq -e '
-    (.landed | any(.id == "legacy-archived-done"))
-      and (.unhealthy_endpoints | any(.id == "legacy-mate/legacy-endpoint"))
-      and (.secondmates | any(.id == "legacy-mate" and .doing == "Legacy decision"))
-      and (.omitted | any(.surface == "secondmate legacy-mate posture unknown for 4 unidentified legacy rows: decisions_open, endpoints, holds, landed"))
-  ' >/dev/null || fail "live legacy ledger did not disclose unidentified posture: $json"
-  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
-  json=$(FM_BEARINGS_UNHEALTHY=20 FM_BEARINGS_DECISIONS=20 \
-    run_remote_ledger_bearings "$home" "$sshbin" 1100)
-  printf '%s' "$json" | jq -e '
-    (.landed | any(.id == "legacy-archived-done"))
-      and (.secondmates | any(.id == "legacy-mate" and .provenance == "structured-home-cache"))
-      and (.omitted | any(.surface == "secondmate legacy-mate posture unknown for 4 unidentified legacy rows: decisions_open, endpoints, holds, landed"))
-  ' >/dev/null || fail "cached legacy ledger did not disclose unidentified posture: $json"
-  pass "legacy ledgers preserve and disclose unidentified posture rows"
-}
-
-test_archived_legacy_invalidity_is_reconciled() {
-  local home mate sshbin json
-  home=$(make_home archived-legacy-invalidity)
-  mate="$TMP_ROOT/archived-legacy-invalidity-mate"
-  mkdir -p "$mate/state"
-  printf -- '- archive-legacy-mate - fixture domain (host: archive-legacy-host; root: /remote/root; home: %s; scope: fixture; projects: archived-app, active-app; added 2026-09-01)\n' \
-    "$mate" > "$home/data/secondmates.md"
-  fm_write_meta "$home/state/archive-legacy-mate.meta" \
-    "kind=secondmate" "mode=secondmate" "harness=pi" \
-    "remote_host=archive-legacy-host" "remote_root=/remote/root" "home=$mate"
-  jq -n --arg home "$mate" '{
-    schema:"fm-secondmate-home-summary.v1",
-    hold_classifier_schema:"fm-captain-hold-buckets.v1",
-    generated:"2026-09-01T22:00:00Z",generated_epoch:1000,home:$home,
-    projects:[
-      {name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null},
-      {name:"active-app",repo:"active-app",posture:"active",parked_until:null}],
-    valid:false,reason:"child current state unavailable: archived-unknown",
-    invalidity:{kind:"child_current_unavailable",ids:["archived-unknown"]},state:"unknown",
-    active_children:[{id:"healthy-active",kind:"ship",state:"working",repo:"active-app",
-      source:"status-log",doing:"Healthy active work"}],decisions_open:[],holds:[],
-    queued:[{id:"archived-unknown",title:"Archived unknown child",repo:"archived-app",
-      blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],blocked_reason:null,
-      hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,hold_age_days:null,
-      captain_actionable:false,kind:"ship"}],landed:[],
-    endpoints:[{id:"archived-unknown",state:"unknown",source:"unavailable",
-      endpoint:{target:"archived-target",exists:false,agent_alive:"dead"}}],
-    counts:{active_children:1,decisions_open:0,holds:0,queued:1,landed:0,endpoints:1},omitted:[]
-  }' > "$mate/state/home-summary.json"
-  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
-  mkdir -p "$home/ledger-active"
-  : > "$home/ledger-calls.log"
-  : > "$home/ledger-pids.log"
-  run_remote_ledger_bearings "$home" "$sshbin" 1100 >/dev/null
-  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
-  json=$(run_remote_ledger_bearings "$home" "$sshbin" 1100)
-  printf '%s' "$json" | jq -e '
-    (.secondmates | any(.id == "archive-legacy-mate" and .state == "active_child_work"
-      and .provenance == "structured-home-cache"))
-      and (.in_flight | any(.id == "archive-legacy-mate/healthy-active"))
-      and (.secondmate_reconcile | any(.id == "archive-legacy-mate"
-        and .kind == null and (.ids | length) == 0))
-      and (.secondmate_reconcile | any(.ids[]? == "archived-unknown") | not)
-      and ((.unhealthy_endpoints // []) | any(.id == "archive-legacy-mate/archived-unknown") | not)
-      and (.gates | any(.id == "archived-unknown") | not)
-      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
-  ' >/dev/null || fail "archived legacy invalidity survived lifecycle filtering: $json"
-  pass "archived legacy invalidity is reconciled after lifecycle filtering"
-}
-
 test_archive_filter_updates_summary_counts() {
   local home mate fakebin canonical json
   home=$(make_home archive-filter-counts)
@@ -3910,7 +3772,7 @@ EOF
   pass "archived main orphans do not invalidate visible inventory"
 }
 
-test_expired_parks_do_not_consume_lifecycle_inventory() {
+test_lifecycle_inventory_is_complete() {
   local home mate fakebin summary json i
   home=$(make_home expired-park-inventory-cap)
   mate="$TMP_ROOT/expired-park-inventory-cap-mate"
@@ -3936,8 +3798,8 @@ EOF
     i=$((i + 1))
   done
   i=1
-  while [ "$i" -le 199 ]; do
-    printf -- '- [ ] b-expired-%03d - Expired gate %03d (repo: expired-app) (kind: ship)\n' "$i" "$i" \
+  while [ "$i" -le 201 ]; do
+    printf -- '- [ ] b-future-%03d - Future parked gate %03d (repo: future-app) (kind: ship)\n' "$i" "$i" \
       >> "$mate/data/backlog.md"
     i=$((i + 1))
   done
@@ -3957,12 +3819,16 @@ EOF
     FM_SNAPSHOT_SECONDMATE_QUEUED=20 "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
   summary=$(<"$mate/state/home-summary.json")
   printf '%s' "$summary" | jq -e '
-    [.lifecycle_inventory[].id] == ["z-future-park"]
+    (.lifecycle_inventory | length) == 202
+      and (.counts.lifecycle_inventory == 202)
+      and (.lifecycle_inventory | any(.id == "b-future-201"))
+      and (.lifecycle_inventory | any(.id == "z-future-park"))
+      and (.omitted | any(.surface == "lifecycle_inventory") | not)
       and (.active_children | map(select(.id == "a-expired-live")) | length) == 1
       and .counts.active_children == 1
       and (.queued | length) == 20
       and (.queued | any(.id == "z-future-park") | not)
-  ' >/dev/null || fail "expired parks polluted the lifecycle inventory or fresh active counts: $summary"
+  ' >/dev/null || fail "lifecycle inventory was capped or fresh active counts changed: $summary"
   json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
     FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
     NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-queued)
@@ -3971,7 +3837,7 @@ EOF
       and .reason == "project parked until 2026-09-01"))
       and ([.in_flight[] | select(.id == "inventory-mate/a-expired-live")] | length) == 1
   ' >/dev/null || fail "future park was hidden behind expired lifecycle rows: $json"
-  pass "expired parks do not consume lifecycle inventory capacity"
+  pass "lifecycle inventory is complete beyond projection bounds"
 }
 
 test_expired_secondmate_park_survives_summary_bounds_and_cache() {
@@ -4166,19 +4032,16 @@ test_projection_and_toon_fail_closed
 test_project_lifecycle_surface_and_bearings_projection
 test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
-test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
-test_project_aware_v1_parked_work_sinks_to_gates
 test_expired_unknown_park_revalidates_cached_summary
-test_expired_unknown_park_replaces_stale_primary_invalidity
+test_expired_unknown_park_preserves_strict_primary_invalidity
+test_expired_orphan_replaces_cached_unknown_primary
 test_expiry_preserves_fatal_cached_invalidity
 test_expired_queued_worker_is_unowned
 test_expired_unknown_preserves_unknown_with_orphan_primary
 test_expired_active_worker_leaves_cached_queue
 test_expired_held_park_stays_valid
-test_cached_legacy_ledger_discloses_unidentified_posture
-test_archived_legacy_invalidity_is_reconciled
 test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate
-test_expired_parks_do_not_consume_lifecycle_inventory
+test_lifecycle_inventory_is_complete
 test_expired_secondmate_park_survives_summary_bounds_and_cache
 test_expired_project_park_resurfaces_with_one_wake
