@@ -3461,6 +3461,25 @@ test_expired_unknown_park_revalidates_cached_summary() {
     break
   done
   [ -n "$cache_file" ] || fail "future parked summary did not populate its cache"
+  cp "$mate/state/home-summary.json" "$mate/state/home-summary.valid"
+  tmp="$mate/state/home-summary.json.tmp"
+  jq '.lifecycle_inventory=[{id:"expired-unknown",repo:"parked-app"}]
+    | .queued=[] | .counts.lifecycle_inventory=1 | .counts.queued=0' \
+    "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  cp "$mate/state/home-summary.json" "$cache_file"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "unknown-mate" and .state == "unknown"
+      and .provenance == "unknown" and (.reason | contains("no valid cached copy"))))
+      and (.gates | any(.id == "expired-unknown") | not)
+  ' >/dev/null || fail "malformed lifecycle inventory remained trusted through expiry: $json"
+  cp "$mate/state/home-summary.valid" "$mate/state/home-summary.json"
+  cp "$mate/state/home-summary.valid" "$cache_file"
   tmp="$mate/state/home-summary.json.tmp"
   jq 'del(.bounds)' "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
   tmp="$cache_file.tmp"

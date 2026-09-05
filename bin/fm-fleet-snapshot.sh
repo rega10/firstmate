@@ -1477,7 +1477,7 @@ length == 1 and (.[0] |
        else true end)
   and (if has("lifecycle_inventory") then
          (.lifecycle_inventory | type) == "array"
-         and all(.queued[]?;
+         and all(.lifecycle_inventory[]?;
            has("project_posture") and has("parked_until") and has("backlog_state")
            and has("current_role") and has("child_state") and has("child_source") and has("child_doing"))
        else true end)
