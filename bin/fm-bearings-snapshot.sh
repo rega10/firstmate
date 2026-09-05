@@ -189,6 +189,28 @@ else
 fi
 HOME_LABEL=$(printf '%s' "$SNAP" | jq -er '.fm_home | strings | split("/") | (.[-2:] | join("/"))') \
   || { echo "fm-bearings-snapshot: invalid canonical snapshot" >&2; exit 1; }
+SNAP=$(printf '%s' "$SNAP" | jq '
+  (.projects // []) as $projects
+  | .fm_home as $fm_home
+  | def normalized_project($value):
+      if $value == null or $value == "" then $value
+      else
+        ([$projects[]
+          | select(.name == $value or .repo == $value
+              or .path? == $value or .clone_path? == $value
+              or ($fm_home + "/projects/" + (.name // "")) == $value
+              or ($fm_home + "/projects/" + (.repo // "")) == $value)
+          | .name] | unique) as $direct
+        | if ($direct | length) == 1 then $direct[0]
+          elif ($direct | length) > 1 then $value
+          else
+            ($value | split("/") | map(select(. != "")) | .[-1] // "") as $base
+            | ([$projects[] | select(.name == $base or .repo == $base) | .name] | unique) as $basename
+            | if ($basename | length) == 1 then $basename[0] else $value end
+          end
+      end;
+  .tasks |= map(.project = normalized_project(.project))
+') || { echo "fm-bearings-snapshot: could not normalize project metadata" >&2; exit 1; }
 
 # --- optional live PR enrichment (the ONLY network path) --------------------
 PR_STATUS='not_requested (run: /bearings include PRs)'
