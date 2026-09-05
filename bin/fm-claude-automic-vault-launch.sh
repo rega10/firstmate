@@ -37,8 +37,18 @@ if [ "${1:-}" = --injected ]; then
   worker_path=${FM_CLAUDE_AV_WORKER_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
   unset FM_CLAUDE_AV_WORKER_PATH
   worker_args=()
+  drop_settings_value=0
   for worker_arg in "$@"; do
-    [ "$worker_arg" = --dangerously-skip-permissions ] || worker_args+=("$worker_arg")
+    if [ "$drop_settings_value" = 1 ]; then
+      drop_settings_value=0
+      continue
+    fi
+    case "$worker_arg" in
+      --dangerously-skip-permissions) continue ;;
+      --settings) drop_settings_value=1; continue ;;
+      --settings=*) continue ;;
+    esac
+    worker_args+=("$worker_arg")
   done
   : > "$ready" || exit 1
   exec 1>&3 2>&4 3>&- 4>&-
