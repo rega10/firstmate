@@ -25,7 +25,6 @@ def fm_merge_by_id($base; $extra):
     if any(.[]; .id == $row.id) then . else . + [$row] end);
 
 def fm_secondmate_summary_at($today):
-  if .valid != true then . else
   (.projects // []) as $projects
   | ([.queued[]?
       | fm_project_lifecycle(.repo; $projects; $today) as $life
@@ -47,11 +46,12 @@ def fm_secondmate_summary_at($today):
   | .active_children = fm_merge_by_id(.active_children; $active)
   | .holds = fm_merge_by_id(.holds; $holds)
   | .decisions_open = fm_merge_by_id(.decisions_open; $decisions)
-  | .state = (if any(.decisions_open[]; .verb == "needs-decision" or .verb == "captain-hold") then "captain_decision"
-              elif (.active_children | length) > 0 then "active_child_work"
-              elif (.holds | length) > 0 then "externally_held"
-              else "no_active_work" end)
   | .counts.active_children += ($active | length)
   | .counts.decisions_open += ($decisions | length)
   | .counts.holds += ($holds | length)
-  end;
+  | if .valid == true then
+      .state = (if any(.decisions_open[]; .verb == "needs-decision" or .verb == "captain-hold") then "captain_decision"
+                elif (.active_children | length) > 0 then "active_child_work"
+                elif (.holds | length) > 0 then "externally_held"
+                else "no_active_work" end)
+    else . end;
