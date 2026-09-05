@@ -365,6 +365,24 @@ MODEL=$(printf '%s' "$SNAP" | jq \
   | (($fl | index("endpoints")) != null) as $f_endpoints
   | (([.backlog.records[] | select(.structured and project_archived(.repo)) | .id]
       + [.tasks[] | select(project_archived(.backlog.repo // .project)) | .id]) | unique) as $archived_work_ids
+  | (([.backlog.records[]
+        | (.repo // task_project(.id)) as $repo
+        | select(.structured and project_archived($repo))
+        | (project_record($repo) | .name)]
+      + [.tasks[]
+         | (.backlog.repo // .project) as $repo
+         | select(project_archived($repo))
+         | (project_record($repo) | .name)]
+      + [((.secondmate_landed.records // [])[])
+         | .repo as $repo
+         | select(project_archived($repo))
+         | (project_record($repo) | .name)]
+      + [(.secondmate_current.records // [])[]
+         | (.queued[]?, .decisions_open[]?)
+         | .repo as $repo
+         | select(project_archived($repo))
+         | (project_record($repo) | .name)])
+     | map(select(. != null)) | unique) as $archived_projects
   | ([ .backlog.records[] | select(.state == "done" and .structured and .hold_kind != "captain")
        | select(project_archived(.repo) | not)
        | {id, title, repo, pr_url, report_path, local_note, completion, home:"(main)", home_id:"(main)"} ]) as $main_done
@@ -511,7 +529,6 @@ MODEL=$(printf '%s' "$SNAP" | jq \
        | {id, path} ]) as $reports_all
   | ([ .tasks[] | select(.kind != "secondmate" and .pr.url != null and .pr.source == "meta")
        | select(project_archived(.backlog.repo // .project) | not) | {id, url:.pr.url} ]) as $recorded_prs_all
-  | ($projects | map(select(.posture == "archived") | .name)) as $archived_projects
   | . as $snap
   | {
       schema: "fm-bearings.v1",

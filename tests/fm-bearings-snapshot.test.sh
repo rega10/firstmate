@@ -1952,6 +1952,7 @@ test_project_lifecycle_surface_and_bearings_projection() {
 - permanent [local-only parked] - Permanent park (added 2026-07-01)
 - future [no-mistakes parked:2026-08-01] - Future park (added 2026-07-01)
 - archived [direct-PR archived] - Archived project (added 2026-07-01)
+- empty-archived [local-only archived] - Archived project without work (added 2026-07-01)
 EOF
   cat > "$home/data/backlog.md" <<'EOF'
 ## In flight
@@ -1991,7 +1992,7 @@ EOF
   canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
     "$ROOT/bin/fm-fleet-snapshot.sh" --json)
   printf '%s' "$canonical" | jq -e '
-    [.projects[].name] == ["active", "due", "permanent", "future", "archived"]
+    [.projects[].name] == ["active", "due", "permanent", "future", "archived", "empty-archived"]
       and (.projects[] | select(.name == "active")
         | .posture == "active" and .parked_until == null and .repo == "active"
           and .delivery == "no-mistakes +yolo")
@@ -2002,11 +2003,13 @@ EOF
         | .posture == "parked" and .parked_until == null and .delivery == "local-only")
       and (.projects[] | select(.name == "archived")
         | .posture == "archived" and .parked_until == null and .delivery == "direct-PR")
+      and (.projects[] | select(.name == "empty-archived")
+        | .posture == "archived" and .parked_until == null and .delivery == "local-only")
   ' >/dev/null || fail "canonical project lifecycle surface was incomplete or unordered: $canonical"
 
   json=$(run "$home" "$fakebin" --json)
   printf '%s' "$json" | jq -e '
-    [.projects[].name] == ["active", "due", "permanent", "future", "archived"]
+    [.projects[].name] == ["active", "due", "permanent", "future", "archived", "empty-archived"]
       and ([.in_flight[].id] == ["due-live"])
       and ([.gates[].id] == ["active-next", "due-next", "permanent-live", "permanent-meta-live", "permanent-next", "future-call", "future-live"])
       and (.gates | any(.id == "permanent-live" and .reason == "project parked"))
@@ -2020,6 +2023,7 @@ EOF
       and (.landed | any(.id == "active-done"))
       and (.landed | any(.id == "archived-done") | not)
       and (.omitted | any(.surface == "archived project work omitted: archived"))
+      and ([.omitted[].surface] | any(contains("empty-archived")) | not)
   ' >/dev/null || fail "Bearings did not gate parks, resurface due work, or disclose archives: $json"
   bounded=$(FM_BEARINGS_GATES=2 run "$home" "$fakebin" --json)
   printf '%s' "$bounded" | jq -e '
@@ -2029,7 +2033,7 @@ EOF
           and .reveal == "--all-queued")] | length) == 1
   ' >/dev/null || fail "bounded gates did not name omitted parked projects: $bounded"
   toon=$(run "$home" "$fakebin")
-  assert_contains "$toon" 'projects[5]{name,posture,parked_until,repo,delivery}:' \
+  assert_contains "$toon" 'projects[6]{name,posture,parked_until,repo,delivery}:' \
     "TOON omitted the project lifecycle surface"
   assert_contains "$toon" 'project parked until 2026-08-01' \
     "TOON omitted the dated park reason"
