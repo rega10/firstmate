@@ -122,6 +122,34 @@ def fm_secondmate_summary_at($today):
   | ([ $inventory[]?
       | fm_project_lifecycle(.repo; $projects; $today) as $life
       | select($life.posture == "parked" and ($life.parked | not))]) as $expired
+  | ([ $expired[]
+       | select(.backlog_state == "in_flight" and .current_role != "program")
+       | select(.child_state == null or .child_state == "")
+       | .id] | unique) as $expired_orphans
+  | ([ $expired[]
+       | select(.backlog_state == null and .kind != "secondmate")
+       | select(.child_state != null and .child_state != "")
+       | .id] | unique) as $expired_unowned
+  | ([ $expired[]
+       | select(.backlog_state == "in_flight"
+           and (.child_state == "done" or .child_state == "failed"))
+       | .id] | unique) as $expired_terminal
+  | ([ $expired[]
+       | select(.child_state == "unknown")
+       | .id] | unique) as $expired_unknown
+  | (if ($expired_orphans | length) > 0 then
+       {kind:"orphan_in_flight",ids:$expired_orphans,
+        reason:("in-flight backlog item has no child metadata: " + ($expired_orphans | join(", ")))}
+     elif ($expired_unowned | length) > 0 then
+       {kind:"unowned_current",ids:$expired_unowned,
+        reason:("live child state has no in-flight backlog item: " + ($expired_unowned | join(", ")))}
+     elif ($expired_terminal | length) > 0 then
+       {kind:"terminal_in_flight",ids:$expired_terminal,
+        reason:("in-flight backlog item has terminal child state: " + ($expired_terminal | join(", ")))}
+     elif ($expired_unknown | length) > 0 then
+       {kind:"child_current_unavailable",ids:$expired_unknown,
+        reason:("child current state unavailable: " + ($expired_unknown | join(", ")))}
+     else null end) as $expiry_invalidity
   | ([ $inventory[]?
       | fm_project_lifecycle(.repo; $projects; $today) as $life
       | select($life.parked)
@@ -142,14 +170,22 @@ def fm_secondmate_summary_at($today):
       | {id, key:.id, verb:"captain-hold", summary:.title, reason:.hold_reason, repo,
          hold_until, hold_bucket, hold_age_days, source:"backlog"}]) as $decisions
   | ([$expired[] | select(.backlog_state == "queued")]) as $expired_queued
-  | .queued = fm_merge_by_id($queued; ($parked + $expired_queued + $legacy_parked))
+  | fm_merge_by_id($queued; ($parked + $expired_queued)) as $lifecycle_queued
+  | fm_merge_by_id($lifecycle_queued; $legacy_parked) as $merged_queued
+  | .queued = $merged_queued
+  | .counts.queued += (($merged_queued | length) - ($lifecycle_queued | length))
   | .active_children = fm_merge_by_id((.active_children // []); $active)
   | .holds = fm_merge_by_id((.holds // []); $holds)
   | .decisions_open = fm_merge_by_id((.decisions_open // []); $decisions)
   | .counts.active_children += ($active | length)
   | .counts.decisions_open += ($decisions | length)
   | .counts.holds += ($holds | length)
-  | if .valid == true then
+  | if .valid == true and $expiry_invalidity != null then
+      .valid = false
+      | .invalidity = ($expiry_invalidity | del(.reason))
+      | .reason = $expiry_invalidity.reason
+      | .state = "unknown"
+    elif .valid == true then
       .state = (if any(.decisions_open[]; .verb == "needs-decision" or .verb == "captain-hold") then "captain_decision"
                 elif (.active_children | length) > 0 then "active_child_work"
                 elif (.holds | length) > 0 then "externally_held"

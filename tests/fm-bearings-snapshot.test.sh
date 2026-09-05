@@ -3381,7 +3381,7 @@ test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible() {
 }
 
 test_project_aware_v1_parked_work_sinks_to_gates() {
-  local home mate fakebin json
+  local home mate fakebin canonical json
   home=$(make_home project-aware-v1-parked-work)
   mate="$TMP_ROOT/project-aware-v1-parked-work-mate"
   : > "$home/data/secondmates.md"
@@ -3403,6 +3403,12 @@ test_project_aware_v1_parked_work_sinks_to_gates() {
     omitted:[]
   }' > "$mate/state/home-summary.json"
   fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1783792800 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "v1-parked-mate")
+    | (.queued | length) == 2 and .counts.queued == 2
+  ' >/dev/null || fail "legacy parked queue count did not match reclassified rows: $canonical"
   json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
     FM_SNAPSHOT_NOW_EPOCH=1783792800 FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
     NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-decisions --all-queued)
@@ -3416,6 +3422,69 @@ test_project_aware_v1_parked_work_sinks_to_gates() {
       and (.secondmates | any(.id == "v1-parked-mate" and .state == "no_active_work"))
   ' >/dev/null || fail "legacy parked work leaked active projections: $json"
   pass "project-aware v1 parked work sinks to Charted Next"
+}
+
+test_expired_unknown_park_revalidates_cached_summary() {
+  local home mate sshbin json
+  home=$(make_home expired-unknown-park)
+  mate="$TMP_ROOT/expired-unknown-park-mate"
+  mkdir -p "$mate/state"
+  printf -- '- unknown-mate - fixture domain (host: unknown-host; root: /remote/root; home: %s; scope: fixture; projects: parked-app; added 2026-07-31)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/unknown-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=unknown-host" "remote_root=/remote/root" "home=$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    lifecycle_inventory:[{id:"expired-unknown",title:"Unknown parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[{id:"expired-unknown",title:"Unknown parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:1,queued:1,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785520800 FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "expired-unknown" and .reason == "project parked until 2026-08-01"))
+      and (.secondmates | any(.id == "unknown-mate" and .state == "no_active_work"))
+  ' >/dev/null || fail "future parked unknown child was not safely gated: $json"
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "unknown-mate" and .state == "unknown"
+      and .provenance == "structured-home-cache"
+      and (.reason | contains("child current state unavailable"))))
+      and (.secondmate_reconcile | any(.id == "unknown-mate"
+        and (.ids | index("expired-unknown") != null)))
+  ' >/dev/null || fail "expired unknown child remained trusted no-active work: $json"
+  pass "expired unknown parks revalidate cached summaries"
 }
 
 test_cached_legacy_ledger_discloses_unidentified_posture() {
@@ -3787,6 +3856,7 @@ test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
 test_project_aware_v1_parked_work_sinks_to_gates
+test_expired_unknown_park_revalidates_cached_summary
 test_cached_legacy_ledger_discloses_unidentified_posture
 test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate

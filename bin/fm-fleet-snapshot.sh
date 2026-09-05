@@ -1932,17 +1932,6 @@ secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
     fi
     if [ -z "$reason" ]; then
       summary_sampled=true
-      summary_valid=$(jq -r '.valid' "$summary_file")
-      if [ "$summary_valid" != true ]; then
-        summary_invalidity=$(jq -r '.invalidity.kind // "unknown"' "$summary_file")
-        case "$summary_invalidity" in
-          child_current_unavailable|orphan_in_flight|unowned_current|terminal_in_flight) : ;;
-          *) reason="structured home state invalid" ;;
-        esac
-      fi
-    fi
-
-    if [ -z "$reason" ]; then
       normalized_summary_file="$SNAPSHOT_COLLECT_DIR/normalized-summary-$summary_index.json"
       if jq -L "$SCRIPT_DIR" --arg today "${SNAPSHOT_NOW%%T*}" \
           'include "fm-project-lifecycle"; fm_secondmate_summary_at($today)' \
@@ -1950,6 +1939,17 @@ secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
         mv -f -- "$normalized_summary_file" "$summary_file" || return 1
       else
         reason="structured home lifecycle normalization failed"
+      fi
+    fi
+
+    if [ -z "$reason" ]; then
+      summary_valid=$(jq -r '.valid' "$summary_file")
+      if [ "$summary_valid" != true ]; then
+        summary_invalidity=$(jq -r '.invalidity.kind // "unknown"' "$summary_file")
+        case "$summary_invalidity" in
+          child_current_unavailable|orphan_in_flight|unowned_current|terminal_in_flight) : ;;
+          *) reason="structured home state invalid" ;;
+        esac
       fi
     fi
 
