@@ -2763,6 +2763,8 @@ test_remote_ledgers_share_one_concurrent_budget_and_fall_back_to_cache() {
   local parent fakebin json i remote_home pid collector_pid sleeper_pid duplicate_base cache_file candidate tmp
   parent=$(make_home concurrent-remote-ledgers)
   make_remote_ledger_fleet "$parent" 5
+  printf '%s\n' '- firstmate [no-mistakes archived] - Main-home project with the same name (added 2026-07-01)' \
+    > "$parent/data/projects.md"
   fakebin=$(make_remote_ledger_ssh "$parent/remote-ssh")
   mkdir -p "$parent/ledger-active"
   : > "$parent/ledger-calls.log"
@@ -2777,6 +2779,7 @@ test_remote_ledgers_share_one_concurrent_budget_and_fall_back_to_cache() {
       and (.decisions_open | any(.id == "ledger-1/remote-parked" and .owner == "ledger-1"))
       and (.gates | all(.id != "remote-parked"))
       and (.gates | any(.id == "remote-aged" and .owner == "ledger-1" and (.reason | startswith("held 40d"))))
+      and ([.omitted[] | select(.surface | test("secondmate ledger-[1-5] posture registry not published"))] | length) == 5
   ' >/dev/null || fail "healthy remote ledgers did not project their generated-epoch ages and bucketed holds: $json"
 
   cache_file=
@@ -3147,7 +3150,7 @@ EOF
 }
 
 test_secondmate_project_posture_is_honored_from_structured_state() {
-  local home mate fakebin json
+  local home mate fakebin json summary_tmp
   home=$(make_home secondmate-posture)
   mate="$TMP_ROOT/secondmate-posture-mate"
   : > "$home/data/secondmates.md"
@@ -3165,8 +3168,11 @@ EOF
 - parked-app [direct-PR parked:2026-08-01] - Parked in the secondmate home (added 2026-07-01)
 - archived-app [local-only archived] - Archived in the secondmate home (added 2026-07-01)
 EOF
+  mkdir -p "$mate/projects/parked-app" "$mate/projects/archived-app"
   cat > "$mate/data/backlog.md" <<'EOF'
 ## In flight
+- [ ] mate-parked-live - Parked child description must not leak (repo: parked-app) (kind: ship)
+- [ ] mate-archived-live - Archived child description must not leak (repo: archived-app) (kind: ship)
 
 ## Queued
 - [ ] mate-active - Active secondmate work (repo: sample) (kind: ship)
@@ -3174,25 +3180,52 @@ EOF
 - [ ] mate-parked-call - Parked secondmate captain work (repo: parked-app) (kind: captain) (hold: choose a route) (hold-kind: captain)
 - [ ] mate-archived - Archived secondmate work (repo: archived-app) (kind: ship)
 - [ ] mate-archived-call - Archived secondmate captain work (repo: archived-app) (kind: captain) (hold: choose a route) (hold-kind: captain)
+- [ ] mate-archived-deferred - Archived deferred call (repo: archived-app) (kind: captain) (hold: parked) (hold-kind: captain) (hold-until: 2026-08-01)
 
 ## Done
 - [x] mate-archived-done - Archived secondmate completion (repo: archived-app) (kind: ship) (done 2026-07-10)
 - [x] mate-active-done - Active secondmate completion (repo: sample) (kind: ship) (done 2026-07-10)
 EOF
+  fm_write_meta "$mate/state/mate-parked-live.meta" \
+    "window=firstmate:fm-mate-parked-live" "worktree=$mate/projects/parked-app" \
+    "project=$mate/projects/parked-app" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" mate-parked-live busy
+  printf 'working: Parked child description must not leak\n' > "$mate/state/mate-parked-live.status"
+  fm_write_meta "$mate/state/mate-archived-live.meta" \
+    "window=firstmate:fm-mate-archived-live" "worktree=$mate/projects/archived-app" \
+    "project=$mate/projects/archived-app" "harness=claude" "kind=ship" "mode=local-only"
+  record_claude_state "$mate/state" mate-archived-live busy
+  printf 'working: Archived child description must not leak\n' > "$mate/state/mate-archived-live.status"
   fakebin=$(make_fakebin "$home")
-  json=$(run "$home" "$fakebin" --json)
+  PATH="$fakebin:$PATH" refresh_local_secondmate_ledgers "$home"
+  summary_tmp="$mate/state/home-summary.json.tmp"
+  jq '.endpoints |= map(
+        if .id == "mate-parked-live" or .id == "mate-archived-live"
+        then .endpoint.exists = false | .endpoint.agent_alive = "dead"
+        else . end)' "$mate/state/home-summary.json" > "$summary_tmp" \
+    && mv "$summary_tmp" "$mate/state/home-summary.json"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json)
   printf '%s' "$json" | jq -e '
     (.gates | any(.id == "mate-active" and .owner == "posture-mate"))
       and (.gates | any(.id == "mate-parked" and .owner == "posture-mate"
         and .reason == "project parked until 2026-08-01"))
       and (.gates | any(.id == "mate-parked-call" and .owner == "posture-mate"
         and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "mate-parked-live" and .owner == "posture-mate"
+        and .reason == "project parked until 2026-08-01"))
+      and (.secondmates | any(.id == "posture-mate" and .state == "no_active_work"
+        and (.doing | contains("description must not leak") | not)))
+      and (.in_flight | any(.id == "posture-mate/mate-parked-live" or .id == "posture-mate/mate-archived-live") | not)
+      and (.unhealthy_endpoints | any(.id == "posture-mate/mate-parked-live"))
+      and (.unhealthy_endpoints | any(.id == "posture-mate/mate-archived-live") | not)
       and (.decisions_open | any(.id == "posture-mate/mate-parked-call") | not)
       and (.decisions_open | any(.id == "posture-mate/mate-archived-call") | not)
       and (.gates | any(.id == "mate-archived") | not)
       and (.landed | any(.id == "mate-active-done" and .owner == "posture-mate"))
       and (.landed | any(.id == "mate-archived-done") | not)
       and (.omitted | any(.surface | contains("archived-app")))
+      and (.omitted | any(.surface | startswith("captain holds bucketed")) | not)
   ' >/dev/null || fail "secondmate posture was not honored from that home's structured state: $json"
   pass "secondmate project posture is honored from that home's structured state"
 }
