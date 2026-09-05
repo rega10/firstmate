@@ -49,7 +49,10 @@ def fm_secondmate_summary_at($today):
   | .active_children |= map(with_resolved_repo)
   | .holds |= map(with_resolved_repo)
   | .decisions_open |= map(with_resolved_repo)
-  | .queued |= map(with_resolved_repo)
+  | .queued |= map(with_resolved_repo
+      | if $legacy_summary and (has("backlog_state") | not) then
+          . + {backlog_state:"queued"}
+        else . end)
   | .landed |= map(with_resolved_repo)
   | .endpoints |= map(with_resolved_repo)
   | {active_children:(.active_children | length),holds:(.holds | length),
@@ -85,7 +88,8 @@ def fm_secondmate_summary_at($today):
       + [if ($archived_projects | length) > 0 or $lifecycle_omission != null then
            {surface:"project_lifecycle",
             archived_projects:((($lifecycle_omission.archived_projects // []) + $archived_projects) | unique),
-            parked_projects:($lifecycle_omission.parked_projects // [])}
+            parked_projects:([($lifecycle_omission.parked_projects // [])[]
+              | select(fm_project_lifecycle(.; $projects; $today).parked)])}
          else empty end]
       + [if ($unidentified_legacy_rows | length) > 0 then
            {surface:"legacy_posture_unknown",count:($unidentified_legacy_rows | length),

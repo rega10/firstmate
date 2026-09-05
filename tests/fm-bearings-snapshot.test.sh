@@ -3347,29 +3347,30 @@ EOF
 }
 
 test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible() {
-  local home mate fakebin tmp json
+  local home mate fakebin json
   home=$(make_home project-aware-v1-ledger)
   mate="$TMP_ROOT/project-aware-v1-ledger-mate"
   : > "$home/data/secondmates.md"
   make_valid_secondmate_home v1-mate "$mate"
   append_secondmate_registry "$home" v1-mate "$mate"
-  cat > "$mate/data/projects.md" <<'EOF'
-- active-app [no-mistakes] - Active app (added 2026-07-01)
-EOF
-  cat > "$mate/data/backlog.md" <<'EOF'
-## In flight
-
-## Queued
-- [ ] v1-visible - Visible pre-inventory work (repo: active-app) (kind: ship)
-
-## Done
-EOF
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-11T18:00:00Z",generated_epoch:1783792800,home:$home,
+    projects:[{name:"active-app",repo:"active-app",posture:"active",parked_until:null}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[{id:"v1-visible",title:"Visible pre-inventory work",blocked_by:null,
+      blocked_by_ids:[],unresolved_blocker_ids:[],blocked_reason:null,hold_reason:null,
+      hold_kind:null,hold_until:null,hold_bucket:null,hold_age_days:null,
+      captain_actionable:false,repo:"active-app",kind:"ship"}],
+    landed:[],endpoints:[],
+    counts:{active_children:0,decisions_open:0,holds:0,queued:1,landed:0,endpoints:0},
+    omitted:[]
+  }' > "$mate/state/home-summary.json"
   fakebin=$(make_fakebin "$home")
-  PATH="$fakebin:$PATH" refresh_local_secondmate_ledgers "$home"
-  tmp="$mate/state/home-summary.json.tmp"
-  jq 'del(.lifecycle_inventory, .counts.lifecycle_inventory)' \
-    "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
-  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1783792800 FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
     NET_LOG="$home/net.log" "$BEARINGS" --json --all-queued)
   printf '%s' "$json" | jq -e '
     (.gates | any(.id == "v1-visible" and .owner == "v1-mate"))
@@ -3644,6 +3645,7 @@ EOF
         and .reason == "-"))
       and (.secondmates | any(.id == "expiry-mate" and .freshness == "cached"
         and .provenance == "structured-home-cache"))
+      and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: parked-app") | not)
   ' >/dev/null || fail "cached bounded park did not resurface after expiry: $json"
   pass "expired secondmate parks survive summary bounds and cached reads"
 }

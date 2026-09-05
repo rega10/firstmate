@@ -1467,8 +1467,9 @@ length == 1 and (.[0] |
   and (.holds | type) == "array" and (.queued | type) == "array"
   and (.landed | type) == "array" and (.endpoints | type) == "array"
   and (.counts | type) == "object" and (.omitted | type) == "array"
-  and (if has("projects") then
-         all(.queued[]?;
+  and (if has("lifecycle_inventory") then
+         (.lifecycle_inventory | type) == "array"
+         and all(.queued[]?;
            has("project_posture") and has("parked_until") and has("backlog_state")
            and has("current_role") and has("child_state") and has("child_source") and has("child_doing"))
        else true end)
