@@ -3663,6 +3663,54 @@ test_bounded_unknown_child_preserves_unknown_home_state() {
   pass "bounded unknown children preserve unknown home state"
 }
 
+test_expired_task_only_child_preserves_queue_omission() {
+  local home mate fakebin canonical
+  home=$(make_home expired-task-only-queue-count)
+  mate="$TMP_ROOT/expired-task-only-queue-count-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home task-only-mate "$mate"
+  append_secondmate_registry "$home" task-only-mate "$mate"
+  jq -n --arg home "$mate" '
+    def queued($n): {id:("active-" + ($n | tostring)),title:"Active queued work",
+      repo:"active-app",project_posture:"active",parked_until:null,
+      backlog_state:"queued",current_role:null,child_state:null,child_source:null,
+      child_doing:null,blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship"};
+    {
+      schema:"fm-secondmate-home-summary.v1",
+      hold_classifier_schema:"fm-captain-hold-buckets.v1",
+      generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+      projects:[
+        {name:"active-app",repo:"active-app",posture:"active",parked_until:null},
+        {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+      bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+      lifecycle_inventory:[{id:"task-only-child",title:"Parked task-only child",repo:"parked-app",
+        project_posture:"parked",parked_until:"2026-08-01",backlog_state:null,
+        current_role:null,child_state:null,child_source:null,child_doing:null,
+        blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],blocked_reason:null,
+        hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,hold_age_days:null,
+        captain_actionable:false,kind:"ship"}],
+      valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+      active_children:[],decisions_open:[],holds:[],queued:[range(0;20) | queued(.)],
+      landed:[],endpoints:[],
+      counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:1,
+        queued:21,landed:0,endpoints:0},
+      omitted:[{surface:"queued",count:1}]
+    }
+  ' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "task-only-mate")
+    | .counts.queued == 21
+      and (.queued | length) == 20
+      and (.omitted | any(.surface == "queued" and .count == 1))
+  ' >/dev/null || fail "expired task-only child consumed the queued omission count: $canonical"
+  pass "expired task-only children preserve queued omission counts"
+}
+
 test_expired_active_worker_leaves_cached_queue() {
   local home mate fakebin canonical
   home=$(make_home expired-active-queue)
@@ -4071,6 +4119,7 @@ test_expiry_preserves_fatal_cached_invalidity
 test_expired_queued_worker_is_unowned
 test_expired_unknown_preserves_unknown_with_orphan_primary
 test_bounded_unknown_child_preserves_unknown_home_state
+test_expired_task_only_child_preserves_queue_omission
 test_expired_active_worker_leaves_cached_queue
 test_expired_held_park_stays_valid
 test_archive_filter_updates_summary_counts

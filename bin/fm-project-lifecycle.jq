@@ -148,9 +148,13 @@ def fm_secondmate_summary_at($today):
          hold_until, hold_bucket, hold_age_days, source:"backlog"}]) as $decisions
   | ([$expired[]
       | select(.backlog_state == "queued"
-          or (.backlog_state == "in_flight"
-            and (.child_state == "parked" or .child_state == "paused" or .child_state == "blocked")))]) as $expired_queueable
-  | ([$expired[] | select(.id as $id | any($expired_queueable[]; .id == $id) | not) | .id]
+          or .hold_bucket != null
+          or (.backlog_state == "in_flight" and .current_role == "held"
+            and .child_state != "working"))]) as $expired_queueable
+  | ([$expired[]
+      | select(.backlog_state == "in_flight")
+      | select(.id as $id | any($expired_queueable[]; .id == $id) | not)
+      | .id]
      | unique) as $expired_dequeued_ids
   | (.queued // []
      | map(. as $row | select(any($expired[]; .id == $row.id) | not))) as $retained_queued
