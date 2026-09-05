@@ -1168,6 +1168,8 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         generated_epoch:$generated_epoch,
         home:$home,
         projects:($projects[0] // []),
+        bounds:{active_children:$child_n,decisions_open:$decisions_n,
+          holds:$queued_n,queued:$queued_n},
         valid:$valid,
         reason:$reason,
         invalidity:$invalidity,
@@ -1468,6 +1470,11 @@ length == 1 and (.[0] |
   and (.counts | type) == "object" and (.omitted | type) == "array"
   and ((has("projects") and has("lifecycle_inventory"))
        or ((has("projects") | not) and (has("lifecycle_inventory") | not)))
+  and (if has("bounds") then
+         (.bounds | type) == "object"
+         and all([.bounds.active_children,.bounds.decisions_open,.bounds.holds,.bounds.queued][];
+           type == "number" and . >= 0 and floor == .)
+       else true end)
   and (if has("lifecycle_inventory") then
          (.lifecycle_inventory | type) == "array"
          and all(.queued[]?;

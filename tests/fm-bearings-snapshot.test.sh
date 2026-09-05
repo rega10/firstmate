@@ -3630,6 +3630,39 @@ test_expired_unknown_preserves_unknown_with_orphan_primary() {
   pass "expired unknown children preserve unknown with another primary invalidity"
 }
 
+test_bounded_unknown_child_preserves_unknown_home_state() {
+  local home mate fakebin canonical
+  home=$(make_home bounded-unknown-child)
+  mate="$TMP_ROOT/bounded-unknown-child-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home bounded-unknown-mate "$mate"
+  append_secondmate_registry "$home" bounded-unknown-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"active-app",repo:"active-app",posture:"active",parked_until:null}],
+    lifecycle_inventory:[],valid:false,
+    reason:"in-flight backlog item has no child metadata: visible-orphan",
+    invalidity:{kind:"orphan_in_flight",ids:["visible-orphan"]},state:"unknown",
+    active_children:[],decisions_open:[],holds:[],queued:[],landed:[],
+    endpoints:[{id:"visible-child",repo:"active-app",state:"working",source:"status-log",
+      endpoint:{target:"visible-target",exists:true,agent_alive:"not_checked"}}],
+    counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:0,
+      queued:0,landed:0,endpoints:2},
+    omitted:[{surface:"endpoints",count:1}]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "bounded-unknown-mate")
+    | .current.state == "unknown"
+      and .invalidity == {kind:"orphan_in_flight",ids:["visible-orphan"]}
+  ' >/dev/null || fail "bounded unknown child was normalized into an idle home: $canonical"
+  pass "bounded unknown children preserve unknown home state"
+}
+
 test_expired_active_worker_leaves_cached_queue() {
   local home mate fakebin canonical
   home=$(make_home expired-active-queue)
@@ -3925,12 +3958,12 @@ EOF
   printf '%s' "$json" | jq -e '
     (.in_flight | any(.id == "expiry-mate/z-parked-live"))
       and (.gates | any(.id == "z-parked-live") | not)
-      and (.gates | any(.id == "z-parked-queued" and .owner == "expiry-mate"
-        and .reason == "-"))
+      and (.gates | any(.id == "z-parked-queued" and .owner == "expiry-mate") | not)
       and (.secondmates | any(.id == "expiry-mate" and .freshness == "cached"
         and .provenance == "structured-home-cache"))
       and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: parked-app") | not)
-  ' >/dev/null || fail "cached bounded park did not resurface after expiry: $json"
+      and (.omitted | any(.surface == "secondmate expiry-mate queued work omitted by snapshot bound: 1"))
+  ' >/dev/null || fail "cached bounded park was lost or bypassed its owner bound after expiry: $json"
   pass "expired secondmate parks survive summary bounds and cached reads"
 }
 
@@ -4037,6 +4070,7 @@ test_expired_orphan_replaces_cached_unknown_primary
 test_expiry_preserves_fatal_cached_invalidity
 test_expired_queued_worker_is_unowned
 test_expired_unknown_preserves_unknown_with_orphan_primary
+test_bounded_unknown_child_preserves_unknown_home_state
 test_expired_active_worker_leaves_cached_queue
 test_expired_held_park_stays_valid
 test_archive_filter_updates_summary_counts

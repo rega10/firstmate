@@ -24,6 +24,16 @@ def fm_merge_by_id($base; $extra):
   reduce $extra[] as $row ($base;
     if any(.[]; .id == $row.id) then . else . + [$row] end);
 
+def fm_surface_limit($surface; $before; $total; $bounds; $omitted):
+  if ($bounds[$surface] | type) == "number" then $bounds[$surface]
+  elif $total > $before or any($omitted[]?; .surface == $surface) then $before
+  else null
+  end;
+
+def fm_set_surface_omission($surface; $count):
+  .omitted = ([.omitted[]? | select(.surface != $surface)]
+    + [if $count > 0 then {surface:$surface,count:$count} else empty end]);
+
 def fm_invalidity_reason($kind; $ids):
   if $kind == "child_current_unavailable" then
     "child current state unavailable: " + ($ids | join(", "))
@@ -40,6 +50,7 @@ def fm_secondmate_summary_at($today):
   if (has("projects") and has("lifecycle_inventory")) | not then .
   else
   (.projects // []) as $projects
+  | (.bounds // {}) as $bounds
   | {active_children:(.active_children | length),holds:(.holds | length),
      decisions_open:(.decisions_open | length),queued:(.queued | length),
      landed:(.landed | length),endpoints:(.endpoints | length)} as $before
@@ -78,6 +89,9 @@ def fm_secondmate_summary_at($today):
       - ($before.endpoints - (.endpoints | length)))] | max)
   | (.invalidity.kind // null) as $prior_invalid_kind
   | (.invalidity.ids // []) as $prior_invalid_ids
+  | (.state == "unknown"
+      and (["orphan_in_flight","unowned_current","terminal_in_flight"]
+        | index($prior_invalid_kind)) != null) as $prior_unknown_state
   | ($prior_invalid_ids
      | [.[] as $id | select(($archived_ids | index($id)) == null) | $id]) as $retained_invalid_ids
   | ([.endpoints[]? | select(.state == "unknown") | .id]
@@ -110,6 +124,14 @@ def fm_secondmate_summary_at($today):
        | select(.child_state == "unknown")
        | .id] | unique) as $expired_unknown
   | (.queued // []) as $queued
+  | fm_surface_limit("active_children"; $before.active_children;
+      .counts.active_children; $bounds; .omitted) as $active_limit
+  | fm_surface_limit("holds"; $before.holds;
+      .counts.holds; $bounds; .omitted) as $holds_limit
+  | fm_surface_limit("decisions_open"; $before.decisions_open;
+      .counts.decisions_open; $bounds; .omitted) as $decisions_limit
+  | fm_surface_limit("queued"; $before.queued;
+      .counts.queued; $bounds; .omitted) as $queued_limit
   | ([$expired[]
       | select(.backlog_state == "in_flight" and .current_role != "program" and .child_state == "working")
       | {id, kind:(.kind // "secondmate"), state:.child_state, repo,
@@ -133,15 +155,26 @@ def fm_secondmate_summary_at($today):
   | (.queued // []
      | map(. as $row | select(any($expired[]; .id == $row.id) | not))) as $retained_queued
   | fm_merge_by_id($retained_queued; $expired_queueable) as $lifecycle_queued
-  | .queued = $lifecycle_queued
-  | .counts.queued = ([0, ((.counts.queued // ($queued | length))
-      - ($expired_dequeued_ids | length))] | max)
-  | .active_children = fm_merge_by_id((.active_children // []); $active)
-  | .holds = fm_merge_by_id((.holds // []); $holds)
-  | .decisions_open = fm_merge_by_id((.decisions_open // []); $decisions)
-  | .counts.active_children += ($active | length)
-  | .counts.decisions_open += ($decisions | length)
-  | .counts.holds += ($holds | length)
+  | ([0, ((.counts.queued // ($queued | length))
+      - ($expired_dequeued_ids | length))] | max) as $queued_total
+  | fm_merge_by_id((.active_children // []); $active) as $merged_active
+  | fm_merge_by_id((.holds // []); $holds) as $merged_holds
+  | fm_merge_by_id((.decisions_open // []); $decisions) as $merged_decisions
+  | ((.counts.active_children // 0) + ($active | length)) as $active_total
+  | ((.counts.holds // 0) + ($holds | length)) as $holds_total
+  | ((.counts.decisions_open // 0) + ($decisions | length)) as $decisions_total
+  | .queued = (if $queued_limit == null then $lifecycle_queued else $lifecycle_queued[:$queued_limit] end)
+  | .active_children = (if $active_limit == null then $merged_active else $merged_active[:$active_limit] end)
+  | .holds = (if $holds_limit == null then $merged_holds else $merged_holds[:$holds_limit] end)
+  | .decisions_open = (if $decisions_limit == null then $merged_decisions else $merged_decisions[:$decisions_limit] end)
+  | .counts.queued = $queued_total
+  | .counts.active_children = $active_total
+  | .counts.holds = $holds_total
+  | .counts.decisions_open = $decisions_total
+  | fm_set_surface_omission("queued"; ($queued_total - (.queued | length)))
+  | fm_set_surface_omission("active_children"; ($active_total - (.active_children | length)))
+  | fm_set_surface_omission("holds"; ($holds_total - (.holds | length)))
+  | fm_set_surface_omission("decisions_open"; ($decisions_total - (.decisions_open | length)))
   | ((if $prior_invalid_kind == "orphan_in_flight" then $retained_invalid_ids else [] end)
       + $expired_orphans | unique) as $current_orphans
   | ((if $prior_invalid_kind == "unowned_current" then $retained_invalid_ids else [] end)
@@ -190,7 +223,7 @@ def fm_secondmate_summary_at($today):
       | .reason = $current_invalidity.reason
     end
   | if .valid != true
-      and (($current_unknown | length) > 0 or $fatal_prior) then
+      and (($current_unknown | length) > 0 or $prior_unknown_state or $fatal_prior) then
       .state = "unknown"
     else
       .state = (if any(.decisions_open[]; .verb == "needs-decision" or .verb == "captain-hold") then "captain_decision"
