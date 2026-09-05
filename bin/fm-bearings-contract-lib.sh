@@ -197,7 +197,7 @@ fm_bearings_emit_contract() {
         "id": {"type": "string"},
         "backend": {"type": "string"},
         "target": {"type": "string"},
-        "exists": {"type": "boolean"},
+        "exists": {"type": "boolean", "notes": "null when the task's endpoint target is empty (a local task with no recorded endpoint target); true or false otherwise."},
         "agent": {"type": "string", "enum": "endpoint_agent"}
       }
     },
@@ -259,7 +259,7 @@ fm_bearings_emit_contract() {
         "id": {"type": "string"},
         "backend": {"type": "string"},
         "target": {"type": "string"},
-        "exists": {"type": "boolean"},
+        "exists": {"type": "boolean", "notes": "null when the task's endpoint target is empty (a local task with no recorded endpoint target); true or false otherwise."},
         "agent": {"type": "string", "enum": "endpoint_agent"}
       }
     },
