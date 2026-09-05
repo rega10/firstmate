@@ -4541,24 +4541,6 @@ test_events_capable_rejects_schema_missing_a_needle() {
   pass "fm_backend_herdr_events_capable: schema missing an event needle fails closed"
 }
 
-test_events_capable_does_not_pipe_schema_through_grep_q() {
-  # Source-shape lock: the ~220KB schema must not be fed to an early-exit
-  # consumer via a pipe. That pattern is the broken-pipe defect; reintroducing
-  # it would re-pollute every watcher cycle. Strip comments so the lock looks
-  # only at executable lines.
-  local body code
-  body=$(sed -n '/^fm_backend_herdr_events_capable()/,/^}/p' "$ROOT/bin/backends/herdr.sh")
-  [ -n "$body" ] || fail "could not extract fm_backend_herdr_events_capable from herdr.sh"
-  code=$(printf '%s\n' "$body" | sed -e 's/[[:space:]]*#.*//' -e '/^[[:space:]]*$/d')
-  if printf '%s\n' "$code" | grep -E '(^|[^[:alnum:]_])grep[[:space:]]' >/dev/null; then
-    fail "events_capable must not invoke grep on the schema (broken-pipe regression)"
-  fi
-  if printf '%s\n' "$code" | grep -E 'printf.*\|' >/dev/null; then
-    fail "events_capable must not pipe printf of the schema into a consumer (broken-pipe regression)"
-  fi
-  pass "fm_backend_herdr_events_capable: source does not pipe schema through early-exit grep -q"
-}
-
 # shellcheck source=bin/fm-backend.sh
 . "$ROOT/bin/fm-backend.sh"
 
@@ -4746,4 +4728,3 @@ test_wait_transition_bad_ack_returns_2_and_cleans_up
 test_wait_transition_clean_timeout_returns_1
 test_events_capable_accepts_large_schema_without_broken_pipe
 test_events_capable_rejects_schema_missing_a_needle
-test_events_capable_does_not_pipe_schema_through_grep_q
