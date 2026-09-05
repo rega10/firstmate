@@ -27,9 +27,9 @@ file_link_count() {
 sha256_file() {
   if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" | awk '{print $1}'; else sha256sum "$1" | awk '{print $1}'; fi
 }
-# Writable set, derived from the ONE declared inherited-material owner
-# (FM_INHERITABLE_CONFIG in bin/fm-config-inherit-lib.sh), so this code root's
-# receiver and sender cannot drift silently. This runs under the remote
+# Writable set, derived from the ONE declared inherited-material owner in
+# bin/fm-config-inherit-lib.sh, so this code root's receiver and sender cannot
+# drift silently. This runs under the remote
 # entrypoint's fixed empty environment, so the declaration is this code root's
 # own, never something the caller can widen over SSH; a caller from a different
 # revision must match it or the transfer fails closed.
@@ -38,7 +38,17 @@ allowed() {
   while IFS= read -r candidate; do
     [ "$candidate" = "$1" ] && return 0
   done <<EOF
-$(fm_config_inherit_items)
+$(fm_config_remote_inherit_items)
+EOF
+  return 1
+}
+
+absent_only() {
+  local candidate
+  while IFS= read -r candidate; do
+    [ "$candidate" = "$1" ] && return 0
+  done <<EOF
+$(fm_config_remote_absent_items)
 EOF
   return 1
 }
@@ -49,7 +59,11 @@ REL=$2
 EXPECTED_BYTES=$3
 EXPECTED_HASH=$4
 GENERATION=$5
-allowed "$REL" || die "path is not inherited material: $REL"
+case "$COMMAND" in
+  put) allowed "$REL" || die "path is not remote inherited material: $REL" ;;
+  absent) allowed "$REL" || absent_only "$REL" || die "path is not remote inherited material: $REL" ;;
+  *) usage ;;
+esac
 case "$EXPECTED_BYTES" in ''|*[!0-9]*) die "expected bytes must be a nonnegative integer" ;; esac
 [ "${#EXPECTED_BYTES}" -le 10 ] || die "expected bytes exceed the byte bound"
 [ "$EXPECTED_BYTES" -le "$MAX_BYTES" ] || die "expected bytes exceed the byte bound"
@@ -175,5 +189,4 @@ case "$COMMAND" in
     rm -f -- "$DEST" || die "cannot remove absent inherited material"
     printf 'removed: %s\n' "$REL"
     ;;
-  *) usage ;;
 esac

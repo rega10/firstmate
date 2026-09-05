@@ -114,6 +114,7 @@ init_changed_fixture_repo() {
     fm-pi-watch-extension.test.sh \
     fm-afk-return.test.sh \
     fm-bearings-snapshot.test.sh \
+    fm-claude-automic-vault.test.sh \
     fm-backend-cmux.test.sh \
     fm-backend-zellij.test.sh \
     fm-control-herdr-smoke.test.sh \
@@ -145,7 +146,8 @@ init_changed_fixture_repo() {
   mkdir -p \
     "$repo/.agents/skills/example" \
     "$repo/.agents/skills/harness-adapters/references/common" \
-    "$repo/.claude" "$repo/.pi/extensions" "$repo/docs" "$repo/src"
+    "$repo/.claude" "$repo/.pi/extensions" "$repo/docs" "$repo/src" \
+    "$repo/tests/fixtures"
   : >"$repo/.agents/skills/example/SKILL.md"
   : >"$repo/.agents/skills/harness-adapters/SKILL.md"
   : >"$repo/.agents/skills/harness-adapters/references/common/dispatch.md"
@@ -155,6 +157,7 @@ init_changed_fixture_repo() {
   : >"$repo/docs/fm-test-isolation-proof.md"
   : >"$repo/CONTRIBUTING.md"
   : >"$repo/src/unmapped.ts"
+  : >"$repo/tests/fixtures/fm-claude-automic-vault-lib.sh"
   git -C "$repo" init -q
   git -C "$repo" add .
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm baseline
@@ -295,6 +298,13 @@ test_changed_dependency_selection_and_unmapped_failure() {
     "timeout library selects quota polling coverage"
   git -C "$repo" add bin/fm-timeout-lib.sh
   git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm timeout-lib-change
+
+  printf '\n' >>"$repo/tests/fixtures/fm-claude-automic-vault-lib.sh"
+  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  [ "$listed" = "tests/fm-claude-automic-vault.test.sh" ] \
+    || fail "Claude Vault fixture must select only its behavioral test: $listed"
+  git -C "$repo" add tests/fixtures/fm-claude-automic-vault-lib.sh
+  git -C "$repo" -c user.name=test -c user.email=test@example.invalid commit -qm claude-vault-fixture-change
 
   printf '\n' >>"$repo/src/unmapped.ts"
   set +e

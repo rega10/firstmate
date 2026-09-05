@@ -1599,7 +1599,7 @@ test_projection_close_emptying_before_focus_repositions_then_uses_pane_death() {
   status=$?
   kill "$bgpid" 2>/dev/null || true; wait "$bgpid" 2>/dev/null || true
   [ "$status" -eq 0 ] || fail "repositioned emptying close should succeed through the pane-death path: $out"
-  [ "$(cat "$dir/mover.log")" = "$(cd /tmp && pwd -P)/fmtest.sock"$'\t'"w1"$'\t'"3" ] \
+  [ "$(cat "$dir/mover.log")" = "/tmp/fmtest.sock"$'\t'"w1"$'\t'"3" ] \
     || fail "the repositioning move did not target the exact doomed workspace at the list length: $(cat "$dir/mover.log")"
   mover_line=$(grep -n $'pane\x1fprocess-info' "$log" | head -1 | cut -d: -f1)
   [ -n "$mover_line" ] || fail "repositioned close skipped the idle-shell proof"
@@ -2058,9 +2058,9 @@ assert_projection_close_failed_removal_rolls_back_the_reposition() {
   [ "$status" -ne 0 ] || fail "an unconfirmed removal must report failure: $out"
   [ "$(wc -l < "$dir/mover.log" | tr -d ' ')" = 2 ] \
     || fail "a failed removal did not roll the reposition back exactly once: $(cat "$dir/mover.log")"
-  [ "$(sed -n '1p' "$dir/mover.log")" = "$(cd /tmp && pwd -P)/fmtest.sock"$'\t'"w1"$'\t'"3" ] \
+  [ "$(sed -n '1p' "$dir/mover.log")" = "/tmp/fmtest.sock"$'\t'"w1"$'\t'"3" ] \
     || fail "the reposition did not move the doomed workspace to the end: $(sed -n '1p' "$dir/mover.log")"
-  [ "$(sed -n '2p' "$dir/mover.log")" = "$(cd /tmp && pwd -P)/fmtest.sock"$'\t'"w1"$'\t'"0" ] \
+  [ "$(sed -n '2p' "$dir/mover.log")" = "/tmp/fmtest.sock"$'\t'"w1"$'\t'"0" ] \
     || fail "the rollback did not restore the doomed workspace to its exact original position: $(sed -n '2p' "$dir/mover.log")"
   assert_not_contains "$(cat "$log")" $'tab\x1ffocus' "a failed rolled-back removal moved focus"
 }
@@ -2295,7 +2295,7 @@ SH
   status=$?
   [ "$status" -eq 0 ] || fail "best-effort projection ordering must not fail the spawn"
   [ -z "$out" ] || fail "successful projection ordering emitted a warning: $out"
-  [ "$(cat "$mover_log")" = "$(cd /tmp && pwd -P)/fmtest.sock"$'\t'"w5"$'\t'"2" ] \
+  [ "$(cat "$mover_log")" = "/tmp/fmtest.sock"$'\t'"w5"$'\t'"2" ] \
     || fail "projection ordering did not move only the exact new response id to the owning-parent append index"
   assert_not_contains "$(cat "$log")" $'workspace\x1fclose' "projection ordering called workspace close"
   assert_not_contains "$(cat "$log")" $'session\x1fdelete' "projection ordering called session delete"
@@ -2327,7 +2327,7 @@ SH
   status=$?
   [ "$status" -eq 0 ] || fail "secondmate parent ordering must not fail the spawn: $out"
   [ -z "$out" ] || fail "successful secondmate ordering emitted a warning: $out"
-  [ "$(cat "$mover_log")" = "$(cd /tmp && pwd -P)/fmtest.sock"$'\t'"w6"$'\t'"4" ] \
+  [ "$(cat "$mover_log")" = "/tmp/fmtest.sock"$'\t'"w6"$'\t'"4" ] \
     || fail "secondmate child was not inserted after its parent block: $(cat "$mover_log")"
   assert_not_contains "$(cat "$log")" $'workspace\x1frename' "secondmate ordering renamed a legacy child"
   pass "herdr presentation ordering: secondmate children append under their owning parent block"
@@ -2381,7 +2381,7 @@ SH
   status=$?
   [ "$status" -eq 0 ] || fail "intervening parent ordering must not fail the spawn: $out"
   [ -z "$out" ] || fail "legitimate intervening parent ordering emitted a warning: $out"
-  [ "$(cat "$mover_log")" = "$(cd /tmp && pwd -P)/fmtest.sock"$'\t'"w6"$'\t'"2" ] \
+  [ "$(cat "$mover_log")" = "/tmp/fmtest.sock"$'\t'"w6"$'\t'"2" ] \
     || fail "intervening parent block prevented the owning-parent insertion: $(cat "$mover_log")"
   pass "herdr presentation ordering: intervening parent child blocks remain traversable"
 }
@@ -2408,7 +2408,7 @@ SH
     bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_projection_focus_snapshot() { printf "w2\tw2:t1"; }; fm_backend_herdr_projection_focus_restore() { return 0; }; fm_backend_herdr_projection_order_best_effort fmtest w3 firstmate' "$ROOT" 2>&1)
   status=$?
   [ "$status" -eq 0 ] || fail "human-interleaved ordering must not fail: $out"
-  [ "$(cat "$mover_log")" = "$(cd /tmp && pwd -P)/fmtest.sock"$'\t'"w3"$'\t'"2" ] \
+  [ "$(cat "$mover_log")" = "/tmp/fmtest.sock"$'\t'"w3"$'\t'"2" ] \
     || fail "human spaces changed the move target or insert index: $(cat "$mover_log")"
   pass "herdr presentation ordering: only the exact new id moves; human spaces keep relative order"
 }
@@ -2604,6 +2604,22 @@ test_presentation_session_lock_path_is_shared_across_homes() {
       || fail "symlink parent socket paths must resolve one lock: $path_tmp vs $path_private"
   fi
   pass "herdr presentation lock: one path per session/socket across homes"
+}
+
+test_presentation_socket_transport_preserves_server_spelling() {
+  local dir log resp fb socket
+  dir="$TMP_ROOT/presentation-socket-spelling"; mkdir -p "$dir/responses" "$dir/real"
+  log="$dir/log"; resp="$dir/responses"; : > "$log"
+  ln -s "$dir/real" "$dir/alias"
+  : > "$dir/real/fmtest.sock"
+  printf '%s\n' "{\"sessions\":[{\"name\":\"fmtest\",\"running\":true,\"socket_path\":\"$dir/alias/fmtest.sock\"}]}" > "$resp/1.out"
+  fb=$(make_herdr_fakebin "$dir")
+  socket=$(PATH="$fb:$PATH" FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" \
+    bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_presentation_session_socket_path fmtest' "$ROOT") \
+    || fail "presentation socket transport path resolution failed"
+  [ "$socket" = "$dir/alias/fmtest.sock" ] \
+    || fail "socket transport canonicalized the server path and may exceed the AF_UNIX limit: $socket"
+  pass "herdr presentation transport: the server-reported socket spelling is preserved"
 }
 
 test_presentation_session_lock_path_rejects_malformed_socket() {
@@ -4677,6 +4693,7 @@ test_projection_order_anchors_the_parent_by_exact_id
 test_projection_order_foreign_new_child_before_parent_is_read_only
 test_projection_order_missing_parent_is_read_only
 test_presentation_session_lock_path_is_shared_across_homes
+test_presentation_socket_transport_preserves_server_spelling
 test_presentation_session_lock_path_rejects_malformed_socket
 test_projection_order_rejects_malformed_socket
 test_projection_reclaim_refusal_matrix_is_non_mutating
