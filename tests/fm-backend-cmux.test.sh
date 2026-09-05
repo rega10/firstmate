@@ -511,6 +511,29 @@ test_target_ready_fails_when_target_absent() {
   pass "fm_backend_cmux_target_ready: fails when the workspace/surface is not found (list-panes structural check)"
 }
 
+test_surface_exists_fails_when_list_panes_call_fails() {
+  # Regression: a failed `list-panes` call must read as "unknown/not live", never as
+  # a confirmed surface. Without pipefail the old pipe trusted jq's verdict on whatever
+  # bytes reached it, so a nonzero list-panes that still printed a matching pane read as
+  # a false positive. The guard checks the CLI exit and non-empty output before jq.
+  local dir fb status
+  dir="$TMP_ROOT/surface-list-panes-fail"; mkdir -p "$dir/fakebin"
+  cat > "$dir/fakebin/cmux" <<'SH'
+#!/usr/bin/env bash
+set -u
+# Emit a matching-surface payload but fail the call (server error mid-stream).
+printf '{"panes":[{"selected_surface_id":"bbbbbbbb-1111-1111-1111-111111111111","surface_ids":["bbbbbbbb-1111-1111-1111-111111111111"]}]}'
+exit 1
+SH
+  chmod +x "$dir/fakebin/cmux"
+  fb="$dir/fakebin"
+  PATH="$fb:$PATH" \
+    bash -c '. "$0/bin/backends/cmux.sh"; fm_backend_cmux_surface_exists "aaaaaaaa-0000-0000-0000-000000000000" "bbbbbbbb-1111-1111-1111-111111111111"' "$ROOT"
+  status=$?
+  [ "$status" -ne 0 ] || fail "surface_exists must not report a surface present when the list-panes call failed"
+  pass "fm_backend_cmux_surface_exists: a failed list-panes call is not a confirmed surface"
+}
+
 test_target_ready_checks_expected_label() {
   local dir fb title
   dir="$TMP_ROOT/ready-label-ok"; mkdir -p "$dir/responses"
@@ -1131,6 +1154,7 @@ test_ensure_running_fails_fast_on_unauth_without_launching
 test_create_task_refuses_duplicate_label
 test_create_task_creates_and_parses_ids
 test_target_ready_fails_when_target_absent
+test_surface_exists_fails_when_list_panes_call_fails
 test_target_ready_checks_expected_label
 test_target_ready_rejects_label_mismatch
 test_capture_trims_locally
