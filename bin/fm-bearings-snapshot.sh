@@ -373,7 +373,7 @@ case "$BEARINGS_TODAY" in
   [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) : ;;
   *) BEARINGS_TODAY=$(date -u +%Y-%m-%d) ;;
 esac
-MODEL=$(printf '%s' "$SNAP" | jq \
+MODEL=$(printf '%s' "$SNAP" | jq -L "$SCRIPT_DIR" \
   --arg home "$HOME_LABEL" \
   --arg now "$NOW" \
   --arg today "$BEARINGS_TODAY" \
@@ -402,6 +402,7 @@ MODEL=$(printf '%s' "$SNAP" | jq \
   --argjson pr_rows_capped "$PR_ROWS_CAPPED" \
   --argjson pr_rows_min_total "$PR_ROWS_MIN_TOTAL" \
   --argjson candidate_prs "$CANDIDATE_PRS" '
+  include "fm-project-lifecycle";
   def trunc($n): if . == null then null else
     (tostring | gsub("\\s+"; " ") | if (length > $n) then (.[:$n] + "…") else . end) end;
   def fit($n):
@@ -452,25 +453,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
     {id, title:(.title | trunc(60)),
      blocked_by:((.unresolved_blocker_ids // []) | if length > 0 then join(",") else "-" end | trunc(120)),
      reason:(hold_gate_reason | trunc(40)), owner:$owner};
-  def project_record($repo; $plist):
-    if $repo == null or $repo == "" then null
-    else first($plist[]? | select(.name == $repo or .repo == $repo)) // null
-    end;
   def lifecycle($repo; $plist):
-    (project_record($repo; $plist)) as $p
-    | if $p == null then
-        {archived:false, parked:false, rank:0, reason:null, name:null}
-      elif $p.posture == "archived" then
-        {archived:true, parked:false, rank:3, reason:null, name:$p.name}
-      elif $p.posture == "parked" and ($p.parked_until == null or $p.parked_until > $today) then
-        {archived:false, parked:true,
-         rank:(if $p.parked_until == null then 1 else 2 end),
-         reason:(if $p.parked_until == null then "project parked"
-                 else "project parked until " + $p.parked_until end),
-         name:$p.name}
-      else
-        {archived:false, parked:false, rank:0, reason:null, name:$p.name}
-      end;
+    fm_project_lifecycle($repo; $plist; $today);
   def task_repo($id; $tasks):
     first($tasks[]? | select(.id == $id) | (.backlog.repo // .project)) // null;
   def with_lifecycle($repo; $plist):
@@ -582,7 +566,9 @@ MODEL=$(printf '%s' "$SNAP" | jq \
                                       (.reason // "captain decision pending")),owner:$m.id} ]
             + [ $m.queued[]?
                 | select($all_decisions == 1 and .hold_kind == "captain")
-                | select(.project_posture != "parked")
+                | lifecycle(.repo; ($m.projects // [])) as $life
+                | select($life.archived | not)
+                | select($life.parked | not)
                 | select(.id as $id
                          | [$m.decisions_open[]?
                             | select(.source == "backlog" and .verb == "captain-hold")
@@ -600,7 +586,9 @@ MODEL=$(printf '%s' "$SNAP" | jq \
      + [ (.secondmate_current.records // [])[] as $m
          | $m.queued[]?
          | select(.hold_kind == "captain" and projected_deferred_hold)
-         | select(.project_posture != "parked") ]
+         | lifecycle(.repo; ($m.projects // [])) as $life
+         | select($life.archived | not)
+         | select($life.parked | not) ]
      | length) as $decisions_marked_deferred
   | ((if (.main_inventory.valid == false) then
         [{id:"(main-inventory)",
@@ -617,7 +605,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | lifecycle($repo; $projects) as $life
          | select($life.archived | not)
          | select(.structured and
-             ($life.parked or .hold_bucket != null or .state == "queued" or
+             (($life.parked and (.state == "queued" or .state == "in_flight"))
+              or .hold_bucket != null or .state == "queued" or
               (.state == "in_flight" and .current_role == "held" and ($working_ids | index($record.id) | not))))
          | select($life.parked or .captain_actionable != true)
          | select($life.parked or (.hold_bucket == null) or ($all_decisions == 0))
@@ -626,15 +615,18 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | select($m.provenance.selected == "structured-home")
          | $m.queued[]?
          | . as $row
-         | (.project_posture == "parked") as $parked
+         | lifecycle(.repo; ($m.projects // [])) as $life
+         | $life.parked as $parked
+         | select($life.archived | not)
+         | select($parked or .hold_bucket != null or .backlog_state == "queued" or
+             (.backlog_state == "in_flight" and .current_role == "held" and .child_state != "working"))
          | select($parked or .captain_actionable != true)
          | select($parked or (.hold_bucket == null) or ($all_decisions == 0))
          | as_gate($m.id)
          | if $parked then
-             .reason = (if $row.parked_until == null then "project parked"
-                        else "project parked until " + $row.parked_until end)
-             | ._project_rank = (if $row.parked_until == null then 1 else 2 end)
-             | ._parked_project = $row.repo
+             .reason = $life.reason
+             | ._project_rank = $life.rank
+             | ._parked_project = $life.name
            else ._project_rank = 0 | ._parked_project = null end ]) as $gates_ranked
   | ($gates_ranked | to_entries | sort_by(.value._project_rank, .key) | map(.value)) as $gates_sorted
   | ($gates_sorted | map(del(._project_rank, ._parked_project))) as $gates_all

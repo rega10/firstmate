@@ -3046,6 +3046,7 @@ EOF
 
 ## Done
 - [x] active-done - Active completion (repo: active) (kind: ship) (done 2026-07-10)
+- [x] future-done - Parked completion (repo: future) (kind: ship) (done 2026-07-10)
 - [x] archived-done - Archived completion (repo: archived) (kind: ship) (done 2026-07-10)
 - [x] archived-meta-done - Archived completion identified by metadata (kind: ship) (done 2026-07-10)
 EOF
@@ -3116,6 +3117,8 @@ EOF
       and (.gates | any(.id == "archived-next") | not)
       and (.gates | any(.id == "archived-meta-call") | not)
       and (.landed | any(.id == "active-done"))
+      and (.landed | any(.id == "future-done"))
+      and (.gates | any(.id == "future-done") | not)
       and (.landed | any(.id == "archived-done") | not)
       and (.landed | any(.id == "archived-meta-done") | not)
       and (.omitted | any(.surface == "archived project work omitted: archived"))
@@ -3150,7 +3153,7 @@ EOF
 }
 
 test_secondmate_project_posture_is_honored_from_structured_state() {
-  local home mate fakebin json summary summary_tmp
+  local home mate fakebin json summary summary_tmp check first second
   home=$(make_home secondmate-posture)
   mate="$TMP_ROOT/secondmate-posture-mate"
   : > "$home/data/secondmates.md"
@@ -3186,6 +3189,7 @@ EOF
 ## Done
 - [x] mate-archived-done - Archived secondmate completion (repo: archived-app) (kind: ship) (done 2026-07-10)
 - [x] mate-meta-archived-done - Archived completion identified only by task metadata (kind: ship) (done 2026-07-10)
+- [x] mate-parked-done - Parked secondmate completion (repo: parked-app) (kind: ship) (done 2026-07-10)
 - [x] mate-active-done - Active secondmate completion (repo: sample) (kind: ship) (done 2026-07-10)
 EOF
   fm_write_meta "$mate/state/mate-parked-live.meta" \
@@ -3208,6 +3212,9 @@ EOF
     "project=$mate/projects/archived-app" "harness=claude" "kind=ship" "mode=local-only"
   record_claude_state "$mate/state" mate-meta-archived-done idle
   printf 'done: archived metadata completion\n' > "$mate/state/mate-meta-archived-done.status"
+  FM_HOME="$mate" "$ROOT/bin/fm-project-posture.sh" set parked-app parked:2026-08-01 >/dev/null
+  check="$mate/state/project-posture-expiry.check.sh"
+  assert_present "$check" "secondmate dated park did not arm the expiry check"
   fakebin=$(make_fakebin "$home")
   PATH="$fakebin:$PATH" refresh_local_secondmate_ledgers "$home"
   summary=$(<"$mate/state/home-summary.json")
@@ -3218,12 +3225,14 @@ EOF
         and .parked_until == "2026-08-01"))
   ' >/dev/null || fail "a parked queued hold changed the owning-home state: $summary"
   summary_tmp="$mate/state/home-summary.json.tmp"
-  jq '.endpoints |= map(
+  jq '.generated = "2026-07-31T18:00:00Z"
+      | .generated_epoch = 1785520800
+      | .endpoints |= map(
         if .id == "mate-parked-live" or .id == "mate-archived-live"
         then .endpoint.exists = false | .endpoint.agent_alive = "dead"
         else . end)' "$mate/state/home-summary.json" > "$summary_tmp" \
     && mv "$summary_tmp" "$mate/state/home-summary.json"
-  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
     NET_LOG="$home/net.log" "$BEARINGS" --json)
   printf '%s' "$json" | jq -e '
     (.gates | any(.id == "mate-active" and .owner == "posture-mate"))
@@ -3244,6 +3253,8 @@ EOF
       and (.decisions_open | any(.id == "posture-mate/mate-archived-call") | not)
       and (.gates | any(.id == "mate-archived") | not)
       and (.landed | any(.id == "mate-active-done" and .owner == "posture-mate"))
+      and (.landed | any(.id == "mate-parked-done" and .owner == "posture-mate"))
+      and (.gates | any(.id == "mate-parked-done") | not)
       and (.landed | any(.id == "mate-archived-done") | not)
       and (.landed | any(.id == "mate-meta-archived-done") | not)
       and (.secondmate_reconcile | any(.id == "posture-mate"
@@ -3253,6 +3264,17 @@ EOF
       and (.omitted | any(.surface | contains("archived-app")))
       and (.omitted | any(.surface | startswith("captain holds bucketed")) | not)
   ' >/dev/null || fail "secondmate posture was not honored from that home's structured state: $json"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json)
+  printf '%s' "$json" | jq -e '
+    (.in_flight | any(.id == "posture-mate/mate-parked-live"))
+      and (.gates | any(.id == "mate-parked-live") | not)
+  ' >/dev/null || fail "a stale secondmate summary kept an expired live park hidden: $json"
+  first=$(FM_PROJECT_POSTURE_TODAY=2026-08-01 "$check")
+  assert_contains "$first" 'project posture expired: parked-app (parked until 2026-08-01)' \
+    "expired secondmate park did not emit its wake"
+  second=$(FM_PROJECT_POSTURE_TODAY=2026-08-02 "$check")
+  [ -z "$second" ] || fail "expired secondmate park repeated its wake: $second"
   PATH="$fakebin:$PATH" FM_SNAPSHOT_SECONDMATE_QUEUED=1 refresh_local_secondmate_ledgers "$home"
   json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
     NET_LOG="$home/net.log" "$BEARINGS" --json --all-queued)

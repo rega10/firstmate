@@ -241,7 +241,9 @@ Its invalidity object names the normalized failure kind and affected ids.
 Actionable tasks-axi captain holds appear as decisions_open and stay visible in
 queued with hold_reason, hold_kind, hold_until,
 hold_bucket, hold_age_days, and plural blocker fields for downstream
-projections. A captain hold is actionable only when every blocker is Done, any
+projections. Queued rows also retain project_posture, parked_until, backlog_state,
+current_role, and bounded child-state facts so dated posture is evaluated when read.
+A captain hold is actionable only when every blocker is Done, any
 hold-until date has arrived, and an undated hold remains below the aging threshold.
 Cross-home collection uses FM_SNAPSHOT_SECONDMATES (default 20, 0 lifts the
 count bound) and FM_SNAPSHOT_SECONDMATE_MAX_BYTES.
@@ -961,7 +963,7 @@ main_inventory_json() {  # <backlog-json-file> <tasks-json-file>
 # This mode never reads parent events or terminal text and never aggregates
 # nested secondmates.
 secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <projects-json-file>
-  jq -n \
+  jq -L "$SCRIPT_DIR" -n \
     --arg generated "$SNAPSHOT_NOW" \
     --arg today "${SNAPSHOT_NOW%%T*}" \
     --argjson generated_epoch "$SNAPSHOT_EPOCH" \
@@ -973,6 +975,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     --slurpfile backlog "$1" \
     --slurpfile tasks "$2" \
     --slurpfile projects "$3" '
+    include "fm-project-lifecycle";
     ($tasks[0]) as $raw_tasks
     | ($projects[0] // []) as $project_list
     | def normalized_project($value):
@@ -983,14 +986,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     def trunc($n):
       tostring | gsub("\\s+"; " ")
       | if length > $n then .[:$n] + "…" else . end;
-    def lifecycle($repo):
-      (normalized_project($repo)) as $key
-      | (first($project_list[]? | select(.name == $key or .repo == $key)) // null) as $project
-      | if $project == null then {archived:false,parked:false,name:null,parked_until:null}
-        elif $project.posture == "archived" then {archived:true,parked:false,name:$project.name,parked_until:null}
-        elif $project.posture == "parked" and ($project.parked_until == null or $project.parked_until > $today)
-        then {archived:false,parked:true,name:$project.name,parked_until:$project.parked_until}
-        else {archived:false,parked:false,name:$project.name,parked_until:null} end;
+    def lifecycle($repo): fm_project_lifecycle(normalized_project($repo); $project_list; $today);
     ($backlog[0]
      | .records |= map(. as $record
          | .repo = normalized_project(.repo // (first($raw_tasks[]? | select(.id == $record.id) | .project) // null)))) as $backlog
@@ -1006,15 +1002,16 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     | ([ $visible_records[]? | select(.state == "in_flight" and .structured) ]) as $owned_in_flight
     | ([ $visible_records[]?
          | select(.structured and
-             (lifecycle(.repo).parked or .hold_bucket != null or .state == "queued" or
+             ((lifecycle(.repo).posture == "parked" and (.state == "queued" or .state == "in_flight"))
+              or .hold_bucket != null or .state == "queued" or
               (.state == "in_flight" and .current_role == "held"
                and (.id as $id
                     | any($visible_tasks[]; .id == $id and .current_state.state == "working") | not))))
-         | lifecycle(.repo).parked as $parked
+         | (lifecycle(.repo).posture == "parked") as $parked
          | . + {_lifecycle_rank:(if $parked then 1 else 0 end)} ]
        | sort_by(._lifecycle_rank) | map(del(._lifecycle_rank))) as $queued_all
     | ([ $queued_all[]
-         | select(lifecycle(.repo).parked | not)
+         | select(lifecycle(.repo).posture != "parked")
          | select(.captain_actionable == true)
          | {id,key:.id,verb:"captain-hold",summary:(.title | trunc(160)),
             reason:(.hold_reason | trunc(160)),
@@ -1029,18 +1026,18 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
             report_path:((.report_path // null) | if . == null then null else trunc(500) end),
             local_note:((.local_note // null) | if . == null then null else trunc(120) end),completion} ]
        | sort_by([(.completion.date // ""), .id]) | reverse) as $landed_all
-    | ([ $visible_tasks[] | select(lifecycle(.project).parked | not) | select(.current_state.state == "unknown") ]) as $unknown_children
+    | ([ $visible_tasks[] | select(lifecycle(.project).posture != "parked") | select(.current_state.state == "unknown") ]) as $unknown_children
     | ([ $owned_in_flight[]
-         | select(lifecycle(.repo).parked | not)
+         | select(lifecycle(.repo).posture != "parked")
          | select(.requires_child_metadata)
          | select(.id as $id | [$visible_tasks[].id] | index($id) | not) ]) as $orphan_in_flight
     | ([ $visible_tasks[]
-         | select(lifecycle(.project).parked | not)
+         | select(lifecycle(.project).posture != "parked")
          | select(.kind != "secondmate")
          | select(.id as $id | [$owned_in_flight[].id] | index($id) | not)
          | {id,state:.current_state.state} ]) as $unowned_children
     | ([ $owned_in_flight[] as $work
-         | select(lifecycle($work.repo).parked | not)
+         | select(lifecycle($work.repo).posture != "parked")
          | $visible_tasks[]
          | select(.kind != "secondmate")
          | select(.id == $work.id and (.current_state.state == "done" or .current_state.state == "failed"))
@@ -1067,7 +1064,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         else empty end]) as $strict_invalidities
     | ([ $owned_in_flight[] as $work
          | select($work.current_role != "program")
-         | select(lifecycle($work.repo).parked | not)
+         | select(lifecycle($work.repo).posture != "parked")
          | $visible_tasks[]
          | select(.id == $work.id and .current_state.state == "working")
          | {id,kind,state:.current_state.state,
@@ -1076,13 +1073,13 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
             doing:((.current_state.detail // "") | trunc(120))} ]) as $active_all
     | ($captain_holds_all
        + ([ $visible_tasks[] as $t
-            | select(lifecycle($t.project).parked | not)
+            | select(lifecycle($t.project).posture != "parked")
             | ($t.hints.open_decisions // [])[]
             | {id:$t.id,key,verb,summary:(.summary | trunc(160)),reason:null,
                repo:((normalized_project($t.backlog.repo // $t.project // null)) | if . == null then null else trunc(120) end),
                source:"status"} ])) as $decisions_all
     | ([ $queued_all[]
-         | select(lifecycle(.repo).parked | not)
+         | select(lifecycle(.repo).posture != "parked")
          | select((.unresolved_blocker_ids | length) > 0 or (.hold_reason != null and .hold_kind != null))
          | {id:(.id | trunc(120)),title:(.title | trunc(90)),
             repo:((.repo // null) | if . == null then null else trunc(120) end),
@@ -1091,7 +1088,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
             unresolved_blocker_ids:(.unresolved_blocker_ids | map(trunc(120))),
             reason:((.hold_reason // .blocked_reason // "blocked") | trunc(120)),source:"backlog"} ]
        + [ $owned_in_flight[] as $work
-           | select(lifecycle($work.repo).parked | not)
+           | select(lifecycle($work.repo).posture != "parked")
            | $visible_tasks[]
            | select(.id == $work.id and (.current_state.state == "parked" or .current_state.state == "paused" or .current_state.state == "blocked"))
            | select(($work.hold_reason != null and $work.hold_kind != null) | not)
@@ -1104,7 +1101,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
          | select(.archived) | .name] | map(select(. != null)) | unique) as $archived_projects
     | ([($queued_all[$queued_n:][]?, $holds_all[$queued_n:][]?, $active_all[$child_n:][]?)
          | lifecycle(.repo)
-         | select(.parked) | .name] | map(select(. != null)) | unique) as $bounded_parked_projects
+         | select(.posture == "parked") | .name] | map(select(. != null)) | unique) as $bounded_parked_projects
     | ($backlog.present == true
        and ($unstructured_current | length) == 0
        and ($unknown_children | length) == 0
@@ -1141,7 +1138,10 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         active_children:$active_all[:$child_n],
         decisions_open:$decisions_all[:$decisions_n],
         holds:$holds_all[:$queued_n],
-        queued:([$queued_all[] | lifecycle(.repo) as $life
+        queued:([$queued_all[] as $row
+          | lifecycle($row.repo) as $life
+          | (first($tasks[]? | select(.id == $row.id)) // null) as $task
+          | $row
           | {id:(.id | trunc(120)),title:(.title | trunc(120)),
           blocked_by:((.blocked_by // null) | if . == null then null else trunc(120) end),
           blocked_by_ids:((.blocked_by_ids // []) | map(trunc(120))),
@@ -1154,12 +1154,17 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
           hold_age_days:(.hold_age_days // null),
           captain_actionable:(.captain_actionable // false),
           repo:((.repo // null) | if . == null then null else trunc(120) end),
-          project_posture:(if $life.parked then "parked" else "active" end),
+          project_posture:$life.posture,
           parked_until:$life.parked_until,
+          backlog_state:(.state // null),
+          current_role:(.current_role // null),
+          child_state:($task.current_state.state // null),
+          child_source:($task.current_state.source // null),
+          child_doing:($task.current_state.detail // null),
           kind:((.kind // null) | if . == null then null else trunc(40) end)}][:$queued_n]),
         landed:(if $landed_n == 0 then $landed_all else $landed_all[:$landed_n] end),
         endpoints:([$visible_tasks[]
-          | lifecycle(.project).parked as $parked
+          | (lifecycle(.project).posture == "parked") as $parked
           | {id,
           repo:((normalized_project(.backlog.repo // .project // null)) | if . == null then null else trunc(120) end),
           state:.current_state.state,source:.current_state.source,
@@ -1422,6 +1427,11 @@ length == 1 and (.[0] |
   and (.holds | type) == "array" and (.queued | type) == "array"
   and (.landed | type) == "array" and (.endpoints | type) == "array"
   and (.counts | type) == "object" and (.omitted | type) == "array"
+  and (if has("projects") then
+         all(.queued[]?;
+           has("project_posture") and has("parked_until") and has("backlog_state")
+           and has("current_role") and has("child_state") and has("child_source") and has("child_doing"))
+       else true end)
 )
 JQ
   snapshot_cache_prepare || true
@@ -1754,7 +1764,7 @@ parent_evidence_reconciliation_json() {  # <summary-json-file> <activities-json>
 secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
   local tasks_file=$1 output_file=$2 registry_file union_file records_file rows total_registered total shown truncated
   local row id home host remote registered registry_error task sampled_spawn_gen status_file status_observation_file event_raw event_note event_epoch event_age
-  local activity_scan activities decisions reconciliation provenance freshness reason summary_file summary_sampled summary_valid summary_invalidity state terminal terminal_contradiction contradiction
+  local activity_scan activities decisions reconciliation provenance freshness reason summary_file normalized_summary_file summary_sampled summary_valid summary_invalidity state terminal terminal_contradiction contradiction
   local summary_source summary_age summary_observed summary_freshness cache_path collection_status collection_slot summary_index=0
   local seen_homes=''
   registry_file="$JSON_TRANSPORT_DIR/secondmate-registry.json"
@@ -1888,6 +1898,17 @@ secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
           child_current_unavailable|orphan_in_flight|unowned_current|terminal_in_flight) : ;;
           *) reason="structured home state invalid" ;;
         esac
+      fi
+    fi
+
+    if [ -z "$reason" ]; then
+      normalized_summary_file="$SNAPSHOT_COLLECT_DIR/normalized-summary-$summary_index.json"
+      if jq -L "$SCRIPT_DIR" --arg today "${SNAPSHOT_NOW%%T*}" \
+          'include "fm-project-lifecycle"; fm_secondmate_summary_at($today)' \
+          "$summary_file" > "$normalized_summary_file"; then
+        mv -f -- "$normalized_summary_file" "$summary_file" || return 1
+      else
+        reason="structured home lifecycle normalization failed"
       fi
     fi
 
