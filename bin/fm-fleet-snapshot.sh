@@ -14,6 +14,10 @@
 #   generated: UTC observation time for this fresh command execution.
 #   fm_home: resolved operational home.
 #   roots: resolved root/config/data/state/projects directories.
+#   projects[]: every data/projects.md registry row as
+#     {name,posture,parked_until,repo,delivery}. Lifecycle posture is orthogonal
+#     to the delivery string. A missing lifecycle token is active; dated parks
+#     retain their registered date so projections can resurface due projects.
 #   backlog: {path,present,records[]} where records are ordered as written in
 #     data/backlog.md and cover In flight, Queued, and Done.
 #     Canonical tasks-axi rows are structured; free-form non-empty lines in
@@ -217,6 +221,12 @@ Print a structured snapshot of the firstmate fleet.
 JSON is the stable machine-readable output contract. The default snapshot
 refreshes only its parent-side remote-summary cache as an observational side effect.
 
+The top-level projects array lists every registered project as
+projects{name,posture,parked_until,repo,delivery}. Posture is active, parked, or
+archived; parked_until is the registered YYYY-MM-DD date or null. The array is
+ordered as active/due first, permanent parked next, future dated parks next, and
+archived last, with names as the deterministic tie-breaker.
+
 --secondmate-home-summary emits the bounded structured summary used after a
 validated registered-home handoff. It is local-only, skips nested secondmate
 aggregation, includes generated_epoch for freshness arithmetic, and marks
@@ -280,6 +290,42 @@ path_present_json() {  # <contract-path> [<observed-path>]
   [ -e "$observed" ] && present=1
   jq -n --arg path "$path" --argjson present "$(bool_json "$present")" \
     '{path:$path,present:$present}'
+}
+
+project_registry_json() {
+  if [ ! -f "$DATA/projects.md" ]; then
+    jq -n '[]'
+    return 0
+  fi
+  jq -Rn --arg today "$SNAPSHOT_TODAY" '
+    def lifecycle_token:
+      . == "active" or . == "parked" or . == "archived" or test("^parked:[0-9]{4}-[0-9]{2}-[0-9]{2}$");
+    def registered_mode:
+      . == "no-mistakes" or . == "direct-PR" or . == "local-only" or . == "no-mistakes-prod-only";
+    [ inputs
+      | (capture("^[[:space:]]*-[[:space:]]+(?<name>[^[:space:]]+)(?:[[:space:]]+\\[(?<annotation>[^]]*)\\])?[[:space:]]+-[[:space:]]+.*$")?) as $row
+      | select($row != null)
+      | (($row.annotation // "") | gsub("[[:space:]]+"; " ") | split(" ") | map(select(. != ""))) as $tokens
+      | ($tokens | map(select(. != "+yolo" and (lifecycle_token | not))) | .[0] // "no-mistakes") as $candidate_mode
+      | (if ($candidate_mode | registered_mode) then $candidate_mode else "no-mistakes" end) as $mode
+      | ($tokens | any(. == "+yolo")) as $yolo
+      | ($tokens | map(select(lifecycle_token)) | .[-1] // "active") as $registered_posture
+      | {name:$row.name,
+         posture:(if ($registered_posture | startswith("parked")) then "parked"
+                  elif $registered_posture == "archived" then "archived"
+                  else "active" end),
+         parked_until:(if ($registered_posture | startswith("parked:")) then ($registered_posture | ltrimstr("parked:")) else null end),
+         repo:$row.name,
+         delivery:($mode + (if $yolo then " +yolo" else "" end))}
+    ]
+    | sort_by(
+        (if .posture == "active" or (.posture == "parked" and .parked_until != null and .parked_until <= $today) then 0
+         elif .posture == "parked" and .parked_until == null then 1
+         elif .posture == "parked" then 2
+         else 3 end),
+        (.parked_until // ""),
+        .name)
+  ' < "$DATA/projects.md"
 }
 
 meta_value() {  # <meta-file> <key>
@@ -1907,6 +1953,7 @@ MAIN_INVENTORY_JSON_FILE="$JSON_TRANSPORT_DIR/main-inventory.json"
 SCOUT_REPORTS_JSON_FILE="$JSON_TRANSPORT_DIR/scout-reports.json"
 SECONDMATE_CURRENT_JSON_FILE="$JSON_TRANSPORT_DIR/secondmate-current.json"
 SECONDMATE_LANDED_JSON_FILE="$JSON_TRANSPORT_DIR/secondmate-landed.json"
+PROJECT_REGISTRY_JSON_FILE="$JSON_TRANSPORT_DIR/project-registry.json"
 printf '%s\n' "$BACKLOG_JSON" > "$BACKLOG_JSON_FILE" \
   || { echo "fm-fleet-snapshot: temporary backlog file write failed" >&2; exit 1; }
 printf '%s\n' "$TASKS_JSON" > "$TASKS_JSON_FILE" \
@@ -1920,6 +1967,8 @@ fi
 
 scout_report_lines > "$SCOUT_REPORTS_JSON_FILE" \
   || { echo "fm-fleet-snapshot: scout report snapshot failed" >&2; exit 1; }
+project_registry_json > "$PROJECT_REGISTRY_JSON_FILE" \
+  || { echo "fm-fleet-snapshot: project registry read failed" >&2; exit 1; }
 main_inventory_json "$BACKLOG_JSON_FILE" "$TASKS_JSON_FILE" > "$MAIN_INVENTORY_JSON_FILE" \
   || { echo "fm-fleet-snapshot: main inventory summary failed" >&2; exit 1; }
 secondmate_current_json "$TASKS_JSON_FILE" "$SECONDMATE_CURRENT_JSON_FILE" \
@@ -1941,12 +1990,14 @@ jq -n \
   --slurpfile scout_reports "$SCOUT_REPORTS_JSON_FILE" \
   --slurpfile secondmate_current "$SECONDMATE_CURRENT_JSON_FILE" \
   --slurpfile secondmate_landed "$SECONDMATE_LANDED_JSON_FILE" \
+  --slurpfile project_registry "$PROJECT_REGISTRY_JSON_FILE" \
   '($backlog[0]) as $backlog
    | ($tasks[0]) as $tasks
    | ($main_inventory[0]) as $main_inventory
    | ($scout_reports[0]) as $scout_reports
    | ($secondmate_current[0]) as $secondmate_current
    | ($secondmate_landed[0]) as $secondmate_landed
+   | ($project_registry[0]) as $project_registry
    | def backlog_by_id($id): ($backlog.records[]? | select(.structured == true and .id == $id) | .) // null;
    def task_by_id($id): ($tasks[]? | select(.id == $id) | .) // null;
    def report_kind($id): (task_by_id($id).kind // backlog_by_id($id).kind // "scout");
@@ -1955,6 +2006,7 @@ jq -n \
      generated:$generated,
      fm_home:$fm_home,
      roots:{fm_root:$fm_root,state:$state,data:$data,config:$config,projects:$projects},
+     projects:$project_registry,
      backlog:$backlog,
      tasks:($tasks | map(. + {backlog:backlog_by_id(.id)})),
      main_inventory:$main_inventory,

@@ -25,6 +25,32 @@ Wake, watcher, away-mode, and Relay-specific state mechanics remain with their n
 `AGENTS.md` retains the run-once and read-once operator rules, lock-refusal safety, installation consent, and direct-report recovery boundaries because those facts apply at every session start.
 Ordinary dead-direct-report recovery is owned by `stuck-crewmate-recovery`, while persistent-secondmate recovery is owned by `secondmate-provisioning`.
 
+## Project registry (data/projects.md)
+
+`data/projects.md` is the private, human-readable project registry.
+The header of [`bin/fm-project-mode.sh`](../bin/fm-project-mode.sh) owns its exact line grammar and backward-compatible delivery defaults.
+A line may keep its existing delivery mode and optional `+yolo` token while adding one orthogonal lifecycle token: `parked`, `parked:YYYY-MM-DD`, or `archived`.
+A missing lifecycle token means `active`.
+
+```text
+- example [no-mistakes +yolo parked:2026-10-01] - Example project (added 2026-09-04)
+- waiting [direct-PR parked] - Parked without an expiry (added 2026-09-04)
+- retired [no-mistakes archived] - Retired project (added 2026-09-04)
+```
+
+Use `bin/fm-project-posture.sh get <project>`, `set <project> <posture>`, or `clear <project>` instead of hand-editing lifecycle tokens.
+The writer rejects unknown values and impossible calendar dates, preserves the delivery annotation, replaces the registry atomically, and prints the exact previous line beside the current line.
+`active` and `clear` both remove the lifecycle token.
+
+A dated park is inactive until its date and resurfaces on that date.
+Setting one registers the finite local `state/project-posture-expiry.check.sh` through `bin/fm-check-register.sh`; its private receipt makes the resulting `check:` wake fire once per project and registered date.
+Changing or clearing the posture resets that project's receipt, and removing the final dated park retires the generated check registration.
+
+`bin/fm-fleet-snapshot.sh --json` exposes `projects{name,posture,parked_until,repo,delivery}` rows; how `bin/fm-bearings-snapshot.sh` and the Bearings board consume them is a pending follow-up.
+`posture` is `active`, `parked`, or `archived`; `parked_until` is a `YYYY-MM-DD` string for a dated park and otherwise null; `repo` is the registry's project key; and `delivery` is the unchanged registered mode with ` +yolo` when enabled.
+The rows are ordered with active and due projects first, permanent parks next, future dated parks next, and archived projects last, with project name as the deterministic tie-breaker.
+Lifecycle never changes delivery-mode semantics or merge authority.
+
 ## Pi Calm preference (config/calm)
 
 The Pi Calm extension stores the captain's home-local presentation choice in gitignored `config/calm` under the effective Firstmate home, resolved from `FM_HOME`, then `FM_ROOT_OVERRIDE`, then the tracked code root derived from the extension path, or under `FM_CONFIG_OVERRIDE` when that test and specialized-setup override is present.
