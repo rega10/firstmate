@@ -209,11 +209,20 @@ def fm_secondmate_summary_at($today):
       | select(.captain_actionable == true)
       | {id, key:.id, verb:"captain-hold", summary:.title, reason:.hold_reason, repo,
          hold_until, hold_bucket, hold_age_days, source:"backlog"}]) as $decisions
-  | ([$expired[] | select(.backlog_state == "queued")]) as $expired_queued
-  | fm_merge_by_id($queued; ($parked + $expired_queued)) as $lifecycle_queued
+  | ([$expired[]
+      | select(.backlog_state == "queued"
+          or (.backlog_state == "in_flight"
+            and (.child_state == "parked" or .child_state == "paused" or .child_state == "blocked")))]) as $expired_queueable
+  | ([$expired[] | select(.id as $id | any($expired_queueable[]; .id == $id) | not) | .id]
+     | unique) as $expired_dequeued_ids
+  | (.queued // []
+     | map(. as $row | select(any($expired[]; .id == $row.id) | not))) as $retained_queued
+  | fm_merge_by_id($retained_queued; ($parked + $expired_queueable)) as $lifecycle_queued
   | fm_merge_by_id($lifecycle_queued; $legacy_parked) as $merged_queued
   | .queued = $merged_queued
-  | .counts.queued += (($merged_queued | length) - ($lifecycle_queued | length))
+  | .counts.queued = ([0, ((.counts.queued // ($queued | length))
+      - ($expired_dequeued_ids | length)
+      + (($merged_queued | length) - ($lifecycle_queued | length)))] | max)
   | .active_children = fm_merge_by_id((.active_children // []); $active)
   | .holds = fm_merge_by_id((.holds // []); $holds)
   | .decisions_open = fm_merge_by_id((.decisions_open // []); $decisions)
@@ -237,7 +246,8 @@ def fm_secondmate_summary_at($today):
     end
   | (.invalidity.kind // null) as $invalid_kind
   | if .valid != true
-      and (.state == "unknown"
+      and (($expired_unknown | length) > 0
+        or .state == "unknown"
         or $invalid_kind == "child_current_unavailable"
         or (["orphan_in_flight","unowned_current","terminal_in_flight"]
           | index($invalid_kind) | not)) then

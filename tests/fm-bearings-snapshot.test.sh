@@ -3630,6 +3630,82 @@ test_expired_queued_worker_is_unowned() {
   pass "expired queued workers are classified as unowned"
 }
 
+test_expired_unknown_preserves_unknown_with_orphan_primary() {
+  local home mate fakebin canonical
+  home=$(make_home expired-mixed-invalidity)
+  mate="$TMP_ROOT/expired-mixed-invalidity-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home mixed-expiry-mate "$mate"
+  append_secondmate_registry "$home" mixed-expiry-mate "$mate"
+  jq -n --arg home "$mate" 'def row($id;$state):
+    {id:$id,title:$id,repo:"parked-app",project_posture:"parked",parked_until:"2026-08-01",
+     backlog_state:"in_flight",current_role:"worker",blocked_by:null,blocked_by_ids:[],
+     unresolved_blocker_ids:[],blocked_reason:null,hold_reason:null,hold_kind:null,
+     hold_until:null,hold_bucket:null,hold_age_days:null,captain_actionable:false,
+     kind:"ship",child_state:$state,child_source:null,child_doing:null};
+  {
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    lifecycle_inventory:[row("expired-orphan";null),row("expired-unknown";"unknown")],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[row("expired-orphan";null),row("expired-unknown";"unknown")],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:2,queued:2,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "mixed-expiry-mate")
+    | .current.state == "unknown"
+      and .invalidity == {kind:"orphan_in_flight",ids:["expired-orphan"]}
+      and (.current.reason | contains("expired-orphan"))
+      and (.queued | any(.id == "expired-orphan" or .id == "expired-unknown") | not)
+  ' >/dev/null || fail "coexisting expired unknown child yielded an idle home: $canonical"
+  pass "expired unknown children preserve unknown with another primary invalidity"
+}
+
+test_expired_active_worker_leaves_cached_queue() {
+  local home mate fakebin canonical
+  home=$(make_home expired-active-queue)
+  mate="$TMP_ROOT/expired-active-queue-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home active-expiry-mate "$mate"
+  append_secondmate_registry "$home" active-expiry-mate "$mate"
+  jq -n --arg home "$mate" 'def row:
+    {id:"expired-active",title:"Expired active worker",repo:"parked-app",
+     project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+     current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+     blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+     hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"working",
+     child_source:"status-log",child_doing:"active after expiry"};
+  {
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    lifecycle_inventory:[row],valid:true,reason:null,invalidity:{kind:null,ids:[]},
+    state:"no_active_work",active_children:[],decisions_open:[],holds:[],queued:[row],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:1,queued:1,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "active-expiry-mate")
+    | .current.state == "active_child_work"
+      and [.active_children[].id] == ["expired-active"]
+      and (.queued | any(.id == "expired-active") | not)
+      and .counts.active_children == 1
+      and .counts.queued == 0
+  ' >/dev/null || fail "expired active worker remained in the cached queue: $canonical"
+  pass "expired active workers leave the cached queue"
+}
+
 test_expired_held_park_stays_valid() {
   local home mate fakebin canonical
   home=$(make_home expired-held-park)
@@ -4096,6 +4172,8 @@ test_expired_unknown_park_revalidates_cached_summary
 test_expired_unknown_park_replaces_stale_primary_invalidity
 test_expiry_preserves_fatal_cached_invalidity
 test_expired_queued_worker_is_unowned
+test_expired_unknown_preserves_unknown_with_orphan_primary
+test_expired_active_worker_leaves_cached_queue
 test_expired_held_park_stays_valid
 test_cached_legacy_ledger_discloses_unidentified_posture
 test_archived_legacy_invalidity_is_reconciled
