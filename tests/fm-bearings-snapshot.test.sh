@@ -3380,6 +3380,44 @@ test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible() {
   pass "project-aware v1 ledgers remain visible without lifecycle inventory"
 }
 
+test_project_aware_v1_parked_work_sinks_to_gates() {
+  local home mate fakebin json
+  home=$(make_home project-aware-v1-parked-work)
+  mate="$TMP_ROOT/project-aware-v1-parked-work-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home v1-parked-mate "$mate"
+  append_secondmate_registry "$home" v1-parked-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-11T18:00:00Z",generated_epoch:1783792800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"captain_decision",
+    active_children:[{id:"legacy-parked-active",kind:"ship",state:"working",
+      repo:"parked-app",source:"status-log",doing:"Building parked work"}],
+    decisions_open:[{id:"legacy-parked-decision",key:"legacy-parked-decision",
+      verb:"captain-hold",summary:"Choose parked route",reason:"captain input",
+      hold_until:null,hold_bucket:"live",hold_age_days:0,source:"backlog",repo:"parked-app"}],
+    holds:[],queued:[],landed:[],endpoints:[],
+    counts:{active_children:1,decisions_open:1,holds:0,queued:0,landed:0,endpoints:0},
+    omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1783792800 FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-decisions --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.in_flight | any(.id == "v1-parked-mate/legacy-parked-active") | not)
+      and (.decisions_open | any(.id == "v1-parked-mate/legacy-parked-decision") | not)
+      and (.gates | any(.id == "legacy-parked-active" and .owner == "v1-parked-mate"
+        and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "legacy-parked-decision" and .owner == "v1-parked-mate"
+        and .reason == "project parked until 2026-08-01"))
+      and (.secondmates | any(.id == "v1-parked-mate" and .state == "no_active_work"))
+  ' >/dev/null || fail "legacy parked work leaked active projections: $json"
+  pass "project-aware v1 parked work sinks to Charted Next"
+}
+
 test_cached_legacy_ledger_discloses_unidentified_posture() {
   local home mate sshbin json
   home=$(make_home cached-legacy-archived-landed)
@@ -3748,6 +3786,7 @@ test_project_lifecycle_surface_and_bearings_projection
 test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
+test_project_aware_v1_parked_work_sinks_to_gates
 test_cached_legacy_ledger_discloses_unidentified_posture
 test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate

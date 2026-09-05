@@ -55,6 +55,26 @@ def fm_secondmate_summary_at($today):
         else . end)
   | .landed |= map(with_resolved_repo)
   | .endpoints |= map(with_resolved_repo)
+  | ([
+      (.active_children[]?
+       | select($legacy_summary and fm_project_lifecycle(.repo; $projects; $today).parked)
+       | {id,title:(.doing // .id),repo,backlog_state:"in_flight",current_role:"active",
+          child_state:(.state // "working"),child_source:(.source // null),
+          child_doing:(.doing // null),captain_actionable:false}),
+      (.holds[]?
+       | select($legacy_summary and fm_project_lifecycle(.repo; $projects; $today).parked)
+       | {id,title:(.title // .id),repo,backlog_state:"in_flight",current_role:"held",
+          child_state:"paused",child_source:(.source // null),child_doing:(.reason // null),
+          blocked_by:(.blocked_by // null),blocked_by_ids:(.blocked_by_ids // []),
+          unresolved_blocker_ids:(.unresolved_blocker_ids // []),captain_actionable:false}),
+      (.decisions_open[]?
+       | select($legacy_summary and fm_project_lifecycle(.repo; $projects; $today).parked)
+       | {id,title:(.summary // .id),repo,backlog_state:"in_flight",current_role:"held",
+          child_state:"paused",child_source:(.source // null),child_doing:(.reason // null),
+          hold_reason:(.reason // null),hold_until:(.hold_until // null),
+          hold_bucket:(.hold_bucket // null),hold_age_days:(.hold_age_days // null),
+          captain_actionable:true})
+    ]) as $legacy_parked
   | {active_children:(.active_children | length),holds:(.holds | length),
      decisions_open:(.decisions_open | length),queued:(.queued | length),
      landed:(.landed | length),endpoints:(.endpoints | length)} as $before
@@ -65,9 +85,12 @@ def fm_secondmate_summary_at($today):
       | .name]
      | map(select(. != null)) | unique) as $archived_projects
   | (first((.omitted // [])[]? | select(.surface == "project_lifecycle")) // null) as $lifecycle_omission
-  | .active_children |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
-  | .holds |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
-  | .decisions_open |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
+  | .active_children |= map(select(fm_project_lifecycle(.repo; $projects; $today)
+      | (.archived or ($legacy_summary and .parked)) | not))
+  | .holds |= map(select(fm_project_lifecycle(.repo; $projects; $today)
+      | (.archived or ($legacy_summary and .parked)) | not))
+  | .decisions_open |= map(select(fm_project_lifecycle(.repo; $projects; $today)
+      | (.archived or ($legacy_summary and .parked)) | not))
   | .queued |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
   | .landed |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
   | .endpoints |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
@@ -119,7 +142,7 @@ def fm_secondmate_summary_at($today):
       | {id, key:.id, verb:"captain-hold", summary:.title, reason:.hold_reason, repo,
          hold_until, hold_bucket, hold_age_days, source:"backlog"}]) as $decisions
   | ([$expired[] | select(.backlog_state == "queued")]) as $expired_queued
-  | .queued = fm_merge_by_id($queued; ($parked + $expired_queued))
+  | .queued = fm_merge_by_id($queued; ($parked + $expired_queued + $legacy_parked))
   | .active_children = fm_merge_by_id((.active_children // []); $active)
   | .holds = fm_merge_by_id((.holds // []); $holds)
   | .decisions_open = fm_merge_by_id((.decisions_open // []); $decisions)
