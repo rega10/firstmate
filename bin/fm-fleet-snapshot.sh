@@ -1487,6 +1487,21 @@ def lifecycle_row:
   and (.child_state == null or (.child_state | IN("working", "paused", "parked", "blocked", "done", "failed", "unknown")))
   and (.child_source | nullable_string)
   and (.child_doing | nullable_string);
+def project_row:
+  . as $row
+  | (["name", "posture", "parked_until", "repo", "delivery"]
+     | map(. as $key | $row | has($key)) | all)
+  and (.name | nonempty_string)
+  and (.repo | nonempty_string)
+  and (.delivery | nonempty_string)
+  and (.posture | IN("active", "parked", "archived"))
+  and (.parked_until | nullable_date)
+  and (if .posture == "parked" then true else .parked_until == null end);
+def project_rows_unambiguous:
+  [to_entries[] | {row:.key, identities:([.value.name, .value.repo] | unique)}]
+  | [.[] as $entry | $entry.identities[] | {row:$entry.row, identity:.}]
+  | group_by(.identity)
+  | all(.[]; ([.[].row] | unique | length) == 1);
 length == 1 and (.[0] |
   .schema == "fm-secondmate-home-summary.v1"
   and .hold_classifier_schema == "fm-captain-hold-buckets.v1"
@@ -1501,6 +1516,11 @@ length == 1 and (.[0] |
   and (.counts | type) == "object" and (.omitted | type) == "array"
   and ((has("projects") and has("lifecycle_inventory") and has("bounds"))
        or ((has("projects") | not) and (has("lifecycle_inventory") | not) and (has("bounds") | not)))
+  and (if has("projects") then
+         (.projects | type) == "array"
+         and all(.projects[]?; project_row)
+         and (.projects | project_rows_unambiguous)
+       else true end)
   and (if has("bounds") then
          (.bounds | type) == "object"
          and all([.bounds.active_children,.bounds.decisions_open,.bounds.holds,.bounds.queued][];

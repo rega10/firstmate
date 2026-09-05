@@ -240,6 +240,8 @@ else
 fi
 HOME_LABEL=$(printf '%s' "$SNAP" | jq -er '.fm_home | strings | split("/") | (.[-2:] | join("/"))') \
   || { echo "fm-bearings-snapshot: invalid canonical snapshot" >&2; exit 1; }
+FM_HOME_PATH=$(printf '%s' "$SNAP" | jq -er '.fm_home | strings | select(length > 0)') \
+  || { echo "fm-bearings-snapshot: invalid canonical snapshot" >&2; exit 1; }
 # Normalize project identity once against each registry so every later
 # projection (including live PR discovery) uses the same project key.
 SNAP=$(printf '%s' "$SNAP" | jq '
@@ -250,7 +252,6 @@ SNAP=$(printf '%s' "$SNAP" | jq '
       else
         ([$plist[]
           | select(.name == $value or .repo == $value
-              or .path? == $value or .clone_path? == $value
               or ($fm_home + "/projects/" + (.name // "")) == $value
               or ($fm_home + "/projects/" + (.repo // "")) == $value)
           | .name] | unique) as $direct
@@ -321,10 +322,15 @@ if [ "$INCLUDE_PRS" = 1 ]; then
       while IFS= read -r ref; do
         [ -n "$ref" ] || continue
         ref_url=$(printf '%s' "$ref" | jq -r '.url // empty')
+        ref_project=$(printf '%s' "$ref" | jq -r '.project // empty')
         ref_worktree=$(printf '%s' "$ref" | jq -r '.worktree // empty')
         ref_repo=$(repo_slug "$ref_url")
         if [ -z "$ref_repo" ] && [ -n "$ref_worktree" ] && [ -d "$ref_worktree" ]; then
           ref_origin=$(git -C "$ref_worktree" remote get-url origin 2>/dev/null || true)
+          ref_repo=$(repo_slug "$ref_origin")
+        fi
+        if [ -z "$ref_repo" ] && [ -n "$ref_project" ] && [ -d "$FM_HOME_PATH/projects/$ref_project" ]; then
+          ref_origin=$(git -C "$FM_HOME_PATH/projects/$ref_project" remote get-url origin 2>/dev/null || true)
           ref_repo=$(repo_slug "$ref_origin")
         fi
         printf '%s' "$ref" | jq -c --arg repository "$ref_repo" \
@@ -377,10 +383,7 @@ EOF
       if [ "$ALL_PR_REPOS" != 1 ] && [ "$nrepos" -ge "$FM_BEARINGS_PR_REPOS" ]; then break; fi
       nrepos=$((nrepos + 1))
       repo_suppressed_refs=$(printf '%s' "$SUPPRESSED_PR_REFS" | jq --arg repo "$repo" '
-        ($repo | split("/") | last) as $repo_name
-        | [.[] | select(
-            .repository == $repo
-            or (.repository == null and .project == $repo_name))]') \
+        [.[] | select(.repository == $repo)]') \
         || { nwarn=$((nwarn + 1)); continue; }
       repo_suppressed_count=$(printf '%s' "$repo_suppressed_refs" | jq 'length') \
         || { nwarn=$((nwarn + 1)); continue; }

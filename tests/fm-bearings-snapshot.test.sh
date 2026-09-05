@@ -1444,17 +1444,20 @@ test_shared_origin_prs_respect_project_lifecycle() {
   cat > "$home/data/projects.md" <<'EOF'
 - firstmate [no-mistakes] - Active project (added 2026-07-01)
 - parked-app [no-mistakes parked:2026-08-01] - Parked project (added 2026-07-01)
-- other [no-mistakes parked:2026-08-01] - Backlog-only parked project (added 2026-07-01)
+- app-b [no-mistakes parked:2026-08-01] - Backlog-only parked project (added 2026-07-01)
 - archived-other [local-only archived] - Unrelated archived project (added 2026-07-01)
 EOF
   sed '/^## Queued$/i\
 - [ ] parked-task - Parked shared-origin work (repo: parked-app) (kind: ship)\
-- [ ] fallback-parked - Parked backlog-only work (repo: other) (kind: ship)\
+- [ ] fallback-parked - Parked backlog-only work (repo: app-b) (kind: ship)\
 - [ ] archived-other-task - Archived work in another repository (repo: archived-other) (kind: ship)\
 ' "$home/data/backlog.md" > "$home/data/backlog.next"
   mv "$home/data/backlog.next" "$home/data/backlog.md"
   git -C "$home/projects/ship-wt" init -q
   git -C "$home/projects/ship-wt" remote add origin https://github.com/kunchenguid/firstmate.git
+  mkdir -p "$home/projects/app-b"
+  git -C "$home/projects/app-b" init -q
+  git -C "$home/projects/app-b" remote add origin https://github.com/acme/other.git
   fm_write_meta "$home/state/parked-task.meta" \
     "window=firstmate:fm-parked-task" \
     "worktree=$home/projects/ship-wt" \
@@ -3484,7 +3487,7 @@ test_expired_unknown_park_revalidates_cached_summary() {
     schema:"fm-secondmate-home-summary.v1",
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
-    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"expired-unknown",title:"Unknown parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
@@ -3544,6 +3547,23 @@ test_expired_unknown_park_revalidates_cached_summary() {
   cp "$mate/state/home-summary.valid" "$mate/state/home-summary.json"
   cp "$mate/state/home-summary.valid" "$cache_file"
   tmp="$mate/state/home-summary.json.tmp"
+  jq '.projects=null' "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  tmp="$cache_file.tmp"
+  jq '.projects=null' "$cache_file" > "$tmp" && mv "$tmp" "$cache_file"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785520800 FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "unknown-mate" and .state == "unknown"
+      and .provenance == "unknown" and (.reason | contains("no valid cached copy"))))
+      and (.gates | any(.id == "expired-unknown") | not)
+  ' >/dev/null || fail "malformed project registry remained trusted: $json"
+  cp "$mate/state/home-summary.valid" "$mate/state/home-summary.json"
+  cp "$mate/state/home-summary.valid" "$cache_file"
+  tmp="$mate/state/home-summary.json.tmp"
   jq 'del(.bounds)' "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
   tmp="$cache_file.tmp"
   jq 'del(.bounds)' "$cache_file" > "$tmp" && mv "$tmp" "$cache_file"
@@ -3595,8 +3615,8 @@ test_expired_unknown_park_preserves_strict_primary_invalidity() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[
-      {name:"active-app",repo:"active-app",posture:"active",parked_until:null},
-      {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+      {name:"active-app",repo:"active-app",posture:"active",parked_until:null,delivery:"no-mistakes"},
+      {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"newly-active-unknown",title:"Unknown parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
@@ -3651,8 +3671,8 @@ test_expired_orphan_replaces_cached_unknown_primary() {
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
     projects:[
-      {name:"active-app",repo:"active-app",posture:"active",parked_until:null},
-      {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+      {name:"active-app",repo:"active-app",posture:"active",parked_until:null,delivery:"no-mistakes"},
+      {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"newly-active-orphan",title:"Orphaned parked worker",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
@@ -3694,7 +3714,7 @@ test_expiry_preserves_fatal_cached_invalidity() {
     schema:"fm-secondmate-home-summary.v1",
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
-    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"fatal-expired-unknown",title:"Unknown task-only child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:null,
@@ -3738,7 +3758,7 @@ test_expired_queued_worker_is_unowned() {
     schema:"fm-secondmate-home-summary.v1",
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
-    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"queued-live-child",title:"Queued row with live child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"queued",
@@ -3782,7 +3802,7 @@ test_expired_unknown_preserves_unknown_with_orphan_primary() {
     schema:"fm-secondmate-home-summary.v1",
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
-    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[row("expired-orphan";null),row("expired-unknown";"unknown")],
     valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
@@ -3815,7 +3835,7 @@ test_bounded_unknown_child_preserves_unknown_home_state() {
     schema:"fm-secondmate-home-summary.v1",
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
-    projects:[{name:"active-app",repo:"active-app",posture:"active",parked_until:null}],
+    projects:[{name:"active-app",repo:"active-app",posture:"active",parked_until:null,delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[],valid:false,
     reason:"in-flight backlog item has no child metadata: visible-orphan",
@@ -3857,8 +3877,8 @@ test_expired_task_only_child_preserves_queue_omission() {
       hold_classifier_schema:"fm-captain-hold-buckets.v1",
       generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
       projects:[
-        {name:"active-app",repo:"active-app",posture:"active",parked_until:null},
-        {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+        {name:"active-app",repo:"active-app",posture:"active",parked_until:null,delivery:"no-mistakes"},
+        {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
       bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
       lifecycle_inventory:[{id:"task-only-child",title:"Parked task-only child",repo:"parked-app",
         project_posture:"parked",parked_until:"2026-08-01",backlog_state:null,
@@ -3904,7 +3924,7 @@ test_expired_active_worker_leaves_cached_queue() {
     schema:"fm-secondmate-home-summary.v1",
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
-    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[row],valid:true,reason:null,invalidity:{kind:null,ids:[]},
     state:"no_active_work",active_children:[],decisions_open:[],holds:[],queued:[row],
@@ -3936,7 +3956,7 @@ test_expired_held_park_stays_valid() {
     schema:"fm-secondmate-home-summary.v1",
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
-    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"expired-held",title:"Held parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
@@ -3979,7 +3999,7 @@ test_archive_filter_updates_summary_counts() {
     schema:"fm-secondmate-home-summary.v1",
     hold_classifier_schema:"fm-captain-hold-buckets.v1",
     generated:"2026-07-11T18:00:00Z",generated_epoch:1783792800,home:$home,
-    projects:[{name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null}],
+    projects:[{name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null,delivery:"local-only"}],
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[],valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
     active_children:[],decisions_open:[],holds:[],queued:[],
