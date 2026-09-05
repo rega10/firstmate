@@ -376,25 +376,26 @@ EOF
     for repo in $repos; do
       if [ "$ALL_PR_REPOS" != 1 ] && [ "$nrepos" -ge "$FM_BEARINGS_PR_REPOS" ]; then break; fi
       nrepos=$((nrepos + 1))
-      repo_suppressed_count=$(printf '%s' "$SUPPRESSED_PR_REFS" | jq --arg repo "$repo" '
-        [$repo | split("/") | last] as $repo_name
+      repo_suppressed_refs=$(printf '%s' "$SUPPRESSED_PR_REFS" | jq --arg repo "$repo" '
+        ($repo | split("/") | last) as $repo_name
         | [.[] | select(
             .repository == $repo
-            or (.repository == null and .project == $repo_name))]
-        | length') || { nwarn=$((nwarn + 1)); continue; }
+            or (.repository == null and .project == $repo_name))]') \
+        || { nwarn=$((nwarn + 1)); continue; }
+      repo_suppressed_count=$(printf '%s' "$repo_suppressed_refs" | jq 'length') \
+        || { nwarn=$((nwarn + 1)); continue; }
       pr_fetch_limit=$((FM_BEARINGS_PR_LIMIT + repo_suppressed_count + 1))
       out=$(gh_bounded pr list --repo "$repo" --state open --limit "$pr_fetch_limit" \
         --json number,title,url,headRefName,reviewDecision,mergeable,statusCheckRollup 2>/dev/null) \
         || { nwarn=$((nwarn + 1)); continue; }
       [ -n "$out" ] || out='[]'
       repo_result=$(printf '%s' "$out" | jq --arg repo "$repo" \
-        --argjson limit "$FM_BEARINGS_PR_LIMIT" --argjson suppressed "$SUPPRESSED_PR_REFS" '
+        --argjson limit "$FM_BEARINGS_PR_LIMIT" --argjson suppressed "$repo_suppressed_refs" '
         [ .[]
           | . as $pr
           | select(any($suppressed[];
               (.url != null and .url == ($pr.url // null))
-              or (.repository == $repo and .id != null
-                  and ("fm/" + .id) == ($pr.headRefName // ""))) | not)
+              or (.id != null and ("fm/" + .id) == ($pr.headRefName // ""))) | not)
           | {
           num:(.number|tostring),
           repo:$repo,

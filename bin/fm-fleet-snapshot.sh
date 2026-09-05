@@ -1177,7 +1177,6 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         holds:$holds_all[:$queued_n],
         lifecycle_inventory:$lifecycle_inventory_all,
         queued:([$queued_all[] as $row
-          | lifecycle($row.repo) as $life
           | (first($tasks[]? | select(.id == $row.id)) // null) as $task
           | $row
           | {id:(.id | trunc(120)),title:(.title | trunc(120)),
@@ -1192,8 +1191,6 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
           hold_age_days:(.hold_age_days // null),
           captain_actionable:(.captain_actionable // false),
           repo:((.repo // null) | if . == null then null else trunc(120) end),
-          project_posture:$life.posture,
-          parked_until:$life.parked_until,
           backlog_state:(.state // null),
           current_role:(.current_role // null),
           child_state:($task.current_state.state // null),
@@ -1213,7 +1210,6 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
           active_children:($active_all | length),
           decisions_open:($decisions_all | length),
           holds:($holds_all | length),
-          lifecycle_inventory:($lifecycle_inventory_all | length),
           queued:($queued_all | length),
           landed:($landed_all | length),
           endpoints:($visible_tasks | length)

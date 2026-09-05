@@ -1,6 +1,9 @@
 def fm_project_record($repo; $projects):
   if $repo == null or $repo == "" then null
-  else first($projects[]? | select(.name == $repo or .repo == $repo)) // null
+  else ([$projects[]? | select(.name == $repo or .repo == $repo)]) as $matches
+  | if ($matches | length) > 1 then error("ambiguous project identity: " + $repo)
+    else $matches[0] // null
+    end
   end;
 
 def fm_project_lifecycle($repo; $projects; $today):

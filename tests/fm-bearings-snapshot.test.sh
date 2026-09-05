@@ -58,7 +58,7 @@ if [ "${FAKE_GH_CROSS_REPO:-0}" = 1 ]; then
       printf '%s\n' '[{"number":10,"title":"Parked work","url":"https://github.com/kunchenguid/firstmate/pull/10","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]'
       ;;
     *" --repo acme/other "*)
-      printf '%s\n' '[{"number":21,"title":"Unrelated release","url":"https://github.com/acme/other/pull/21","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]'
+      printf '%s\n' '[{"number":20,"title":"Backlog-only parked work","url":"https://github.com/acme/other/pull/20","headRefName":"fm/fallback-parked","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":21,"title":"Unrelated release","url":"https://github.com/acme/other/pull/21","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]'
       ;;
   esac
   exit 0
@@ -1444,10 +1444,12 @@ test_shared_origin_prs_respect_project_lifecycle() {
   cat > "$home/data/projects.md" <<'EOF'
 - firstmate [no-mistakes] - Active project (added 2026-07-01)
 - parked-app [no-mistakes parked:2026-08-01] - Parked project (added 2026-07-01)
+- other [no-mistakes parked:2026-08-01] - Backlog-only parked project (added 2026-07-01)
 - archived-other [local-only archived] - Unrelated archived project (added 2026-07-01)
 EOF
   sed '/^## Queued$/i\
 - [ ] parked-task - Parked shared-origin work (repo: parked-app) (kind: ship)\
+- [ ] fallback-parked - Parked backlog-only work (repo: other) (kind: ship)\
 - [ ] archived-other-task - Archived work in another repository (repo: archived-other) (kind: ship)\
 ' "$home/data/backlog.md" > "$home/data/backlog.next"
   mv "$home/data/backlog.next" "$home/data/backlog.md"
@@ -1502,6 +1504,7 @@ EOF
       == [{num:"21",repo:"acme/other",task:"parked-task",
            url:"https://github.com/acme/other/pull/21",review:"APPROVED",
            mergeable:"MERGEABLE",checks:"none"}]
+      and (.candidate_prs | any(.task == "fallback-parked") | not)
   ' >/dev/null || fail "parked branch suppression crossed repository boundaries: $cross_repo"
   pass "shared-origin PR discovery keeps parked work in Charted Next"
 }
@@ -3253,6 +3256,24 @@ EOF
   pass "project lifecycle is one canonical snapshot surface for Bearings ordering and disclosure"
 }
 
+test_duplicate_project_identity_fails_closed() {
+  local home fakebin out err rc
+  home=$(make_home duplicate-project-identity)
+  write_fixture "$home"
+  cat > "$home/data/projects.md" <<'EOF'
+- firstmate [no-mistakes] - Active duplicate (added 2026-07-01)
+- firstmate [local-only archived] - Archived duplicate (added 2026-07-01)
+EOF
+  fakebin=$(make_fakebin "$home")
+  err="$home/duplicate.err"
+  out=$(run "$home" "$fakebin" --json 2> "$err"); rc=$?
+  [ "$rc" -ne 0 ] || fail "duplicate project identity remained accepted: $out"
+  [ -z "$out" ] || fail "duplicate project identity emitted a partial projection: $out"
+  grep -F 'ambiguous project identity: firstmate' "$err" >/dev/null \
+    || fail "duplicate project identity lacked a diagnostic: $(<"$err")"
+  pass "duplicate project identities fail closed at lifecycle normalization"
+}
+
 test_secondmate_project_posture_is_honored_from_structured_state() {
   local home mate fakebin json summary summary_tmp check first second
   home=$(make_home secondmate-posture)
@@ -3322,8 +3343,8 @@ EOF
   printf '%s' "$summary" | jq -e '
     .state == "no_active_work"
       and (.holds | any(.id == "mate-parked-call") | not)
-      and (.queued | any(.id == "mate-parked-call" and .project_posture == "parked"
-        and .parked_until == "2026-08-01"))
+      and (.queued | any(.id == "mate-parked-call"
+        and (has("project_posture") | not) and (has("parked_until") | not)))
   ' >/dev/null || fail "a parked queued hold changed the owning-home state: $summary"
   summary_tmp="$mate/state/home-summary.json.tmp"
   jq '.generated = "2026-07-31T18:00:00Z"
@@ -4058,7 +4079,6 @@ EOF
   summary=$(<"$mate/state/home-summary.json")
   printf '%s' "$summary" | jq -e '
     (.lifecycle_inventory | length) == 202
-      and (.counts.lifecycle_inventory == 202)
       and (.lifecycle_inventory | any(.id == "b-future-201"))
       and (.lifecycle_inventory | any(.id == "z-future-park"))
       and (.omitted | any(.surface == "lifecycle_inventory") | not)
@@ -4269,6 +4289,7 @@ test_pr_repository_cap_and_expansion
 test_per_repository_pr_cap_is_disclosed
 test_projection_and_toon_fail_closed
 test_project_lifecycle_surface_and_bearings_projection
+test_duplicate_project_identity_fails_closed
 test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_expired_unknown_park_revalidates_cached_summary
