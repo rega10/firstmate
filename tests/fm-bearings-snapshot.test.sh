@@ -3173,6 +3173,7 @@ EOF
 ## In flight
 - [ ] mate-parked-live - Parked child description must not leak (repo: parked-app) (kind: ship)
 - [ ] mate-archived-live - Archived child description must not leak (repo: archived-app) (kind: ship)
+- [ ] mate-parked-paused - Paused parked child must reach Charted Next (repo: parked-app) (kind: ship)
 
 ## Queued
 - [ ] mate-active - Active secondmate work (repo: sample) (kind: ship)
@@ -3196,6 +3197,11 @@ EOF
     "project=$mate/projects/archived-app" "harness=claude" "kind=ship" "mode=local-only"
   record_claude_state "$mate/state" mate-archived-live busy
   printf 'working: Archived child description must not leak\n' > "$mate/state/mate-archived-live.status"
+  fm_write_meta "$mate/state/mate-parked-paused.meta" \
+    "window=firstmate:fm-mate-parked-paused" "worktree=$mate/projects/parked-app" \
+    "project=$mate/projects/parked-app" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" mate-parked-paused idle
+  printf 'paused: waiting for project resume\n' > "$mate/state/mate-parked-paused.status"
   fakebin=$(make_fakebin "$home")
   PATH="$fakebin:$PATH" refresh_local_secondmate_ledgers "$home"
   summary_tmp="$mate/state/home-summary.json.tmp"
@@ -3214,6 +3220,8 @@ EOF
         and .reason == "project parked until 2026-08-01"))
       and (.gates | any(.id == "mate-parked-live" and .owner == "posture-mate"
         and .reason == "project parked until 2026-08-01"))
+      and ([.gates[] | select(.id == "mate-parked-paused" and .owner == "posture-mate"
+        and .reason == "project parked until 2026-08-01")] | length) == 1
       and (.secondmates | any(.id == "posture-mate" and .state == "no_active_work"
         and (.doing | contains("description must not leak") | not)))
       and (.in_flight | any(.id == "posture-mate/mate-parked-live" or .id == "posture-mate/mate-archived-live") | not)

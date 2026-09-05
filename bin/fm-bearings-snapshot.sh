@@ -706,6 +706,18 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | select([$m.queued[]? | .id] | index($child.id) | not)
          | {id:$child.id, title:(($child.doing // $child.id) | trunc(60)),
             blocked_by:"-", reason:($life.reason | trunc(40)), owner:$m.id,
+            _project_rank:$life.rank, _parked_project:$life.name} ]
+     + [ (.secondmate_current.records // [])[] as $m
+         | select($m.provenance.selected == "structured-home")
+         | mate_projects($m) as $plist
+         | $m.holds[]?
+         | . as $hold
+         | lifecycle($hold.repo; $plist) as $life
+         | select($life.parked)
+         | select($life.archived | not)
+         | select(([$m.queued[]?.id] + [$m.active_children[]?.id]) | index($hold.id) | not)
+         | {id:$hold.id, title:(($hold.title // $hold.id) | trunc(60)),
+            blocked_by:"-", reason:($life.reason | trunc(40)), owner:$m.id,
             _project_rank:$life.rank, _parked_project:$life.name} ]) as $gates_ranked
   | ($gates_ranked | to_entries | sort_by(.value._project_rank, .key) | map(.value)) as $gates_sorted
   | ($gates_sorted | map(del(._project_rank, ._parked_project))) as $gates_all
