@@ -592,6 +592,20 @@ test_enabled_disabled_and_non_claude_launches() {
     "enabled Claude launch required an approval prompt"
   assert_no_grep 'conflict=' "$state/claude-env.log" "higher-precedence auth environment reached Claude"
 
+  injected_argv=$(grep '^claude ' "$state/claude-argv.log" | tail -1)
+  settings_count=$(printf '%s\n' "$injected_argv" | grep -oE '<--settings(>|=)' | wc -l | tr -d ' ')
+  [ "$settings_count" = 1 ] \
+    || fail "injected Claude exec carried $settings_count --settings flags, expected exactly one authoritative --settings"
+  injected_settings=$(printf '%s\n' "$injected_argv" | sed -n 's/.*<--settings> <\([^>]*\)>.*/\1/p')
+  printf '%s' "$injected_settings" | "$JQ_BIN" -e \
+    'has("apiKeyHelper") and .apiKeyHelper == null and .feedbackDrafts == "off" and (.env | has("ANTHROPIC_API_KEY")) and .env.ANTHROPIC_API_KEY == null' \
+    >/dev/null 2>&1 \
+    || fail "authoritative injected --settings did not both null the credential keys and set feedbackDrafts off"
+  injected_worker_args=${injected_argv#*<--allowedTools> <Bash>}
+  if printf '%s\n' "$injected_worker_args" | grep -qE '<--settings(>|=)'; then
+    fail "worker template --settings survived into the injected Claude exec worker arguments"
+  fi
+
   : > "$launchlog"
   record=$(make_ship "$dir" "$home" production-attestation)
   proj=${record%%$'\t'*}
