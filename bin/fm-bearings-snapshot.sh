@@ -60,6 +60,10 @@
 # Flags:
 #   (default)        compact projection with bounded remote-ledger collection, TOON
 #   --json           the same projected model as JSON (machine/debug; parity form)
+#   --contract       print the machine-readable contract describing the --json
+#                    output (schema fm-bearings.v1): every surface, field, enum,
+#                    bound, and identity rule an external consumer needs. Static:
+#                    no fleet read, no network. Owned by fm-bearings-contract-lib.sh.
 #   --include-prs    ALSO do live GitHub open-PR discovery + checks
 #   --fields <list>  opt in to dropped surfaces: bodies,paths,actions,endpoints
 #   --all-in-flight  include every in-flight task
@@ -79,6 +83,22 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FLEET="$SCRIPT_DIR/fm-fleet-snapshot.sh"
+
+# --contract is a static description of the --json output. Handle it before any
+# argument accumulation, fleet read, guard, or network path: it needs none of
+# them and must stay deterministic. It is a first-position dispatch, not a flag
+# that composes with the projection flags.
+if [ "${1:-}" = "--contract" ]; then
+  if [ "$#" -ne 1 ]; then
+    echo "fm-bearings-snapshot: --contract takes no other arguments" >&2
+    exit 2
+  fi
+  # shellcheck source=bin/fm-bearings-contract-lib.sh
+  # shellcheck disable=SC1091
+  . "$SCRIPT_DIR/fm-bearings-contract-lib.sh"
+  fm_bearings_emit_contract || exit 1
+  exit 0
+fi
 # shellcheck source=bin/fm-timeout-lib.sh
 # shellcheck disable=SC1091
 . "$SCRIPT_DIR/fm-timeout-lib.sh"
@@ -524,6 +544,7 @@ MODEL=$(printf '%s' "$SNAP" | jq \
       home: $home,
       generated: $now,
       prs: $prs,
+      projects: (.projects // []),
       in_flight: (if $all_in_flight == 1 then $in_flight_all else $in_flight_all[:$in_flight_n] end),
       secondmates: (if $all_secondmates == 1 then $secondmates_all else $secondmates_all[:$secondmates_n] end),
       secondmate_reconcile: [ (.secondmate_current.records // [])[]

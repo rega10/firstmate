@@ -17,7 +17,8 @@ The shared no-mistakes gate refusal for fleet lifecycle entrypoints is summarize
 | `fm-fleet-snapshot.sh`   | Print structured fleet snapshot JSON and refresh only its parent-side remote-ledger cache (schema `fm-fleet-snapshot.v1`) |
 | `fm-home-summary-refresh.sh` | Atomically publish this home's structured summary ledger                         |
 | `fm-fleet-view.sh`       | Render the fleet snapshot as a human Markdown view                                   |
-| `fm-bearings-snapshot.sh` | Project the bounded remote-ledger fleet snapshot to compact TOON; `--include-prs` adds live GitHub enrichment |
+| `fm-bearings-snapshot.sh` | Project the bounded remote-ledger fleet snapshot to compact TOON; `--include-prs` adds live GitHub enrichment; `--contract` prints the machine-readable contract for the `--json` output |
+| `fm-bearings-contract-lib.sh` | Single owner of the `--contract` document describing the `fm-bearings-snapshot.sh --json` output (schema `fm-bearings.v1`) for external consumers |
 | `fm-bearings-board.sh`   | Build and arm the stable interactive `/bearings lavish` fleet board                  |
 | `fm-secondmate-reconcile.sh` | Queue Bearings reconcile requests for later supervision delivery and ask each mismatched home through its durable inbox with a per-home cooldown |
 | `fm-update.sh`           | Fast-forward-only self-update of firstmate and local or remote secondmate homes, classifying every live mate left on the target commit for restart or fallback nudge |
@@ -154,3 +155,29 @@ The shared no-mistakes gate refusal for fleet lifecycle entrypoints is summarize
 | `fm-voice-client.py`     | The laptop end of the spoken interface: capture, playback, and turn timing over SSH; audio devices unverified |
 | `fm_voice_frame.py`      | The wire format both machines share, copied to the laptop beside the client          |
 | `fm_voice_records.py`    | What a spoken answer may read, and the handover that queues real work                |
+
+## Bearings snapshot contract
+
+`bin/fm-bearings-snapshot.sh --json` is the fleet's single deterministic fleet-state source, and external tools (such as Orchestra) render project cards directly from it.
+So its vocabulary is published, versioned, and testable rather than left implicit.
+
+- `bin/fm-bearings-snapshot.sh --contract` prints a machine-readable JSON document describing the `--json` output: schema id and version anchor (`fm-bearings.v1`), every top-level surface, every field with its type, whether each surface is always present or opt-in and which flag reveals it, the closed enum value sets, the bounding rules (which surfaces are capped, by which env var, and how `omitted` discloses the cut), and the identity rules (task ids are stable identity, decision keys are captain-held task ids, every PR is a full URL).
+  The contract is static: it makes no network or fleet read and is deterministic.
+- `bin/fm-bearings-contract-lib.sh` owns that document, so the contract is generated from one place rather than a second copy that can drift; its header is the authoritative description.
+- The colocated `test_contract_describes_json_output_and_fails_on_undeclared_field` in `tests/fm-bearings-snapshot.test.sh` validates real `--json` output against `--contract` and fails when an undeclared field, undeclared surface, or out-of-set enum value appears, so the two cannot drift apart silently.
+
+Compatibility rule: adding an optional field or a new opt-in surface is a minor, backward-compatible change and does not bump the schema id.
+Renaming or removing a field or surface, or removing or renaming an enum value, is a breaking change and requires bumping the schema id (`fm-bearings.v2`).
+
+Consumer example: an external tool reads `.schema` first and refuses a major version it does not understand, then treats `omitted` as a disclosure to surface, never to hide.
+
+```sh
+snap=$(fm-bearings-snapshot.sh --json)
+case "$(printf '%s' "$snap" | jq -r '.schema')" in
+  fm-bearings.v1) : ;;                       # understood
+  *) echo "unsupported bearings schema; refusing to render" >&2; exit 1 ;;
+esac
+# Render the surfaces the contract declares, and show (never swallow) what was left out.
+printf '%s' "$snap" | jq -r '.omitted[] | "note: \(.surface) (reveal with: \(.reveal))"'
+```
+
