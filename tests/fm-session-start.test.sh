@@ -108,6 +108,18 @@ SH
   printf '%s\n' manual > "${fakebin%/*}/home-placeholder" 2>/dev/null || true
 }
 
+# make_fake_ps_denied <fakebin>: a ps that always fails, mimicking a hosted
+# Codex seatbelt sandbox that denies process-ancestry inspection.
+make_fake_ps_denied() {
+  local fakebin=$1
+  cat > "$fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' 'ps: operation not permitted' >&2
+exit 1
+SH
+  chmod +x "$fakebin/ps"
+}
+
 # make_fake_tasks_axi_compact <fakebin>: a tasks-axi boundary that answers the
 # four group filters the startup listing composes (in-flight, held, blocked
 # queued, and the dispatchable ready set) and REFUSES anything the recovery
@@ -2563,6 +2575,27 @@ EOF
   pass "session start rejects Pi loaded markers from previous sessions"
 }
 
+test_codex_ps_denied_lock_owner_survives_session_start() {
+  local rec root home fakebin out owner status
+  rec=$(new_world codex-lock-owner)
+  IFS='|' read -r root home fakebin <<EOF
+$rec
+EOF
+  make_fake_toolchain "$fakebin"
+  make_fake_ps_denied "$fakebin"
+
+  out=$(CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt run_session_start "$home" "$root" "$fakebin:$BASE_PATH")
+  assert_contains "$out" "lock acquired: harness codex:test-thread" "session start did not acquire through Codex fallback"
+
+  owner=$(cat "$home/state/.lock")
+  [ "$owner" = "codex:test-thread" ] || fail "session-start lock owner was '$owner', expected Codex thread token"
+
+  status=$(FM_HOME="$home" CODEX_THREAD_ID=test-thread CODEX_SANDBOX=seatbelt PATH="$fakebin:$BASE_PATH" "$ROOT/bin/fm-lock.sh" status)
+  assert_contains "$status" "lock: held by hosted Codex session codex:test-thread" "session-start lock owner was stale after the subprocess exited"
+
+  pass "fm-session-start uses a stable Codex thread lock owner when ps is denied"
+}
+
 test_context_digest_absent_empty_present
 test_lock_refusal_read_only_path
 test_lock_write_failure_read_only_path
@@ -2613,5 +2646,6 @@ test_read_only_pi_compact_refreshes_against_its_own_session_identity
 test_codex_unreachable_reset_sources_do_not_claim_instruction_refresh
 test_agents_baseline_requires_sha256_and_successful_completion
 test_reemit_keeps_repair_ownership_with_the_lock_holder
+test_codex_ps_denied_lock_owner_survives_session_start
 
 echo "# fm-session-start.test.sh: all assertions passed"
