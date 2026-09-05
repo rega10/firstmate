@@ -3379,6 +3379,70 @@ EOF
   pass "project-aware v1 ledgers remain visible without lifecycle inventory"
 }
 
+test_expired_parks_do_not_consume_lifecycle_inventory() {
+  local home mate fakebin summary json i
+  home=$(make_home expired-park-inventory-cap)
+  mate="$TMP_ROOT/expired-park-inventory-cap-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home inventory-mate "$mate"
+  append_secondmate_registry "$home" inventory-mate "$mate"
+  cat > "$mate/data/projects.md" <<'EOF'
+- active-app [no-mistakes] - Active app (added 2026-07-01)
+- expired-app [direct-PR parked:2026-07-31] - Expired app (added 2026-07-01)
+- future-app [direct-PR parked:2026-09-01] - Future app (added 2026-07-01)
+EOF
+  mkdir -p "$mate/projects/expired-app"
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+- [ ] a-expired-live - Expired live child (repo: expired-app) (kind: ship)
+
+## Queued
+EOF
+  i=1
+  while [ "$i" -le 20 ]; do
+    printf -- '- [ ] active-%02d - Active gate %02d (repo: active-app) (kind: ship)\n' "$i" "$i" \
+      >> "$mate/data/backlog.md"
+    i=$((i + 1))
+  done
+  i=1
+  while [ "$i" -le 199 ]; do
+    printf -- '- [ ] b-expired-%03d - Expired gate %03d (repo: expired-app) (kind: ship)\n' "$i" "$i" \
+      >> "$mate/data/backlog.md"
+    i=$((i + 1))
+  done
+  cat >> "$mate/data/backlog.md" <<'EOF'
+- [ ] z-future-park - Future parked gate (repo: future-app) (kind: ship)
+
+## Done
+EOF
+  fm_write_meta "$mate/state/a-expired-live.meta" \
+    "window=firstmate:fm-a-expired-live" "worktree=$mate/projects/expired-app" \
+    "project=expired-app" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" a-expired-live busy
+  printf 'working: expired park is active again\n' > "$mate/state/a-expired-live.status"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$mate" \
+    FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785607200 \
+    FM_SNAPSHOT_SECONDMATE_QUEUED=20 "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e '
+    [.lifecycle_inventory[].id] == ["z-future-park"]
+      and (.active_children | map(select(.id == "a-expired-live")) | length) == 1
+      and .counts.active_children == 1
+      and (.queued | length) == 20
+      and (.queued | any(.id == "z-future-park") | not)
+  ' >/dev/null || fail "expired parks polluted the lifecycle inventory or fresh active counts: $summary"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "z-future-park" and .owner == "inventory-mate"
+      and .reason == "project parked until 2026-09-01"))
+      and ([.in_flight[] | select(.id == "inventory-mate/a-expired-live")] | length) == 1
+  ' >/dev/null || fail "future park was hidden behind expired lifecycle rows: $json"
+  pass "expired parks do not consume lifecycle inventory capacity"
+}
+
 test_expired_secondmate_park_survives_summary_bounds_and_cache() {
   local home mate fakebin sshbin summary json i
   home=$(make_home expired-secondmate-park-cache)
@@ -3562,5 +3626,6 @@ test_project_lifecycle_surface_and_bearings_projection
 test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
+test_expired_parks_do_not_consume_lifecycle_inventory
 test_expired_secondmate_park_survives_summary_bounds_and_cache
 test_expired_project_park_resurfaces_with_one_wake
