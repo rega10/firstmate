@@ -3256,6 +3256,60 @@ EOF
   pass "secondmate project posture is honored from that home's structured state"
 }
 
+test_secondmate_lifecycle_precedes_owning_summary_bounds() {
+  local home mate fakebin summary json
+  home=$(make_home secondmate-lifecycle-bounds)
+  mate="$TMP_ROOT/secondmate-lifecycle-bounds-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home bounds-mate "$mate"
+  append_secondmate_registry "$home" bounds-mate "$mate"
+  cat > "$mate/data/projects.md" <<'EOF'
+- active-app [no-mistakes] - Active app (added 2026-07-01)
+- archived-app [local-only archived] - Archived app (added 2026-07-01)
+EOF
+  mkdir -p "$mate/projects/active-app" "$mate/projects/archived-app"
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+- [ ] a-archived-live - Archived child ordered first (repo: archived-app) (kind: ship)
+- [ ] z-active-live - Active child ordered second (repo: active-app) (kind: ship)
+
+## Queued
+- [ ] a-archived-queued - Archived queue ordered first (repo: archived-app) (kind: ship)
+- [ ] z-active-queued - Active queue ordered second (repo: active-app) (kind: ship)
+
+## Done
+EOF
+  fm_write_meta "$mate/state/a-archived-live.meta" \
+    "window=firstmate:fm-a-archived-live" "worktree=$mate/projects/archived-app" \
+    "project=$mate/projects/archived-app" "harness=claude" "kind=ship" "mode=local-only"
+  record_claude_state "$mate/state" a-archived-live busy
+  printf 'working: archived first\n' > "$mate/state/a-archived-live.status"
+  fm_write_meta "$mate/state/z-active-live.meta" \
+    "window=firstmate:fm-z-active-live" "worktree=$mate/projects/active-app" \
+    "project=$mate/projects/active-app" "harness=claude" "kind=ship" "mode=no-mistakes"
+  record_claude_state "$mate/state" z-active-live busy
+  printf 'working: active second\n' > "$mate/state/z-active-live.status"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" FM_SNAPSHOT_SECONDMATE_CHILDREN=1 \
+    FM_SNAPSHOT_SECONDMATE_QUEUED=1 refresh_local_secondmate_ledgers "$home"
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e '
+    [.active_children[].id] == ["z-active-live"]
+      and [.queued[].id] == ["z-active-queued"]
+      and [.endpoints[].id] == ["z-active-live"]
+      and (.omitted | any(.surface == "project_lifecycle"
+        and (.archived_projects | index("archived-app") != null)))
+  ' >/dev/null || fail "archived rows consumed owning-summary bounds: $summary"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.in_flight | any(.id == "bounds-mate/z-active-live"))
+      and (.gates | any(.id == "z-active-queued" and .owner == "bounds-mate"))
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+  ' >/dev/null || fail "bounded active secondmate work disappeared from Bearings: $json"
+  pass "secondmate lifecycle filtering precedes every owning-summary bound"
+}
+
 test_expired_project_park_resurfaces_with_one_wake() {
   local home fakebin json check first second
   home=$(make_home expired-park)
@@ -3352,4 +3406,5 @@ test_per_repository_pr_cap_is_disclosed
 test_projection_and_toon_fail_closed
 test_project_lifecycle_surface_and_bearings_projection
 test_secondmate_project_posture_is_honored_from_structured_state
+test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_expired_project_park_resurfaces_with_one_wake
