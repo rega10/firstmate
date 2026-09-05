@@ -999,11 +999,9 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     def lifecycle($repo): fm_project_lifecycle(normalized_project($repo); $project_list; $today);
     def lifecycle_item($record; $task):
       ($record.repo // $task.project // null) as $repo
-      | lifecycle($repo) as $life
       | {id:(($record.id // $task.id) | trunc(120)),
          title:(($record.title // $task.backlog.title // $task.id) | trunc(120)),
          repo:(($repo // null) | if . == null then null else trunc(120) end),
-         project_posture:$life.posture,parked_until:$life.parked_until,
          backlog_state:($record.state // null),current_role:($record.current_role // null),
          blocked_by:($record.blocked_by // null),blocked_by_ids:($record.blocked_by_ids // []),
          unresolved_blocker_ids:($record.unresolved_blocker_ids // []),
@@ -1027,7 +1025,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
           | (first($tasks[]? | select(.id == $record.id)) // null) as $task
           | lifecycle_item($record; $task) ]
         + [ $tasks[]? as $task
-            | select(.id as $id | any($backlog.records[]?; .id == $id) | not)
+            | select([$backlog.records[]?.id] | index($task.id) | not)
             | lifecycle($task.project) as $life
             | select($life.parked or $life.archived)
             | lifecycle_item(null; $task) ])
@@ -1456,6 +1454,43 @@ prepare_remote_summary_collection() {  # <sampled-row-json-lines>
   SNAPSHOT_COLLECT_DIR=$(umask 077; mktemp -d "${TMPDIR:-/tmp}/fm-fleet-ledgers.XXXXXX") || return 1
   SNAPSHOT_SUMMARY_FILTER="$SNAPSHOT_COLLECT_DIR/summary-filter.jq"
   cat > "$SNAPSHOT_SUMMARY_FILTER" <<'JQ'
+def nonempty_string: type == "string" and length > 0;
+def nullable_string: . == null or type == "string";
+def string_ids:
+  type == "array" and all(.[]; nonempty_string) and length == (unique | length);
+def nullable_date:
+  . == null or
+  (. as $date
+   | type == "string"
+     and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
+     and (try (($date + "T00:00:00Z") | fromdateiso8601 | strftime("%Y-%m-%d") == $date) catch false));
+def lifecycle_row:
+  . as $row
+  | (["id", "title", "repo", "backlog_state", "current_role", "blocked_by",
+      "blocked_by_ids", "unresolved_blocker_ids", "blocked_reason", "hold_reason",
+      "hold_kind", "hold_until", "hold_bucket", "hold_age_days", "captain_actionable",
+      "kind", "child_state", "child_source", "child_doing"]
+     | map(. as $key | $row | has($key)) | all)
+  and (.id | nonempty_string)
+  and (.title | nonempty_string)
+  and (.repo | nonempty_string)
+  and (.backlog_state == null or (.backlog_state | IN("in_flight", "queued", "done")))
+  and (.current_role == null or (.current_role | IN("worker", "program", "held", "queued", "done")))
+  and (.blocked_by | nullable_string)
+  and (.blocked_by_ids | string_ids)
+  and (.unresolved_blocker_ids | string_ids)
+  and (.blocked_reason | nullable_string)
+  and (.hold_reason | nullable_string)
+  and (.hold_kind == null or (.hold_kind | IN("captain", "external")))
+  and (.hold_until | nullable_date)
+  and (.hold_bucket == null or (.hold_bucket | IN("blocked", "dated", "aged", "live")))
+  and (.hold_age_days == null or
+       ((.hold_age_days | type) == "number" and .hold_age_days >= 0 and (.hold_age_days | floor) == .hold_age_days))
+  and (.captain_actionable | type) == "boolean"
+  and (.kind | nullable_string)
+  and (.child_state == null or (.child_state | IN("working", "paused", "parked", "blocked", "done", "failed", "unknown")))
+  and (.child_source | nullable_string)
+  and (.child_doing | nullable_string);
 length == 1 and (.[0] |
   .schema == "fm-secondmate-home-summary.v1"
   and .hold_classifier_schema == "fm-captain-hold-buckets.v1"
@@ -1477,9 +1512,8 @@ length == 1 and (.[0] |
        else true end)
   and (if has("lifecycle_inventory") then
          (.lifecycle_inventory | type) == "array"
-         and all(.lifecycle_inventory[]?;
-           has("project_posture") and has("parked_until") and has("backlog_state")
-           and has("current_role") and has("child_state") and has("child_source") and has("child_doing"))
+         and all(.lifecycle_inventory[]?; lifecycle_row)
+         and (([.lifecycle_inventory[].id] | unique | length) == (.lifecycle_inventory | length))
        else true end)
 )
 JQ
@@ -1993,10 +2027,8 @@ secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
          freshness:{status:$summary_freshness,observed_at:$observed,age_seconds:$summary_age},
          active_children:$summary.active_children,
          decisions_open:$summary.decisions_open,holds:$summary.holds,queued:$summary.queued,
-         lifecycle_inventory:($summary.lifecycle_inventory // []),
          landed:$summary.landed,endpoints:$summary.endpoints,counts:$summary.counts,omitted:$summary.omitted,
          projects:($summary.projects // []),projects_published:($summary | has("projects")),
-         lifecycle_inventory_published:($summary | has("lifecycle_inventory")),
          parent_event:{raw:$event_raw,note:$event_note,age_seconds:$event_age,open_activities:$activities,open_decisions:$decisions,activity_scan:$activity_scan,reconciliation:$reconciliation},
          terminal_evidence:$terminal,contradiction:$contradiction}' >> "$records_file" || return 1
     else

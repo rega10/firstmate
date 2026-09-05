@@ -1433,9 +1433,11 @@ test_shared_origin_prs_respect_project_lifecycle() {
   cat > "$home/data/projects.md" <<'EOF'
 - firstmate [no-mistakes] - Active project (added 2026-07-01)
 - parked-app [no-mistakes parked:2026-08-01] - Parked project (added 2026-07-01)
+- archived-other [local-only archived] - Unrelated archived project (added 2026-07-01)
 EOF
   sed '/^## Queued$/i\
 - [ ] parked-task - Parked shared-origin work (repo: parked-app) (kind: ship)\
+- [ ] archived-other-task - Archived work in another repository (repo: archived-other) (kind: ship)\
 ' "$home/data/backlog.md" > "$home/data/backlog.next"
   mv "$home/data/backlog.next" "$home/data/backlog.md"
   fm_write_meta "$home/state/parked-task.meta" \
@@ -1448,12 +1450,23 @@ EOF
     "pr=https://github.com/kunchenguid/firstmate/pull/10"
   record_claude_state "$home/state" parked-task busy
   printf 'working: parked project task\n' > "$home/state/parked-task.status"
+  fm_write_meta "$home/state/archived-other-task.meta" \
+    "window=firstmate:fm-archived-other-task" \
+    "worktree=$home/projects/ship-wt" \
+    "project=archived-other" \
+    "harness=claude" \
+    "kind=ship" \
+    "mode=local-only" \
+    "pr=https://github.com/acme/other/pull/99"
+  record_claude_state "$home/state" archived-other-task busy
+  printf 'working: unrelated archived task\n' > "$home/state/archived-other-task.status"
   fakebin=$(make_fakebin "$home")
   json=$(FAKE_GH_SHARED_ORIGIN=1 run "$home" "$fakebin" --include-prs --json)
   printf '%s' "$json" | jq -e '
     [.candidate_prs[].task] == ["ship-task"]
       and (.gates | any(.id == "parked-task" and .reason == "project parked until 2026-08-01"))
   ' >/dev/null || fail "shared-origin PR discovery exposed parked work: $json"
+  : > "$home/net.log"
   capped=$(FAKE_GH_SUPPRESSED_CAP=1 FM_BEARINGS_PR_LIMIT=2 \
     run "$home" "$fakebin" --include-prs --json)
   printf '%s' "$capped" | jq -e '
@@ -1461,6 +1474,8 @@ EOF
       and (.prs | contains("2 shown, at least 3 open; capped in 1 repo(s)"))
       and (.omitted | any(.surface == "candidate_prs showing 2 of at least 3; capped in 1 repo(s)"))
   ' >/dev/null || fail "suppressed PRs consumed the visible cap lookahead: $capped"
+  grep -q -- '--repo kunchenguid/firstmate .*--limit 4 ' "$home/net.log" \
+    || fail "unrelated lifecycle suppression inflated the repository fetch bound: $(<"$home/net.log")"
   pass "shared-origin PR discovery keeps parked work in Charted Next"
 }
 
@@ -3425,7 +3440,7 @@ test_expired_unknown_park_revalidates_cached_summary() {
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"expired-unknown",title:"Unknown parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
-      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
       blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
       hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
       child_source:"unavailable",child_doing:"current state unavailable"}],
@@ -3433,7 +3448,7 @@ test_expired_unknown_park_revalidates_cached_summary() {
     active_children:[],decisions_open:[],holds:[],
     queued:[{id:"expired-unknown",title:"Unknown parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
-      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
       blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
       hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
       child_source:"unavailable",child_doing:"current state unavailable"}],
@@ -3463,7 +3478,7 @@ test_expired_unknown_park_revalidates_cached_summary() {
   [ -n "$cache_file" ] || fail "future parked summary did not populate its cache"
   cp "$mate/state/home-summary.json" "$mate/state/home-summary.valid"
   tmp="$mate/state/home-summary.json.tmp"
-  jq '.lifecycle_inventory=[{id:"expired-unknown",repo:"parked-app"}]
+  jq '.lifecycle_inventory[0].id=null
     | .queued=[] | .counts.lifecycle_inventory=1 | .counts.queued=0' \
     "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
   cp "$mate/state/home-summary.json" "$cache_file"
@@ -3537,7 +3552,7 @@ test_expired_unknown_park_preserves_strict_primary_invalidity() {
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"newly-active-unknown",title:"Unknown parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
-      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
       blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
       hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
       child_source:"unavailable",child_doing:"current state unavailable"}],
@@ -3546,7 +3561,7 @@ test_expired_unknown_park_preserves_strict_primary_invalidity() {
     active_children:[],decisions_open:[],holds:[],
     queued:[{id:"newly-active-unknown",title:"Unknown parked child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
-      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
       blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
       hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
       child_source:"unavailable",child_doing:"current state unavailable"}],
@@ -3635,7 +3650,7 @@ test_expiry_preserves_fatal_cached_invalidity() {
     bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
     lifecycle_inventory:[{id:"fatal-expired-unknown",title:"Unknown task-only child",repo:"parked-app",
       project_posture:"parked",parked_until:"2026-08-01",backlog_state:null,
-      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      current_role:null,blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
       blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
       hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
       child_source:"unavailable",child_doing:"current state unavailable"}],
@@ -4088,10 +4103,11 @@ EOF
       and (.queued | any(.id == "z-parked-live") | not)
       and (.queued | any(.id == "z-parked-queued") | not)
       and (.lifecycle_inventory | any(.id == "z-parked-live"
-        and .repo == "parked-app" and .project_posture == "parked"
-        and .parked_until == "2026-08-01" and .child_state == "working"))
+        and .repo == "parked-app" and .child_state == "working"
+        and (has("project_posture") | not) and (has("parked_until") | not)))
       and (.lifecycle_inventory | any(.id == "z-parked-queued"
-        and .backlog_state == "queued" and .parked_until == "2026-08-01"))
+        and .backlog_state == "queued"
+        and (has("project_posture") | not) and (has("parked_until") | not)))
   ' >/dev/null || fail "parked task facts were lost behind the owning-summary bound: $summary"
   sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
   mkdir -p "$home/ledger-active"

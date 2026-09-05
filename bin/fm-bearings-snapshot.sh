@@ -303,18 +303,17 @@ if [ "$INCLUDE_PRS" = 1 ]; then
               (.repo == $repo or .name == $repo)
               and (.posture == "archived"
                 or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))))
-          | {id,url:(.pr.url // null)}),
+          | {id,url:(.pr.url // null),project:$repo}),
          ($root.backlog.records[]
           | .repo as $repo
           | select(any($projects[];
               (.repo == $repo or .name == $repo)
               and (.posture == "archived"
                 or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))))
-          | {id,url:(.pr_url // null)})]
+          | {id,url:(.pr_url // null),project:$repo})]
       | group_by(.id)
-      | map({id:.[0].id,url:([.[].url | select(. != null)][0] // null)})') \
+      | map({id:.[0].id,url:([.[].url | select(. != null)][0] // null),project:.[0].project})') \
       || { echo "fm-bearings-snapshot: could not classify PR lifecycle" >&2; exit 1; }
-    suppressed_pr_count=$(printf '%s' "$SUPPRESSED_PR_REFS" | jq 'length')
     # Candidate repos: recorded pr= URLs plus live worktree origins. Deduped.
     repos=""
     while IFS= read -r u; do
@@ -353,10 +352,16 @@ EOF
 
     for repo in $repos; do PR_REPOS_TOTAL=$((PR_REPOS_TOTAL + 1)); done
     nrepos=0; npr=0; nwarn=0; ncapped=0; rows='[]'
-    pr_fetch_limit=$((FM_BEARINGS_PR_LIMIT + suppressed_pr_count + 1))
     for repo in $repos; do
       if [ "$ALL_PR_REPOS" != 1 ] && [ "$nrepos" -ge "$FM_BEARINGS_PR_REPOS" ]; then break; fi
       nrepos=$((nrepos + 1))
+      repo_suppressed_count=$(printf '%s' "$SUPPRESSED_PR_REFS" | jq --arg repo "$repo" '
+        [$repo | split("/") | last] as $repo_name
+        | [.[] | select(
+            (.url != null and (.url | startswith("https://github.com/" + $repo + "/")))
+            or (.url == null and .project == $repo_name))]
+        | length') || { nwarn=$((nwarn + 1)); continue; }
+      pr_fetch_limit=$((FM_BEARINGS_PR_LIMIT + repo_suppressed_count + 1))
       out=$(gh_bounded pr list --repo "$repo" --state open --limit "$pr_fetch_limit" \
         --json number,title,url,headRefName,reviewDecision,mergeable,statusCheckRollup 2>/dev/null) \
         || { nwarn=$((nwarn + 1)); continue; }
