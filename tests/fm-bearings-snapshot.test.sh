@@ -3274,7 +3274,7 @@ EOF
   printf '%s' "$json" | jq -e '
     (.in_flight | any(.id == "posture-mate/mate-parked-live"))
       and (.gates | any(.id == "mate-parked-live") | not)
-      and (.secondmates | any(.id == "posture-mate" and .state == "no_active_work"
+      and (.secondmates | any(.id == "posture-mate" and .state == "captain_decision"
         and (.reason | contains("unrelated-orphan"))))
   ' >/dev/null || fail "a stale secondmate summary kept an expired live park hidden: $json"
   first=$(FM_PROJECT_POSTURE_TODAY=2026-08-01 "$check")
@@ -3485,6 +3485,49 @@ test_expired_unknown_park_revalidates_cached_summary() {
         and (.ids | index("expired-unknown") != null)))
   ' >/dev/null || fail "expired unknown child remained trusted no-active work: $json"
   pass "expired unknown parks revalidate cached summaries"
+}
+
+test_expired_held_park_stays_valid() {
+  local home mate fakebin canonical
+  home=$(make_home expired-held-park)
+  mate="$TMP_ROOT/expired-held-park-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home held-mate "$mate"
+  append_secondmate_registry "$home" held-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    lifecycle_inventory:[{id:"expired-held",title:"Held parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"held",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:"choose route",hold_kind:"captain",hold_until:null,
+      hold_bucket:"live",hold_age_days:0,captain_actionable:true,kind:"ship",
+      child_state:null,child_source:null,child_doing:null}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[{id:"expired-held",title:"Held parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"held",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:"choose route",hold_kind:"captain",hold_until:null,
+      hold_bucket:"live",hold_age_days:0,captain_actionable:true,kind:"ship",
+      child_state:null,child_source:null,child_doing:null}],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:1,queued:1,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "held-mate")
+    | .provenance.summary_valid == true
+      and .provenance.trust == "complete"
+      and .current.state == "captain_decision"
+      and .invalidity.kind == null
+      and (.decisions_open | any(.id == "expired-held"))
+  ' >/dev/null || fail "expired held work was falsely treated as orphaned: $canonical"
+  pass "expired held parks stay valid without child metadata"
 }
 
 test_cached_legacy_ledger_discloses_unidentified_posture() {
@@ -3857,6 +3900,7 @@ test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
 test_project_aware_v1_parked_work_sinks_to_gates
 test_expired_unknown_park_revalidates_cached_summary
+test_expired_held_park_stays_valid
 test_cached_legacy_ledger_discloses_unidentified_posture
 test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate

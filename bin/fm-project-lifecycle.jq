@@ -123,7 +123,7 @@ def fm_secondmate_summary_at($today):
       | fm_project_lifecycle(.repo; $projects; $today) as $life
       | select($life.posture == "parked" and ($life.parked | not))]) as $expired
   | ([ $expired[]
-       | select(.backlog_state == "in_flight" and .current_role != "program")
+       | select(.backlog_state == "in_flight" and .current_role == "worker")
        | select(.child_state == null or .child_state == "")
        | .id] | unique) as $expired_orphans
   | ([ $expired[]
@@ -184,10 +184,17 @@ def fm_secondmate_summary_at($today):
       .valid = false
       | .invalidity = ($expiry_invalidity | del(.reason))
       | .reason = $expiry_invalidity.reason
-      | .state = "unknown"
-    elif .valid == true then
+    else . end
+  | (.invalidity.kind // null) as $invalid_kind
+  | if .valid != true
+      and (.state == "unknown"
+        or $invalid_kind == "child_current_unavailable"
+        or (["orphan_in_flight","unowned_current","terminal_in_flight"]
+          | index($invalid_kind) | not)) then
+      .state = "unknown"
+    else
       .state = (if any(.decisions_open[]; .verb == "needs-decision" or .verb == "captain-hold") then "captain_decision"
                 elif (.active_children | length) > 0 then "active_child_work"
                 elif (.holds | length) > 0 then "externally_held"
                 else "no_active_work" end)
-    else . end;
+    end;
