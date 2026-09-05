@@ -3379,6 +3379,72 @@ EOF
   pass "project-aware v1 ledgers remain visible without lifecycle inventory"
 }
 
+test_cached_legacy_ledger_filters_archived_landed_work() {
+  local home mate sshbin json
+  home=$(make_home cached-legacy-archived-landed)
+  mate="$TMP_ROOT/cached-legacy-archived-landed-mate"
+  mkdir -p "$mate/state"
+  printf -- '- legacy-mate - fixture domain (host: legacy-host; root: /remote/root; home: %s; scope: fixture; projects: archived-app; added 2026-09-01)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/legacy-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=legacy-host" "remote_root=/remote/root" "home=$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-09-01T22:00:00Z",generated_epoch:1000,home:$home,
+    projects:[{name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],queued:[],
+    landed:[{id:"legacy-archived-done",title:"Archived legacy completion",repo:"archived-app",
+      pr_url:null,report_path:null,local_note:"done",completion:{date:"2026-08-31"}}],
+    endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,queued:0,landed:1,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  json=$(run_remote_ledger_bearings "$home" "$sshbin" 1100)
+  printf '%s' "$json" | jq -e '
+    (.landed | any(.id == "legacy-archived-done") | not)
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+  ' >/dev/null || fail "live legacy ledger exposed archived landed work: $json"
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(run_remote_ledger_bearings "$home" "$sshbin" 1100)
+  printf '%s' "$json" | jq -e '
+    (.landed | any(.id == "legacy-archived-done") | not)
+      and (.secondmates | any(.id == "legacy-mate" and .provenance == "structured-home-cache"))
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+  ' >/dev/null || fail "cached legacy ledger exposed archived landed work: $json"
+  pass "legacy ledger lifecycle normalization filters archived landed work"
+}
+
+test_archived_main_orphan_does_not_emit_inventory_gate() {
+  local home fakebin json
+  home=$(make_home archived-main-orphan)
+  : > "$home/data/secondmates.md"
+  cat > "$home/data/projects.md" <<'EOF'
+- archived-app [local-only archived] - Archived app (added 2026-07-01)
+EOF
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+- [ ] archived-orphan - Archived work without child metadata (repo: archived-app) (kind: ship)
+
+## Queued
+
+## Done
+EOF
+  fakebin=$(make_fakebin "$home")
+  json=$(run "$home" "$fakebin" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "(main-inventory)" or .id == "archived-orphan") | not)
+      and (.in_flight | any(.id == "archived-orphan") | not)
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+      and (.omitted | any(.surface | startswith("main in-flight backlog item(s) have no child metadata")) | not)
+  ' >/dev/null || fail "archived orphan emitted a main inventory repair gate: $json"
+  pass "archived main orphans do not invalidate visible inventory"
+}
+
 test_expired_parks_do_not_consume_lifecycle_inventory() {
   local home mate fakebin summary json i
   home=$(make_home expired-park-inventory-cap)
@@ -3626,6 +3692,8 @@ test_project_lifecycle_surface_and_bearings_projection
 test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
+test_cached_legacy_ledger_filters_archived_landed_work
+test_archived_main_orphan_does_not_emit_inventory_gate
 test_expired_parks_do_not_consume_lifecycle_inventory
 test_expired_secondmate_park_survives_summary_bounds_and_cache
 test_expired_project_park_resurfaces_with_one_wake

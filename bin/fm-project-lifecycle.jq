@@ -26,6 +26,25 @@ def fm_merge_by_id($base; $extra):
 
 def fm_secondmate_summary_at($today):
   (.projects // []) as $projects
+  | ([((.active_children // []), (.holds // []), (.decisions_open // []),
+       (.queued // []), (.landed // []), (.endpoints // []), (.lifecycle_inventory // []))[]?
+      | fm_project_lifecycle(.repo; $projects; $today)
+      | select(.archived)
+      | .name]
+     | map(select(. != null)) | unique) as $archived_projects
+  | (first((.omitted // [])[]? | select(.surface == "project_lifecycle")) // null) as $lifecycle_omission
+  | .active_children |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
+  | .holds |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
+  | .decisions_open |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
+  | .queued |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
+  | .landed |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
+  | .endpoints |= map(select(fm_project_lifecycle(.repo; $projects; $today).archived | not))
+  | .omitted = ([.omitted[]? | select(.surface != "project_lifecycle")]
+      + [if ($archived_projects | length) > 0 or $lifecycle_omission != null then
+           {surface:"project_lifecycle",
+            archived_projects:((($lifecycle_omission.archived_projects // []) + $archived_projects) | unique),
+            parked_projects:($lifecycle_omission.parked_projects // [])}
+         else empty end])
   | (.lifecycle_inventory // .queued // []) as $inventory
   | ([ $inventory[]?
       | fm_project_lifecycle(.repo; $projects; $today) as $life

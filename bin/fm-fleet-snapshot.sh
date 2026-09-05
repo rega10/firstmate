@@ -933,15 +933,23 @@ task_json_lines() {
 # used by secondmate_home_summary_json, without inventing live task rows.
 # Meta inventory remains the sole source of live workers; this object only
 # discloses backlog↔task inconsistency for renderers (Bearings omitted/gates).
-main_inventory_json() {  # <backlog-json-file> <tasks-json-file>
-  jq -n \
+main_inventory_json() {  # <backlog-json-file> <tasks-json-file> <projects-json-file>
+  jq -L "$SCRIPT_DIR" -n \
+    --arg today "${SNAPSHOT_NOW%%T*}" \
     --slurpfile backlog "$1" \
-    --slurpfile tasks "$2" '
+    --slurpfile tasks "$2" \
+    --slurpfile projects "$3" '
+    include "fm-project-lifecycle";
     ($backlog[0]) as $backlog
     | ($tasks[0]) as $tasks
-    | ([ $backlog.records[]?
+    | ($projects[0] // []) as $projects
+    | def task_repo($id): first($tasks[]? | select(.id == $id) | (.backlog.repo // .project)) // null;
+    ([ $backlog.records[]?
+         | . as $record
+         | select(fm_project_lifecycle((.repo // task_repo($record.id)); $projects; $today).archived | not) ]) as $visible_records
+    | ([ $visible_records[]?
        | select((.state == "in_flight" or .state == "queued") and (.structured | not)) ]) as $unstructured_current
-    | ([ $backlog.records[]?
+    | ([ $visible_records[]?
          | select(.state == "in_flight" and .structured and .requires_child_metadata) ]) as $owned_in_flight
     | ([ $owned_in_flight[]
          | select(.id as $id | [$tasks[].id] | index($id) | not)
@@ -2091,7 +2099,7 @@ fi
 
 scout_report_lines > "$SCOUT_REPORTS_JSON_FILE" \
   || { echo "fm-fleet-snapshot: scout report snapshot failed" >&2; exit 1; }
-main_inventory_json "$BACKLOG_JSON_FILE" "$TASKS_JSON_FILE" > "$MAIN_INVENTORY_JSON_FILE" \
+main_inventory_json "$BACKLOG_JSON_FILE" "$TASKS_JSON_FILE" "$PROJECT_REGISTRY_JSON_FILE" > "$MAIN_INVENTORY_JSON_FILE" \
   || { echo "fm-fleet-snapshot: main inventory summary failed" >&2; exit 1; }
 secondmate_current_json "$TASKS_JSON_FILE" "$SECONDMATE_CURRENT_JSON_FILE" \
   || { echo "fm-fleet-snapshot: registered secondmate aggregation failed" >&2; exit 1; }
