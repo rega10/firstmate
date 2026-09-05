@@ -505,6 +505,33 @@ tests/fm-claude-stop-autoarm.test.sh
 tests/fm-turnend-guard.test.sh
 ```
 
+## Claude launch session-identity sanitize
+
+`bin/fm-spawn.sh` is the single owner: every firstmate-launched ordinary Claude worker and Claude secondmate runs under an identity-sanitize prefix that, alongside the cross-harness marker unset, drops any inherited parent Claude session identity:
+
+```sh
+env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI \
+  -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_JOB_DIR \
+  CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_SEND_FEEDBACK=0 \
+  claude --dangerously-skip-permissions ...
+```
+
+Claude Code sets `CLAUDE_CODE_CHILD_SESSION` and its pack for its own intentional child sessions.
+When a primary or ancestor firstmate still carries them, an unsanitized launch inherits the marker and Claude reports "Transcript saving is off - inherited CLAUDE_CODE_CHILD_SESSION marker", writing no resumable transcript.
+Clearing the pack makes an independent, resumable top-level session; `CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1` also re-enables saving but leaves the child-session semantics in place, so it is not the chosen contract.
+The unset is Claude-only, since those variables are meaningless to other harnesses.
+
+Deterministic regression coverage:
+
+```sh
+bin/fm-test-run.sh tests/fm-spawn-dispatch-profile.test.sh tests/fm-claude-session-env.test.sh
+```
+
+`tests/fm-spawn-dispatch-profile.test.sh` pins the exact launched command for an ordinary Claude worker (including the `-u CLAUDE_CODE_*` unsets and the `CLAUDE_CONFIG_DIR` forwarding case), so removing the sanitize from the spawn fails the suite.
+`tests/fm-claude-session-env.test.sh` executes the emitted prefix against a polluted parent environment and a fake `claude` that records its effective environment, proving the four identity variables are unset while unrelated environment (including `CLAUDECODE`) is preserved.
+Every spawn-capable backend (tmux, herdr, zellij, orca, cmux) types the shared `launch_template` command into the worker shell, so the sanitize rides each backend without per-backend copies.
+No transcript contents or credentials are recorded here.
+
 ## Wedge-alarm channels
 
 The two real notification channels were bounded manually on 2026-07-10 on macOS 26.5.2 with Herdr 0.7.3.

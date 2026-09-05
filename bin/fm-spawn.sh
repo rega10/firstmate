@@ -3164,7 +3164,21 @@ case "$HARNESS" in
 esac
 LAUNCH=${LAUNCH//__WORKTREE__/$sq_worktree}
 case "$HARNESS" in
-  claude|codex|opencode|pi|pi-signed|grok|kimi|gemini|muse)
+  claude)
+    # In addition to the cross-harness identity sanitize below, drop any inherited
+    # parent Claude session identity (CLAUDE_CODE_CHILD_SESSION and its pack). Claude
+    # Code sets these for its own intentional child sessions; when a primary (or
+    # ancestor) firstmate still carries them, an unsanitized launch inherits the
+    # marker and shows "Transcript saving is off - inherited CLAUDE_CODE_CHILD_SESSION
+    # marker", writing no resumable transcript for the worker or secondmate. Clearing
+    # the pack makes an independent, resumable top-level Claude session.
+    # CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1 also re-enables saving but leaves the
+    # child-session semantics in place, so it is not the chosen contract. These vars
+    # are meaningful only to Claude, so the unset is scoped to the claude launch and
+    # never touches other harnesses or the captain's shell.
+    LAUNCH="env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_JOB_DIR $LAUNCH"
+    ;;
+  codex|opencode|pi|pi-signed|grok|kimi|gemini|muse)
     LAUNCH="env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI $LAUNCH"
     ;;
 esac

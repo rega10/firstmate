@@ -44,6 +44,12 @@ Styled capture stays internal to the boolean detector; `fm-peek` and model-facin
 The spawn disables Claude's `/bug` and `/feedback` model-drafted feedback flow for every Claude worker and secondmate, preventing a fleet-launched agent from queuing or submitting a bug report on the captain's behalf.
 The controls are scoped to the launched process and never modify the captain's global Claude settings; `launch_template()` in `../../../../../bin/fm-spawn.sh` owns their exact mechanics and defense-in-depth rationale.
 
+## Session identity
+
+The Claude launch also drops any inherited parent Claude session identity (`CLAUDE_CODE_CHILD_SESSION`, `CLAUDE_CODE_SESSION_ID`, `CLAUDE_PID`, `CLAUDE_JOB_DIR`) so each firstmate-launched worker or secondmate gets an independent, resumable top-level session.
+When a primary or ancestor still carries those markers, an unsanitized launch inherits them and Claude reports "Transcript saving is off - inherited CLAUDE_CODE_CHILD_SESSION marker", writing no resumable transcript.
+The unset is per-launch and Claude-only; `../../../bin/fm-spawn.sh` owns the exact environment mechanics, with active evidence in `../../../docs/verification/supervision.md`.
+
 ## Primary integration
 
 Primary behavior was verified 2026-07-04 on 2.1.201, preserved 2026-07-08 on 2.1.204, and Stop auto-arm revalidated 2026-07-24 on 2.1.219.
