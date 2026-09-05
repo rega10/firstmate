@@ -241,8 +241,9 @@ Its invalidity object names the normalized failure kind and affected ids.
 Actionable tasks-axi captain holds appear as decisions_open and stay visible in
 queued with hold_reason, hold_kind, hold_until,
 hold_bucket, hold_age_days, and plural blocker fields for downstream
-projections. Queued rows also retain project_posture, parked_until, backlog_state,
-current_role, and bounded child-state facts so dated posture is evaluated when read.
+projections. Each summary also publishes a separately bounded lifecycle_inventory
+of parked and archived task facts so dated posture is evaluated when read without
+depending on ordinary projection bounds.
 A captain hold is actionable only when every blocker is Done, any
 hold-until date has arrived, and an undated hold remains below the aging threshold.
 Cross-home collection uses FM_SNAPSHOT_SECONDMATES (default 20, 0 lifts the
@@ -972,6 +973,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     --argjson queued_n "$FM_SNAPSHOT_SECONDMATE_QUEUED" \
     --argjson decisions_n "$FM_SNAPSHOT_SECONDMATE_DECISIONS" \
     --argjson landed_n "$FM_SNAPSHOT_SECONDMATE_LANDED_PER_HOME" \
+    --argjson lifecycle_n 200 \
     --slurpfile backlog "$1" \
     --slurpfile tasks "$2" \
     --slurpfile projects "$3" '
@@ -987,6 +989,22 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
       tostring | gsub("\\s+"; " ")
       | if length > $n then .[:$n] + "…" else . end;
     def lifecycle($repo): fm_project_lifecycle(normalized_project($repo); $project_list; $today);
+    def lifecycle_item($record; $task):
+      ($record.repo // $task.project // null) as $repo
+      | lifecycle($repo) as $life
+      | {id:(($record.id // $task.id) | trunc(120)),
+         title:(($record.title // $task.backlog.title // $task.id) | trunc(120)),
+         repo:(($repo // null) | if . == null then null else trunc(120) end),
+         project_posture:$life.posture,parked_until:$life.parked_until,
+         backlog_state:($record.state // null),current_role:($record.current_role // null),
+         blocked_by:($record.blocked_by // null),blocked_by_ids:($record.blocked_by_ids // []),
+         unresolved_blocker_ids:($record.unresolved_blocker_ids // []),
+         blocked_reason:($record.blocked_reason // null),hold_reason:($record.hold_reason // null),
+         hold_kind:($record.hold_kind // null),hold_until:($record.hold_until // null),
+         hold_bucket:($record.hold_bucket // null),hold_age_days:($record.hold_age_days // null),
+         captain_actionable:($record.captain_actionable // false),kind:($record.kind // $task.kind // null),
+         child_state:($task.current_state.state // null),child_source:($task.current_state.source // null),
+         child_doing:($task.current_state.detail // null)};
     ($backlog[0]
      | .records |= map(. as $record
          | .repo = normalized_project(.repo // (first($raw_tasks[]? | select(.id == $record.id) | .project) // null)))) as $backlog
@@ -995,6 +1013,17 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
            // normalized_project($task.project)) as $project
         | .project = $project
         | if (.backlog | type) == "object" then .backlog.repo = $project else . end)) as $tasks
+    | (([ $backlog.records[]? as $record
+          | lifecycle($record.repo) as $life
+          | select($life.posture == "parked" or $life.archived)
+          | (first($tasks[]? | select(.id == $record.id)) // null) as $task
+          | lifecycle_item($record; $task) ]
+        + [ $tasks[]? as $task
+            | select(.id as $id | any($backlog.records[]?; .id == $id) | not)
+            | lifecycle($task.project) as $life
+            | select($life.posture == "parked" or $life.archived)
+            | lifecycle_item(null; $task) ])
+       | sort_by(.id)) as $lifecycle_inventory_all
     | ([ $tasks[] | select(lifecycle(.project).archived | not) ]) as $visible_tasks
     | ([ $backlog.records[]? | select(lifecycle(.repo).archived | not) ]) as $visible_records
     | ([ $visible_records[]?
@@ -1138,6 +1167,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         active_children:$active_all[:$child_n],
         decisions_open:$decisions_all[:$decisions_n],
         holds:$holds_all[:$queued_n],
+        lifecycle_inventory:$lifecycle_inventory_all[:$lifecycle_n],
         queued:([$queued_all[] as $row
           | lifecycle($row.repo) as $life
           | (first($tasks[]? | select(.id == $row.id)) // null) as $task
@@ -1175,6 +1205,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
           active_children:($active_all | length),
           decisions_open:($decisions_all | length),
           holds:($holds_all | length),
+          lifecycle_inventory:($lifecycle_inventory_all | length),
           queued:($queued_all | length),
           landed:($landed_all | length),
           endpoints:($visible_tasks | length)
@@ -1185,6 +1216,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
            else empty end),
           (if ($active_all | length) > $child_n then {surface:"active_children",count:(($active_all | length) - $child_n)} else empty end),
           (if ($decisions_all | length) > $decisions_n then {surface:"decisions_open",count:(($decisions_all | length) - $decisions_n)} else empty end),
+          (if ($lifecycle_inventory_all | length) > $lifecycle_n then {surface:"lifecycle_inventory",count:(($lifecycle_inventory_all | length) - $lifecycle_n)} else empty end),
           (if ($queued_all | length) > $queued_n then {surface:"queued",count:(($queued_all | length) - $queued_n)} else empty end),
           (if ($visible_tasks | length) > $child_n then {surface:"endpoints",count:(($visible_tasks | length) - $child_n)} else empty end),
           (if $landed_n > 0 and ($landed_all | length) > $landed_n then {surface:"landed",count:(($landed_all | length) - $landed_n)} else empty end)
@@ -1428,7 +1460,8 @@ length == 1 and (.[0] |
   and (.landed | type) == "array" and (.endpoints | type) == "array"
   and (.counts | type) == "object" and (.omitted | type) == "array"
   and (if has("projects") then
-         all(.queued[]?;
+         (.lifecycle_inventory | type) == "array"
+         and all(.queued[]?;
            has("project_posture") and has("parked_until") and has("backlog_state")
            and has("current_role") and has("child_state") and has("child_source") and has("child_doing"))
        else true end)
@@ -1944,6 +1977,7 @@ secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
          freshness:{status:$summary_freshness,observed_at:$observed,age_seconds:$summary_age},
          active_children:$summary.active_children,
          decisions_open:$summary.decisions_open,holds:$summary.holds,queued:$summary.queued,
+         lifecycle_inventory:($summary.lifecycle_inventory // []),
          landed:$summary.landed,endpoints:$summary.endpoints,counts:$summary.counts,omitted:$summary.omitted,
          projects:($summary.projects // []),projects_published:($summary | has("projects")),
          parent_event:{raw:$event_raw,note:$event_note,age_seconds:$event_age,open_activities:$activities,open_decisions:$decisions,activity_scan:$activity_scan,reconciliation:$reconciliation},

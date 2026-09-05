@@ -26,9 +26,15 @@ def fm_merge_by_id($base; $extra):
 
 def fm_secondmate_summary_at($today):
   (.projects // []) as $projects
-  | ([.queued[]?
+  | (.lifecycle_inventory // .queued // []) as $inventory
+  | ([ $inventory[]?
       | fm_project_lifecycle(.repo; $projects; $today) as $life
       | select($life.posture == "parked" and ($life.parked | not))]) as $expired
+  | ([ $inventory[]?
+      | fm_project_lifecycle(.repo; $projects; $today) as $life
+      | select($life.parked)
+      | select(.backlog_state == "queued" or .backlog_state == "in_flight")]) as $parked
+  | (.queued // []) as $queued
   | ([$expired[]
       | select(.backlog_state == "in_flight" and .current_role != "program" and .child_state == "working")
       | {id, kind:(.kind // "secondmate"), state:.child_state, repo,
@@ -43,9 +49,10 @@ def fm_secondmate_summary_at($today):
       | select(.captain_actionable == true)
       | {id, key:.id, verb:"captain-hold", summary:.title, reason:.hold_reason, repo,
          hold_until, hold_bucket, hold_age_days, source:"backlog"}]) as $decisions
-  | .active_children = fm_merge_by_id(.active_children; $active)
-  | .holds = fm_merge_by_id(.holds; $holds)
-  | .decisions_open = fm_merge_by_id(.decisions_open; $decisions)
+  | .queued = fm_merge_by_id($queued; $parked)
+  | .active_children = fm_merge_by_id((.active_children // []); $active)
+  | .holds = fm_merge_by_id((.holds // []); $holds)
+  | .decisions_open = fm_merge_by_id((.decisions_open // []); $decisions)
   | .counts.active_children += ($active | length)
   | .counts.decisions_open += ($decisions | length)
   | .counts.holds += ($holds | length)

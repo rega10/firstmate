@@ -3346,6 +3346,91 @@ EOF
   pass "secondmate lifecycle filtering precedes every owning-summary bound"
 }
 
+test_expired_secondmate_park_survives_summary_bounds_and_cache() {
+  local home mate fakebin sshbin summary json i
+  home=$(make_home expired-secondmate-park-cache)
+  mate="$TMP_ROOT/expired-secondmate-park-cache-mate"
+  make_valid_secondmate_home expiry-mate "$mate"
+  printf -- '- expiry-mate - fixture domain (host: expiry-host; root: /remote/root; home: %s; scope: fixture; projects: active-app, parked-app; added 2026-07-31)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/expiry-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=expiry-host" "remote_root=/remote/root" "home=$mate"
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+
+## Done
+EOF
+  cat > "$mate/data/projects.md" <<'EOF'
+- active-app [no-mistakes] - Active app (added 2026-07-01)
+- parked-app [direct-PR parked:2026-08-01] - Parked app (added 2026-07-01)
+EOF
+  mkdir -p "$mate/projects/parked-app"
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+- [ ] z-parked-live - Parked child beyond queue bound (repo: parked-app) (kind: ship)
+
+## Queued
+EOF
+  i=1
+  while [ "$i" -le 20 ]; do
+    printf -- '- [ ] active-%02d - Active gate %02d (repo: active-app) (kind: ship)\n' "$i" "$i" \
+      >> "$mate/data/backlog.md"
+    i=$((i + 1))
+  done
+  printf '\n## Done\n' >> "$mate/data/backlog.md"
+  fm_write_meta "$mate/state/z-parked-live.meta" \
+    "window=firstmate:fm-z-parked-live" "worktree=$mate/projects/parked-app" \
+    "project=parked-app" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" z-parked-live busy
+  printf 'working: parked child retained for expiry\n' > "$mate/state/z-parked-live.status"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$mate" \
+    FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785520800 \
+    FM_SNAPSHOT_SECONDMATE_QUEUED=20 "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e '
+    (.queued | length) == 20
+      and (.queued | any(.id == "z-parked-live") | not)
+      and (.lifecycle_inventory | any(.id == "z-parked-live"
+        and .repo == "parked-app" and .project_posture == "parked"
+        and .parked_until == "2026-08-01" and .child_state == "working"))
+  ' >/dev/null || fail "parked task facts were lost behind the owning-summary bound: $summary"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
+    FM_SSH_BIN="$sshbin/fake-ssh" FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" \
+    FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" \
+    FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" FM_SNAPSHOT_BUDGET=3 \
+    FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785520800 \
+    FM_BEARINGS_NOW=2026-07-31T18:00:00Z NET_LOG="$home/net.log" \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "z-parked-live" and .owner == "expiry-mate"
+      and .reason == "project parked until 2026-08-01"))
+      and (.in_flight | any(.id == "expiry-mate/z-parked-live") | not)
+  ' >/dev/null || fail "bounded parked task was absent from cached-ledger Charted Next: $json"
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
+    FM_SSH_BIN="$sshbin/fake-ssh" FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" \
+    FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" \
+    FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" FM_SNAPSHOT_BUDGET=3 \
+    FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785607200 \
+    FM_BEARINGS_NOW=2026-08-01T18:00:00Z NET_LOG="$home/net.log" \
+    "$BEARINGS" --json --all-in-flight --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.in_flight | any(.id == "expiry-mate/z-parked-live"))
+      and (.gates | any(.id == "z-parked-live") | not)
+      and (.secondmates | any(.id == "expiry-mate" and .freshness == "cached"
+        and .provenance == "structured-home-cache"))
+  ' >/dev/null || fail "cached bounded park did not resurface after expiry: $json"
+  pass "expired secondmate parks survive summary bounds and cached reads"
+}
+
 test_expired_project_park_resurfaces_with_one_wake() {
   local home fakebin json check first second
   home=$(make_home expired-park)
@@ -3443,4 +3528,5 @@ test_projection_and_toon_fail_closed
 test_project_lifecycle_surface_and_bearings_projection
 test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
+test_expired_secondmate_park_survives_summary_bounds_and_cache
 test_expired_project_park_resurfaces_with_one_wake
