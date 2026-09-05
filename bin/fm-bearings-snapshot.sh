@@ -294,6 +294,25 @@ if [ "$INCLUDE_PRS" = 1 ]; then
   if ! command -v gh >/dev/null 2>&1; then
     PR_STATUS='unavailable (gh not found)'
   else
+    SUPPRESSED_PR_REFS=$(printf '%s' "$SNAP" | jq -c --arg today "$BEARINGS_TODAY" '
+      (.projects // []) as $projects
+      | . as $root
+      | [($root.tasks[]
+          | (.backlog.repo // .project) as $repo
+          | select(any($projects[];
+              (.repo == $repo or .name == $repo)
+              and (.posture == "archived"
+                or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))))
+          | {id,url:(.pr.url // null)}),
+         ($root.backlog.records[]
+          | .repo as $repo
+          | select(any($projects[];
+              (.repo == $repo or .name == $repo)
+              and (.posture == "archived"
+                or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))))
+          | {id,url:(.pr_url // null)})]
+      | unique_by([.id,.url])') \
+      || { echo "fm-bearings-snapshot: could not classify PR lifecycle" >&2; exit 1; }
     # Candidate repos: recorded pr= URLs plus live worktree origins. Deduped.
     repos=""
     while IFS= read -r u; do
@@ -340,8 +359,14 @@ EOF
         --json number,title,url,headRefName,reviewDecision,mergeable,statusCheckRollup 2>/dev/null) \
         || { nwarn=$((nwarn + 1)); continue; }
       [ -n "$out" ] || out='[]'
-      repo_result=$(printf '%s' "$out" | jq --arg repo "$repo" --argjson limit "$FM_BEARINGS_PR_LIMIT" '
-        [ .[] | {
+      repo_result=$(printf '%s' "$out" | jq --arg repo "$repo" \
+        --argjson limit "$FM_BEARINGS_PR_LIMIT" --argjson suppressed "$SUPPRESSED_PR_REFS" '
+        [ .[]
+          | . as $pr
+          | select(any($suppressed[];
+              (.url != null and .url == ($pr.url // null))
+              or (.id != null and ("fm/" + .id) == ($pr.headRefName // ""))) | not)
+          | {
           num:(.number|tostring),
           repo:$repo,
           task:(if (.headRefName // "" | startswith("fm/")) then (.headRefName | ltrimstr("fm/")) else "-" end),

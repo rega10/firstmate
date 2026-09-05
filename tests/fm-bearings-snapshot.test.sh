@@ -52,6 +52,12 @@ SH
 echo "gh $*" >> "$NET_LOG"
 if [ "${FAKE_GH_FAIL:-0}" = 1 ]; then exit 1; fi
 if [ "${FAKE_GH_SLEEP:-0}" = 1 ]; then sleep 30; fi
+if [ "${FAKE_GH_SHARED_ORIGIN:-0}" = 1 ]; then
+  cat <<'JSON'
+[{"number":9,"title":"Active work","url":"https://github.com/kunchenguid/firstmate/pull/9","headRefName":"fm/ship-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":10,"title":"Parked work","url":"https://github.com/kunchenguid/firstmate/pull/10","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]
+JSON
+  exit 0
+fi
 if [ "${FAKE_GH_MANY:-0}" = 1 ]; then
   cat <<'JSON'
 [{"number":1,"title":"One","url":"https://github.com/acme/repo/pull/1","headRefName":"fm/one","reviewDecision":"","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":2,"title":"Two","url":"https://github.com/acme/repo/pull/2","headRefName":"fm/two","reviewDecision":"","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":3,"title":"Three","url":"https://github.com/acme/repo/pull/3","headRefName":"fm/three","reviewDecision":"","mergeable":"MERGEABLE","statusCheckRollup":[]}]
@@ -1403,6 +1409,37 @@ test_include_prs_is_the_only_fetch_path() {
     .candidate_prs | any(.[]; .num == "9" and .task == "ship-task" and .checks == "passing" and .review == "APPROVED")
   ' >/dev/null || fail "candidate_prs must carry the fetched PR cross-referenced to its task: $json"
   pass "--include-prs is the only path that fetches, and it enriches correctly"
+}
+
+test_shared_origin_prs_respect_project_lifecycle() {
+  local home fakebin json
+  home=$(make_home shared-origin-prs)
+  write_fixture "$home"
+  cat > "$home/data/projects.md" <<'EOF'
+- firstmate [no-mistakes] - Active project (added 2026-07-01)
+- parked-app [no-mistakes parked:2026-08-01] - Parked project (added 2026-07-01)
+EOF
+  sed '/^## Queued$/i\
+- [ ] parked-task - Parked shared-origin work (repo: parked-app) (kind: ship)\
+' "$home/data/backlog.md" > "$home/data/backlog.next"
+  mv "$home/data/backlog.next" "$home/data/backlog.md"
+  fm_write_meta "$home/state/parked-task.meta" \
+    "window=firstmate:fm-parked-task" \
+    "worktree=$home/projects/ship-wt" \
+    "project=parked-app" \
+    "harness=claude" \
+    "kind=ship" \
+    "mode=no-mistakes" \
+    "pr=https://github.com/kunchenguid/firstmate/pull/10"
+  record_claude_state "$home/state" parked-task busy
+  printf 'working: parked project task\n' > "$home/state/parked-task.status"
+  fakebin=$(make_fakebin "$home")
+  json=$(FAKE_GH_SHARED_ORIGIN=1 run "$home" "$fakebin" --include-prs --json)
+  printf '%s' "$json" | jq -e '
+    [.candidate_prs[].task] == ["ship-task"]
+      and (.gates | any(.id == "parked-task" and .reason == "project parked until 2026-08-01"))
+  ' >/dev/null || fail "shared-origin PR discovery exposed parked work: $json"
+  pass "shared-origin PR discovery keeps parked work in Charted Next"
 }
 
 test_partial_github_failure_degrades() {
@@ -4136,6 +4173,7 @@ test_open_decision_surfaces_end_to_end
 test_report_pointers_surface
 test_queued_item_prose_never_hides_it
 test_include_prs_is_the_only_fetch_path
+test_shared_origin_prs_respect_project_lifecycle
 test_partial_github_failure_degrades
 test_perl_fallback_bounds_github_call
 test_section_caps_and_expansion_flags
