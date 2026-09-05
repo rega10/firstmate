@@ -3275,7 +3275,9 @@ EOF
     (.in_flight | any(.id == "posture-mate/mate-parked-live"))
       and (.gates | any(.id == "mate-parked-live") | not)
       and (.secondmates | any(.id == "posture-mate" and .state == "captain_decision"
-        and (.reason | contains("unrelated-orphan"))))
+        and (.reason | contains("mate-parked-live"))))
+      and (.secondmate_reconcile | any(.id == "posture-mate"
+        and .kind == "unowned_current" and (.ids | index("mate-parked-live") != null)))
   ' >/dev/null || fail "a stale secondmate summary kept an expired live park hidden: $json"
   first=$(FM_PROJECT_POSTURE_TODAY=2026-08-01 "$check")
   assert_contains "$first" 'project posture expired: parked-app (parked until 2026-08-01)' \
@@ -3485,6 +3487,64 @@ test_expired_unknown_park_revalidates_cached_summary() {
         and (.ids | index("expired-unknown") != null)))
   ' >/dev/null || fail "expired unknown child remained trusted no-active work: $json"
   pass "expired unknown parks revalidate cached summaries"
+}
+
+test_expired_unknown_park_replaces_stale_primary_invalidity() {
+  local home mate sshbin json
+  home=$(make_home expired-unknown-secondary)
+  mate="$TMP_ROOT/expired-unknown-secondary-mate"
+  mkdir -p "$mate/state"
+  printf -- '- secondary-mate - fixture domain (host: secondary-host; root: /remote/root; home: %s; scope: fixture; projects: active-app, parked-app; added 2026-07-31)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/secondary-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=secondary-host" "remote_root=/remote/root" "home=$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[
+      {name:"active-app",repo:"active-app",posture:"active",parked_until:null},
+      {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01"}],
+    lifecycle_inventory:[{id:"newly-active-unknown",title:"Unknown parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    valid:false,reason:"in-flight backlog item has no child metadata: existing-orphan",
+    invalidity:{kind:"orphan_in_flight",ids:["existing-orphan"]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[{id:"newly-active-unknown",title:"Unknown parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"active",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:1,queued:1,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785520800 \
+    FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    run_remote_ledger_bearings "$home" "$sshbin" 1785520800 >/dev/null
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785607200 \
+    FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    run_remote_ledger_bearings "$home" "$sshbin" 1785607200)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "secondary-mate" and .state == "unknown"
+      and .provenance == "structured-home-cache"
+      and (.reason | contains("newly-active-unknown"))))
+      and (.secondmate_reconcile | any(.id == "secondary-mate"
+        and .kind == "child_current_unavailable"
+        and .ids == ["newly-active-unknown"]))
+      and (.gates | any(.id == "newly-active-unknown") | not)
+  ' >/dev/null || fail "newly active invalidity was masked by the cached primary: $json"
+  pass "newly active expiry invalidity replaces a stale cached primary"
 }
 
 test_expired_held_park_stays_valid() {
@@ -3950,6 +4010,7 @@ test_secondmate_lifecycle_precedes_owning_summary_bounds
 test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
 test_project_aware_v1_parked_work_sinks_to_gates
 test_expired_unknown_park_revalidates_cached_summary
+test_expired_unknown_park_replaces_stale_primary_invalidity
 test_expired_held_park_stays_valid
 test_cached_legacy_ledger_discloses_unidentified_posture
 test_archived_legacy_invalidity_is_reconciled

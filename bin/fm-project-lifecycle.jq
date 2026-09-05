@@ -24,6 +24,18 @@ def fm_merge_by_id($base; $extra):
   reduce $extra[] as $row ($base;
     if any(.[]; .id == $row.id) then . else . + [$row] end);
 
+def fm_invalidity_reason($kind; $ids):
+  if $kind == "child_current_unavailable" then
+    "child current state unavailable: " + ($ids | join(", "))
+  elif $kind == "orphan_in_flight" then
+    "in-flight backlog item has no child metadata: " + ($ids | join(", "))
+  elif $kind == "unowned_current" then
+    "live child state has no in-flight backlog item: " + ($ids | join(", "))
+  elif $kind == "terminal_in_flight" then
+    "in-flight backlog item has terminal child state: " + ($ids | join(", "))
+  else null
+  end;
+
 def fm_secondmate_summary_at($today):
   (.projects // []) as $projects
   | (has("projects") and (has("lifecycle_inventory") | not)) as $legacy_summary
@@ -111,29 +123,29 @@ def fm_secondmate_summary_at($today):
       - ($before.landed - (.landed | length)))] | max)
   | .counts.endpoints = ([0, ((.counts.endpoints // $before.endpoints)
       - ($before.endpoints - (.endpoints | length)))] | max)
-  | (.invalidity.kind // null) as $legacy_invalid_kind
-  | if $legacy_summary
-      and (["child_current_unavailable","orphan_in_flight","unowned_current","terminal_in_flight"]
-        | index($legacy_invalid_kind)) != null then
-      (.invalidity.ids // []
-       | [.[] as $id | select(($archived_ids | index($id)) == null) | $id]) as $remaining_invalid_ids
-      | if ($remaining_invalid_ids | length) == 0 then
-          .valid = true
-          | .invalidity = {kind:null,ids:[]}
-          | .reason = null
-        elif ($remaining_invalid_ids | length) < ((.invalidity.ids // []) | length) then
-          .invalidity.ids = $remaining_invalid_ids
-          | .reason = (if .invalidity.kind == "child_current_unavailable" then
-                         "child current state unavailable: " + ($remaining_invalid_ids | join(", "))
-                       elif .invalidity.kind == "orphan_in_flight" then
-                         "in-flight backlog item has no child metadata: " + ($remaining_invalid_ids | join(", "))
-                       elif .invalidity.kind == "unowned_current" then
-                         "live child state has no in-flight backlog item: " + ($remaining_invalid_ids | join(", "))
-                       else
-                         "in-flight backlog item has terminal child state: " + ($remaining_invalid_ids | join(", "))
-                       end)
-        else . end
-    else . end
+  | (.invalidity.kind // null) as $prior_invalid_kind
+  | (.invalidity.ids // []) as $prior_invalid_ids
+  | ($prior_invalid_ids
+     | [.[] as $id | select(($archived_ids | index($id)) == null) | $id]) as $retained_invalid_ids
+  | ([.endpoints[]? | select(.state == "unknown") | .id]
+     | map(select(type == "string" and . != "")) | unique) as $visible_unknown_ids
+  | (if $legacy_summary
+        and (["child_current_unavailable","orphan_in_flight","unowned_current","terminal_in_flight"]
+          | index($prior_invalid_kind)) != null
+        and ($retained_invalid_ids | length) == 0 then
+       if ($visible_unknown_ids | length) > 0 then
+         {kind:"child_current_unavailable",ids:$visible_unknown_ids,
+          reason:fm_invalidity_reason("child_current_unavailable"; $visible_unknown_ids)}
+       else null end
+     elif $prior_invalid_kind != null then
+       {kind:$prior_invalid_kind,ids:$retained_invalid_ids,
+        reason:(if ($retained_invalid_ids | length) < ($prior_invalid_ids | length) then
+                  fm_invalidity_reason($prior_invalid_kind; $retained_invalid_ids)
+                else .reason end)}
+     elif ($visible_unknown_ids | length) > 0 then
+       {kind:"child_current_unavailable",ids:$visible_unknown_ids,
+        reason:fm_invalidity_reason("child_current_unavailable"; $visible_unknown_ids)}
+     else null end) as $retained_invalidity
   | .omitted = ([.omitted[]?
         | select(.surface != "project_lifecycle" and .surface != "legacy_posture_unknown")]
       + [if ($archived_projects | length) > 0 or $lifecycle_omission != null then
@@ -208,11 +220,16 @@ def fm_secondmate_summary_at($today):
   | .counts.active_children += ($active | length)
   | .counts.decisions_open += ($decisions | length)
   | .counts.holds += ($holds | length)
-  | if .valid == true and $expiry_invalidity != null then
+  | (if $expiry_invalidity != null then $expiry_invalidity else $retained_invalidity end) as $current_invalidity
+  | if $current_invalidity == null then
+      .valid = true
+      | .invalidity = {kind:null,ids:[]}
+      | .reason = null
+    else
       .valid = false
-      | .invalidity = ($expiry_invalidity | del(.reason))
-      | .reason = $expiry_invalidity.reason
-    else . end
+      | .invalidity = ($current_invalidity | del(.reason))
+      | .reason = $current_invalidity.reason
+    end
   | (.invalidity.kind // null) as $invalid_kind
   | if .valid != true
       and (.state == "unknown"
