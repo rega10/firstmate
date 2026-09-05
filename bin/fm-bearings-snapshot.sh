@@ -311,8 +311,10 @@ if [ "$INCLUDE_PRS" = 1 ]; then
               and (.posture == "archived"
                 or (.posture == "parked" and (.parked_until == null or .parked_until > $today)))))
           | {id,url:(.pr_url // null)})]
-      | unique_by([.id,.url])') \
+      | group_by(.id)
+      | map({id:.[0].id,url:([.[].url | select(. != null)][0] // null)})') \
       || { echo "fm-bearings-snapshot: could not classify PR lifecycle" >&2; exit 1; }
+    suppressed_pr_count=$(printf '%s' "$SUPPRESSED_PR_REFS" | jq 'length')
     # Candidate repos: recorded pr= URLs plus live worktree origins. Deduped.
     repos=""
     while IFS= read -r u; do
@@ -351,7 +353,7 @@ EOF
 
     for repo in $repos; do PR_REPOS_TOTAL=$((PR_REPOS_TOTAL + 1)); done
     nrepos=0; npr=0; nwarn=0; ncapped=0; rows='[]'
-    pr_fetch_limit=$((FM_BEARINGS_PR_LIMIT + 1))
+    pr_fetch_limit=$((FM_BEARINGS_PR_LIMIT + suppressed_pr_count + 1))
     for repo in $repos; do
       if [ "$ALL_PR_REPOS" != 1 ] && [ "$nrepos" -ge "$FM_BEARINGS_PR_REPOS" ]; then break; fi
       nrepos=$((nrepos + 1))

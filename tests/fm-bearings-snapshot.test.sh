@@ -52,6 +52,21 @@ SH
 echo "gh $*" >> "$NET_LOG"
 if [ "${FAKE_GH_FAIL:-0}" = 1 ]; then exit 1; fi
 if [ "${FAKE_GH_SLEEP:-0}" = 1 ]; then sleep 30; fi
+if [ "${FAKE_GH_SUPPRESSED_CAP:-0}" = 1 ]; then
+  limit=0
+  previous=
+  for arg in "$@"; do
+    if [ "$previous" = "--limit" ]; then limit=$arg; break; fi
+    previous=$arg
+  done
+  jq -nc --argjson limit "$limit" '[
+    {number:10,title:"Parked work",url:"https://github.com/kunchenguid/firstmate/pull/10",headRefName:"fm/parked-task",reviewDecision:"APPROVED",mergeable:"MERGEABLE",statusCheckRollup:[]},
+    {number:11,title:"Active A",url:"https://github.com/kunchenguid/firstmate/pull/11",headRefName:"fm/active-a",reviewDecision:"APPROVED",mergeable:"MERGEABLE",statusCheckRollup:[]},
+    {number:12,title:"Active B",url:"https://github.com/kunchenguid/firstmate/pull/12",headRefName:"fm/active-b",reviewDecision:"APPROVED",mergeable:"MERGEABLE",statusCheckRollup:[]},
+    {number:13,title:"Active C",url:"https://github.com/kunchenguid/firstmate/pull/13",headRefName:"fm/active-c",reviewDecision:"APPROVED",mergeable:"MERGEABLE",statusCheckRollup:[]}
+  ][: $limit]'
+  exit 0
+fi
 if [ "${FAKE_GH_SHARED_ORIGIN:-0}" = 1 ]; then
   cat <<'JSON'
 [{"number":9,"title":"Active work","url":"https://github.com/kunchenguid/firstmate/pull/9","headRefName":"fm/ship-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":10,"title":"Parked work","url":"https://github.com/kunchenguid/firstmate/pull/10","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]
@@ -1412,7 +1427,7 @@ test_include_prs_is_the_only_fetch_path() {
 }
 
 test_shared_origin_prs_respect_project_lifecycle() {
-  local home fakebin json
+  local home fakebin json capped
   home=$(make_home shared-origin-prs)
   write_fixture "$home"
   cat > "$home/data/projects.md" <<'EOF'
@@ -1439,6 +1454,13 @@ EOF
     [.candidate_prs[].task] == ["ship-task"]
       and (.gates | any(.id == "parked-task" and .reason == "project parked until 2026-08-01"))
   ' >/dev/null || fail "shared-origin PR discovery exposed parked work: $json"
+  capped=$(FAKE_GH_SUPPRESSED_CAP=1 FM_BEARINGS_PR_LIMIT=2 \
+    run "$home" "$fakebin" --include-prs --json)
+  printf '%s' "$capped" | jq -e '
+    [.candidate_prs[].task] == ["active-a","active-b"]
+      and (.prs | contains("2 shown, at least 3 open; capped in 1 repo(s)"))
+      and (.omitted | any(.surface == "candidate_prs showing 2 of at least 3; capped in 1 repo(s)"))
+  ' >/dev/null || fail "suppressed PRs consumed the visible cap lookahead: $capped"
   pass "shared-origin PR discovery keeps parked work in Charted Next"
 }
 
