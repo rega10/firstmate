@@ -135,7 +135,50 @@ MD
   pass "local links resolve while dates, versions, commands, and incident prose remain semantically reviewed"
 }
 
+test_secret_store_boundary_section_is_enforced() {
+  local repo="$TMP_ROOT/secret-stores"
+  mkdir -p "$repo/docs"
+  git -C "$repo" init -q
+  printf '%s\n' '[Setup](docs/setup.md)' > "$repo/README.md"
+  printf '%s\n' '# Setup' > "$repo/docs/setup.md"
+  printf '%s\n' '# Rollout' '' \
+    'Local secrets stay in the development-only [secret-store boundary](configuration.md#secret-stores).' \
+    > "$repo/docs/bitwarden-rollout.md"
+  # A configuration doc that does not yet carry the boundary section.
+  printf '%s\n' '# Configuration' '' '## Something else' > "$repo/docs/configuration.md"
+  cat > "$repo/docs/documentation-audiences.json" <<'JSON'
+{
+  "version": 1,
+  "scope": {"trackedPatterns": ["*.md", "*.mdx", "*.rst", "*.txt", "docs/examples/*"]},
+  "allowedAudiences": ["operator-current"],
+  "setupAudiences": ["operator-current"],
+  "readmeSetupTargets": ["docs/setup.md"],
+  "requiredOwnerPointers": [
+    {"source": "docs/bitwarden-rollout.md", "target": "docs/configuration.md"}
+  ],
+  "surfaces": [
+    {"path": "README.md", "audience": "operator-current"},
+    {"path": "docs/setup.md", "audience": "operator-current"},
+    {"path": "docs/bitwarden-rollout.md", "audience": "operator-current"},
+    {"path": "docs/configuration.md", "audience": "operator-current"}
+  ]
+}
+JSON
+  git -C "$repo" add -A
+  run_expect_failure "unresolved local anchor" "$CHECK" --root "$repo"
+
+  # Adding the boundary section resolves the pointer that other mentions rely on.
+  printf '%s\n' '# Configuration' '' '## Secret stores' '' \
+    'Automic Vault is development-only per-machine injection; Bitwarden custodies production and team credentials.' \
+    > "$repo/docs/configuration.md"
+  git -C "$repo" add -A
+  "$CHECK" --root "$repo" >/dev/null \
+    || fail "boundary section presence did not satisfy the secret-store owner pointer"
+  pass "the configuration doc must carry the secret-store boundary section its mentions point at"
+}
+
 test_repository_inventory_passes
 test_duplicate_and_setup_classification_fail
 test_required_pointer_fails
 test_local_links_and_no_keyword_heuristic
+test_secret_store_boundary_section_is_enforced

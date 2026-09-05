@@ -109,6 +109,10 @@
     {
       "source": "docs/configuration.md",
       "target": "docs/verification/claude-automic-vault.md"
+    },
+    {
+      "source": "docs/bitwarden-rollout.md",
+      "target": "docs/configuration.md"
     }
   ],
   "surfaces": [
