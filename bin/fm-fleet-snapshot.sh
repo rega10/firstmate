@@ -963,6 +963,7 @@ main_inventory_json() {  # <backlog-json-file> <tasks-json-file>
 secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <projects-json-file>
   jq -n \
     --arg generated "$SNAPSHOT_NOW" \
+    --arg today "${SNAPSHOT_NOW%%T*}" \
     --argjson generated_epoch "$SNAPSHOT_EPOCH" \
     --arg home "$FM_HOME" \
     --argjson child_n "$FM_SNAPSHOT_SECONDMATE_CHILDREN" \
@@ -972,12 +973,28 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     --slurpfile backlog "$1" \
     --slurpfile tasks "$2" \
     --slurpfile projects "$3" '
-    ($backlog[0]) as $backlog
-    | ($tasks[0]) as $tasks
-    | def trunc($n):
+    ($tasks[0]) as $tasks
+    | ($projects[0] // []) as $project_list
+    | def normalized_project($value):
+      if $value == null or $value == "" then $value
+      else ($value | split("/") | map(select(. != "")) | .[-1] // "") as $base
+      | ([$project_list[]? | select(.name == $value or .repo == $value or .name == $base or .repo == $base) | .name] | unique) as $matches
+      | if ($matches | length) == 1 then $matches[0] else $value end end;
+    def trunc($n):
       tostring | gsub("\\s+"; " ")
       | if length > $n then .[:$n] + "…" else . end;
-    ([ $backlog.records[]?
+    def lifecycle($repo):
+      (normalized_project($repo)) as $key
+      | (first($project_list[]? | select(.name == $key or .repo == $key))) as $project
+      | if $project == null then {archived:false,parked:false,name:null}
+        elif $project.posture == "archived" then {archived:true,parked:false,name:$project.name}
+        elif $project.posture == "parked" and ($project.parked_until == null or $project.parked_until > $today)
+        then {archived:false,parked:true,name:$project.name}
+        else {archived:false,parked:false,name:$project.name} end;
+    ($backlog[0]
+     | .records |= map(. as $record
+         | .repo = normalized_project(.repo // (first($tasks[]? | select(.id == $record.id) | .project) // null)))) as $backlog
+    | ([ $backlog.records[]?
        | select((.state == "in_flight" or .state == "queued") and (.structured | not)) ]) as $unstructured_current
     | ([ $backlog.records[]? | select(.state == "in_flight" and .structured) ]) as $owned_in_flight
     | ([ $backlog.records[]?
@@ -1045,7 +1062,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     | ($captain_holds_all
        + ([ $tasks[] as $t | ($t.hints.open_decisions // [])[]
             | {id:$t.id,key,verb,summary:(.summary | trunc(160)),reason:null,
-               repo:(($t.backlog.repo // $t.project // null) | if . == null then null else trunc(120) end),
+               repo:((normalized_project($t.backlog.repo // $t.project // null)) | if . == null then null else trunc(120) end),
                source:"status"} ])) as $decisions_all
     | ([ $queued_all[]
          | select((.unresolved_blocker_ids | length) > 0 or (.hold_reason != null and .hold_kind != null))
@@ -1063,6 +1080,12 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
               repo:(($work.repo // .project // null) | if . == null then null else trunc(120) end),blocked_by:null,
               blocked_by_ids:[],unresolved_blocker_ids:[],
               reason:((.current_state.detail // .current_state.state) | trunc(120)),source:"child-state"} ]) as $holds_all
+    | ([($backlog.records[]?, $tasks[]?)
+         | lifecycle((.repo // .project))
+         | select(.archived) | .name] | map(select(. != null)) | unique) as $archived_projects
+    | ([($queued_all[$queued_n:][]?, $holds_all[$queued_n:][]?, $active_all[$child_n:][]?)
+         | lifecycle(.repo)
+         | select(.parked) | .name] | map(select(. != null)) | unique) as $bounded_parked_projects
     | ($backlog.present == true
        and ($unstructured_current | length) == 0
        and ($unknown_children | length) == 0
@@ -1114,7 +1137,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
           kind:((.kind // null) | if . == null then null else trunc(40) end)}][:$queued_n]),
         landed:(if $landed_n == 0 then $landed_all else $landed_all[:$landed_n] end),
         endpoints:([$tasks[] | {id,
-          repo:((.backlog.repo // .project // null) | if . == null then null else trunc(120) end),
+          repo:((normalized_project(.backlog.repo // .project // null)) | if . == null then null else trunc(120) end),
           state:.current_state.state,source:.current_state.source,
           endpoint:(.endpoint + {target:((.endpoint.target // null) | if . == null then null else trunc(240) end)})}][:$child_n]),
         counts:{
@@ -1126,6 +1149,9 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
           endpoints:($tasks | length)
         },
         omitted:[
+          (if ($archived_projects | length) > 0 or ($bounded_parked_projects | length) > 0
+           then {surface:"project_lifecycle",archived_projects:$archived_projects,parked_projects:$bounded_parked_projects}
+           else empty end),
           (if ($active_all | length) > $child_n then {surface:"active_children",count:(($active_all | length) - $child_n)} else empty end),
           (if ($decisions_all | length) > $decisions_n then {surface:"decisions_open",count:(($decisions_all | length) - $decisions_n)} else empty end),
           (if ($queued_all | length) > $queued_n then {surface:"queued",count:(($queued_all | length) - $queued_n)} else empty end),

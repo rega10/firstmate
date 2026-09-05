@@ -3185,6 +3185,7 @@ EOF
 
 ## Done
 - [x] mate-archived-done - Archived secondmate completion (repo: archived-app) (kind: ship) (done 2026-07-10)
+- [x] mate-meta-archived-done - Archived completion identified only by task metadata (kind: ship) (done 2026-07-10)
 - [x] mate-active-done - Active secondmate completion (repo: sample) (kind: ship) (done 2026-07-10)
 EOF
   fm_write_meta "$mate/state/mate-parked-live.meta" \
@@ -3202,6 +3203,11 @@ EOF
     "project=$mate/projects/parked-app" "harness=claude" "kind=ship" "mode=direct-PR"
   record_claude_state "$mate/state" mate-parked-paused idle
   printf 'paused: waiting for project resume\n' > "$mate/state/mate-parked-paused.status"
+  fm_write_meta "$mate/state/mate-meta-archived-done.meta" \
+    "window=firstmate:fm-mate-meta-archived-done" "worktree=$mate/projects/archived-app" \
+    "project=$mate/projects/archived-app" "harness=claude" "kind=ship" "mode=local-only"
+  record_claude_state "$mate/state" mate-meta-archived-done idle
+  printf 'done: archived metadata completion\n' > "$mate/state/mate-meta-archived-done.status"
   fakebin=$(make_fakebin "$home")
   PATH="$fakebin:$PATH" refresh_local_secondmate_ledgers "$home"
   summary_tmp="$mate/state/home-summary.json.tmp"
@@ -3232,9 +3238,21 @@ EOF
       and (.gates | any(.id == "mate-archived") | not)
       and (.landed | any(.id == "mate-active-done" and .owner == "posture-mate"))
       and (.landed | any(.id == "mate-archived-done") | not)
+      and (.landed | any(.id == "mate-meta-archived-done") | not)
+      and (.secondmate_reconcile | any(.id == "posture-mate"
+        and (.ids | index("mate-meta-archived-done") | not)))
+      and (.secondmates | any(.id == "posture-mate"
+        and (.reason | contains("mate-meta-archived-done") | not)))
       and (.omitted | any(.surface | contains("archived-app")))
       and (.omitted | any(.surface | startswith("captain holds bucketed")) | not)
   ' >/dev/null || fail "secondmate posture was not honored from that home's structured state: $json"
+  PATH="$fakebin:$PATH" FM_SNAPSHOT_SECONDMATE_QUEUED=1 refresh_local_secondmate_ledgers "$home"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: parked-app"))
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+  ' >/dev/null || fail "secondmate lifecycle disappeared behind the owning-summary bound: $json"
   pass "secondmate project posture is honored from that home's structured state"
 }
 

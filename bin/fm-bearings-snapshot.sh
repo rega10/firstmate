@@ -257,6 +257,18 @@ SNAP=$(printf '%s' "$SNAP" | jq '
             | if ($basename | length) == 1 then $basename[0] else $value end
           end
       end;
+  def archived($repo; $plist):
+    any($plist[]?; (.name == $repo or .repo == $repo) and .posture == "archived");
+  def mate_item_repo($m; $id):
+    first(($m.queued[]?, $m.active_children[]?, $m.holds[]?, $m.decisions_open[]?, $m.landed[]?, $m.endpoints[]?)
+      | select(.id == $id) | .repo) // null;
+  def reconcile_reason($kind; $ids):
+    if ($ids | length) == 0 then null
+    elif $kind == "orphan_in_flight" then "in-flight backlog item has no child metadata: " + ($ids | join(", "))
+    elif $kind == "unowned_current" then "live child state has no in-flight backlog item: " + ($ids | join(", "))
+    elif $kind == "terminal_in_flight" then "in-flight backlog item has terminal child state: " + ($ids | join(", "))
+    elif $kind == "child_current_unavailable" then "child current state unavailable: " + ($ids | join(", "))
+    else $kind end;
   .tasks |= map(
     .project = normalized_project(.project; $projects)
     | if has("backlog") and (.backlog | type) == "object"
@@ -264,13 +276,26 @@ SNAP=$(printf '%s' "$SNAP" | jq '
       else . end)
   | .backlog.records |= map(.repo = normalized_project(.repo; $projects))
   | .secondmate_current.records |= map(
-      (.projects // []) as $plist
+      . as $m
+      | (.projects // []) as $plist
       | .queued |= map(.repo = normalized_project(.repo; $plist))
       | .active_children |= map(.repo = normalized_project(.repo; $plist))
       | .landed |= map(.repo = normalized_project(.repo; $plist))
       | .holds |= map(.repo = normalized_project(.repo; $plist))
       | .decisions_open |= map(.repo = normalized_project(.repo; $plist))
-      | .endpoints |= map(.repo = normalized_project(.repo; $plist)))
+      | .endpoints |= map(.repo = normalized_project(.repo; $plist))
+      | . as $normalized
+      | [(.reconcile_inventory.ids // [])[] as $id
+          | select(archived(mate_item_repo($normalized; $id); $plist) | not)
+          | $id] as $visible_ids
+      | .bearings_reconcile_inventory =
+          (if .reconcile_inventory == null then null else (.reconcile_inventory | .ids = $visible_ids) end)
+      | .bearings_reconcile_archived_only =
+          (.reconcile_inventory != null and ((.reconcile_inventory.ids // []) | length) > 0 and ($visible_ids | length) == 0)
+      | .bearings_reason =
+          (if ($visible_ids | length) == ((.reconcile_inventory.ids // []) | length)
+           then .current.reason
+           else reconcile_reason((.reconcile_inventory.kind // null); $visible_ids) end))
   | (.secondmate_current.records // []) as $mates
   | .secondmate_landed.records |= map(
       . as $row
@@ -559,7 +584,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
        | ([.holds[]? | lifecycle(.repo; $plist) as $life
             | select($life.archived | not) | select($life.parked | not)]) as $visible_holds
        | ([$visible_holds[] | select(.source == "backlog")]) as $backlog_holds
-       | .current.state as $current_state
+       | (if .current.state == "unknown" and .bearings_reconcile_archived_only
+          then "no_active_work" else .current.state end) as $current_state
        | (if $current_state == "captain_decision" then $backlog_holds else $visible_holds end) as $state_holds
        | . + {
            bearings_active_children:$active_children,
@@ -589,11 +615,11 @@ MODEL=$(printf '%s' "$SNAP" | jq \
                   elif .bearings_state == "externally_held" then
                     ([.bearings_holds[] | .id + ": " + (.reason // "held")] | join("; "))
                   elif .bearings_state == "no_active_work" then "No active child work"
-                  else (.current.reason // "Current home state unavailable") end) | trunc(120)),
+                  else (.bearings_reason // "Current home state unavailable") end) | trunc(120)),
           provenance:(if .provenance.summary_source == "remote-ledger-cache" then "structured-home-cache"
                       else .provenance.selected end),freshness:.freshness.status,
           age_seconds:.freshness.age_seconds,contradiction:(.contradiction // false),
-          reason:(.current.reason // "-")} ]) as $secondmates_all
+          reason:(.bearings_reason // "-")} ]) as $secondmates_all
   | ([ .tasks[]
        | select(.kind != "secondmate")
        | lifecycle((.backlog.repo // .project); $projects) as $life
@@ -723,7 +749,9 @@ MODEL=$(printf '%s' "$SNAP" | jq \
   | ($gates_sorted | map(del(._project_rank, ._parked_project))) as $gates_all
   | (if $all_queued == 1 then []
      else [$gates_sorted[$gates_n:][] | ._parked_project // empty] | unique
-     end) as $bounded_parked_projects
+     end) as $gate_bounded_parked_projects
+  | ([($root.secondmate_current.records // [])[] | (.omitted // [])[]
+       | select(.surface == "project_lifecycle") | .parked_projects[]?] | unique) as $summary_bounded_parked_projects
   | (([.backlog.records[] | select(.structured) | select(lifecycle((.repo // task_repo(.id; $tasks)); $projects).archived) | .id]
       + [.tasks[] | select(lifecycle((.backlog.repo // .project); $projects).archived) | .id])
      | unique) as $archived_work_ids
@@ -753,7 +781,9 @@ MODEL=$(printf '%s' "$SNAP" | jq \
          | $m.endpoints[]?
          | lifecycle((mate_item_repo($m; .id) // .repo); $plist) as $life
          | select($life.archived)
-         | $life.name])
+         | $life.name]
+      + [($root.secondmate_current.records // [])[] | (.omitted // [])[]
+         | select(.surface == "project_lifecycle") | .archived_projects[]?])
      | map(select(. != null)) | unique) as $archived_projects
   | ([ .scout_reports[]
        | . as $r
@@ -773,8 +803,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
       in_flight: (if $all_in_flight == 1 then $in_flight_all else $in_flight_all[:$in_flight_n] end),
       secondmates: (if $all_secondmates == 1 then $secondmates_all else $secondmates_all[:$secondmates_n] end),
       secondmate_reconcile: [ (.secondmate_current.records // [])[]
-        | select(.reconcile_inventory != null)
-        | {id, spawn_gen:(.spawn_gen // null), host:(.host // null), kind:(.reconcile_inventory.kind // null), ids:((.reconcile_inventory.ids // []) | map(select(type == "string")) | sort)} ],
+        | select(.bearings_reconcile_inventory != null)
+        | {id, spawn_gen:(.spawn_gen // null), host:(.host // null), kind:(.bearings_reconcile_inventory.kind // null), ids:((.bearings_reconcile_inventory.ids // []) | map(select(type == "string")) | sort)} ],
       decisions_open: (if $all_decisions == 1 then $decisions_all else $decisions_all[:$decisions_n] end),
       landed: ($done | map({id, what:(.title | trunc(70)),
                             artifact:(.pr_url // .report_path // .local_note // "-"),owner:.home_id})),
@@ -793,7 +823,8 @@ MODEL=$(printf '%s' "$SNAP" | jq \
   | . + {omitted: (
       [ (if $f_bodies then empty else {surface:"backlog item bodies", reveal:"--fields bodies"} end),
         (if ($archived_projects | length) > 0 then {surface:("archived project work omitted: " + ($archived_projects | join(", "))), reveal:"bin/fm-project-posture.sh set <project> active"} else empty end),
-        (if ($bounded_parked_projects | length) > 0 then {surface:("parked project work omitted by gates bound: " + ($bounded_parked_projects | join(", "))), reveal:"--all-queued"} else empty end),
+        (if ($gate_bounded_parked_projects | length) > 0 then {surface:("parked project work omitted by gates bound: " + ($gate_bounded_parked_projects | join(", "))), reveal:"--all-queued"} else empty end),
+        (if ($summary_bounded_parked_projects | length) > 0 then {surface:("parked project work omitted by secondmate summary bound: " + ($summary_bounded_parked_projects | join(", "))), reveal:"raise FM_SNAPSHOT_SECONDMATE_QUEUED or FM_SNAPSHOT_SECONDMATE_CHILDREN"} else empty end),
         (if $f_paths then empty else {surface:"task paths", reveal:"--fields paths"} end),
         (if $f_actions then empty else {surface:"watch/steer actions", reveal:"--fields actions"} end),
         (if $f_endpoints then empty else {surface:"healthy endpoint detail", reveal:"--fields endpoints"} end),
