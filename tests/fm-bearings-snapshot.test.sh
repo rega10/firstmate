@@ -2073,7 +2073,96 @@ EOF
   pass "project lifecycle is one canonical snapshot surface for Bearings ordering and disclosure"
 }
 
+# The contract (--contract) must stay an honest description of the --json output:
+# no undeclared surface or field may appear, every always-present surface must be
+# there, and every enum-typed value must be in its declared set. The validator here
+# is generic and derives everything from --contract, so a field or enum value added
+# to the snapshot without being declared fails this test - which the negative case
+# proves by tampering with real output.
+#
+# contract_violations <contract-json> <snapshot-json> prints one line per violation.
+contract_violations() {  # <contract> <snapshot>
+  jq -n --argjson c "$1" --argjson s "$2" '
+    ($c.surfaces) as $surf
+    | ($c.enums) as $enums
+    | ( [ $s | keys_unsorted[] | select($surf[.] == null) | "undeclared surface: \(.)" ]
+      + [ $surf | to_entries[] | select(.value.presence == "always") | .key
+          | select($s[.] == null) | "missing always-present surface: \(.)" ]
+      + [ $s | to_entries[]
+          | .key as $sname | .value as $sval
+          | select(($sval | type) == "array" and $surf[$sname] != null and $surf[$sname].type == "array")
+          | ($surf[$sname].fields) as $fdef
+          | $sval[] | . as $row
+          | ( [ $row | keys_unsorted[] | select($fdef[.] == null)
+                | "undeclared field: \($sname).\(.)" ]
+            + [ $fdef | to_entries[] | select(.value.enum != null)
+                | .key as $fk | .value.enum as $en
+                | ($row[$fk]) as $val | select($val != null)
+                | select(($enums[$en] | index($val)) == null)
+                | "enum out of declared set: \($sname).\($fk) = \($val | tostring) not in \($en)" ] )
+      ] | flatten )
+    | .[]'
+}
+
+# Build the widest local-only-plus-fake-network output the snapshot can emit, so
+# the validator sees every surface at once: opt-in fields, live PR rows, a
+# secondmate, project lifecycle postures, decisions, reports, and endpoints.
+write_contract_fixture() {  # <home>
+  local home=$1
+  write_fixture "$home"
+  cat > "$home/data/projects.md" <<'EOF'
+- active-proj [no-mistakes +yolo] - Active project (added 2026-07-01)
+- parked-proj [direct-PR parked:2026-08-01] - Parked project (added 2026-07-01)
+- archived-proj [local-only archived] - Archived project without work (added 2026-07-01)
+EOF
+}
+
+test_contract_describes_json_output_and_fails_on_undeclared_field() {
+  local home fakebin json contract violations tampered
+  home=$(make_home contract-honesty)
+  write_contract_fixture "$home"
+  fakebin=$(make_fakebin "$home")
+  # --contract is static: no home, no network, deterministic.
+  contract=$("$BEARINGS" --contract) || fail "--contract did not emit"
+  [ "$contract" = "$("$BEARINGS" --contract)" ] || fail "--contract output is not deterministic"
+  printf '%s' "$contract" | jq -e '.schema == "fm-bearings.v1"' >/dev/null \
+    || fail "contract schema anchor is not fm-bearings.v1: $contract"
+  # Every surface the widest --json output emits must validate against the contract.
+  json=$(run "$home" "$fakebin" --json --include-prs \
+    --fields bodies,paths,actions,endpoints --all-secondmates)
+  # Sanity: the fixture actually populated the surfaces we mean to guard, so the
+  # clean pass is not vacuous.
+  printf '%s' "$json" | jq -e '
+    (.projects | map(.posture) | (index("active") and index("parked") and index("archived")))
+      and (.secondmates | length > 0)
+      and (.decisions_open | any(.verb == "captain-hold"))
+      and (.candidate_prs | length > 0)
+      and (.endpoints | length > 0)
+      and (has("bodies") and has("paths") and has("actions"))
+  ' >/dev/null || fail "contract fixture did not populate the surfaces under test: $json"
+  # Positive: real output has zero violations.
+  violations=$(contract_violations "$contract" "$json")
+  [ -z "$violations" ] || fail "current --json output violates its own contract:"$'\n'"$violations"
+  # Negative: a field added to the snapshot without declaring it, and an undeclared
+  # top-level surface, must both be caught.
+  tampered=$(printf '%s' "$json" | jq '
+    .in_flight[0].undeclared_field = "leak"
+    | .brand_new_surface = [{id: "x"}]')
+  violations=$(contract_violations "$contract" "$tampered")
+  printf '%s\n' "$violations" | grep -q 'undeclared field: in_flight.undeclared_field' \
+    || fail "validator did not catch an undeclared field: $violations"
+  printf '%s\n' "$violations" | grep -q 'undeclared surface: brand_new_surface' \
+    || fail "validator did not catch an undeclared surface: $violations"
+  # Negative: an enum value outside its declared set must be caught.
+  tampered=$(printf '%s' "$json" | jq '.projects[0].posture = "mothballed"')
+  violations=$(contract_violations "$contract" "$tampered")
+  printf '%s\n' "$violations" | grep -q 'enum out of declared set: projects.posture' \
+    || fail "validator did not catch an out-of-set enum value: $violations"
+  pass "the --contract document describes --json and fails on an undeclared field or enum"
+}
+
 test_domain_alpha_stale_parent_event_does_not_become_current_work
+test_contract_describes_json_output_and_fails_on_undeclared_field
 test_gnu_stat_uses_file_formats_without_bsd_fallback_pollution
 test_parent_activity_evidence_is_bounded_and_disclosed
 test_active_child_overrides_old_parent_event
