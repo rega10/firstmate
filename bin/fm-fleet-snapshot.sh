@@ -82,7 +82,10 @@
 #     failure reasons. Parent status and bounded terminal evidence are historical,
 #     untrusted supplements only and never override readable structured-home facts.
 #     Each structured-home record carries active_children, decisions_open, holds,
-#     queued, landed, endpoints, counts, and omitted. provenance.summary_source
+#     queued, landed, endpoints, counts, omitted, and that home's projects[]
+#     registry rows (same shape as the top-level projects array) so projections
+#     honor that home's lifecycle posture from its own structured state.
+#     provenance.summary_source
 #     distinguishes "local-ledger", "remote-ledger", and "remote-ledger-cache";
 #     freshness is "cached" only for the cache source, and observed_at/age_seconds
 #     come from the selected summary's generation. Every successfully sampled home also carries
@@ -229,8 +232,9 @@ archived last, with names as the deterministic tie-breaker.
 
 --secondmate-home-summary emits the bounded structured summary used after a
 validated registered-home handoff. It is local-only, skips nested secondmate
-aggregation, includes generated_epoch for freshness arithmetic, and marks
-inventory contradictions or unavailable child state invalid.
+aggregation, includes generated_epoch for freshness arithmetic, that home's
+projects[] registry rows, and marks inventory contradictions or unavailable
+child state invalid.
 kind=secondmate meta records are not child inventory for unowned_current or
 terminal_in_flight; they never have backlog rows.
 Its invalidity object names the normalized failure kind and affected ids.
@@ -956,7 +960,7 @@ main_inventory_json() {  # <backlog-json-file> <tasks-json-file>
 # validated parent read needs.
 # This mode never reads parent events or terminal text and never aggregates
 # nested secondmates.
-secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file>
+secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <projects-json-file>
   jq -n \
     --arg generated "$SNAPSHOT_NOW" \
     --argjson generated_epoch "$SNAPSHOT_EPOCH" \
@@ -966,7 +970,8 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file>
     --argjson decisions_n "$FM_SNAPSHOT_SECONDMATE_DECISIONS" \
     --argjson landed_n "$FM_SNAPSHOT_SECONDMATE_LANDED_PER_HOME" \
     --slurpfile backlog "$1" \
-    --slurpfile tasks "$2" '
+    --slurpfile tasks "$2" \
+    --slurpfile projects "$3" '
     ($backlog[0]) as $backlog
     | ($tasks[0]) as $tasks
     | def trunc($n):
@@ -990,6 +995,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file>
             hold_age_days:(.hold_age_days // null),source:"backlog"} ]) as $captain_holds_all
     | ([ $backlog.records[]? | select(.state == "done" and .structured and .hold_kind != "captain")
          | {id:(.id | trunc(120)),title:(.title | trunc(120)),
+            repo:((.repo // null) | if . == null then null else trunc(120) end),
             pr_url:((.pr_url // null) | if . == null then null else trunc(500) end),
             report_path:((.report_path // null) | if . == null then null else trunc(500) end),
             local_note:((.local_note // null) | if . == null then null else trunc(120) end),completion} ]
@@ -1080,6 +1086,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file>
         generated:$generated,
         generated_epoch:$generated_epoch,
         home:$home,
+        projects:($projects[0] // []),
         valid:$valid,
         reason:$reason,
         invalidity:$invalidity,
@@ -1858,6 +1865,7 @@ secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
          active_children:$summary.active_children,
          decisions_open:$summary.decisions_open,holds:$summary.holds,queued:$summary.queued,
          landed:$summary.landed,endpoints:$summary.endpoints,counts:$summary.counts,omitted:$summary.omitted,
+         projects:($summary.projects // []),
          parent_event:{raw:$event_raw,note:$event_note,age_seconds:$event_age,open_activities:$activities,open_decisions:$decisions,activity_scan:$activity_scan,reconciliation:$reconciliation},
          terminal_evidence:$terminal,contradiction:$contradiction}' >> "$records_file" || return 1
     else
@@ -1888,7 +1896,7 @@ secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
          reconcile_inventory:(if $summary_sampled then $summary.invalidity else null end),
          provenance:{selected:$provenance,structured_home:($home | if . == "" then null else . end),parent_event_role:"fallback-only-not-current"},
          freshness:{status:$freshness,observed_at:$observed,age_seconds:$event_age},
-         active_children:[],decisions_open:[],holds:[],queued:[],landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,queued:0,landed:0,endpoints:0},omitted:[],
+         active_children:[],decisions_open:[],holds:[],queued:[],landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,queued:0,landed:0,endpoints:0},omitted:[],projects:[],
          parent_event:{raw:$event_raw,note:$event_note,age_seconds:$event_age,open_activities:$activities,open_decisions:$decisions,activity_scan:$activity_scan},
          terminal_evidence:$terminal,contradiction:false}' >> "$records_file" || return 1
     fi
@@ -1958,17 +1966,17 @@ printf '%s\n' "$BACKLOG_JSON" > "$BACKLOG_JSON_FILE" \
   || { echo "fm-fleet-snapshot: temporary backlog file write failed" >&2; exit 1; }
 printf '%s\n' "$TASKS_JSON" > "$TASKS_JSON_FILE" \
   || { echo "fm-fleet-snapshot: temporary task file write failed" >&2; exit 1; }
+project_registry_json > "$PROJECT_REGISTRY_JSON_FILE" \
+  || { echo "fm-fleet-snapshot: project registry read failed" >&2; exit 1; }
 
 if [ "$OUTPUT_MODE" = secondmate-home-summary ]; then
-  secondmate_home_summary_json "$BACKLOG_JSON_FILE" "$TASKS_JSON_FILE" \
+  secondmate_home_summary_json "$BACKLOG_JSON_FILE" "$TASKS_JSON_FILE" "$PROJECT_REGISTRY_JSON_FILE" \
     || { echo "fm-fleet-snapshot: secondmate home summary failed" >&2; exit 1; }
   exit 0
 fi
 
 scout_report_lines > "$SCOUT_REPORTS_JSON_FILE" \
   || { echo "fm-fleet-snapshot: scout report snapshot failed" >&2; exit 1; }
-project_registry_json > "$PROJECT_REGISTRY_JSON_FILE" \
-  || { echo "fm-fleet-snapshot: project registry read failed" >&2; exit 1; }
 main_inventory_json "$BACKLOG_JSON_FILE" "$TASKS_JSON_FILE" > "$MAIN_INVENTORY_JSON_FILE" \
   || { echo "fm-fleet-snapshot: main inventory summary failed" >&2; exit 1; }
 secondmate_current_json "$TASKS_JSON_FILE" "$SECONDMATE_CURRENT_JSON_FILE" \

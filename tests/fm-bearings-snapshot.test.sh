@@ -3009,6 +3009,234 @@ test_contract_describes_json_output_and_fails_on_undeclared_field() {
   pass "the --contract document describes --json and fails on an undeclared field or enum"
 }
 
+test_project_lifecycle_surface_and_bearings_projection() {
+  local home fakebin canonical json details bounded toon
+  home=$(make_home project-lifecycle)
+  : > "$home/data/secondmates.md"
+  mkdir -p "$home/projects/due-live" "$home/projects/permanent-live" \
+    "$home/projects/permanent-meta-live" "$home/projects/future-live" \
+    "$home/projects/archived-meta-done" "$home/projects/permanent-meta-call" \
+    "$home/projects/archived-meta-call"
+  cat > "$home/data/projects.md" <<'EOF'
+- active [no-mistakes +yolo] - Active project (added 2026-07-01)
+- due [direct-PR parked:2026-07-11] - Due project (added 2026-07-01)
+- permanent [local-only parked] - Permanent park (added 2026-07-01)
+- future [no-mistakes parked:2026-08-01] - Future park (added 2026-07-01)
+- archived [direct-PR archived] - Archived project (added 2026-07-01)
+- empty-archived [local-only archived] - Archived project without work (added 2026-07-01)
+EOF
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+- [ ] due-live - Due parked work is underway (repo: due) (kind: ship) (since 2026-07-10)
+- [ ] permanent-live - Permanently parked live work (repo: permanent) (kind: ship) (since 2026-07-10)
+- [ ] permanent-meta-live - Parked work identified by task metadata (kind: ship) (since 2026-07-10)
+- [ ] future-live - Future parked live work (repo: future) (kind: ship) (since 2026-07-10)
+
+## Queued
+- [ ] active-next - Active queued work (repo: active) (kind: ship)
+- [ ] due-next - Due parked work resurfaces (repo: due) (kind: ship)
+- [ ] permanent-next - Permanent parked work (repo: permanent) (kind: ship)
+- [ ] future-call - Future parked captain work (repo: future) (kind: captain) (hold: captain chooses route) (hold-kind: captain)
+- [ ] archived-next - Archived queued work (repo: archived) (kind: ship)
+- [ ] permanent-meta-call - Parked captain work identified by metadata (kind: captain) (hold: captain chooses route) (hold-kind: captain)
+- [ ] archived-meta-call - Archived captain work identified by metadata (kind: captain) (hold: captain chooses route) (hold-kind: captain)
+
+## Done
+- [x] active-done - Active completion (repo: active) (kind: ship) (done 2026-07-10)
+- [x] archived-done - Archived completion (repo: archived) (kind: ship) (done 2026-07-10)
+- [x] archived-meta-done - Archived completion identified by metadata (kind: ship) (done 2026-07-10)
+EOF
+  fm_write_meta "$home/state/due-live.meta" \
+    "window=firstmate:fm-due-live" "worktree=$home/projects/due-live" "project=$home/projects/due" \
+    "harness=codex" "kind=ship" "mode=direct-PR"
+  printf 'working: due project resumed\n' > "$home/state/due-live.status"
+  fm_write_meta "$home/state/permanent-live.meta" \
+    "window=firstmate:fm-permanent-live" "worktree=$home/projects/permanent-live" "project=$home/projects/permanent" \
+    "harness=codex" "kind=ship" "mode=local-only"
+  printf 'working: permanently parked task still has a live status\n' > "$home/state/permanent-live.status"
+  fm_write_meta "$home/state/permanent-meta-live.meta" \
+    "window=firstmate:fm-permanent-meta-live" "worktree=$home/projects/permanent-meta-live" "project=$home/projects/permanent" \
+    "harness=codex" "kind=ship" "mode=local-only"
+  printf 'working: metadata identifies this parked project\n' > "$home/state/permanent-meta-live.status"
+  fm_write_meta "$home/state/future-live.meta" \
+    "window=firstmate:fm-future-live" "worktree=$home/projects/future-live" "project=$home/projects/future" \
+    "harness=codex" "kind=ship" "mode=no-mistakes"
+  printf 'working: future parked task still has a live status\n' > "$home/state/future-live.status"
+  fm_write_meta "$home/state/archived-meta-done.meta" \
+    "window=firstmate:fm-archived-meta-done" "worktree=$home/projects/archived-meta-done" "project=$home/projects/archived" \
+    "harness=codex" "kind=ship" "mode=direct-PR"
+  printf 'done: archived metadata completion\n' > "$home/state/archived-meta-done.status"
+  fm_write_meta "$home/state/permanent-meta-call.meta" \
+    "window=firstmate:fm-permanent-meta-call" "worktree=$home/projects/permanent-meta-call" "project=$home/projects/permanent" \
+    "harness=codex" "kind=captain" "mode=local-only" "pr=https://github.com/acme/parked/pull/1"
+  fm_write_meta "$home/state/archived-meta-call.meta" \
+    "window=firstmate:fm-archived-meta-call" "worktree=$home/projects/archived-meta-call" "project=$home/projects/archived" \
+    "harness=codex" "kind=captain" "mode=direct-PR" "pr=https://github.com/acme/archived/pull/1"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
+    "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    [.projects[].name] == ["active", "due", "permanent", "future", "archived", "empty-archived"]
+      and (.projects[] | select(.name == "active")
+        | .posture == "active" and .parked_until == null and .repo == "active"
+          and .delivery == "no-mistakes +yolo")
+      and (.projects[] | select(.name == "due")
+        | .posture == "parked" and .parked_until == "2026-07-11"
+          and .repo == "due" and .delivery == "direct-PR")
+      and (.projects[] | select(.name == "permanent")
+        | .posture == "parked" and .parked_until == null and .delivery == "local-only")
+      and (.projects[] | select(.name == "archived")
+        | .posture == "archived" and .parked_until == null and .delivery == "direct-PR")
+      and (.projects[] | select(.name == "empty-archived")
+        | .posture == "archived" and .parked_until == null and .delivery == "local-only")
+  ' >/dev/null || fail "canonical project lifecycle surface was incomplete or unordered: $canonical"
+
+  json=$(run "$home" "$fakebin" --json)
+  printf '%s' "$json" | jq -e '
+    [.projects[].name] == ["active", "due", "permanent", "future", "archived", "empty-archived"]
+      and ([.in_flight[].id] == ["due-live"])
+      and ([.gates[] | select(.reason == "project parked" or (.reason | startswith("project parked until"))) | .id]
+           | contains(["permanent-live", "permanent-meta-call", "permanent-meta-live", "permanent-next", "future-call", "future-live"]))
+      and (([.gates[].id] | index("active-next")) < ([.gates[].id] | index("permanent-next")))
+      and (([.gates[].id] | index("due-next")) < ([.gates[].id] | index("permanent-next")))
+      and (([.gates[].id] | index("permanent-next")) < ([.gates[].id] | index("future-live")))
+      and (.gates | any(.id == "permanent-live" and .reason == "project parked"))
+      and (.gates | any(.id == "permanent-meta-call" and .reason == "project parked"))
+      and (.gates | any(.id == "permanent-meta-live" and .reason == "project parked"))
+      and (.gates | any(.id == "permanent-next" and .reason == "project parked"))
+      and (.gates | any(.id == "future-call" and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "future-live" and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "due-next" and .reason == "-"))
+      and (.decisions_open | any(.id == "future-call") | not)
+      and (.decisions_open | any(.id == "permanent-meta-call") | not)
+      and (.decisions_open | any(.id == "archived-meta-call") | not)
+      and (.gates | any(.id == "archived-next") | not)
+      and (.gates | any(.id == "archived-meta-call") | not)
+      and (.landed | any(.id == "active-done"))
+      and (.landed | any(.id == "archived-done") | not)
+      and (.landed | any(.id == "archived-meta-done") | not)
+      and (.omitted | any(.surface == "archived project work omitted: archived"))
+      and ([.omitted[].surface] | any(contains("empty-archived")) | not)
+  ' >/dev/null || fail "Bearings did not gate parks, resurface due work, or disclose archives: $json"
+  details=$(run "$home" "$fakebin" --json --fields bodies,paths,actions,endpoints)
+  printf '%s' "$details" | jq -e '
+    ([.bodies, .paths, .actions, .endpoints] | all(.[]; any(.id == "permanent-meta-call")))
+      and ([.bodies, .paths, .actions, .endpoints] | all(.[]; (any(.id == "archived-meta-call") | not)))
+  ' >/dev/null || fail "optional detail exposed archived absolute-path project metadata: $details"
+  : > "$home/net.log"
+  run "$home" "$fakebin" --json --include-prs >/dev/null
+  assert_grep 'gh pr list --repo acme/parked ' "$home/net.log" \
+    "PR discovery did not retain parked absolute-path project metadata"
+  assert_no_grep 'gh pr list --repo acme/archived ' "$home/net.log" \
+    "PR discovery exposed archived absolute-path project metadata"
+  bounded=$(FM_BEARINGS_GATES=2 run "$home" "$fakebin" --json)
+  printf '%s' "$bounded" | jq -e '
+    [.gates[].id] == ["active-next", "due-next"]
+      and ([.omitted[] | select(
+        .surface == "parked project work omitted by gates bound: future, permanent"
+          and .reveal == "--all-queued")] | length) == 1
+  ' >/dev/null || fail "bounded gates did not name omitted parked projects: $bounded"
+  toon=$(run "$home" "$fakebin")
+  assert_contains "$toon" 'projects[6]{name,posture,parked_until,repo,delivery}:' \
+    "TOON omitted the project lifecycle surface"
+  assert_contains "$toon" 'project parked until 2026-08-01' \
+    "TOON omitted the dated park reason"
+  assert_contains "$toon" 'archived project work omitted: archived' \
+    "TOON omitted the archived-project disclosure"
+  pass "project lifecycle is one canonical snapshot surface for Bearings ordering and disclosure"
+}
+
+test_secondmate_project_posture_is_honored_from_structured_state() {
+  local home mate fakebin json
+  home=$(make_home secondmate-posture)
+  mate="$TMP_ROOT/secondmate-posture-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home posture-mate "$mate"
+  append_secondmate_registry "$home" posture-mate "$mate"
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+
+## Done
+EOF
+  cat > "$mate/data/projects.md" <<'EOF'
+- sample [no-mistakes] - Active sample (added 2026-07-01)
+- parked-app [direct-PR parked:2026-08-01] - Parked in the secondmate home (added 2026-07-01)
+- archived-app [local-only archived] - Archived in the secondmate home (added 2026-07-01)
+EOF
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+- [ ] mate-active - Active secondmate work (repo: sample) (kind: ship)
+- [ ] mate-parked - Parked secondmate work (repo: parked-app) (kind: ship)
+- [ ] mate-parked-call - Parked secondmate captain work (repo: parked-app) (kind: captain) (hold: choose a route) (hold-kind: captain)
+- [ ] mate-archived - Archived secondmate work (repo: archived-app) (kind: ship)
+- [ ] mate-archived-call - Archived secondmate captain work (repo: archived-app) (kind: captain) (hold: choose a route) (hold-kind: captain)
+
+## Done
+- [x] mate-archived-done - Archived secondmate completion (repo: archived-app) (kind: ship) (done 2026-07-10)
+- [x] mate-active-done - Active secondmate completion (repo: sample) (kind: ship) (done 2026-07-10)
+EOF
+  fakebin=$(make_fakebin "$home")
+  json=$(run "$home" "$fakebin" --json)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "mate-active" and .owner == "posture-mate"))
+      and (.gates | any(.id == "mate-parked" and .owner == "posture-mate"
+        and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "mate-parked-call" and .owner == "posture-mate"
+        and .reason == "project parked until 2026-08-01"))
+      and (.decisions_open | any(.id == "posture-mate/mate-parked-call") | not)
+      and (.decisions_open | any(.id == "posture-mate/mate-archived-call") | not)
+      and (.gates | any(.id == "mate-archived") | not)
+      and (.landed | any(.id == "mate-active-done" and .owner == "posture-mate"))
+      and (.landed | any(.id == "mate-archived-done") | not)
+      and (.omitted | any(.surface | contains("archived-app")))
+  ' >/dev/null || fail "secondmate posture was not honored from that home's structured state: $json"
+  pass "secondmate project posture is honored from that home's structured state"
+}
+
+test_expired_project_park_resurfaces_with_one_wake() {
+  local home fakebin json check first second
+  home=$(make_home expired-park)
+  : > "$home/data/secondmates.md"
+  cat > "$home/data/projects.md" <<'EOF'
+- app [direct-PR] - Expiry fixture (added 2026-07-01)
+EOF
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+- [ ] app-next - Work on a dated park (repo: app) (kind: ship)
+
+## Done
+EOF
+  FM_HOME="$home" "$ROOT/bin/fm-project-posture.sh" set app parked:2026-08-01 >/dev/null
+  check="$home/state/project-posture-expiry.check.sh"
+  assert_present "$check" "dated park did not arm the expiry check"
+  fakebin=$(make_fakebin "$home")
+  json=$(run "$home" "$fakebin" --json)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "app-next" and .reason == "project parked until 2026-08-01"))
+      and (.in_flight | any(.id == "app-next") | not)
+  ' >/dev/null || fail "future dated park did not sink to Charted Next: $json"
+  first=$(FM_PROJECT_POSTURE_TODAY=2026-07-11 "$check")
+  [ -z "$first" ] || fail "future park woke early: $first"
+  json=$(FM_BEARINGS_NOW=2026-08-01T18:00:00Z PATH="$fakebin:$PATH" FM_HOME="$home" \
+    FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z NET_LOG="$home/net.log" "$BEARINGS" --json)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "app-next" and .reason == "-"))
+      and (.omitted | any(.surface | startswith("archived project work omitted")) | not)
+  ' >/dev/null || fail "expired park did not resurface as active Charted Next work: $json"
+  first=$(FM_PROJECT_POSTURE_TODAY=2026-08-01 "$check")
+  assert_contains "$first" 'project posture expired: app (parked until 2026-08-01)' \
+    "due park did not emit its expiry wake"
+  second=$(FM_PROJECT_POSTURE_TODAY=2026-08-02 "$check")
+  [ -z "$second" ] || fail "expired park repeated its wake on a later run: $second"
+  pass "an expired park resurfaces in Bearings and emits exactly one expiry wake"
+}
+
 test_task_teardown_during_metadata_capture_does_not_abort_snapshot
 test_current_state_uses_captured_status_observation
 test_relaunched_task_does_not_inherit_reused_endpoint_state
@@ -3063,3 +3291,6 @@ test_revealed_deferred_holds_show_their_deferral_reason
 test_pr_repository_cap_and_expansion
 test_per_repository_pr_cap_is_disclosed
 test_projection_and_toon_fail_closed
+test_project_lifecycle_surface_and_bearings_projection
+test_secondmate_project_posture_is_honored_from_structured_state
+test_expired_project_park_resurfaces_with_one_wake

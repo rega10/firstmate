@@ -38,6 +38,11 @@ Board answers are acted on later under the normal authority rules; this skill's 
    It is the single bounded, deterministic fleet-state source for Bearings.
    Do not create or consult a second fleet-state reader, parser contract, status-event-tail interpretation, visible-session recap, ad-hoc project probe, or ad-hoc `gh-axi`/`gh` query.
    The command's header and `--help` output own its exact fields, bounds, opt-ins, and output contract.
+   Read project lifecycle only from its `projects` rows, and from a secondmate record's own `projects` when that home's structured state carries them.
+   `bin/fm-project-posture.sh` is the write owner; Bearings never edits the registry.
+   A permanent or future dated park keeps that project's queued and live work under Charted Next with `project parked` or `project parked until <date>` as its reason, even when the item would otherwise be Captain's Call or Underway, and those parked rows sort to the bottom of Charted Next.
+   A dated park is due and active on its date, so the work resurfaces without waiting for a registry edit.
+   Archived project work stays out of every default Bearings work bucket and the snapshot's `omitted` row names each archived project whose work is suppressed.
    The default performs bounded concurrent remote-ledger reads for registered remote homes under one shared snapshot budget and may refresh the parent-side cache.
    Only pass `--include-prs` when the captain asks for live GitHub PR enrichment.
    For registered secondmates, use the snapshot's structured-home classification and provenance.
@@ -100,6 +105,8 @@ Compose the payload from the same snapshot with the same ranking judgment as the
 - A Charted Next row's optional `kind` separates work from alarms: omit it (or set `"queued"`) for real queued work, and set `"warning"` on every action-free fleet-integrity notice - the `(main-inventory)` gate, an unavailable secondmate home, and an inventory-mismatch repair notice. The board badges a warning row `needs repair` instead of `waiting` and leaves it out of the Charted Next count, so those rows never read as dispatchable queued work.
 - `charted_more` counts omitted queued rows only, while `charted_warning_more` counts omitted warning rows only; keep both counts separate whenever the board payload truncates Charted Next.
 - Every Captain's Call item and every Underway, Recently Landed, and Charted Next row carries an explicit `repo` field. Fill it from the snapshot and task records wherever known; use null or an empty string only as the deliberate genuinely-no-repo marker, in which case the template may show the internal id. Ids otherwise stay in the payload only as the routing channel, and composed reasons name blockers in plain words.
+- Keep permanently parked and future dated project work in the board payload's Charted Next rows with the snapshot's park reason, and do not offer those rows in `dispatch.charted` until the park is due or cleared.
+- Set the board payload's optional `omitted` array to snapshot-shaped `{surface,reveal}` rows for every snapshot disclosure that names archived project work, plus a named row for any parked project work omitted from the bounded board projection; omit the field when neither applies.
 
 Run `build` once after composing the payload.
 Its serve-first sequence publishes the board, establishes or resumes its Lavish session with `lavish-axi`, and only then binds and arms the polling source; use the session URL it prints in the chat digest.
@@ -144,6 +151,7 @@ Rules that keep the contract unambiguous:
 - Every chat digest and file-mode report is a complete current snapshot, never a delta against a prior report.
 - Recently Landed always renders the bounded current baseline, even when the same completions appeared in an earlier report.
 - A captain hold appears in exactly one decision bucket: an unsuppressed live hold is in Captain's Call, while a blocked, dated, or aged hold is in Charted Next; `--all-decisions` moves the latter into Captain's Call and removes its gate.
+- Project lifecycle refines that split without replacing hold classification: parked queued and live work remains Charted Next with its park reason and sorts below other Charted Next rows, a due dated park behaves as active, and archived project work is omitted with a named disclosure.
 - Underway independently reports active work, so an actively worked captain-held task may appear there plus its one decision bucket.
 - A secondmate home can contribute to more than one section at once. Each active child is an Underway row regardless of the home-level `bearings_state`, while that same home's live captain hold is Captain's Call and its queued or external holds stay Charted Next. Do not hide active children because the home also has an open captain hold.
 - The strict boundary keeps action-free items OUT of Captain's Call: a working or validating task, a queued item blocked on another task or a date, landed work, a completed scout's report pointer, a declared `paused:` external wait, and a bare recorded PR with no merge-ready signal each belong to one of the other three sections, never Captain's Call.
