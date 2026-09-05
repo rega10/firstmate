@@ -6,7 +6,7 @@ Current access is preserved throughout: every move requires captain approval for
 
 ## Custody boundaries this rollout does not change
 
-- Local secrets stay in the hardened local vault (Automic Vault).
+- Local secrets stay in the hardened local vault (Automic Vault), which is development-only per-machine injection under the authoritative [secret-store boundary](configuration.md#secret-stores).
   This rollout covers production and team credentials only; it never weakens, duplicates, or replaces hardened local access.
 - Machine and unattended secrets are out of the initial migration.
   Bitwarden Password Manager (human and team credentials) and Bitwarden Secrets Manager (machine and unattended access) are separate custody models with separate consequences.

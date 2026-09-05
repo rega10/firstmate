@@ -273,9 +273,22 @@ The Kimi installer requires an existing regular non-symlink `~/.kimi-code/config
 Its `remove` action excises only the marker-delimited Firstmate region and removes Firstmate's hook files.
 For Pi and pi-signed secondmate launches, `fm-spawn.sh` starts the selected executable with `-e` pointed at the secondmate home's own tracked `.pi/extensions/fm-primary-pi-watch.ts` and `.pi/extensions/fm-primary-turnend-guard.ts`, both already present from the secondmate home's git worktree.
 
+## Secret stores
+
+Firstmate uses two secret stores with a deliberate, non-overlapping boundary, and this section is the authoritative statement of that boundary.
+
+- Automic Vault (the `av` CLI and the Automic Vault application, installed on the developer's Mac) is development-only, per-machine secret injection and hardened CLIs.
+  Its role is to inject a development-time secret into a local worker process's environment on that one machine, such as the optional Claude Code subscription token described below.
+  No production custody, recovery, deployment, or team-credential path routes through Automic Vault.
+- Bitwarden is the custody store for production and team credentials.
+  Human interactive logins, shared team credentials, production service passwords humans hold, and break-glass access are custodied in Bitwarden; the staged rollout and the intended Bitwarden-and-Automic-Vault coexistence end state are owned by [`bitwarden-rollout.md`](bitwarden-rollout.md).
+
+Secret values are never written into the repository, briefs, notes, task records, or chat in either store's workflow; every record names a credential by identifier only.
+
 ## Claude authentication through Automic Vault (config/claude-automic-vault)
 
 `bin/fm-claude-automic-vault.sh` is the single executable owner of Firstmate's optional Claude Code authentication through Automic Vault.
+This is a development-time use of Automic Vault under the [Secret stores](#secret-stores) boundary: a per-machine Claude subscription token injected into local worker processes, never a production or team-credential path.
 This integration is disabled by default and affects only launches whose concrete harness is `claude`.
 It does not wrap, replace, configure, log in, or otherwise change the captain's ordinary `claude` command.
 
