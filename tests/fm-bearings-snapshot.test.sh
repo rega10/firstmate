@@ -1941,12 +1941,13 @@ EOF
 }
 
 test_project_lifecycle_surface_and_bearings_projection() {
-  local home fakebin canonical json bounded toon
+  local home fakebin canonical json bodies bounded toon
   home=$(make_home project-lifecycle)
   : > "$home/data/secondmates.md"
   mkdir -p "$home/projects/due-live" "$home/projects/permanent-live" \
     "$home/projects/permanent-meta-live" "$home/projects/future-live" \
-    "$home/projects/archived-meta-done"
+    "$home/projects/archived-meta-done" "$home/projects/permanent-meta-call" \
+    "$home/projects/archived-meta-call"
   cat > "$home/data/projects.md" <<'EOF'
 - active [no-mistakes +yolo] - Active project (added 2026-07-01)
 - due [direct-PR parked:2026-07-11] - Due project (added 2026-07-01)
@@ -1968,6 +1969,8 @@ EOF
 - [ ] permanent-next - Permanent parked work (repo: permanent) (kind: ship)
 - [ ] future-call - Future parked captain work (repo: future) (kind: captain) (hold: captain chooses route) (hold-kind: captain)
 - [ ] archived-next - Archived queued work (repo: archived) (kind: ship)
+- [ ] permanent-meta-call - Parked captain work identified by metadata (kind: captain) (hold: captain chooses route) (hold-kind: captain)
+- [ ] archived-meta-call - Archived captain work identified by metadata (kind: captain) (hold: captain chooses route) (hold-kind: captain)
 
 ## Done
 - [x] active-done - Active completion (repo: active) (kind: ship) (done 2026-07-10)
@@ -1994,6 +1997,12 @@ EOF
     "window=firstmate:fm-archived-meta-done" "worktree=$home/projects/archived-meta-done" "project=archived" \
     "harness=codex" "kind=ship" "mode=direct-PR"
   printf 'done: archived metadata completion\n' > "$home/state/archived-meta-done.status"
+  fm_write_meta "$home/state/permanent-meta-call.meta" \
+    "window=firstmate:fm-permanent-meta-call" "worktree=$home/projects/permanent-meta-call" "project=permanent" \
+    "harness=codex" "kind=captain" "mode=local-only"
+  fm_write_meta "$home/state/archived-meta-call.meta" \
+    "window=firstmate:fm-archived-meta-call" "worktree=$home/projects/archived-meta-call" "project=archived" \
+    "harness=codex" "kind=captain" "mode=direct-PR"
   fakebin=$(make_fakebin "$home")
   canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
     "$ROOT/bin/fm-fleet-snapshot.sh" --json)
@@ -2017,21 +2026,30 @@ EOF
   printf '%s' "$json" | jq -e '
     [.projects[].name] == ["active", "due", "permanent", "future", "archived", "empty-archived"]
       and ([.in_flight[].id] == ["due-live"])
-      and ([.gates[].id] == ["active-next", "due-next", "permanent-live", "permanent-meta-live", "permanent-next", "future-call", "future-live"])
+      and ([.gates[].id] == ["active-next", "due-next", "permanent-live", "permanent-meta-call", "permanent-meta-live", "permanent-next", "future-call", "future-live"])
       and (.gates | any(.id == "permanent-live" and .reason == "project parked"))
+      and (.gates | any(.id == "permanent-meta-call" and .reason == "project parked"))
       and (.gates | any(.id == "permanent-meta-live" and .reason == "project parked"))
       and (.gates | any(.id == "permanent-next" and .reason == "project parked"))
       and (.gates | any(.id == "future-call" and .reason == "project parked until 2026-08-01"))
       and (.gates | any(.id == "future-live" and .reason == "project parked until 2026-08-01"))
       and (.gates | any(.id == "due-next" and .reason == "-"))
       and (.decisions_open | any(.id == "future-call") | not)
+      and (.decisions_open | any(.id == "permanent-meta-call") | not)
+      and (.decisions_open | any(.id == "archived-meta-call") | not)
       and (.gates | any(.id == "archived-next") | not)
+      and (.gates | any(.id == "archived-meta-call") | not)
       and (.landed | any(.id == "active-done"))
       and (.landed | any(.id == "archived-done") | not)
       and (.landed | any(.id == "archived-meta-done") | not)
       and (.omitted | any(.surface == "archived project work omitted: archived"))
       and ([.omitted[].surface] | any(contains("empty-archived")) | not)
   ' >/dev/null || fail "Bearings did not gate parks, resurface due work, or disclose archives: $json"
+  bodies=$(run "$home" "$fakebin" --json --fields bodies)
+  printf '%s' "$bodies" | jq -e '
+    (.bodies | any(.id == "permanent-meta-call"))
+      and (.bodies | any(.id == "archived-meta-call") | not)
+  ' >/dev/null || fail "optional bodies exposed archived metadata-only project work: $bodies"
   bounded=$(FM_BEARINGS_GATES=2 run "$home" "$fakebin" --json)
   printf '%s' "$bounded" | jq -e '
     [.gates[].id] == ["active-next", "due-next"]
