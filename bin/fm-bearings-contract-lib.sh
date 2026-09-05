@@ -61,7 +61,7 @@ fm_bearings_emit_contract() {
     "pr_url": "Every PR reference is a full URL (https://...), never a bare number: recorded_prs[].url, landed[].artifact when it is a PR, and candidate_prs[].url."
   },
   "enums": {
-    "task_kind": ["ship", "scout", "secondmate", "captain"],
+    "task_kind": ["ship", "scout", "secondmate"],
     "task_state": ["working", "parked", "done", "blocked", "paused", "failed", "unknown", "active_child_work"],
     "secondmate_state": ["captain_decision", "active_child_work", "externally_held", "no_active_work", "unknown"],
     "secondmate_provenance": ["structured-home", "parent-event-fallback", "registered-table", "unknown"],
