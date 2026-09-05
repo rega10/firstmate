@@ -84,6 +84,11 @@ def fm_secondmate_summary_at($today):
       | select(.archived)
       | .name]
      | map(select(. != null)) | unique) as $archived_projects
+  | ([((.active_children // []), (.holds // []), (.decisions_open // []),
+       (.queued // []), (.landed // []), (.endpoints // []))[]?
+      | select(fm_project_lifecycle(.repo; $projects; $today).archived)
+      | .id]
+     | map(select(type == "string" and . != "")) | unique) as $archived_ids
   | (first((.omitted // [])[]? | select(.surface == "project_lifecycle")) // null) as $lifecycle_omission
   | .active_children |= map(select(fm_project_lifecycle(.repo; $projects; $today)
       | (.archived or ($legacy_summary and .parked)) | not))
@@ -106,6 +111,29 @@ def fm_secondmate_summary_at($today):
       - ($before.landed - (.landed | length)))] | max)
   | .counts.endpoints = ([0, ((.counts.endpoints // $before.endpoints)
       - ($before.endpoints - (.endpoints | length)))] | max)
+  | (.invalidity.kind // null) as $legacy_invalid_kind
+  | if $legacy_summary
+      and (["child_current_unavailable","orphan_in_flight","unowned_current","terminal_in_flight"]
+        | index($legacy_invalid_kind)) != null then
+      (.invalidity.ids // []
+       | [.[] as $id | select(($archived_ids | index($id)) == null) | $id]) as $remaining_invalid_ids
+      | if ($remaining_invalid_ids | length) == 0 then
+          .valid = true
+          | .invalidity = {kind:null,ids:[]}
+          | .reason = null
+        elif ($remaining_invalid_ids | length) < ((.invalidity.ids // []) | length) then
+          .invalidity.ids = $remaining_invalid_ids
+          | .reason = (if .invalidity.kind == "child_current_unavailable" then
+                         "child current state unavailable: " + ($remaining_invalid_ids | join(", "))
+                       elif .invalidity.kind == "orphan_in_flight" then
+                         "in-flight backlog item has no child metadata: " + ($remaining_invalid_ids | join(", "))
+                       elif .invalidity.kind == "unowned_current" then
+                         "live child state has no in-flight backlog item: " + ($remaining_invalid_ids | join(", "))
+                       else
+                         "in-flight backlog item has terminal child state: " + ($remaining_invalid_ids | join(", "))
+                       end)
+        else . end
+    else . end
   | .omitted = ([.omitted[]?
         | select(.surface != "project_lifecycle" and .surface != "legacy_posture_unknown")]
       + [if ($archived_projects | length) > 0 or $lifecycle_omission != null then

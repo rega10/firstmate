@@ -3580,6 +3580,56 @@ test_cached_legacy_ledger_discloses_unidentified_posture() {
   pass "legacy ledgers preserve and disclose unidentified posture rows"
 }
 
+test_archived_legacy_invalidity_is_reconciled() {
+  local home mate sshbin json
+  home=$(make_home archived-legacy-invalidity)
+  mate="$TMP_ROOT/archived-legacy-invalidity-mate"
+  mkdir -p "$mate/state"
+  printf -- '- archive-legacy-mate - fixture domain (host: archive-legacy-host; root: /remote/root; home: %s; scope: fixture; projects: archived-app, active-app; added 2026-09-01)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/archive-legacy-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=archive-legacy-host" "remote_root=/remote/root" "home=$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-09-01T22:00:00Z",generated_epoch:1000,home:$home,
+    projects:[
+      {name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null},
+      {name:"active-app",repo:"active-app",posture:"active",parked_until:null}],
+    valid:false,reason:"child current state unavailable: archived-unknown",
+    invalidity:{kind:"child_current_unavailable",ids:["archived-unknown"]},state:"unknown",
+    active_children:[{id:"healthy-active",kind:"ship",state:"working",repo:"active-app",
+      source:"status-log",doing:"Healthy active work"}],decisions_open:[],holds:[],
+    queued:[{id:"archived-unknown",title:"Archived unknown child",repo:"archived-app",
+      blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],blocked_reason:null,
+      hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,hold_age_days:null,
+      captain_actionable:false,kind:"ship"}],landed:[],
+    endpoints:[{id:"archived-unknown",state:"unknown",source:"unavailable",
+      endpoint:{target:"archived-target",exists:false,agent_alive:"dead"}}],
+    counts:{active_children:1,decisions_open:0,holds:0,queued:1,landed:0,endpoints:1},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  run_remote_ledger_bearings "$home" "$sshbin" 1100 >/dev/null
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(run_remote_ledger_bearings "$home" "$sshbin" 1100)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "archive-legacy-mate" and .state == "active_child_work"
+      and .provenance == "structured-home-cache"))
+      and (.in_flight | any(.id == "archive-legacy-mate/healthy-active"))
+      and (.secondmate_reconcile | any(.id == "archive-legacy-mate"
+        and .kind == null and (.ids | length) == 0))
+      and (.secondmate_reconcile | any(.ids[]? == "archived-unknown") | not)
+      and ((.unhealthy_endpoints // []) | any(.id == "archive-legacy-mate/archived-unknown") | not)
+      and (.gates | any(.id == "archived-unknown") | not)
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+  ' >/dev/null || fail "archived legacy invalidity survived lifecycle filtering: $json"
+  pass "archived legacy invalidity is reconciled after lifecycle filtering"
+}
+
 test_archive_filter_updates_summary_counts() {
   local home mate fakebin canonical json
   home=$(make_home archive-filter-counts)
@@ -3902,6 +3952,7 @@ test_project_aware_v1_parked_work_sinks_to_gates
 test_expired_unknown_park_revalidates_cached_summary
 test_expired_held_park_stays_valid
 test_cached_legacy_ledger_discloses_unidentified_posture
+test_archived_legacy_invalidity_is_reconciled
 test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate
 test_expired_parks_do_not_consume_lifecycle_inventory
