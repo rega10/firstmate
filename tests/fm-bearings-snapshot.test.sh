@@ -3346,6 +3346,39 @@ EOF
   pass "secondmate lifecycle filtering precedes every owning-summary bound"
 }
 
+test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible() {
+  local home mate fakebin tmp json
+  home=$(make_home project-aware-v1-ledger)
+  mate="$TMP_ROOT/project-aware-v1-ledger-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home v1-mate "$mate"
+  append_secondmate_registry "$home" v1-mate "$mate"
+  cat > "$mate/data/projects.md" <<'EOF'
+- active-app [no-mistakes] - Active app (added 2026-07-01)
+EOF
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+- [ ] v1-visible - Visible pre-inventory work (repo: active-app) (kind: ship)
+
+## Done
+EOF
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" refresh_local_secondmate_ledgers "$home"
+  tmp="$mate/state/home-summary.json.tmp"
+  jq 'del(.lifecycle_inventory, .counts.lifecycle_inventory)' \
+    "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "v1-visible" and .owner == "v1-mate"))
+      and (.secondmates | any(.id == "v1-mate" and .provenance == "structured-home"))
+      and (.omitted | any(.surface == "secondmate v1-mate lifecycle inventory not published"))
+  ' >/dev/null || fail "project-aware v1 ledger without lifecycle inventory was hidden: $json"
+  pass "project-aware v1 ledgers remain visible without lifecycle inventory"
+}
+
 test_expired_secondmate_park_survives_summary_bounds_and_cache() {
   local home mate fakebin sshbin summary json i
   home=$(make_home expired-secondmate-park-cache)
@@ -3528,5 +3561,6 @@ test_projection_and_toon_fail_closed
 test_project_lifecycle_surface_and_bearings_projection
 test_secondmate_project_posture_is_honored_from_structured_state
 test_secondmate_lifecycle_precedes_owning_summary_bounds
+test_project_aware_v1_ledger_without_lifecycle_inventory_stays_visible
 test_expired_secondmate_park_survives_summary_bounds_and_cache
 test_expired_project_park_resurfaces_with_one_wake

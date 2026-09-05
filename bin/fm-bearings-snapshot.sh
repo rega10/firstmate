@@ -718,6 +718,10 @@ MODEL=$(printf '%s' "$SNAP" | jq -L "$SCRIPT_DIR" \
          | select(.provenance.selected == "structured-home" and .projects_published != true)
          | {surface:("secondmate " + .id + " posture registry not published"),reveal:"refresh that secondmate home summary"}),
         (($snap.secondmate_current.records // [])[]
+         | select(.provenance.selected == "structured-home" and .projects_published == true
+           and .lifecycle_inventory_published != true)
+         | {surface:("secondmate " + .id + " lifecycle inventory not published"),reveal:"refresh that secondmate home summary"}),
+        (($snap.secondmate_current.records // [])[]
          | select(.provenance.summary_source == "remote-ledger-cache")
          | {surface:("secondmate " + .id + " served from cached home ledger"),reveal:"inspect the home ledger publication and remote route"}),
         (([($snap.secondmate_current.records // [])[] | select(.parent_event.activity_scan.input_truncated == true or .parent_event.activity_scan.retained_truncated == true)] | length) as $n | if $n > 0 then {surface:("secondmate parent activity evidence truncated for \($n) record(s)"), reveal:"raise FM_SNAPSHOT_PARENT_ACTIVITY_LINES, FM_SNAPSHOT_PARENT_ACTIVITY_BYTES, or FM_SNAPSHOT_PARENT_ACTIVITIES"} else empty end),

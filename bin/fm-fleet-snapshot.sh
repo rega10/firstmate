@@ -1460,8 +1460,7 @@ length == 1 and (.[0] |
   and (.landed | type) == "array" and (.endpoints | type) == "array"
   and (.counts | type) == "object" and (.omitted | type) == "array"
   and (if has("projects") then
-         (.lifecycle_inventory | type) == "array"
-         and all(.queued[]?;
+         all(.queued[]?;
            has("project_posture") and has("parked_until") and has("backlog_state")
            and has("current_role") and has("child_state") and has("child_source") and has("child_doing"))
        else true end)
@@ -1980,6 +1979,7 @@ secondmate_current_json() {  # <parent-tasks-json-file> <output-file>
          lifecycle_inventory:($summary.lifecycle_inventory // []),
          landed:$summary.landed,endpoints:$summary.endpoints,counts:$summary.counts,omitted:$summary.omitted,
          projects:($summary.projects // []),projects_published:($summary | has("projects")),
+         lifecycle_inventory_published:($summary | has("lifecycle_inventory")),
          parent_event:{raw:$event_raw,note:$event_note,age_seconds:$event_age,open_activities:$activities,open_decisions:$decisions,activity_scan:$activity_scan,reconciliation:$reconciliation},
          terminal_evidence:$terminal,contradiction:$contradiction}' >> "$records_file" || return 1
     else
