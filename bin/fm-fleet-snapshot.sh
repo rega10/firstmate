@@ -1239,9 +1239,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
          | if (.bytes + $row_bytes) <= $lifecycle_budget then
              .rows += [$row] | .bytes += $row_bytes
            else . end)) as $selected
-    | summary($selected.rows; ($lifecycle_total - ($selected.rows | length)))
-    | if ((tojson | utf8bytelength) + 1) <= $summary_max_bytes then .
-      else error("secondmate home summary base exceeds byte limit") end'
+    | summary($selected.rows; ($lifecycle_total - ($selected.rows | length)))'
 }
 
 # Current registered-secondmate aggregation.
