@@ -1452,8 +1452,10 @@ home_summary_refresh_detached() {
 # actionable delivery nor the liveness beacon can wait on the board.
 ORCHESTRA_REFRESH_TRIGGERED_FOR_EXIT=0
 orchestra_refresh_detached() {
-  FM_HOME="$FM_HOME" FM_STATE_OVERRIDE="$STATE" FM_CONFIG_OVERRIDE="$CONFIG" \
-    "$SCRIPT_DIR/fm-orchestra-refresh.sh" </dev/null >/dev/null 2>&1 &
+  (
+    FM_HOME="$FM_HOME" FM_STATE_OVERRIDE="$STATE" FM_CONFIG_OVERRIDE="$CONFIG" \
+      nohup "$SCRIPT_DIR/fm-orchestra-refresh.sh" </dev/null >/dev/null 2>&1 &
+  )
 }
 
 RECONCILE_REQUEST_PID=

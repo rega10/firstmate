@@ -58,6 +58,8 @@ install_fake_orchestra() {  # <case-dir>
   cat > "$checkout/bin/orchestra-dashboard" <<'SH'
 #!/usr/bin/env bash
 set -u
+[ -z "${FM_FAKE_ORCHESTRA_START:-}" ] \
+  || while [ ! -e "$FM_FAKE_ORCHESTRA_START" ]; do sleep 0.05; done
 printf '%s\n' "$*" >> "${FM_FAKE_ORCHESTRA_LOG:?}"
 [ -z "${FM_FAKE_ORCHESTRA_READY:-}" ] || : > "$FM_FAKE_ORCHESTRA_READY"
 if [ -n "${FM_FAKE_ORCHESTRA_RELEASE:-}" ]; then
@@ -3853,20 +3855,28 @@ test_orchestra_no_config_is_a_silent_noop() {
 }
 
 test_orchestra_actionable_wake_triggers_once() {
-  local dir state fakebin out log pid
+  local dir state fakebin out log start pid
   dir=$(make_case orchestra-actionable); state="$dir/state"; fakebin="$dir/fakebin"
-  out="$dir/watch.out"; log="$dir/orchestra.log"
+  out="$dir/watch.out"; log="$dir/orchestra.log"; start="$dir/orchestra.start"
   install_fake_orchestra "$dir"
   printf 'needs-decision: pick a release target\n' > "$state/task.status"
-  FM_FAKE_ORCHESTRA_LOG="$log" watch_bg "$state" "$fakebin" "$out" \
-    FM_CONFIG_OVERRIDE="$dir/config"
+  FM_FAKE_ORCHESTRA_LOG="$log" FM_FAKE_ORCHESTRA_START="$start" \
+    watch_bg "$state" "$fakebin" "$out" FM_CONFIG_OVERRIDE="$dir/config"
   pid=$!
-  wait_for_exit "$pid" 100 || fail "watcher did not surface the Orchestra fixture's actionable wake"
+  if ! wait_for_exit "$pid" 100; then
+    : > "$start"
+    fail "watcher did not surface the Orchestra fixture's actionable wake"
+  fi
+  if [ -e "$log" ]; then
+    : > "$start"
+    fail "Orchestra refresh ran before its post-watcher fixture release"
+  fi
+  : > "$start"
   wait_for_lines "$log" 1 || fail "actionable wake did not invoke Orchestra"
   [ "$(wc -l < "$log" | tr -d '[:space:]')" = 1 ] \
     || fail "one actionable wake invoked Orchestra more than once"
   grep -Fx 'refresh' "$log" >/dev/null || fail "watcher invoked an Orchestra command other than refresh"
-  pass "one actionable wake triggers exactly one foreground Orchestra refresh in the detached worker"
+  pass "one actionable wake triggers one Orchestra refresh after the watcher exits"
 }
 
 test_orchestra_heartbeat_triggers_once() {
