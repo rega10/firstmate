@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+printf 'review-surface: %s\n' "$1"

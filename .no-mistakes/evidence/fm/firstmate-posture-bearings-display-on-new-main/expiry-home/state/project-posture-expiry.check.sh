@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec env FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M1W8ES3MBX9DF63G2G0DWHFJ FM_HOME=/Users/rega1011/.no-mistakes/evidence/01M1W8ES3MBX9DF63G2G0DWHFJ/expiry-home FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/evidence/01M1W8ES3MBX9DF63G2G0DWHFJ/expiry-home/data FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/evidence/01M1W8ES3MBX9DF63G2G0DWHFJ/expiry-home/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M1W8ES3MBX9DF63G2G0DWHFJ/bin/fm-project-posture.sh _check-expiry

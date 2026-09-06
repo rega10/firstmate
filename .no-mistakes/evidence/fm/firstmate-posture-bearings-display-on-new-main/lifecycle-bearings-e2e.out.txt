@@ -1,0 +1,116 @@
+===== TOON (default agent-facing Bearings projection) =====
+schema: fm-bearings.v1
+home: fm-bearings-evid.bpRRbT/lifecycle
+generated: "2026-07-11T18:00:00Z"
+prs: "not_requested (run: /bearings include PRs)"
+projects[5]{name,posture,parked_until,repo,delivery}:
+  active,active,null,active,no-mistakes +yolo
+  due,parked,2026-07-11,due,direct-PR
+  permanent,parked,null,permanent,local-only
+  future,parked,2026-08-01,future,no-mistakes
+  archived,archived,null,archived,direct-PR
+in_flight[2]{id,kind,state,repo,doing}:
+  active-live,ship,unknown,active,harness state unavailable (unknown codex-unverified)
+  due-live,ship,unknown,due,harness state unavailable (unknown codex-unverified)
+secondmates: []
+secondmate_reconcile: []
+decisions_open: []
+landed[1]{id,what,artifact,owner}:
+  active-done,Active completion,"-",(main)
+gates[6]{id,title,blocked_by,reason,owner}:
+  active-next,Active queued work,"-","-",(main)
+  due-next,Due parked work resurfaces,"-","-",(main)
+  permanent-live,Permanently parked live work,"-",project parked,(main)
+  permanent-next,Permanent parked work,"-",project parked,(main)
+  future-live,Future parked live work,"-",project parked until 2026-08-01,(main)
+  future-call,Future parked captain work,"-",project parked until 2026-08-01,(main)
+reports: []
+recorded_prs: []
+omitted[7]{surface,reveal}:
+  backlog item bodies,"--fields bodies"
+  "archived project work omitted: archived",bin/fm-project-posture.sh set <project> active
+  task paths,"--fields paths"
+  watch/steer actions,"--fields actions"
+  healthy endpoint detail,"--fields endpoints"
+  full scout-report inventory,"--all-reports"
+  live PR discovery + checks,"--include-prs"
+
+===== JSON parity: projects[] posture surface + Charted Next gate ordering =====
+{
+  "projects": [
+    {
+      "name": "active",
+      "posture": "active",
+      "parked_until": null,
+      "repo": "active",
+      "delivery": "no-mistakes +yolo"
+    },
+    {
+      "name": "due",
+      "posture": "parked",
+      "parked_until": "2026-07-11",
+      "repo": "due",
+      "delivery": "direct-PR"
+    },
+    {
+      "name": "permanent",
+      "posture": "parked",
+      "parked_until": null,
+      "repo": "permanent",
+      "delivery": "local-only"
+    },
+    {
+      "name": "future",
+      "posture": "parked",
+      "parked_until": "2026-08-01",
+      "repo": "future",
+      "delivery": "no-mistakes"
+    },
+    {
+      "name": "archived",
+      "posture": "archived",
+      "parked_until": null,
+      "repo": "archived",
+      "delivery": "direct-PR"
+    }
+  ],
+  "underway": [
+    "active-live",
+    "due-live"
+  ],
+  "charted_next": [
+    {
+      "id": "active-next",
+      "reason": "-"
+    },
+    {
+      "id": "due-next",
+      "reason": "-"
+    },
+    {
+      "id": "permanent-live",
+      "reason": "project parked"
+    },
+    {
+      "id": "permanent-next",
+      "reason": "project parked"
+    },
+    {
+      "id": "future-live",
+      "reason": "project parked until 2026-08-01"
+    },
+    {
+      "id": "future-call",
+      "reason": "project parked until 2026-08-01"
+    }
+  ],
+  "omitted": [
+    "backlog item bodies",
+    "archived project work omitted: archived",
+    "task paths",
+    "watch/steer actions",
+    "healthy endpoint detail",
+    "full scout-report inventory",
+    "live PR discovery + checks"
+  ]
+}

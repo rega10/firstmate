@@ -1,0 +1,1 @@
+- wake-app [direct-PR parked:2026-10-01] - Expiry wake fixture (added 2026-09-01)

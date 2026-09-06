@@ -1,0 +1,4 @@
+- active-app [no-mistakes] - Active project (added 2026-09-01)
+- due-app [direct-PR parked:2026-09-06] - Park due today (added 2026-09-01)
+- parked-app [local-only parked:2026-10-01] - Future parked project (added 2026-09-01)
+- archived-app [local-only archived] - Archived project (added 2026-09-01)

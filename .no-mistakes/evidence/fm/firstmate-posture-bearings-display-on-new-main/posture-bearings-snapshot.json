@@ -1,0 +1,96 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": "01M1W8ES3MBX9DF63G2G0DWHFJ/snapshot-home",
+  "generated": "2026-09-06T17:00:00Z",
+  "prs": "not_requested (run: /bearings include PRs)",
+  "projects": [
+    {
+      "name": "active-app",
+      "posture": "active",
+      "parked_until": null,
+      "repo": "active-app",
+      "delivery": "no-mistakes"
+    },
+    {
+      "name": "due-app",
+      "posture": "parked",
+      "parked_until": "2026-09-06",
+      "repo": "due-app",
+      "delivery": "direct-PR"
+    },
+    {
+      "name": "parked-app",
+      "posture": "parked",
+      "parked_until": "2026-10-01",
+      "repo": "parked-app",
+      "delivery": "local-only"
+    },
+    {
+      "name": "archived-app",
+      "posture": "archived",
+      "parked_until": null,
+      "repo": "archived-app",
+      "delivery": "local-only"
+    }
+  ],
+  "in_flight": [],
+  "secondmates": [],
+  "secondmate_reconcile": [],
+  "decisions_open": [],
+  "landed": [],
+  "gates": [
+    {
+      "id": "active-next",
+      "title": "Active work is ready",
+      "blocked_by": "-",
+      "reason": "-",
+      "owner": "(main)"
+    },
+    {
+      "id": "due-next",
+      "title": "Expired park resurfaces",
+      "blocked_by": "-",
+      "reason": "-",
+      "owner": "(main)"
+    },
+    {
+      "id": "parked-next",
+      "title": "Future park stays charted",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-10-01",
+      "owner": "(main)"
+    }
+  ],
+  "reports": [],
+  "recorded_prs": [],
+  "omitted": [
+    {
+      "surface": "backlog item bodies",
+      "reveal": "--fields bodies"
+    },
+    {
+      "surface": "archived project work omitted: archived-app",
+      "reveal": "bin/fm-project-posture.sh set <project> active"
+    },
+    {
+      "surface": "task paths",
+      "reveal": "--fields paths"
+    },
+    {
+      "surface": "watch/steer actions",
+      "reveal": "--fields actions"
+    },
+    {
+      "surface": "healthy endpoint detail",
+      "reveal": "--fields endpoints"
+    },
+    {
+      "surface": "full scout-report inventory",
+      "reveal": "--all-reports"
+    },
+    {
+      "surface": "live PR discovery + checks",
+      "reveal": "--include-prs"
+    }
+  ]
+}

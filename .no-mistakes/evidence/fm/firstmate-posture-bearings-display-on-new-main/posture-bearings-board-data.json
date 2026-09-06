@@ -1,0 +1,41 @@
+{
+  "schema": "fm-bearings-board.v1",
+  "home": "posture-registry-e2e",
+  "generated": "2026-09-06T12:00:00-05:00",
+  "prs_live": false,
+  "captains_call": [],
+  "underway": [
+    {
+      "id": "active-live",
+      "repo": "active-app",
+      "state": "working",
+      "doing": "Active project remains visible in Underway",
+      "kind": "ship"
+    }
+  ],
+  "landed": [],
+  "charted": [
+    {
+      "id": "due-next",
+      "repo": "due-app",
+      "title": "Expired park resurfaced automatically",
+      "reason": "ready",
+      "dispatchable": true
+    },
+    {
+      "id": "parked-next",
+      "repo": "parked-app",
+      "title": "Parked work stays below active work",
+      "reason": "project parked until 2026-10-01",
+      "dispatchable": false
+    }
+  ],
+  "charted_more": 0,
+  "charted_warning_more": 0,
+  "omitted": [
+    {
+      "surface": "archived project work omitted: archived-app",
+      "reveal": "bin/fm-project-posture.sh set archived-app active"
+    }
+  ]
+}
