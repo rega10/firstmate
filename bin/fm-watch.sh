@@ -1453,8 +1453,12 @@ home_summary_refresh_detached() {
 ORCHESTRA_REFRESH_TRIGGERED_FOR_EXIT=0
 orchestra_refresh_detached() {
   (
+    local monitor_was_on=0
+    case $- in *m*) monitor_was_on=1 ;; esac
+    set -m 2>/dev/null || true
     FM_HOME="$FM_HOME" FM_STATE_OVERRIDE="$STATE" FM_CONFIG_OVERRIDE="$CONFIG" \
       nohup "$SCRIPT_DIR/fm-orchestra-refresh.sh" </dev/null >/dev/null 2>&1 &
+    [ "$monitor_was_on" -eq 1 ] || set +m 2>/dev/null || true
   )
 }
 
