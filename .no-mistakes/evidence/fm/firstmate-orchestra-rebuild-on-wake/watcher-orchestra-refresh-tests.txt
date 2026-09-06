@@ -1,0 +1,20 @@
+############################################################
+# Firstmate live-board refresh: watcher behavioral tests
+############################################################
+
+===== tests/fm-watch-checkpoint.test.sh (full file) =====
+ok - quiet checkpoint exits 124 with a clean checkpoint line and no live lock
+WAKE_ACK_REQUIRED: after handling completes run bin/fm-wake-drain.sh --ack-through 2 --recovery-generation 10353.1788728774.vT1xOT
+ok - checkpoint passes through a real watcher wake and leaves the queue for drain
+ok - checkpoint preserves watcher environment for registered custom checks
+ok - checkpoint rejects an existing watcher singleton as unowned
+ok - checkpoint timeout spares the detached heartbeat refresh process group
+[checkpoint file exit: 0]
+
+===== tests/fm-watch-triage.test.sh :: Orchestra refresh tests (focused) =====
+ok - a home without Orchestra configuration keeps watcher behavior unchanged
+ok - one actionable wake triggers one Orchestra refresh after the watcher exits
+ok - a watcher heartbeat triggers one Orchestra refresh without surfacing a wake
+ok - Orchestra's coalesced exit 3 is treated as success
+ok - overlapping triggers each reach Orchestra so it owns coalescing
+[orchestra triage focused exit: 0]

@@ -1,0 +1,18 @@
+=== fm-orchestra-refresh.sh observable behavior (Firstmate live-board trigger) ===
+
+--- 1. No config/orchestra-dashboard file: silent successful no-op ---
+exit=0 (expect 0); orchestra invoked: NO (expect NO)
+
+--- 2. Valid config -> invokes exactly 'orchestra-dashboard refresh' (never build/open) ---
+exit=0 (expect 0)
+orchestra command log:
+    refresh
+
+--- 3. Orchestra exit 3 (coalesced into active trailing rebuild): still success ---
+exit=0 (expect 0 - side band never changes watcher result)
+
+--- 4. Orchestra exit 2 (failed before publishing): wrapper still exits 0, board stale banner is the failure signal ---
+exit=0 (expect 0)
+
+--- 5. Non-absolute checkout path: rejected as invalid, silent no-op ---
+exit=0 (expect 0); orchestra invoked: NO (expect NO)
