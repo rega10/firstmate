@@ -94,7 +94,7 @@ def fm_secondmate_summary_at($today):
   | ([.endpoints[]? | select(.state == "unknown") | .id]
      | map(select(type == "string" and . != "")) | unique) as $visible_unknown_ids
   | .omitted = ([.omitted[]?
-        | select(.surface != "project_lifecycle" and .surface != "lifecycle_inventory")]
+        | select(.surface != "project_lifecycle")]
       + [if ($archived_projects | length) > 0 or $lifecycle_omission != null then
            {surface:"project_lifecycle",
             archived_projects:((($lifecycle_omission.archived_projects // []) + $archived_projects) | unique),

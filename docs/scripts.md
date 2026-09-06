@@ -172,6 +172,8 @@ Renaming or removing a field or surface, or removing or renaming an enum value, 
 Project lifecycle posture is a projection rule on that same contract, not a second vocabulary.
 `projects[]` is the registry surface and `bin/fm-project-posture.sh` is the write owner.
 Bearings applies parked and archived placement to Charted Next, omission, and `omitted[]` after one identity-normalization pass.
+Each secondmate summary retains at most 200 current parked task facts for read-time expiry reconstruction and discloses the remainder in `omitted[]`; an omitted parked task may not auto-resurface at expiry until earlier parked work clears the bound.
+Live PR suppression covers main-home lifecycle facts, recorded PR URLs, and repository-scoped branch matches only, so a parked or archived secondmate PR may briefly appear in Captain's Call.
 
 Consumer example: an external tool reads `.schema` first and refuses a major version it does not understand, then treats `omitted` as a disclosure to surface, never to hide.
 
@@ -184,4 +186,3 @@ esac
 # Render the surfaces the contract declares, and show (never swallow) what was left out.
 printf '%s' "$snap" | jq -r '.omitted[] | "note: \(.surface) (reveal with: \(.reveal))"'
 ```
-

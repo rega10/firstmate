@@ -4114,7 +4114,7 @@ test_long_secondmate_project_identity_is_preserved() {
   pass "secondmate summaries preserve long canonical project identities"
 }
 
-test_lifecycle_inventory_is_complete() {
+test_lifecycle_inventory_is_bounded_and_disclosed() {
   local home mate fakebin summary json i
   home=$(make_home expired-park-inventory-cap)
   mate="$TMP_ROOT/expired-park-inventory-cap-mate"
@@ -4140,8 +4140,8 @@ EOF
     i=$((i + 1))
   done
   i=1
-  while [ "$i" -le 201 ]; do
-    printf -- '- [ ] b-future-%03d - Future parked gate %03d (repo: future-app) (kind: ship)\n' "$i" "$i" \
+  while [ "$i" -le 2001 ]; do
+    printf -- '- [ ] b-future-%04d - Future parked gate %04d (repo: future-app) (kind: ship)\n' "$i" "$i" \
       >> "$mate/data/backlog.md"
     i=$((i + 1))
   done
@@ -4167,11 +4167,12 @@ EOF
     FM_SNAPSHOT_SECONDMATE_QUEUED=20 "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
   summary=$(<"$mate/state/home-summary.json")
   printf '%s' "$summary" | jq -e '
-    (.lifecycle_inventory | length) == 202
-      and (.lifecycle_inventory | any(.id == "b-future-201"))
-      and (.lifecycle_inventory | any(.id == "z-future-park"))
+    (.lifecycle_inventory | length) == 200
+      and (.lifecycle_inventory | any(.id == "b-future-0200"))
+      and (.lifecycle_inventory | any(.id == "b-future-0201") | not)
+      and (.lifecycle_inventory | any(.id == "z-future-park") | not)
       and (.lifecycle_inventory | any(.id == "historical-600") | not)
-      and (.omitted | any(.surface == "lifecycle_inventory") | not)
+      and (.omitted | any(.surface == "lifecycle_inventory" and .count == 1802))
       and (.active_children | map(select(.id == "a-expired-live")) | length) == 1
       and .counts.active_children == 1
       and (.queued | length) == 20
@@ -4186,8 +4187,9 @@ EOF
     (.gates | any(.id == "z-future-park" and .owner == "inventory-mate") | not)
       and ([.in_flight[] | select(.id == "inventory-mate/a-expired-live")] | length) == 1
       and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: future-app"))
-  ' >/dev/null || fail "bounded future parks bypassed their summary disclosure: $json"
-  pass "lifecycle inventory is complete beyond projection bounds"
+      and (.omitted | any(.surface == "secondmate inventory-mate parked lifecycle facts omitted by summary bound: 1802"))
+  ' >/dev/null || fail "bounded future parks bypassed lifecycle disclosure: $json"
+  pass "lifecycle inventory is bounded with explicit omission disclosure"
 }
 
 test_expired_secondmate_park_survives_summary_bounds_and_cache() {
@@ -4397,6 +4399,6 @@ test_expired_held_park_stays_valid
 test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate
 test_long_secondmate_project_identity_is_preserved
-test_lifecycle_inventory_is_complete
+test_lifecycle_inventory_is_bounded_and_disclosed
 test_expired_secondmate_park_survives_summary_bounds_and_cache
 test_expired_project_park_resurfaces_with_one_wake
