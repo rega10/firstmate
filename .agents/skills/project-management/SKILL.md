@@ -35,7 +35,7 @@ Do not overwrite or repurpose an existing path.
 
 Lifecycle posture is orthogonal to delivery and merge authority.
 An absent token means active; `parked` marks the project parked indefinitely, `parked:YYYY-MM-DD` until that date, and `archived` marks it retired.
-These lifecycle states are recorded in `data/projects.md` and surfaced in the fleet snapshot's `projects[]`; how default Bearings views consume them (parked work as a Charted Next gate, archived work omitted with disclosure) is a pending follow-up rebuilt on the new main.
+These lifecycle states are recorded in `data/projects.md` and surfaced in the fleet snapshot's `projects[]`; how Bearings consumes them (parked work at the bottom of Charted Next with its park reason, archived work omitted with disclosure) is owned by [`docs/configuration.md`](../../../docs/configuration.md#project-registry-dataprojectsmd) and applied by `bin/fm-bearings-snapshot.sh`.
 Use `bin/fm-project-posture.sh` for lifecycle changes; its header owns command mechanics and the expiry-wake path.
 
 ## Delivery posture
