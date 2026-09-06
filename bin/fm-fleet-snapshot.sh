@@ -241,10 +241,10 @@ Its invalidity object names the normalized failure kind and affected ids.
 Actionable tasks-axi captain holds appear as decisions_open and stay visible in
 queued with hold_reason, hold_kind, hold_until,
 hold_bucket, hold_age_days, and plural blocker fields for downstream
-projections. Each summary also publishes up to 200 lifecycle_inventory rows for
-current parked task facts so dated posture is evaluated when read without depending
-on ordinary projection bounds. omitted[] discloses additional parked facts; those
-tasks may not resurface at expiry until the bound clears.
+projections. Each summary byte-bounds lifecycle_inventory within the fixed
+262144-byte publication limit while retaining current parked task facts in
+deterministic order. omitted[] discloses additional parked facts; those tasks may
+not resurface at expiry until the bound clears.
 A captain hold is actionable only when every blocker is Done, any
 hold-until date has arrived, and an undated hold remains below the aging threshold.
 Cross-home collection uses FM_SNAPSHOT_SECONDMATES (default 20, 0 lifts the
@@ -973,7 +973,7 @@ main_inventory_json() {  # <backlog-json-file> <tasks-json-file> <projects-json-
 # This mode never reads parent events or terminal text and never aggregates
 # nested secondmates.
 secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <projects-json-file>
-  jq -L "$SCRIPT_DIR" -n \
+  jq -c -L "$SCRIPT_DIR" -n \
     --arg generated "$SNAPSHOT_NOW" \
     --arg today "${SNAPSHOT_NOW%%T*}" \
     --argjson generated_epoch "$SNAPSHOT_EPOCH" \
@@ -982,7 +982,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     --argjson queued_n "$FM_SNAPSHOT_SECONDMATE_QUEUED" \
     --argjson decisions_n "$FM_SNAPSHOT_SECONDMATE_DECISIONS" \
     --argjson landed_n "$FM_SNAPSHOT_SECONDMATE_LANDED_PER_HOME" \
-    --argjson lifecycle_n 200 \
+    --argjson summary_max_bytes 262144 \
     --slurpfile backlog "$1" \
     --slurpfile tasks "$2" \
     --slurpfile projects "$3" '
@@ -1000,7 +1000,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
     def lifecycle($repo): fm_project_lifecycle(normalized_project($repo); $project_list; $today);
     def lifecycle_item($record; $task):
       ($record.repo // $task.project // null) as $repo
-      | {id:(($record.id // $task.id) | trunc(120)),
+      | {id:($record.id // $task.id),
          title:(($record.title // $task.backlog.title // $task.id) | trunc(120)),
          repo:($repo // null),
          backlog_state:($record.state // null),current_role:($record.current_role // null),
@@ -1162,7 +1162,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
        elif ($active_all | length) > 0 then "active_child_work"
        elif ($holds_all | length) > 0 then "externally_held"
        else "no_active_work" end) as $state
-    | {
+    | def summary($lifecycle_inventory; $lifecycle_omitted): {
         schema:"fm-secondmate-home-summary.v1",
         hold_classifier_schema:"fm-captain-hold-buckets.v1",
         generated:$generated,
@@ -1178,7 +1178,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         active_children:$active_all[:$child_n],
         decisions_open:$decisions_all[:$decisions_n],
         holds:$holds_all[:$queued_n],
-        lifecycle_inventory:$lifecycle_inventory_all[:$lifecycle_n],
+        lifecycle_inventory:$lifecycle_inventory,
         queued:([$queued_all[] as $row
           | (first($tasks[]? | select(.id == $row.id)) // null) as $task
           | $row
@@ -1223,12 +1223,25 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
            else empty end),
           (if ($active_all | length) > $child_n then {surface:"active_children",count:(($active_all | length) - $child_n)} else empty end),
           (if ($decisions_all | length) > $decisions_n then {surface:"decisions_open",count:(($decisions_all | length) - $decisions_n)} else empty end),
-          (if ($lifecycle_inventory_all | length) > $lifecycle_n then {surface:"lifecycle_inventory",count:(($lifecycle_inventory_all | length) - $lifecycle_n)} else empty end),
+          (if $lifecycle_omitted > 0 then {surface:"lifecycle_inventory",count:$lifecycle_omitted} else empty end),
           (if ($queued_all | length) > $queued_n then {surface:"queued",count:(($queued_all | length) - $queued_n)} else empty end),
           (if ($visible_tasks | length) > $child_n then {surface:"endpoints",count:(($visible_tasks | length) - $child_n)} else empty end),
           (if $landed_n > 0 and ($landed_all | length) > $landed_n then {surface:"landed",count:(($landed_all | length) - $landed_n)} else empty end)
         ]
-      }'
+      };
+    ($lifecycle_inventory_all | length) as $lifecycle_total
+    | (summary([]; $lifecycle_total) | tojson | utf8bytelength + 1) as $base_bytes
+    | ([0, ($summary_max_bytes - $base_bytes)] | max) as $lifecycle_budget
+    | (reduce $lifecycle_inventory_all[] as $row
+        ({rows:[],bytes:0};
+         (($row | tojson | utf8bytelength)
+           + (if (.rows | length) > 0 then 1 else 0 end)) as $row_bytes
+         | if (.bytes + $row_bytes) <= $lifecycle_budget then
+             .rows += [$row] | .bytes += $row_bytes
+           else . end)) as $selected
+    | summary($selected.rows; ($lifecycle_total - ($selected.rows | length)))
+    | if ((tojson | utf8bytelength) + 1) <= $summary_max_bytes then .
+      else error("secondmate home summary base exceeds byte limit") end'
 }
 
 # Current registered-secondmate aggregation.

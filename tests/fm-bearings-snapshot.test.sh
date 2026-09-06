@@ -4115,7 +4115,7 @@ test_long_secondmate_project_identity_is_preserved() {
 }
 
 test_lifecycle_inventory_is_bounded_and_disclosed() {
-  local home mate fakebin summary json i
+  local home mate fakebin summary json i large_hold inventory_count omitted_count
   home=$(make_home expired-park-inventory-cap)
   mate="$TMP_ROOT/expired-park-inventory-cap-mate"
   : > "$home/data/secondmates.md"
@@ -4139,10 +4139,16 @@ EOF
       >> "$mate/data/backlog.md"
     i=$((i + 1))
   done
+  large_hold=$(printf '%040000d' 0)
   i=1
-  while [ "$i" -le 2001 ]; do
-    printf -- '- [ ] b-future-%04d - Future parked gate %04d (repo: future-app) (kind: ship)\n' "$i" "$i" \
-      >> "$mate/data/backlog.md"
+  while [ "$i" -le 250 ]; do
+    if [ "$i" -le 10 ]; then
+      printf -- '- [ ] b-future-%04d - Future parked gate %04d (repo: future-app) (kind: captain) (hold: %s) (hold-kind: captain)\n' \
+        "$i" "$i" "$large_hold" >> "$mate/data/backlog.md"
+    else
+      printf -- '- [ ] b-future-%04d - Future parked gate %04d (repo: future-app) (kind: ship)\n' "$i" "$i" \
+        >> "$mate/data/backlog.md"
+    fi
     i=$((i + 1))
   done
   cat >> "$mate/data/backlog.md" <<'EOF'
@@ -4167,12 +4173,13 @@ EOF
     FM_SNAPSHOT_SECONDMATE_QUEUED=20 "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
   summary=$(<"$mate/state/home-summary.json")
   printf '%s' "$summary" | jq -e '
-    (.lifecycle_inventory | length) == 200
-      and (.lifecycle_inventory | any(.id == "b-future-0200"))
-      and (.lifecycle_inventory | any(.id == "b-future-0201") | not)
-      and (.lifecycle_inventory | any(.id == "z-future-park") | not)
+    (.lifecycle_inventory | length) > 0
+      and (.lifecycle_inventory | length) < 200
+      and (.lifecycle_inventory | any(.id == "b-future-0001" and .repo == "future-app"))
+      and (.lifecycle_inventory | any(.id == "b-future-0011" and .repo == "future-app"))
       and (.lifecycle_inventory | any(.id == "historical-600") | not)
-      and (.omitted | any(.surface == "lifecycle_inventory" and .count == 1802))
+      and ((.lifecycle_inventory | length) as $kept
+        | .omitted | any(.surface == "lifecycle_inventory" and .count == (251 - $kept)))
       and (.active_children | map(select(.id == "a-expired-live")) | length) == 1
       and .counts.active_children == 1
       and (.queued | length) == 20
@@ -4180,14 +4187,16 @@ EOF
   ' >/dev/null || fail "lifecycle inventory retained history or fresh active counts changed: $summary"
   [ "$(wc -c < "$mate/state/home-summary.json" | tr -d ' ')" -le 262144 ] \
     || fail "current lifecycle inventory exceeded the remote summary byte limit"
+  inventory_count=$(printf '%s' "$summary" | jq '.lifecycle_inventory | length')
+  omitted_count=$((251 - inventory_count))
   json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
     FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
     NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-queued)
-  printf '%s' "$json" | jq -e '
+  printf '%s' "$json" | jq -e --argjson omitted_count "$omitted_count" '
     (.gates | any(.id == "z-future-park" and .owner == "inventory-mate") | not)
       and ([.in_flight[] | select(.id == "inventory-mate/a-expired-live")] | length) == 1
       and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: future-app"))
-      and (.omitted | any(.surface == "secondmate inventory-mate parked lifecycle facts omitted by summary bound: 1802"))
+      and (.omitted | any(.surface == ("secondmate inventory-mate parked lifecycle facts omitted by summary bound: " + ($omitted_count | tostring))))
   ' >/dev/null || fail "bounded future parks bypassed lifecycle disclosure: $json"
   pass "lifecycle inventory is bounded with explicit omission disclosure"
 }
