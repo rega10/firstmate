@@ -15,6 +15,16 @@ make_home() {
   printf '%s\n' "$home"
 }
 
+wait_for_path() {
+  local path=$1 limit=${2:-100} i=0
+  while [ "$i" -lt "$limit" ]; do
+    [ -e "$path" ] && return 0
+    sleep 0.1
+    i=$((i + 1))
+  done
+  return 1
+}
+
 test_quiet_checkpoint_exits_124_cleanly() {
   local home out err status
   home=$(make_home quiet)
@@ -81,7 +91,56 @@ test_existing_singleton_watcher_is_not_success() {
   pass "checkpoint rejects an existing watcher singleton as unowned"
 }
 
+test_checkpoint_timeout_spares_heartbeat_refresh() {
+  local home checkout out err log started release completed status_file checkpoint_pid status
+  home=$(make_home heartbeat-refresh)
+  checkout="$home/orchestra"
+  out="$home/out.txt"
+  err="$home/err.txt"
+  log="$home/orchestra.log"
+  started="$home/orchestra.started"
+  release="$home/orchestra.release"
+  completed="$home/orchestra.completed"
+  status_file="$home/checkpoint.status"
+  mkdir -p "$checkout/bin"
+  printf '%s\n' "$checkout" > "$home/config/orchestra-dashboard"
+  cat > "$checkout/bin/orchestra-dashboard" <<'SH'
+#!/usr/bin/env bash
+set -u
+printf '%s\n' "$*" >> "${FM_FAKE_ORCHESTRA_LOG:?}"
+: > "${FM_FAKE_ORCHESTRA_STARTED:?}"
+while [ ! -e "${FM_FAKE_ORCHESTRA_RELEASE:?}" ]; do sleep 0.05; done
+: > "${FM_FAKE_ORCHESTRA_COMPLETED:?}"
+SH
+  chmod +x "$checkout/bin/orchestra-dashboard"
+  (
+    status=0
+    FM_HOME="$home" FM_POLL=0.1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 \
+      FM_HEARTBEAT=1 FM_HEARTBEAT_MAX=1 FM_FAKE_ORCHESTRA_LOG="$log" \
+      FM_FAKE_ORCHESTRA_STARTED="$started" FM_FAKE_ORCHESTRA_RELEASE="$release" \
+      FM_FAKE_ORCHESTRA_COMPLETED="$completed" \
+      "$CHECKPOINT" --seconds 3 > "$out" 2> "$err" || status=$?
+    printf '%s\n' "$status" > "$status_file"
+  ) &
+  checkpoint_pid=$!
+  if ! wait_for_path "$started" 50; then
+    : > "$release"
+    wait "$checkpoint_pid" 2>/dev/null || true
+    fail "heartbeat did not start Orchestra before the checkpoint deadline"
+  fi
+  wait "$checkpoint_pid" || true
+  status=$(cat "$status_file" 2>/dev/null || true)
+  expect_code 124 "$status" "heartbeat checkpoint timeout"
+  assert_absent "$completed" "Orchestra completed before its post-timeout release"
+  : > "$release"
+  wait_for_path "$completed" 50 \
+    || fail "checkpoint process-group termination killed the detached Orchestra refresh"
+  assert_grep 'refresh' "$log" "heartbeat invoked an Orchestra command other than refresh"
+  pass "checkpoint timeout spares the detached heartbeat refresh process group"
+}
+
 test_quiet_checkpoint_exits_124_cleanly
 test_signal_passes_through_and_exits_zero
 test_registered_check_uses_preserved_watcher_environment
 test_existing_singleton_watcher_is_not_success
+test_checkpoint_timeout_spares_heartbeat_refresh

@@ -47,8 +47,42 @@ ack_stopped_cycle() {  # <state>
 watch_bg() {  # <state> <fakebin> <out> [extra env assignments...]
   local state=$1 fakebin=$2 out=$3
   shift 3
-  PATH="$fakebin:$PATH" FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" \
+  env PATH="$fakebin:$PATH" FM_STATE_OVERRIDE="$state" FM_CREW_STATE_BIN="$fakebin/fm-crew-state.sh" \
     FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 "$@" "$WATCH" > "$out" &
+}
+
+install_fake_orchestra() {  # <case-dir>
+  local dir=$1 checkout="$1/orchestra"
+  mkdir -p "$dir/config" "$checkout/bin"
+  printf '%s\n' "$checkout" > "$dir/config/orchestra-dashboard"
+  cat > "$checkout/bin/orchestra-dashboard" <<'SH'
+#!/usr/bin/env bash
+set -u
+[ -z "${FM_FAKE_ORCHESTRA_START:-}" ] \
+  || while [ ! -e "$FM_FAKE_ORCHESTRA_START" ]; do sleep 0.05; done
+printf '%s\n' "$*" >> "${FM_FAKE_ORCHESTRA_LOG:?}"
+[ -z "${FM_FAKE_ORCHESTRA_READY:-}" ] || : > "$FM_FAKE_ORCHESTRA_READY"
+if [ -n "${FM_FAKE_ORCHESTRA_RELEASE:-}" ]; then
+  while [ ! -e "$FM_FAKE_ORCHESTRA_RELEASE" ]; do sleep 0.05; done
+fi
+exit "${FM_FAKE_ORCHESTRA_EXIT:-0}"
+SH
+  chmod +x "$checkout/bin/orchestra-dashboard"
+}
+
+wait_for_lines() {  # <file> <count> [limit-ticks]
+  local file=$1 expected=$2 limit=${3:-100} i=0 count
+  while [ "$i" -lt "$limit" ]; do
+    if [ -f "$file" ]; then
+      count=$(wc -l < "$file" | tr -d '[:space:]')
+    else
+      count=0
+    fi
+    [ "${count:-0}" -ge "$expected" ] && return 0
+    sleep 0.1
+    i=$((i + 1))
+  done
+  return 1
 }
 
 # Wait up to <limit> 0.1s ticks while <pid> stays alive; 0 if still alive, 1 if it died.
@@ -3806,6 +3840,95 @@ test_procevent_marker_failure_exits_and_replays() {
 
 # --- heartbeat: no-change absorbed, backstop surfaces a missed status --------
 
+test_orchestra_no_config_is_a_silent_noop() {
+  local dir state fakebin out log pid
+  dir=$(make_case orchestra-no-config); state="$dir/state"; fakebin="$dir/fakebin"
+  out="$dir/watch.out"; log="$dir/orchestra.log"
+  printf 'needs-decision: pick a release target\n' > "$state/task.status"
+  FM_FAKE_ORCHESTRA_LOG="$log" watch_bg "$state" "$fakebin" "$out" \
+    FM_CONFIG_OVERRIDE="$dir/config"
+  pid=$!
+  wait_for_exit "$pid" 100 || fail "watcher did not surface the no-config fixture's actionable wake"
+  sleep 0.2
+  [ ! -e "$log" ] || fail "a home without config/orchestra-dashboard invoked Orchestra"
+  pass "a home without Orchestra configuration keeps watcher behavior unchanged"
+}
+
+test_orchestra_actionable_wake_triggers_once() {
+  local dir state fakebin out log start pid
+  dir=$(make_case orchestra-actionable); state="$dir/state"; fakebin="$dir/fakebin"
+  out="$dir/watch.out"; log="$dir/orchestra.log"; start="$dir/orchestra.start"
+  install_fake_orchestra "$dir"
+  printf 'needs-decision: pick a release target\n' > "$state/task.status"
+  FM_FAKE_ORCHESTRA_LOG="$log" FM_FAKE_ORCHESTRA_START="$start" \
+    watch_bg "$state" "$fakebin" "$out" FM_CONFIG_OVERRIDE="$dir/config"
+  pid=$!
+  if ! wait_for_exit "$pid" 100; then
+    : > "$start"
+    fail "watcher did not surface the Orchestra fixture's actionable wake"
+  fi
+  if [ -e "$log" ]; then
+    : > "$start"
+    fail "Orchestra refresh ran before its post-watcher fixture release"
+  fi
+  : > "$start"
+  wait_for_lines "$log" 1 || fail "actionable wake did not invoke Orchestra"
+  [ "$(wc -l < "$log" | tr -d '[:space:]')" = 1 ] \
+    || fail "one actionable wake invoked Orchestra more than once"
+  grep -Fx 'refresh' "$log" >/dev/null || fail "watcher invoked an Orchestra command other than refresh"
+  pass "one actionable wake triggers one Orchestra refresh after the watcher exits"
+}
+
+test_orchestra_heartbeat_triggers_once() {
+  local dir state fakebin out log pid
+  dir=$(make_case orchestra-heartbeat); state="$dir/state"; fakebin="$dir/fakebin"
+  out="$dir/watch.out"; log="$dir/orchestra.log"
+  install_fake_orchestra "$dir"
+  FM_FAKE_ORCHESTRA_LOG="$log" PATH="$fakebin:$PATH" FM_STATE_OVERRIDE="$state" \
+    FM_CONFIG_OVERRIDE="$dir/config" FM_POLL=1 FM_SIGNAL_GRACE=1 \
+    FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=1 FM_HEARTBEAT_MAX=1 "$WATCH" > "$out" &
+  pid=$!
+  wait_for_lines "$log" 1 200 || { reap "$pid"; fail "heartbeat did not invoke Orchestra"; }
+  reap "$pid"
+  [ "$(wc -l < "$log" | tr -d '[:space:]')" = 1 ] \
+    || fail "one observed heartbeat invoked Orchestra more than once"
+  grep -Fx 'refresh' "$log" >/dev/null || fail "heartbeat invoked an Orchestra command other than refresh"
+  pass "a watcher heartbeat triggers one Orchestra refresh without surfacing a wake"
+}
+
+test_orchestra_exit_three_is_success() {
+  local dir state log rc
+  dir=$(make_case orchestra-exit-three); state="$dir/state"; log="$dir/orchestra.log"
+  install_fake_orchestra "$dir"
+  rc=0
+  FM_STATE_OVERRIDE="$state" FM_CONFIG_OVERRIDE="$dir/config" \
+    FM_FAKE_ORCHESTRA_LOG="$log" FM_FAKE_ORCHESTRA_EXIT=3 \
+    "$ROOT/bin/fm-orchestra-refresh.sh" || rc=$?
+  [ "$rc" -eq 0 ] || fail "Orchestra exit 3 changed the best-effort wrapper result"
+  pass "Orchestra's coalesced exit 3 is treated as success"
+}
+
+test_orchestra_overlapping_triggers_each_invoke_refresh() {
+  local dir state log ready release first i
+  dir=$(make_case orchestra-overlap); state="$dir/state"; log="$dir/orchestra.log"
+  ready="$dir/ready"; release="$dir/release"
+  install_fake_orchestra "$dir"
+  FM_STATE_OVERRIDE="$state" FM_CONFIG_OVERRIDE="$dir/config" \
+    FM_FAKE_ORCHESTRA_LOG="$log" FM_FAKE_ORCHESTRA_READY="$ready" \
+    FM_FAKE_ORCHESTRA_RELEASE="$release" "$ROOT/bin/fm-orchestra-refresh.sh" &
+  first=$!
+  i=0
+  while [ "$i" -lt 100 ] && [ ! -e "$ready" ]; do sleep 0.05; i=$((i + 1)); done
+  [ -e "$ready" ] || { reap "$first"; fail "first Orchestra refresh did not enter its running state"; }
+  FM_STATE_OVERRIDE="$state" FM_CONFIG_OVERRIDE="$dir/config" \
+    FM_FAKE_ORCHESTRA_LOG="$log" "$ROOT/bin/fm-orchestra-refresh.sh"
+  [ "$(wc -l < "$log" | tr -d '[:space:]')" = 2 ] \
+    || { : > "$release"; wait "$first"; fail "an overlapping trigger did not reach Orchestra"; }
+  : > "$release"
+  wait "$first" || fail "first Orchestra refresh failed after release"
+  pass "overlapping triggers each reach Orchestra so it owns coalescing"
+}
+
 test_heartbeat_no_change_absorbed() {
   local dir state fakebin out pid i sig
   dir=$(make_case heartbeat-absorb); state="$dir/state"; fakebin="$dir/fakebin"; out="$dir/watch.out"
@@ -4076,6 +4199,11 @@ test_procevent_marker_keys_are_injective
 test_procevent_surface_serializes_with_drain
 test_procevent_surface_crash_boundaries
 test_procevent_marker_failure_exits_and_replays
+test_orchestra_no_config_is_a_silent_noop
+test_orchestra_actionable_wake_triggers_once
+test_orchestra_heartbeat_triggers_once
+test_orchestra_exit_three_is_success
+test_orchestra_overlapping_triggers_each_invoke_refresh
 test_heartbeat_no_change_absorbed
 test_heartbeat_backstop_surfaces_unsurfaced_status
 test_heartbeat_backstop_surfaces_a_masked_status

@@ -225,6 +225,18 @@ The bound is required rather than cosmetic because churn and pane staleness read
 The flag is a home-local supervision-noise preference and is not inherited by secondmate homes, which run their own crew mix.
 [`architecture.md`](architecture.md) owns the triage contract and `bin/fm-watch.sh`'s `signal_turnend_panes_churned` owns the exact evidence and fail-closed boundaries.
 
+## Orchestra live-board refresh (config/orchestra-dashboard)
+
+The optional local, gitignored `config/orchestra-dashboard` file contains one line with the absolute path of an Orchestra checkout.
+When that checkout has an executable `bin/orchestra-dashboard`, the watcher starts `bin/fm-orchestra-refresh.sh` detached after every actionable wake and on every heartbeat scan.
+The detached worker calls only `bin/orchestra-dashboard refresh`, never `build` or `open`, so Orchestra keeps the existing Lavish session URL and owns rebuild coalescing.
+The worker is best-effort, discards refresh output, and cannot delay or change wake delivery, the liveness beacon, or the watcher result.
+Every trigger reaches Orchestra, including triggers that overlap another refresh, so Orchestra can coalesce the demand and guarantee its trailing rebuild.
+Orchestra exits `0` when it rebuilt and `3` when it coalesced this caller into the active caller's trailing rebuild, and both leave the worker successful.
+The board's stale banner is the failure signal when Orchestra cannot publish a complete replacement.
+Homes without the config file or executable keep their prior watcher behavior, and Firstmate does not start an Orchestra daemon or timer.
+This setting is not inherited by secondmate homes.
+
 ## Gate defaults (.no-mistakes.yaml)
 
 The tracked `.no-mistakes.yaml` sets `test.evidence.store_in_repo: true`, pins `commands.lint` to `bin/fm-lint.sh` so local lint matches CI, and pins `commands.test` to `bin/fm-test-run.sh --changed --exclude-family real-herdr-gated` so the gate's test baseline runs through the repository's own runner instead of a hand-chained walk of `bash tests/*.test.sh`.
