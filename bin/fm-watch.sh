@@ -1447,9 +1447,9 @@ home_summary_refresh_detached() {
 }
 
 # The live Orchestra board is another optional, eventually consistent side
-# band. Its owner validates local configuration, bounds the foreground rebuild,
-# and enforces home-local single-flight. The watcher only starts it detached so
-# neither actionable delivery nor the liveness beacon can wait on the board.
+# band. Its owner validates local configuration and invokes Orchestra, which
+# owns refresh coalescing. The watcher only starts it detached so neither
+# actionable delivery nor the liveness beacon can wait on the board.
 ORCHESTRA_REFRESH_TRIGGERED_FOR_EXIT=0
 orchestra_refresh_detached() {
   FM_HOME="$FM_HOME" FM_STATE_OVERRIDE="$STATE" FM_CONFIG_OVERRIDE="$CONFIG" \

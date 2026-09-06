@@ -63,7 +63,6 @@ printf '%s\n' "$*" >> "${FM_FAKE_ORCHESTRA_LOG:?}"
 if [ -n "${FM_FAKE_ORCHESTRA_RELEASE:-}" ]; then
   while [ ! -e "$FM_FAKE_ORCHESTRA_RELEASE" ]; do sleep 0.05; done
 fi
-[ -z "${FM_FAKE_ORCHESTRA_SLEEP:-}" ] || sleep "$FM_FAKE_ORCHESTRA_SLEEP"
 exit "${FM_FAKE_ORCHESTRA_EXIT:-0}"
 SH
   chmod +x "$checkout/bin/orchestra-dashboard"
@@ -3896,31 +3895,12 @@ test_orchestra_exit_three_is_success() {
     FM_FAKE_ORCHESTRA_LOG="$log" FM_FAKE_ORCHESTRA_EXIT=3 \
     "$ROOT/bin/fm-orchestra-refresh.sh" || rc=$?
   [ "$rc" -eq 0 ] || fail "Orchestra exit 3 changed the best-effort wrapper result"
-  [ ! -e "$state/.orchestra-dashboard-refresh.log" ] \
-    || fail "Orchestra exit 3 was recorded as a failure"
   pass "Orchestra's coalesced exit 3 is treated as success"
 }
 
-test_orchestra_exit_two_failure_is_rate_limited() {
-  local dir state log notices
-  dir=$(make_case orchestra-exit-two); state="$dir/state"; log="$dir/orchestra.log"
-  install_fake_orchestra "$dir"
-  FM_STATE_OVERRIDE="$state" FM_CONFIG_OVERRIDE="$dir/config" \
-    FM_FAKE_ORCHESTRA_LOG="$log" FM_FAKE_ORCHESTRA_EXIT=2 \
-    FM_ORCHESTRA_FAILURE_NOTICE_SECS=999 "$ROOT/bin/fm-orchestra-refresh.sh"
-  FM_STATE_OVERRIDE="$state" FM_CONFIG_OVERRIDE="$dir/config" \
-    FM_FAKE_ORCHESTRA_LOG="$log" FM_FAKE_ORCHESTRA_EXIT=2 \
-    FM_ORCHESTRA_FAILURE_NOTICE_SECS=999 "$ROOT/bin/fm-orchestra-refresh.sh"
-  notices="$state/.orchestra-dashboard-refresh.log"
-  [ -s "$notices" ] || fail "Orchestra exit 2 did not record its failure"
-  [ "$(wc -l < "$notices" | tr -d '[:space:]')" = 1 ] \
-    || fail "a repeated Orchestra exit 2 bypassed the failure notice rate limit"
-  pass "Orchestra exit 2 records one rate-limited watcher-side failure notice"
-}
-
-test_orchestra_single_flight_drops_a_second_trigger() {
+test_orchestra_overlapping_triggers_each_invoke_refresh() {
   local dir state log ready release first i
-  dir=$(make_case orchestra-single-flight); state="$dir/state"; log="$dir/orchestra.log"
+  dir=$(make_case orchestra-overlap); state="$dir/state"; log="$dir/orchestra.log"
   ready="$dir/ready"; release="$dir/release"
   install_fake_orchestra "$dir"
   FM_STATE_OVERRIDE="$state" FM_CONFIG_OVERRIDE="$dir/config" \
@@ -3932,33 +3912,11 @@ test_orchestra_single_flight_drops_a_second_trigger() {
   [ -e "$ready" ] || { reap "$first"; fail "first Orchestra refresh did not enter its running state"; }
   FM_STATE_OVERRIDE="$state" FM_CONFIG_OVERRIDE="$dir/config" \
     FM_FAKE_ORCHESTRA_LOG="$log" "$ROOT/bin/fm-orchestra-refresh.sh"
-  [ "$(wc -l < "$log" | tr -d '[:space:]')" = 1 ] \
-    || { : > "$release"; wait "$first"; fail "a concurrent trigger started a second Orchestra refresh"; }
+  [ "$(wc -l < "$log" | tr -d '[:space:]')" = 2 ] \
+    || { : > "$release"; wait "$first"; fail "an overlapping trigger did not reach Orchestra"; }
   : > "$release"
   wait "$first" || fail "first Orchestra refresh failed after release"
-  pass "the home-local single-flight gate drops a trigger while refresh is running"
-}
-
-test_orchestra_hung_refresh_is_bounded_off_watcher_path() {
-  local dir state fakebin out log notices pid started elapsed i
-  dir=$(make_case orchestra-timeout); state="$dir/state"; fakebin="$dir/fakebin"
-  out="$dir/watch.out"; log="$dir/orchestra.log"
-  install_fake_orchestra "$dir"
-  printf 'needs-decision: pick a release target\n' > "$state/task.status"
-  started=$(date +%s)
-  FM_FAKE_ORCHESTRA_LOG="$log" FM_FAKE_ORCHESTRA_SLEEP=10 \
-    FM_ORCHESTRA_REFRESH_TIMEOUT=1 watch_bg "$state" "$fakebin" "$out" \
-    FM_CONFIG_OVERRIDE="$dir/config"
-  pid=$!
-  wait_for_exit "$pid" 100 || fail "hung Orchestra refresh prevented actionable watcher delivery"
-  elapsed=$(( $(date +%s) - started ))
-  [ "$elapsed" -lt 5 ] || fail "hung Orchestra refresh delayed watcher delivery by ${elapsed}s"
-  wait_for_lines "$log" 1 || fail "hung refresh fixture was never invoked"
-  notices="$state/.orchestra-dashboard-refresh.log"
-  i=0
-  while [ "$i" -lt 50 ] && [ ! -s "$notices" ]; do sleep 0.1; i=$((i + 1)); done
-  [ -s "$notices" ] || fail "bounded hung refresh did not record a failure notice"
-  pass "a hung Orchestra refresh is timeout-bounded and never delays watcher delivery"
+  pass "overlapping triggers each reach Orchestra so it owns coalescing"
 }
 
 test_heartbeat_no_change_absorbed() {
@@ -4235,9 +4193,7 @@ test_orchestra_no_config_is_a_silent_noop
 test_orchestra_actionable_wake_triggers_once
 test_orchestra_heartbeat_triggers_once
 test_orchestra_exit_three_is_success
-test_orchestra_exit_two_failure_is_rate_limited
-test_orchestra_single_flight_drops_a_second_trigger
-test_orchestra_hung_refresh_is_bounded_off_watcher_path
+test_orchestra_overlapping_triggers_each_invoke_refresh
 test_heartbeat_no_change_absorbed
 test_heartbeat_backstop_surfaces_unsurfaced_status
 test_heartbeat_backstop_surfaces_a_masked_status

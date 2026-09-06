@@ -230,10 +230,10 @@ The flag is a home-local supervision-noise preference and is not inherited by se
 The optional local, gitignored `config/orchestra-dashboard` file contains one line with the absolute path of an Orchestra checkout.
 When that checkout has an executable `bin/orchestra-dashboard`, the watcher starts `bin/fm-orchestra-refresh.sh` detached after every actionable wake and on every heartbeat scan.
 The detached worker calls only `bin/orchestra-dashboard refresh`, never `build` or `open`, so Orchestra keeps the existing Lavish session URL and owns rebuild coalescing.
-The worker is best-effort and timeout-bounded, and neither its runtime nor its result can delay or change wake delivery, the liveness beacon, or the watcher result.
-A home-local single-flight gate drops a trigger while another refresh is running.
-Orchestra exits `0` when it rebuilt and `3` when it coalesced this caller into the active caller's trailing rebuild, and the worker treats both as success.
-Exit `2`, a timeout, or an unexpected nonzero exit records a bounded, rate-limited notice in `state/.orchestra-dashboard-refresh.log` without creating a task status event or wake.
+The worker is best-effort, discards refresh output, and cannot delay or change wake delivery, the liveness beacon, or the watcher result.
+Every trigger reaches Orchestra, including triggers that overlap another refresh, so Orchestra can coalesce the demand and guarantee its trailing rebuild.
+Orchestra exits `0` when it rebuilt and `3` when it coalesced this caller into the active caller's trailing rebuild, and both leave the worker successful.
+The board's stale banner is the failure signal when Orchestra cannot publish a complete replacement.
 Homes without the config file or executable keep their prior watcher behavior, and Firstmate does not start an Orchestra daemon or timer.
 This setting is not inherited by secondmate homes.
 
@@ -935,9 +935,6 @@ FM_HOME_SUMMARY_INTERVAL=300   # seconds before a live watcher refreshes this ho
 FM_HOME_SUMMARY_TIMEOUT=60     # seconds bounding the complete best-effort home-summary refresh, including lock acquisition, validation, atomic publication, and worker-side failure logging; invalid or zero values use 60
 FM_HOME_SUMMARY_ERROR_LOG_MAX_BYTES=65536   # approximate size cap for state/.home-summary-refresh.log before it is trimmed to the newest 200 lines; invalid or zero values use 65536
 FM_HOME_SUMMARY_FAILURE_REPORT=2   # recorded publication failures since the ledger's own last publication before session start reports a HOME_SUMMARY line; invalid or zero values use 2
-FM_ORCHESTRA_REFRESH_TIMEOUT=60   # seconds bounding one configured Orchestra live-board refresh
-FM_ORCHESTRA_FAILURE_NOTICE_SECS=3600   # minimum seconds between watcher-side notices for a persistently failing Orchestra refresh; a successful refresh resets the episode
-FM_ORCHESTRA_FAILURE_LOG_MAX_BYTES=16384   # approximate size cap for state/.orchestra-dashboard-refresh.log before it is trimmed to the newest 100 lines
 FM_SNAPSHOT_CREW_STATE_TIMEOUT=10   # seconds bounding each local per-task current-state read inside bin/fm-fleet-snapshot.sh; remote endpoint liveness is not probed on the snapshot path
 FM_SNAPSHOT_LOCAL_READ_CONCURRENCY=8   # maximum local tasks whose current-state and endpoint observations are collected concurrently during snapshot composition
 FM_SNAPSHOT_BUDGET=5                # one total seconds budget for all concurrent remote home-ledger reads
