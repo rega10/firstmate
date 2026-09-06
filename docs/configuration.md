@@ -225,6 +225,18 @@ The bound is required rather than cosmetic because churn and pane staleness read
 The flag is a home-local supervision-noise preference and is not inherited by secondmate homes, which run their own crew mix.
 [`architecture.md`](architecture.md) owns the triage contract and `bin/fm-watch.sh`'s `signal_turnend_panes_churned` owns the exact evidence and fail-closed boundaries.
 
+## Orchestra live-board refresh (config/orchestra-dashboard)
+
+The optional local, gitignored `config/orchestra-dashboard` file contains one line with the absolute path of an Orchestra checkout.
+When that checkout has an executable `bin/orchestra-dashboard`, the watcher starts `bin/fm-orchestra-refresh.sh` detached after every actionable wake and on every heartbeat scan.
+The detached worker calls only `bin/orchestra-dashboard refresh`, never `build` or `open`, so Orchestra keeps the existing Lavish session URL and owns rebuild coalescing.
+The worker is best-effort and timeout-bounded, and neither its runtime nor its result can delay or change wake delivery, the liveness beacon, or the watcher result.
+A home-local single-flight gate drops a trigger while another refresh is running.
+Orchestra exits `0` when it rebuilt and `3` when it coalesced this caller into the active caller's trailing rebuild, and the worker treats both as success.
+Exit `2`, a timeout, or an unexpected nonzero exit records a bounded, rate-limited notice in `state/.orchestra-dashboard-refresh.log` without creating a task status event or wake.
+Homes without the config file or executable keep their prior watcher behavior, and Firstmate does not start an Orchestra daemon or timer.
+This setting is not inherited by secondmate homes.
+
 ## Gate defaults (.no-mistakes.yaml)
 
 The tracked `.no-mistakes.yaml` sets `test.evidence.store_in_repo: true`, pins `commands.lint` to `bin/fm-lint.sh` so local lint matches CI, and pins `commands.test` to `bin/fm-test-run.sh --changed --exclude-family real-herdr-gated` so the gate's test baseline runs through the repository's own runner instead of a hand-chained walk of `bash tests/*.test.sh`.
@@ -923,6 +935,9 @@ FM_HOME_SUMMARY_INTERVAL=300   # seconds before a live watcher refreshes this ho
 FM_HOME_SUMMARY_TIMEOUT=60     # seconds bounding the complete best-effort home-summary refresh, including lock acquisition, validation, atomic publication, and worker-side failure logging; invalid or zero values use 60
 FM_HOME_SUMMARY_ERROR_LOG_MAX_BYTES=65536   # approximate size cap for state/.home-summary-refresh.log before it is trimmed to the newest 200 lines; invalid or zero values use 65536
 FM_HOME_SUMMARY_FAILURE_REPORT=2   # recorded publication failures since the ledger's own last publication before session start reports a HOME_SUMMARY line; invalid or zero values use 2
+FM_ORCHESTRA_REFRESH_TIMEOUT=60   # seconds bounding one configured Orchestra live-board refresh
+FM_ORCHESTRA_FAILURE_NOTICE_SECS=3600   # minimum seconds between watcher-side notices for a persistently failing Orchestra refresh; a successful refresh resets the episode
+FM_ORCHESTRA_FAILURE_LOG_MAX_BYTES=16384   # approximate size cap for state/.orchestra-dashboard-refresh.log before it is trimmed to the newest 100 lines
 FM_SNAPSHOT_CREW_STATE_TIMEOUT=10   # seconds bounding each local per-task current-state read inside bin/fm-fleet-snapshot.sh; remote endpoint liveness is not probed on the snapshot path
 FM_SNAPSHOT_LOCAL_READ_CONCURRENCY=8   # maximum local tasks whose current-state and endpoint observations are collected concurrently during snapshot composition
 FM_SNAPSHOT_BUDGET=5                # one total seconds budget for all concurrent remote home-ledger reads

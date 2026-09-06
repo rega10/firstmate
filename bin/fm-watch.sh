@@ -1446,6 +1446,16 @@ home_summary_refresh_detached() {
   HOME_SUMMARY_PID=$!
 }
 
+# The live Orchestra board is another optional, eventually consistent side
+# band. Its owner validates local configuration, bounds the foreground rebuild,
+# and enforces home-local single-flight. The watcher only starts it detached so
+# neither actionable delivery nor the liveness beacon can wait on the board.
+ORCHESTRA_REFRESH_TRIGGERED_FOR_EXIT=0
+orchestra_refresh_detached() {
+  FM_HOME="$FM_HOME" FM_STATE_OVERRIDE="$STATE" FM_CONFIG_OVERRIDE="$CONFIG" \
+    "$SCRIPT_DIR/fm-orchestra-refresh.sh" </dev/null >/dev/null 2>&1 &
+}
+
 RECONCILE_REQUEST_PID=
 reconcile_requests_pending() {
   local request
@@ -1489,6 +1499,10 @@ watcher_cleanup() {
     && ! fm_recovery_transition "$WATCHER_DOWNTIME_MARKER" "$transition" "$WATCH_LOCK" downtime; then
     echo "watcher: recovery state could not be persisted; retaining stale lock evidence" >&2
     cleanup_status=1
+  fi
+  if [ -n "${FM_WATCH_DELIVERED_REASON:-}" ] \
+    && [ "$ORCHESTRA_REFRESH_TRIGGERED_FOR_EXIT" -ne 1 ]; then
+    orchestra_refresh_detached || true
   fi
   return "$cleanup_status"
 }
@@ -2015,6 +2029,8 @@ EOF
   hb=$(( HEARTBEAT * (1 << streak) ))
   [ "$hb" -gt "$HEARTBEAT_MAX" ] && hb=$HEARTBEAT_MAX
   if [ "$(age_of "$STATE/.last-heartbeat")" -ge "$hb" ]; then
+    orchestra_refresh_detached || true
+    ORCHESTRA_REFRESH_TRIGGERED_FOR_EXIT=1
     # Triage: in always-on mode a heartbeat is benign unless the cheap fleet-scan
     # turns up a captain-relevant status the per-wake path missed. Absorb the
     # no-change case (advance the schedule and back off exactly as wake() would,
@@ -2042,6 +2058,7 @@ EOF
       touch "$STATE/.last-heartbeat"
       echo $(( $(cat "$STATE/.heartbeat-streak" 2>/dev/null || echo 0) + 1 )) > "$STATE/.heartbeat-streak"
       triage_log "absorbed heartbeat (no captain-relevant change)"
+      ORCHESTRA_REFRESH_TRIGGERED_FOR_EXIT=0
     fi
   fi
 
