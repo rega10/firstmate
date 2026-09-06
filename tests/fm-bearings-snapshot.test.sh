@@ -4051,6 +4051,43 @@ EOF
   pass "archived main orphans do not invalidate visible inventory"
 }
 
+test_long_secondmate_project_identity_is_preserved() {
+  local home mate fakebin project summary json
+  home=$(make_home long-secondmate-project)
+  mate="$TMP_ROOT/long-secondmate-project-mate"
+  project=$(printf 'long-%0125d' 0)
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home long-project-mate "$mate"
+  append_secondmate_registry "$home" long-project-mate "$mate"
+  printf -- '- %s [direct-PR parked:2026-08-01] - Long parked project (added 2026-07-01)\n' \
+    "$project" > "$mate/data/projects.md"
+  printf '## In flight\n- [ ] long-project-live - Long parked child (repo: %s) (kind: ship)\n\n## Queued\n\n## Done\n' \
+    "$project" > "$mate/data/backlog.md"
+  mkdir -p "$mate/projects/$project"
+  fm_write_meta "$mate/state/long-project-live.meta" \
+    "window=firstmate:fm-long-project-live" "worktree=$mate/projects/$project" \
+    "project=$mate/projects/$project" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" long-project-live busy
+  printf 'working: long parked project\n' > "$mate/state/long-project-live.status"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$mate" \
+    FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1783792800 \
+    "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e --arg project "$project" '
+    (.projects | any(.name == $project and .repo == $project))
+      and (.lifecycle_inventory | any(.id == "long-project-live" and .repo == $project))
+      and (.queued | any(.id == "long-project-live" and .repo == $project))
+      and (.endpoints | any(.id == "long-project-live" and .repo == $project))
+  ' >/dev/null || fail "secondmate summary truncated a canonical project identity: $summary"
+  json=$(run "$home" "$fakebin" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    .gates | any(.id == "long-project-live" and .owner == "long-project-mate"
+      and .reason == "project parked until 2026-08-01")
+  ' >/dev/null || fail "long parked project escaped lifecycle placement: $json"
+  pass "secondmate summaries preserve long canonical project identities"
+}
+
 test_lifecycle_inventory_is_complete() {
   local home mate fakebin summary json i
   home=$(make_home expired-park-inventory-cap)
@@ -4324,6 +4361,7 @@ test_expired_active_worker_leaves_cached_queue
 test_expired_held_park_stays_valid
 test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate
+test_long_secondmate_project_identity_is_preserved
 test_lifecycle_inventory_is_complete
 test_expired_secondmate_park_survives_summary_bounds_and_cache
 test_expired_project_park_resurfaces_with_one_wake

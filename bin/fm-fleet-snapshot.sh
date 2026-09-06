@@ -1001,7 +1001,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
       ($record.repo // $task.project // null) as $repo
       | {id:(($record.id // $task.id) | trunc(120)),
          title:(($record.title // $task.backlog.title // $task.id) | trunc(120)),
-         repo:(($repo // null) | if . == null then null else trunc(120) end),
+         repo:($repo // null),
          backlog_state:($record.state // null),current_role:($record.current_role // null),
          blocked_by:($record.blocked_by // null),blocked_by_ids:($record.blocked_by_ids // []),
          unresolved_blocker_ids:($record.unresolved_blocker_ids // []),
@@ -1050,13 +1050,13 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
          | select(.captain_actionable == true)
          | {id,key:.id,verb:"captain-hold",summary:(.title | trunc(160)),
             reason:(.hold_reason | trunc(160)),
-            repo:((.repo // null) | if . == null then null else trunc(120) end),
+            repo:(.repo // null),
             hold_until:(.hold_until // null),
             hold_bucket:(.hold_bucket // null),
             hold_age_days:(.hold_age_days // null),source:"backlog"} ]) as $captain_holds_all
     | ([ $visible_records[]? | select(.state == "done" and .structured and .hold_kind != "captain")
          | {id:(.id | trunc(120)),title:(.title | trunc(120)),
-            repo:((.repo // null) | if . == null then null else trunc(120) end),
+            repo:(.repo // null),
             pr_url:((.pr_url // null) | if . == null then null else trunc(500) end),
             report_path:((.report_path // null) | if . == null then null else trunc(500) end),
             local_note:((.local_note // null) | if . == null then null else trunc(120) end),completion} ]
@@ -1103,7 +1103,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
          | $visible_tasks[]
          | select(.id == $work.id and .current_state.state == "working")
          | {id,kind,state:.current_state.state,
-            repo:(($work.repo // .project // null) | if . == null then null else trunc(120) end),
+            repo:($work.repo // .project // null),
             source:.current_state.source,
             doing:((.current_state.detail // "") | trunc(120))} ]) as $active_all
     | ($captain_holds_all
@@ -1111,13 +1111,13 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
             | select(lifecycle($t.project).parked | not)
             | ($t.hints.open_decisions // [])[]
             | {id:$t.id,key,verb,summary:(.summary | trunc(160)),reason:null,
-               repo:((normalized_project($t.backlog.repo // $t.project // null)) | if . == null then null else trunc(120) end),
+               repo:normalized_project($t.backlog.repo // $t.project // null),
                source:"status"} ])) as $decisions_all
     | ([ $queued_all[]
          | select(lifecycle(.repo).parked | not)
          | select((.unresolved_blocker_ids | length) > 0 or (.hold_reason != null and .hold_kind != null))
          | {id:(.id | trunc(120)),title:(.title | trunc(90)),
-            repo:((.repo // null) | if . == null then null else trunc(120) end),
+            repo:(.repo // null),
             blocked_by:((.unresolved_blocker_ids | join(",")) | if . == "" then null else trunc(120) end),
             blocked_by_ids:(.blocked_by_ids | map(trunc(120))),
             unresolved_blocker_ids:(.unresolved_blocker_ids | map(trunc(120))),
@@ -1128,7 +1128,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
            | select(.id == $work.id and (.current_state.state == "parked" or .current_state.state == "paused" or .current_state.state == "blocked"))
            | select(($work.hold_reason != null and $work.hold_kind != null) | not)
            | {id,title:((.backlog.title // .id) | trunc(90)),
-              repo:(($work.repo // .project // null) | if . == null then null else trunc(120) end),blocked_by:null,
+              repo:($work.repo // .project // null),blocked_by:null,
               blocked_by_ids:[],unresolved_blocker_ids:[],
               reason:((.current_state.detail // .current_state.state) | trunc(120)),source:"child-state"} ]) as $holds_all
     | ([($backlog.records[]?, $tasks[]?)
@@ -1190,7 +1190,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
           hold_bucket:(.hold_bucket // null),
           hold_age_days:(.hold_age_days // null),
           captain_actionable:(.captain_actionable // false),
-          repo:((.repo // null) | if . == null then null else trunc(120) end),
+          repo:(.repo // null),
           backlog_state:(.state // null),
           current_role:(.current_role // null),
           child_state:($task.current_state.state // null),
@@ -1201,7 +1201,7 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         endpoints:([$visible_tasks[]
           | lifecycle(.project).parked as $parked
           | {id,
-          repo:((normalized_project(.backlog.repo // .project // null)) | if . == null then null else trunc(120) end),
+          repo:normalized_project(.backlog.repo // .project // null),
           state:.current_state.state,source:.current_state.source,
           endpoint:(.endpoint + {target:((.endpoint.target // null) | if . == null then null else trunc(240) end)}),
           _lifecycle_rank:(if $parked then 1 else 0 end)}]
