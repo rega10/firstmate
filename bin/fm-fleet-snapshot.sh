@@ -944,10 +944,15 @@ main_inventory_json() {  # <backlog-json-file> <tasks-json-file> <projects-json-
     ($backlog[0]) as $backlog
     | ($tasks[0]) as $tasks
     | ($projects[0] // []) as $projects
-    | def task_repo($id): first($tasks[]? | select(.id == $id) | (.backlog.repo // .project)) // null;
+    | def normalized_project($value):
+      if $value == null or $value == "" then $value
+      else ($value | split("/") | map(select(. != "")) | .[-1] // "") as $base
+      | ([$projects[]? | select(.name == $value or .repo == $value or .name == $base or .repo == $base) | .name] | unique) as $matches
+      | if ($matches | length) == 1 then $matches[0] else $value end end;
+    def task_repo($id): first($tasks[]? | select(.id == $id) | (.backlog.repo // .project)) // null;
     ([ $backlog.records[]?
          | . as $record
-         | select(fm_project_lifecycle((.repo // task_repo($record.id)); $projects; $today).archived | not) ]) as $visible_records
+         | select(fm_project_lifecycle(normalized_project(.repo // task_repo($record.id)); $projects; $today).archived | not) ]) as $visible_records
     | ([ $visible_records[]?
        | select((.state == "in_flight" or .state == "queued") and (.structured | not)) ]) as $unstructured_current
     | ([ $visible_records[]?
