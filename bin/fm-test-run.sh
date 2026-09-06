@@ -1325,7 +1325,7 @@ families_for_changed_path() {
       printf '%s\n' live-harness-optin
       ;;
     bin/fm-bearings-snapshot.sh|bin/fm-fleet-snapshot.sh|bin/fm-fleet-view.sh|\
-    bin/fm-home-summary-refresh.sh)
+    bin/fm-home-summary-refresh.sh|bin/fm-project-lifecycle.jq)
       printf '%s\n' snapshot-bearings
       ;;
     bin/fm-project-posture.sh)

@@ -169,6 +169,13 @@ So its vocabulary is published, versioned, and testable rather than left implici
 Compatibility rule: adding an optional field or a new opt-in surface is a minor, backward-compatible change and does not bump the schema id.
 Renaming or removing a field or surface, or removing or renaming an enum value, is a breaking change and requires bumping the schema id (`fm-bearings.v2`).
 
+Project lifecycle posture is a projection rule on that same contract, not a second vocabulary.
+`projects[]` is the registry surface and `bin/fm-project-posture.sh` is the write owner.
+Bearings applies parked and archived placement to Charted Next, omission, and `omitted[]` after one identity-normalization pass.
+Each secondmate summary budgets current parked task facts in deterministic order against the fixed 262144-byte reader limit and discloses every excluded lifecycle row in `omitted[]`; an omitted parked task may not auto-resurface at expiry until earlier parked work clears the byte budget.
+The remaining base summary surfaces retain their pre-existing unbounded behavior, so an unusually large registry or base surface can still exceed that reader limit and make the secondmate summary unavailable.
+Live PR suppression covers main-home lifecycle facts, recorded PR URLs, and repository-scoped branch matches only, so a parked or archived secondmate PR may briefly appear in Captain's Call.
+
 Consumer example: an external tool reads `.schema` first and refuses a major version it does not understand, then treats `omitted` as a disclosure to surface, never to hide.
 
 ```sh
@@ -180,4 +187,3 @@ esac
 # Render the surfaces the contract declares, and show (never swallow) what was left out.
 printf '%s' "$snap" | jq -r '.omitted[] | "note: \(.surface) (reveal with: \(.reveal))"'
 ```
-

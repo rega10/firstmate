@@ -46,7 +46,13 @@ A dated park is inactive until its date and resurfaces on that date.
 Setting one registers the finite local `state/project-posture-expiry.check.sh` through `bin/fm-check-register.sh`; its private receipt makes the resulting `check:` wake fire once per project and registered date.
 Changing or clearing the posture resets that project's receipt, and removing the final dated park retires the generated check registration.
 
-`bin/fm-fleet-snapshot.sh --json` exposes `projects{name,posture,parked_until,repo,delivery}` rows; how `bin/fm-bearings-snapshot.sh` and the Bearings board consume them is a pending follow-up.
+`bin/fm-fleet-snapshot.sh --json` exposes `projects{name,posture,parked_until,repo,delivery}` rows.
+`bin/fm-bearings-snapshot.sh` is the read owner that applies that posture to every Bearings projection after one project-identity normalization pass.
+`bin/fm-project-posture.sh` remains the only writer.
+A permanent or future dated park keeps that project's work at the bottom of Charted Next with the park date.
+A dated park is due and active on its date.
+Archived project work is omitted from every posture-aware work surface and named in `omitted[]`; live PR enrichment keeps the accepted secondmate suppression limitation documented in [`docs/scripts.md`](scripts.md#bearings-snapshot-contract).
+A secondmate home's own structured `projects[]` is the authority for work that home owns.
 `posture` is `active`, `parked`, or `archived`; `parked_until` is a `YYYY-MM-DD` string for a dated park and otherwise null; `repo` is the registry's project key; and `delivery` is the unchanged registered mode with ` +yolo` when enabled.
 The rows are ordered with active and due projects first, permanent parks next, future dated parks next, and archived projects last, with project name as the deterministic tie-breaker.
 Lifecycle never changes delivery-mode semantics or merge authority.

@@ -52,6 +52,38 @@ SH
 echo "gh $*" >> "$NET_LOG"
 if [ "${FAKE_GH_FAIL:-0}" = 1 ]; then exit 1; fi
 if [ "${FAKE_GH_SLEEP:-0}" = 1 ]; then sleep 30; fi
+if [ "${FAKE_GH_CROSS_REPO:-0}" = 1 ]; then
+  case " $* " in
+    *" --repo kunchenguid/firstmate "*)
+      printf '%s\n' '[{"number":10,"title":"Parked work","url":"https://github.com/kunchenguid/firstmate/pull/10","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]'
+      ;;
+    *" --repo acme/other "*)
+      printf '%s\n' '[{"number":20,"title":"Backlog-only parked work","url":"https://github.com/acme/other/pull/20","headRefName":"fm/fallback-parked","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":21,"title":"Unrelated release","url":"https://github.com/acme/other/pull/21","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]'
+      ;;
+  esac
+  exit 0
+fi
+if [ "${FAKE_GH_SUPPRESSED_CAP:-0}" = 1 ]; then
+  limit=0
+  previous=
+  for arg in "$@"; do
+    if [ "$previous" = "--limit" ]; then limit=$arg; break; fi
+    previous=$arg
+  done
+  jq -nc --argjson limit "$limit" '[
+    {number:10,title:"Parked work",url:"https://github.com/kunchenguid/firstmate/pull/10",headRefName:"fm/parked-task",reviewDecision:"APPROVED",mergeable:"MERGEABLE",statusCheckRollup:[]},
+    {number:11,title:"Active A",url:"https://github.com/kunchenguid/firstmate/pull/11",headRefName:"fm/active-a",reviewDecision:"APPROVED",mergeable:"MERGEABLE",statusCheckRollup:[]},
+    {number:12,title:"Active B",url:"https://github.com/kunchenguid/firstmate/pull/12",headRefName:"fm/active-b",reviewDecision:"APPROVED",mergeable:"MERGEABLE",statusCheckRollup:[]},
+    {number:13,title:"Active C",url:"https://github.com/kunchenguid/firstmate/pull/13",headRefName:"fm/active-c",reviewDecision:"APPROVED",mergeable:"MERGEABLE",statusCheckRollup:[]}
+  ][: $limit]'
+  exit 0
+fi
+if [ "${FAKE_GH_SHARED_ORIGIN:-0}" = 1 ]; then
+  cat <<'JSON'
+[{"number":9,"title":"Active work","url":"https://github.com/kunchenguid/firstmate/pull/9","headRefName":"fm/ship-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":10,"title":"Parked work","url":"https://github.com/kunchenguid/firstmate/pull/10","headRefName":"fm/parked-task","reviewDecision":"APPROVED","mergeable":"MERGEABLE","statusCheckRollup":[]}]
+JSON
+  exit 0
+fi
 if [ "${FAKE_GH_MANY:-0}" = 1 ]; then
   cat <<'JSON'
 [{"number":1,"title":"One","url":"https://github.com/acme/repo/pull/1","headRefName":"fm/one","reviewDecision":"","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":2,"title":"Two","url":"https://github.com/acme/repo/pull/2","headRefName":"fm/two","reviewDecision":"","mergeable":"MERGEABLE","statusCheckRollup":[]},{"number":3,"title":"Three","url":"https://github.com/acme/repo/pull/3","headRefName":"fm/three","reviewDecision":"","mergeable":"MERGEABLE","statusCheckRollup":[]}]
@@ -1403,6 +1435,104 @@ test_include_prs_is_the_only_fetch_path() {
     .candidate_prs | any(.[]; .num == "9" and .task == "ship-task" and .checks == "passing" and .review == "APPROVED")
   ' >/dev/null || fail "candidate_prs must carry the fetched PR cross-referenced to its task: $json"
   pass "--include-prs is the only path that fetches, and it enriches correctly"
+}
+
+test_shared_origin_prs_respect_project_lifecycle() {
+  local home fakebin json capped cross_repo real_git origin_log REAL_GIT TRACKED_PROJECT_PATH ORIGIN_LOG
+  home=$(make_home shared-origin-prs)
+  write_fixture "$home"
+  cat > "$home/data/projects.md" <<'EOF'
+- firstmate [no-mistakes] - Active project (added 2026-07-01)
+- parked-app [no-mistakes parked:2026-08-01] - Parked project (added 2026-07-01)
+- app-b [no-mistakes parked:2026-08-01] - Backlog-only parked project (added 2026-07-01)
+- archived-other [local-only archived] - Unrelated archived project (added 2026-07-01)
+EOF
+  sed '/^## Queued$/i\
+- [ ] parked-task - Parked shared-origin work (repo: parked-app) (kind: ship)\
+- [ ] fallback-parked - Parked backlog-only work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-1 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-2 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-3 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-4 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-5 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] archived-other-task - Archived work in another repository (repo: archived-other) (kind: ship)\
+' "$home/data/backlog.md" > "$home/data/backlog.next"
+  mv "$home/data/backlog.next" "$home/data/backlog.md"
+  git -C "$home/projects/ship-wt" init -q
+  git -C "$home/projects/ship-wt" remote add origin https://github.com/kunchenguid/firstmate.git
+  mkdir -p "$home/projects/app-b"
+  git -C "$home/projects/app-b" init -q
+  git -C "$home/projects/app-b" remote add origin https://github.com/acme/other.git
+  fm_write_meta "$home/state/parked-task.meta" \
+    "window=firstmate:fm-parked-task" \
+    "worktree=$home/projects/ship-wt" \
+    "project=parked-app" \
+    "harness=claude" \
+    "kind=ship" \
+    "mode=no-mistakes"
+  record_claude_state "$home/state" parked-task busy
+  printf 'working: parked project task\n' > "$home/state/parked-task.status"
+  fm_write_meta "$home/state/archived-other-task.meta" \
+    "window=firstmate:fm-archived-other-task" \
+    "worktree=$home/projects/ship-wt" \
+    "project=archived-other" \
+    "harness=claude" \
+    "kind=ship" \
+    "mode=local-only" \
+    "pr=https://github.com/acme/other/pull/99"
+  record_claude_state "$home/state" archived-other-task busy
+  printf 'working: unrelated archived task\n' > "$home/state/archived-other-task.status"
+  fakebin=$(make_fakebin "$home")
+  real_git=$(command -v git)
+  origin_log="$home/origin.log"
+  TRACKED_PROJECT_PATH="$home/projects/app-b"
+  export REAL_GIT="$real_git" TRACKED_PROJECT_PATH ORIGIN_LOG="$origin_log"
+  : > "$origin_log"
+  cat > "$fakebin/git" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = "-C" ] && [ "${2:-}" = "$TRACKED_PROJECT_PATH" ] \
+  && [ "${3:-}" = "remote" ] && [ "${4:-}" = "get-url" ] && [ "${5:-}" = "origin" ]; then
+  printf '%s\n' "$2" >> "$ORIGIN_LOG"
+fi
+exec "$REAL_GIT" "$@"
+SH
+  chmod +x "$fakebin/git"
+  json=$(REAL_GIT="$real_git" TRACKED_PROJECT_PATH="$home/projects/app-b" \
+    ORIGIN_LOG="$origin_log" FAKE_GH_SHARED_ORIGIN=1 \
+    run "$home" "$fakebin" --include-prs --json)
+  printf '%s' "$json" | jq -e '
+    [.candidate_prs[].task] == ["ship-task"]
+      and (.gates | any(.id == "parked-task" and .reason == "project parked until 2026-08-01"))
+  ' >/dev/null || fail "shared-origin PR discovery exposed parked work: $json"
+  [ "$(grep -Fc "$home/projects/app-b" "$origin_log")" = 1 ] \
+    || fail "suppressed PR resolution repeated the project origin lookup: $(<"$origin_log")"
+  : > "$home/net.log"
+  capped=$(FAKE_GH_SUPPRESSED_CAP=1 FM_BEARINGS_PR_LIMIT=2 \
+    run "$home" "$fakebin" --include-prs --json)
+  printf '%s' "$capped" | jq -e '
+    [.candidate_prs[].task] == ["active-a","active-b"]
+      and (.prs | contains("2 shown, at least 3 open; capped in 1 repo(s)"))
+      and (.omitted | any(.surface == "candidate_prs showing 2 of at least 3; capped in 1 repo(s)"))
+  ' >/dev/null || fail "suppressed PRs consumed the visible cap lookahead: $capped"
+  grep -q -- '--repo kunchenguid/firstmate .*--limit 4 ' "$home/net.log" \
+    || fail "unrelated lifecycle suppression inflated the repository fetch bound: $(<"$home/net.log")"
+  fm_write_meta "$home/state/ship-task.meta" \
+    "window=firstmate:fm-ship-task" \
+    "worktree=$home/projects/ship-wt" \
+    "project=firstmate" \
+    "harness=claude" \
+    "kind=ship" \
+    "mode=no-mistakes" \
+    "pr=https://github.com/acme/other/pull/20"
+  cross_repo=$(FAKE_GH_CROSS_REPO=1 run "$home" "$fakebin" --include-prs --json)
+  printf '%s' "$cross_repo" | jq -e '
+    [.candidate_prs[] | select(.task == "parked-task")]
+      == [{num:"21",repo:"acme/other",task:"parked-task",
+           url:"https://github.com/acme/other/pull/21",review:"APPROVED",
+           mergeable:"MERGEABLE",checks:"none"}]
+      and (.candidate_prs | any(.task == "fallback-parked") | not)
+  ' >/dev/null || fail "parked branch suppression crossed repository boundaries: $cross_repo"
+  pass "shared-origin PR discovery keeps parked work in Charted Next"
 }
 
 test_partial_github_failure_degrades() {
@@ -2763,6 +2893,8 @@ test_remote_ledgers_share_one_concurrent_budget_and_fall_back_to_cache() {
   local parent fakebin json i remote_home pid collector_pid sleeper_pid duplicate_base cache_file candidate tmp
   parent=$(make_home concurrent-remote-ledgers)
   make_remote_ledger_fleet "$parent" 5
+  printf '%s\n' '- firstmate [no-mistakes archived] - Main-home project with the same name (added 2026-07-01)' \
+    > "$parent/data/projects.md"
   fakebin=$(make_remote_ledger_ssh "$parent/remote-ssh")
   mkdir -p "$parent/ledger-active"
   : > "$parent/ledger-calls.log"
@@ -2777,6 +2909,7 @@ test_remote_ledgers_share_one_concurrent_budget_and_fall_back_to_cache() {
       and (.decisions_open | any(.id == "ledger-1/remote-parked" and .owner == "ledger-1"))
       and (.gates | all(.id != "remote-parked"))
       and (.gates | any(.id == "remote-aged" and .owner == "ledger-1" and (.reason | startswith("held 40d"))))
+      and ([.omitted[] | select(.surface | test("secondmate ledger-[1-5] posture registry not published"))] | length) == 5
   ' >/dev/null || fail "healthy remote ledgers did not project their generated-epoch ages and bucketed holds: $json"
 
   cache_file=
@@ -3009,6 +3142,1200 @@ test_contract_describes_json_output_and_fails_on_undeclared_field() {
   pass "the --contract document describes --json and fails on an undeclared field or enum"
 }
 
+test_project_lifecycle_surface_and_bearings_projection() {
+  local home fakebin canonical json details bounded toon
+  home=$(make_home project-lifecycle)
+  : > "$home/data/secondmates.md"
+  mkdir -p "$home/projects/due-live" "$home/projects/permanent-live" \
+    "$home/projects/permanent-meta-live" "$home/projects/future-live" \
+    "$home/projects/archived-meta-done" "$home/projects/permanent-meta-call" \
+    "$home/projects/archived-meta-call"
+  cat > "$home/data/projects.md" <<'EOF'
+- active [no-mistakes +yolo] - Active project (added 2026-07-01)
+- due [direct-PR parked:2026-07-11] - Due project (added 2026-07-01)
+- permanent [local-only parked] - Permanent park (added 2026-07-01)
+- future [no-mistakes parked:2026-08-01] - Future park (added 2026-07-01)
+- archived [direct-PR archived] - Archived project (added 2026-07-01)
+- empty-archived [local-only archived] - Archived project without work (added 2026-07-01)
+EOF
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+- [ ] due-live - Due parked work is underway (repo: due) (kind: ship) (since 2026-07-10)
+- [ ] permanent-live - Permanently parked live work (repo: permanent) (kind: ship) (since 2026-07-10)
+- [ ] permanent-meta-live - Parked work identified by task metadata (kind: ship) (since 2026-07-10)
+- [ ] future-live - Future parked live work (repo: future) (kind: ship) (since 2026-07-10)
+
+## Queued
+- [ ] active-next - Active queued work (repo: active) (kind: ship)
+- [ ] due-next - Due parked work resurfaces (repo: due) (kind: ship)
+- [ ] permanent-next - Permanent parked work (repo: permanent) (kind: ship)
+- [ ] future-call - Future parked captain work (repo: future) (kind: captain) (hold: captain chooses route) (hold-kind: captain)
+- [ ] archived-next - Archived queued work (repo: archived) (kind: ship)
+- [ ] permanent-meta-call - Parked captain work identified by metadata (kind: captain) (hold: captain chooses route) (hold-kind: captain)
+- [ ] archived-meta-call - Archived captain work identified by metadata (kind: captain) (hold: captain chooses route) (hold-kind: captain)
+
+## Done
+- [x] active-done - Active completion (repo: active) (kind: ship) (done 2026-07-10)
+- [x] future-done - Parked completion (repo: future) (kind: ship) (done 2026-07-10)
+- [x] archived-done - Archived completion (repo: archived) (kind: ship) (done 2026-07-10)
+- [x] archived-meta-done - Archived completion identified by metadata (kind: ship) (done 2026-07-10)
+EOF
+  fm_write_meta "$home/state/due-live.meta" \
+    "window=firstmate:fm-due-live" "worktree=$home/projects/due-live" "project=$home/projects/due" \
+    "harness=codex" "kind=ship" "mode=direct-PR"
+  printf 'working: due project resumed\n' > "$home/state/due-live.status"
+  fm_write_meta "$home/state/permanent-live.meta" \
+    "window=firstmate:fm-permanent-live" "worktree=$home/projects/permanent-live" "project=$home/projects/permanent" \
+    "harness=codex" "kind=ship" "mode=local-only"
+  printf 'working: permanently parked task still has a live status\n' > "$home/state/permanent-live.status"
+  fm_write_meta "$home/state/permanent-meta-live.meta" \
+    "window=firstmate:fm-permanent-meta-live" "worktree=$home/projects/permanent-meta-live" "project=$home/projects/permanent" \
+    "harness=codex" "kind=ship" "mode=local-only"
+  printf 'working: metadata identifies this parked project\n' > "$home/state/permanent-meta-live.status"
+  fm_write_meta "$home/state/future-live.meta" \
+    "window=firstmate:fm-future-live" "worktree=$home/projects/future-live" "project=$home/projects/future" \
+    "harness=codex" "kind=ship" "mode=no-mistakes"
+  printf 'working: future parked task still has a live status\n' > "$home/state/future-live.status"
+  fm_write_meta "$home/state/archived-meta-done.meta" \
+    "window=firstmate:fm-archived-meta-done" "worktree=$home/projects/archived-meta-done" "project=$home/projects/archived" \
+    "harness=codex" "kind=ship" "mode=direct-PR"
+  printf 'done: archived metadata completion\n' > "$home/state/archived-meta-done.status"
+  fm_write_meta "$home/state/permanent-meta-call.meta" \
+    "window=firstmate:fm-permanent-meta-call" "worktree=$home/projects/permanent-meta-call" "project=$home/projects/permanent" \
+    "harness=codex" "kind=captain" "mode=local-only" "pr=https://github.com/acme/parked/pull/1"
+  fm_write_meta "$home/state/archived-meta-call.meta" \
+    "window=firstmate:fm-archived-meta-call" "worktree=$home/projects/archived-meta-call" "project=$home/projects/archived" \
+    "harness=codex" "kind=captain" "mode=direct-PR" "pr=https://github.com/acme/archived/pull/1"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
+    "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    [.projects[].name] == ["active", "due", "permanent", "future", "archived", "empty-archived"]
+      and (.projects[] | select(.name == "active")
+        | .posture == "active" and .parked_until == null and .repo == "active"
+          and .delivery == "no-mistakes +yolo")
+      and (.projects[] | select(.name == "due")
+        | .posture == "parked" and .parked_until == "2026-07-11"
+          and .repo == "due" and .delivery == "direct-PR")
+      and (.projects[] | select(.name == "permanent")
+        | .posture == "parked" and .parked_until == null and .delivery == "local-only")
+      and (.projects[] | select(.name == "archived")
+        | .posture == "archived" and .parked_until == null and .delivery == "direct-PR")
+      and (.projects[] | select(.name == "empty-archived")
+        | .posture == "archived" and .parked_until == null and .delivery == "local-only")
+  ' >/dev/null || fail "canonical project lifecycle surface was incomplete or unordered: $canonical"
+
+  json=$(run "$home" "$fakebin" --json)
+  printf '%s' "$json" | jq -e '
+    [.projects[].name] == ["active", "due", "permanent", "future", "archived", "empty-archived"]
+      and ([.in_flight[].id] == ["due-live"])
+      and ([.gates[] | select(.reason == "project parked" or (.reason | startswith("project parked until"))) | .id]
+           | contains(["permanent-live", "permanent-meta-call", "permanent-meta-live", "permanent-next", "future-call", "future-live"]))
+      and (([.gates[].id] | index("active-next")) < ([.gates[].id] | index("permanent-next")))
+      and (([.gates[].id] | index("due-next")) < ([.gates[].id] | index("permanent-next")))
+      and (([.gates[].id] | index("permanent-next")) < ([.gates[].id] | index("future-live")))
+      and (.gates | any(.id == "permanent-live" and .reason == "project parked"))
+      and (.gates | any(.id == "permanent-meta-call" and .reason == "project parked"))
+      and (.gates | any(.id == "permanent-meta-live" and .reason == "project parked"))
+      and (.gates | any(.id == "permanent-next" and .reason == "project parked"))
+      and (.gates | any(.id == "future-call" and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "future-live" and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "due-next" and .reason == "-"))
+      and (.decisions_open | any(.id == "future-call") | not)
+      and (.decisions_open | any(.id == "permanent-meta-call") | not)
+      and (.decisions_open | any(.id == "archived-meta-call") | not)
+      and (.gates | any(.id == "archived-next") | not)
+      and (.gates | any(.id == "archived-meta-call") | not)
+      and (.landed | any(.id == "active-done"))
+      and (.landed | any(.id == "future-done"))
+      and (.gates | any(.id == "future-done") | not)
+      and (.landed | any(.id == "archived-done") | not)
+      and (.landed | any(.id == "archived-meta-done") | not)
+      and (.omitted | any(.surface == "archived project work omitted: archived"))
+      and ([.omitted[].surface] | any(contains("empty-archived")) | not)
+  ' >/dev/null || fail "Bearings did not gate parks, resurface due work, or disclose archives: $json"
+  details=$(run "$home" "$fakebin" --json --fields bodies,paths,actions,endpoints)
+  printf '%s' "$details" | jq -e '
+    ([.bodies, .paths, .actions, .endpoints] | all(.[]; any(.id == "permanent-meta-call")))
+      and ([.bodies, .paths, .actions, .endpoints] | all(.[]; (any(.id == "archived-meta-call") | not)))
+  ' >/dev/null || fail "optional detail exposed archived absolute-path project metadata: $details"
+  : > "$home/net.log"
+  run "$home" "$fakebin" --json --include-prs >/dev/null
+  assert_no_grep 'gh pr list --repo acme/parked ' "$home/net.log" \
+    "PR discovery exposed parked absolute-path project metadata"
+  assert_no_grep 'gh pr list --repo acme/archived ' "$home/net.log" \
+    "PR discovery exposed archived absolute-path project metadata"
+  bounded=$(FM_BEARINGS_GATES=2 run "$home" "$fakebin" --json)
+  printf '%s' "$bounded" | jq -e '
+    [.gates[].id] == ["active-next", "due-next"]
+      and ([.omitted[] | select(
+        .surface == "parked project work omitted by gates bound: future, permanent"
+          and .reveal == "--all-queued")] | length) == 1
+  ' >/dev/null || fail "bounded gates did not name omitted parked projects: $bounded"
+  toon=$(run "$home" "$fakebin")
+  assert_contains "$toon" 'projects[6]{name,posture,parked_until,repo,delivery}:' \
+    "TOON omitted the project lifecycle surface"
+  assert_contains "$toon" 'project parked until 2026-08-01' \
+    "TOON omitted the dated park reason"
+  assert_contains "$toon" 'archived project work omitted: archived' \
+    "TOON omitted the archived-project disclosure"
+  pass "project lifecycle is one canonical snapshot surface for Bearings ordering and disclosure"
+}
+
+test_duplicate_project_identity_fails_closed() {
+  local home fakebin out err rc
+  home=$(make_home duplicate-project-identity)
+  write_fixture "$home"
+  cat > "$home/data/projects.md" <<'EOF'
+- firstmate [no-mistakes] - Active duplicate (added 2026-07-01)
+- firstmate [local-only archived] - Archived duplicate (added 2026-07-01)
+EOF
+  fakebin=$(make_fakebin "$home")
+  err="$home/duplicate.err"
+  out=$(run "$home" "$fakebin" --json 2> "$err"); rc=$?
+  [ "$rc" -ne 0 ] || fail "duplicate project identity remained accepted: $out"
+  [ -z "$out" ] || fail "duplicate project identity emitted a partial projection: $out"
+  grep -F 'ambiguous project identity: firstmate' "$err" >/dev/null \
+    || fail "duplicate project identity lacked a diagnostic: $(<"$err")"
+  pass "duplicate project identities fail closed at lifecycle normalization"
+}
+
+test_secondmate_project_posture_is_honored_from_structured_state() {
+  local home mate fakebin json summary summary_tmp check first second
+  home=$(make_home secondmate-posture)
+  mate="$TMP_ROOT/secondmate-posture-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home posture-mate "$mate"
+  append_secondmate_registry "$home" posture-mate "$mate"
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+
+## Done
+EOF
+  cat > "$mate/data/projects.md" <<'EOF'
+- sample [no-mistakes] - Active sample (added 2026-07-01)
+- parked-app [direct-PR parked:2026-08-01] - Parked in the secondmate home (added 2026-07-01)
+- archived-app [local-only archived] - Archived in the secondmate home (added 2026-07-01)
+EOF
+  mkdir -p "$mate/projects/parked-app" "$mate/projects/archived-app"
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+- [ ] mate-parked-live - Parked child description must not leak (repo: parked-app) (kind: ship)
+- [ ] mate-archived-live - Archived child description must not leak (repo: archived-app) (kind: ship)
+- [ ] mate-parked-paused - Paused parked child must reach Charted Next (repo: parked-app) (kind: ship)
+
+## Queued
+- [ ] mate-active - Active secondmate work (repo: sample) (kind: ship)
+- [ ] mate-parked - Parked secondmate work (repo: parked-app) (kind: ship)
+- [ ] mate-parked-call - Parked secondmate captain work (repo: parked-app) (kind: captain) (hold: choose a route) (hold-kind: captain)
+- [ ] mate-archived - Archived secondmate work (repo: archived-app) (kind: ship)
+- [ ] mate-archived-call - Archived secondmate captain work (repo: archived-app) (kind: captain) (hold: choose a route) (hold-kind: captain)
+- [ ] mate-archived-deferred - Archived deferred call (repo: archived-app) (kind: captain) (hold: parked) (hold-kind: captain) (hold-until: 2026-08-01)
+
+## Done
+- [x] mate-archived-done - Archived secondmate completion (repo: archived-app) (kind: ship) (done 2026-07-10)
+- [x] mate-meta-archived-done - Archived completion identified only by task metadata (kind: ship) (done 2026-07-10)
+- [x] mate-parked-done - Parked secondmate completion (repo: parked-app) (kind: ship) (done 2026-07-10)
+- [x] mate-active-done - Active secondmate completion (repo: sample) (kind: ship) (done 2026-07-10)
+EOF
+  fm_write_meta "$mate/state/mate-parked-live.meta" \
+    "window=firstmate:fm-mate-parked-live" "worktree=$mate/projects/parked-app" \
+    "project=$mate/projects/parked-app" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" mate-parked-live busy
+  printf 'working: Parked child description must not leak\n' > "$mate/state/mate-parked-live.status"
+  fm_write_meta "$mate/state/mate-archived-live.meta" \
+    "window=firstmate:fm-mate-archived-live" "worktree=$mate/projects/archived-app" \
+    "project=$mate/projects/archived-app" "harness=claude" "kind=ship" "mode=local-only"
+  record_claude_state "$mate/state" mate-archived-live busy
+  printf 'working: Archived child description must not leak\n' > "$mate/state/mate-archived-live.status"
+  fm_write_meta "$mate/state/mate-parked-paused.meta" \
+    "window=firstmate:fm-mate-parked-paused" "worktree=$mate/projects/parked-app" \
+    "project=$mate/projects/parked-app" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" mate-parked-paused idle
+  printf 'paused: waiting for project resume\n' > "$mate/state/mate-parked-paused.status"
+  fm_write_meta "$mate/state/mate-meta-archived-done.meta" \
+    "window=firstmate:fm-mate-meta-archived-done" "worktree=$mate/projects/archived-app" \
+    "project=$mate/projects/archived-app" "harness=claude" "kind=ship" "mode=local-only"
+  record_claude_state "$mate/state" mate-meta-archived-done idle
+  printf 'done: archived metadata completion\n' > "$mate/state/mate-meta-archived-done.status"
+  FM_HOME="$mate" "$ROOT/bin/fm-project-posture.sh" set parked-app parked:2026-08-01 >/dev/null
+  check="$mate/state/project-posture-expiry.check.sh"
+  assert_present "$check" "secondmate dated park did not arm the expiry check"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" refresh_local_secondmate_ledgers "$home"
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e '
+    .state == "no_active_work"
+      and (.holds | any(.id == "mate-parked-call") | not)
+      and (.queued | any(.id == "mate-parked-call"
+        and (has("project_posture") | not) and (has("parked_until") | not)))
+      and (.lifecycle_inventory | any(.id == "mate-parked-live"))
+      and (.lifecycle_inventory | any(.id == "mate-parked-done") | not)
+      and (.lifecycle_inventory | any(.repo == "archived-app") | not)
+  ' >/dev/null || fail "a parked queued hold changed the owning-home state: $summary"
+  summary_tmp="$mate/state/home-summary.json.tmp"
+  jq '.generated = "2026-07-31T18:00:00Z"
+      | .generated_epoch = 1785520800
+      | .endpoints |= map(
+        if .id == "mate-parked-live" or .id == "mate-archived-live"
+        then .endpoint.exists = false | .endpoint.agent_alive = "dead"
+        else . end)' "$mate/state/home-summary.json" > "$summary_tmp" \
+    && mv "$summary_tmp" "$mate/state/home-summary.json"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "mate-active" and .owner == "posture-mate"))
+      and (.gates | any(.id == "mate-parked" and .owner == "posture-mate"
+        and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "mate-parked-call" and .owner == "posture-mate"
+        and .reason == "project parked until 2026-08-01"))
+      and (.gates | any(.id == "mate-parked-live" and .owner == "posture-mate"
+        and .reason == "project parked until 2026-08-01"))
+      and ([.gates[] | select(.id == "mate-parked-paused" and .owner == "posture-mate"
+        and .reason == "project parked until 2026-08-01")] | length) == 1
+      and (.secondmates | any(.id == "posture-mate" and .state == "no_active_work"
+        and (.doing | contains("description must not leak") | not)))
+      and (.in_flight | any(.id == "posture-mate/mate-parked-live" or .id == "posture-mate/mate-archived-live") | not)
+      and (.unhealthy_endpoints | any(.id == "posture-mate/mate-parked-live"))
+      and (.unhealthy_endpoints | any(.id == "posture-mate/mate-archived-live") | not)
+      and (.decisions_open | any(.id == "posture-mate/mate-parked-call") | not)
+      and (.decisions_open | any(.id == "posture-mate/mate-archived-call") | not)
+      and (.gates | any(.id == "mate-archived") | not)
+      and (.landed | any(.id == "mate-active-done" and .owner == "posture-mate"))
+      and (.landed | any(.id == "mate-parked-done" and .owner == "posture-mate"))
+      and (.gates | any(.id == "mate-parked-done") | not)
+      and (.landed | any(.id == "mate-archived-done") | not)
+      and (.landed | any(.id == "mate-meta-archived-done") | not)
+      and (.secondmate_reconcile | any(.id == "posture-mate"
+        and (.ids | index("mate-meta-archived-done") | not)))
+      and (.secondmates | any(.id == "posture-mate"
+        and (.reason | contains("mate-meta-archived-done") | not)))
+      and (.omitted | any(.surface | contains("archived-app")))
+      and (.omitted | any(.surface | startswith("captain holds bucketed")) | not)
+  ' >/dev/null || fail "secondmate posture was not honored from that home's structured state: $json"
+  jq '.valid = false
+      | .reason = "in-flight backlog item has no child metadata: unrelated-orphan"
+      | .invalidity = {kind:"orphan_in_flight",ids:["unrelated-orphan"]}
+      | .state = "no_active_work"' "$mate/state/home-summary.json" > "$summary_tmp" \
+    && mv "$summary_tmp" "$mate/state/home-summary.json"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json)
+  printf '%s' "$json" | jq -e '
+    (.in_flight | any(.id == "posture-mate/mate-parked-live"))
+      and (.gates | any(.id == "mate-parked-live") | not)
+      and (.secondmates | any(.id == "posture-mate" and .state == "captain_decision"
+        and (.reason | contains("unrelated-orphan"))))
+      and (.secondmate_reconcile | any(.id == "posture-mate"
+        and .kind == "orphan_in_flight" and .ids == ["unrelated-orphan"]))
+  ' >/dev/null || fail "a stale secondmate summary kept an expired live park hidden: $json"
+  first=$(FM_PROJECT_POSTURE_TODAY=2026-08-01 "$check")
+  assert_contains "$first" 'project posture expired: parked-app (parked until 2026-08-01)' \
+    "expired secondmate park did not emit its wake"
+  second=$(FM_PROJECT_POSTURE_TODAY=2026-08-02 "$check")
+  [ -z "$second" ] || fail "expired secondmate park repeated its wake: $second"
+  PATH="$fakebin:$PATH" FM_SNAPSHOT_SECONDMATE_QUEUED=1 refresh_local_secondmate_ledgers "$home"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: parked-app"))
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+  ' >/dev/null || fail "secondmate lifecycle disappeared behind the owning-summary bound: $json"
+  pass "secondmate project posture is honored from that home's structured state"
+}
+
+test_secondmate_lifecycle_precedes_owning_summary_bounds() {
+  local home mate fakebin summary json
+  home=$(make_home secondmate-lifecycle-bounds)
+  mate="$TMP_ROOT/secondmate-lifecycle-bounds-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home bounds-mate "$mate"
+  append_secondmate_registry "$home" bounds-mate "$mate"
+  cat > "$mate/data/projects.md" <<'EOF'
+- active-app [no-mistakes] - Active app (added 2026-07-01)
+- archived-app [local-only archived] - Archived app (added 2026-07-01)
+EOF
+  mkdir -p "$mate/projects/active-app" "$mate/projects/archived-app"
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+- [ ] a-archived-live - Archived child ordered first (repo: archived-app) (kind: ship)
+- [ ] z-active-live - Active child ordered second (repo: active-app) (kind: ship)
+
+## Queued
+- [ ] a-archived-queued - Archived queue ordered first (repo: archived-app) (kind: ship)
+- [ ] z-active-queued - Active queue ordered second (repo: active-app) (kind: ship)
+
+## Done
+EOF
+  fm_write_meta "$mate/state/a-archived-live.meta" \
+    "window=firstmate:fm-a-archived-live" "worktree=$mate/projects/archived-app" \
+    "project=$mate/projects/active-app" "harness=claude" "kind=ship" "mode=local-only"
+  record_claude_state "$mate/state" a-archived-live busy
+  printf 'working: archived first\n' > "$mate/state/a-archived-live.status"
+  fm_write_meta "$mate/state/z-active-live.meta" \
+    "window=firstmate:fm-z-active-live" "worktree=$mate/projects/active-app" \
+    "project=$mate/projects/active-app" "harness=claude" "kind=ship" "mode=no-mistakes"
+  record_claude_state "$mate/state" z-active-live busy
+  printf 'working: active second\n' > "$mate/state/z-active-live.status"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" FM_SNAPSHOT_SECONDMATE_CHILDREN=1 \
+    FM_SNAPSHOT_SECONDMATE_QUEUED=1 refresh_local_secondmate_ledgers "$home"
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e '
+    [.active_children[].id] == ["z-active-live"]
+      and [.queued[].id] == ["z-active-queued"]
+      and [.endpoints[].id] == ["z-active-live"]
+      and (.omitted | any(.surface == "project_lifecycle"
+        and (.archived_projects | index("archived-app") != null)))
+  ' >/dev/null || fail "archived rows consumed owning-summary bounds: $summary"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.in_flight | any(.id == "bounds-mate/z-active-live"))
+      and (.gates | any(.id == "z-active-queued" and .owner == "bounds-mate"))
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+  ' >/dev/null || fail "bounded active secondmate work disappeared from Bearings: $json"
+  pass "secondmate lifecycle filtering precedes every owning-summary bound"
+}
+
+test_expired_unknown_park_revalidates_cached_summary() {
+  local home mate sshbin json cache_file tmp
+  home=$(make_home expired-unknown-park)
+  mate="$TMP_ROOT/expired-unknown-park-mate"
+  mkdir -p "$mate/state"
+  printf -- '- unknown-mate - fixture domain (host: unknown-host; root: /remote/root; home: %s; scope: fixture; projects: parked-app; added 2026-07-31)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/unknown-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=unknown-host" "remote_root=/remote/root" "home=$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[{id:"expired-unknown",title:"Unknown parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[{id:"expired-unknown",title:"Unknown parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:1,queued:1,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785520800 FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "expired-unknown" and .reason == "project parked until 2026-08-01"))
+      and (.secondmates | any(.id == "unknown-mate" and .state == "no_active_work"))
+  ' >/dev/null || fail "future parked unknown child was not safely gated: $json"
+  cache_file=
+  for tmp in "$home/state/summary-cache"/*.json; do
+    [ -f "$tmp" ] || continue
+    cache_file=$tmp
+    break
+  done
+  [ -n "$cache_file" ] || fail "future parked summary did not populate its cache"
+  cp "$mate/state/home-summary.json" "$mate/state/home-summary.valid"
+  tmp="$mate/state/home-summary.json.tmp"
+  jq '.lifecycle_inventory[0].id=null
+    | .queued=[] | .counts.lifecycle_inventory=1 | .counts.queued=0' \
+    "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  cp "$mate/state/home-summary.json" "$cache_file"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "unknown-mate" and .state == "unknown"
+      and .provenance == "unknown" and (.reason | contains("no valid cached copy"))))
+      and (.gates | any(.id == "expired-unknown") | not)
+  ' >/dev/null || fail "malformed lifecycle inventory remained trusted through expiry: $json"
+  cp "$mate/state/home-summary.valid" "$mate/state/home-summary.json"
+  cp "$mate/state/home-summary.valid" "$cache_file"
+  tmp="$mate/state/home-summary.json.tmp"
+  jq '.projects=null' "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  tmp="$cache_file.tmp"
+  jq '.projects=null' "$cache_file" > "$tmp" && mv "$tmp" "$cache_file"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785520800 FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "unknown-mate" and .state == "unknown"
+      and .provenance == "unknown" and (.reason | contains("no valid cached copy"))))
+      and (.gates | any(.id == "expired-unknown") | not)
+  ' >/dev/null || fail "malformed project registry remained trusted: $json"
+  cp "$mate/state/home-summary.valid" "$mate/state/home-summary.json"
+  cp "$mate/state/home-summary.valid" "$cache_file"
+  tmp="$mate/state/home-summary.json.tmp"
+  jq 'del(.bounds)' "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  tmp="$cache_file.tmp"
+  jq 'del(.bounds)' "$cache_file" > "$tmp" && mv "$tmp" "$cache_file"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785520800 FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "unknown-mate" and .state == "unknown"
+      and .provenance == "unknown" and (.reason | contains("no valid cached copy"))))
+  ' >/dev/null || fail "lifecycle-aware summary without bounds remained trusted: $json"
+  tmp="$mate/state/home-summary.json.tmp"
+  jq '.bounds={active_children:10,decisions_open:10,holds:20,queued:20}' \
+    "$mate/state/home-summary.json" > "$tmp" && mv "$tmp" "$mate/state/home-summary.json"
+  tmp="$cache_file.tmp"
+  jq '.bounds={active_children:10,decisions_open:10,holds:20,queued:20}' \
+    "$cache_file" > "$tmp" && mv "$tmp" "$cache_file"
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" FM_SSH_BIN="$sshbin/fake-ssh" \
+    FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" \
+    FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" \
+    FM_SNAPSHOT_BUDGET=3 FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "unknown-mate" and .state == "unknown"
+      and .provenance == "structured-home-cache"
+      and (.reason | contains("child current state unavailable"))))
+      and (.secondmate_reconcile | any(.id == "unknown-mate"
+        and (.ids | index("expired-unknown") != null)))
+  ' >/dev/null || fail "expired unknown child remained trusted no-active work: $json"
+  pass "expired unknown parks revalidate cached summaries"
+}
+
+test_expired_unknown_park_preserves_strict_primary_invalidity() {
+  local home mate sshbin json
+  home=$(make_home expired-unknown-secondary)
+  mate="$TMP_ROOT/expired-unknown-secondary-mate"
+  mkdir -p "$mate/state"
+  printf -- '- secondary-mate - fixture domain (host: secondary-host; root: /remote/root; home: %s; scope: fixture; projects: active-app, parked-app; added 2026-07-31)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/secondary-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=secondary-host" "remote_root=/remote/root" "home=$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[
+      {name:"active-app",repo:"active-app",posture:"active",parked_until:null,delivery:"no-mistakes"},
+      {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[{id:"newly-active-unknown",title:"Unknown parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    valid:false,reason:"in-flight backlog item has no child metadata: existing-orphan",
+    invalidity:{kind:"orphan_in_flight",ids:["existing-orphan"]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[{id:"newly-active-unknown",title:"Unknown parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:1,queued:1,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785520800 \
+    FM_BEARINGS_NOW=2026-07-31T18:00:00Z \
+    run_remote_ledger_bearings "$home" "$sshbin" 1785520800 >/dev/null
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785607200 \
+    FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    run_remote_ledger_bearings "$home" "$sshbin" 1785607200)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "secondary-mate" and .state == "unknown"
+      and .provenance == "structured-home-cache"
+      and (.reason | contains("existing-orphan"))))
+      and (.secondmate_reconcile | any(.id == "secondary-mate"
+        and .kind == "orphan_in_flight"
+        and .ids == ["existing-orphan"]))
+      and (.gates | any(.id == "newly-active-unknown") | not)
+  ' >/dev/null || fail "expired unknown child displaced the strict cached contradiction: $json"
+  pass "expired unknown children preserve strict cached contradictions"
+}
+
+test_expired_orphan_replaces_cached_unknown_primary() {
+  local home mate fakebin canonical
+  home=$(make_home expired-orphan-secondary)
+  mate="$TMP_ROOT/expired-orphan-secondary-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home inverse-expiry-mate "$mate"
+  append_secondmate_registry "$home" inverse-expiry-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[
+      {name:"active-app",repo:"active-app",posture:"active",parked_until:null,delivery:"no-mistakes"},
+      {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[{id:"newly-active-orphan",title:"Orphaned parked worker",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:null,
+      child_source:null,child_doing:null}],
+    valid:false,reason:"child current state unavailable: existing-unknown",
+    invalidity:{kind:"child_current_unavailable",ids:["existing-unknown"]},state:"unknown",
+    active_children:[],decisions_open:[],holds:[],queued:[],landed:[],
+    endpoints:[{id:"existing-unknown",repo:"active-app",state:"unknown",source:"unavailable",
+      endpoint:{target:"unknown-target",exists:false,agent_alive:"dead"}}],
+    counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:1,
+      queued:0,landed:0,endpoints:1},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "inverse-expiry-mate")
+    | .current.state == "unknown"
+      and .invalidity == {kind:"orphan_in_flight",ids:["newly-active-orphan"]}
+      and (.current.reason | contains("newly-active-orphan"))
+  ' >/dev/null || fail "expired orphan was masked by the cached unknown primary: $canonical"
+  pass "expired strict contradictions replace cached unknown primaries"
+}
+
+test_expiry_preserves_fatal_cached_invalidity() {
+  local home mate sshbin json
+  home=$(make_home expiry-preserves-fatal)
+  mate="$TMP_ROOT/expiry-preserves-fatal-mate"
+  mkdir -p "$mate/state"
+  printf -- '- fatal-mate - fixture domain (host: fatal-host; root: /remote/root; home: %s; scope: fixture; projects: parked-app; added 2026-07-31)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/fatal-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=fatal-host" "remote_root=/remote/root" "home=$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[{id:"fatal-expired-unknown",title:"Unknown task-only child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:null,
+      current_role:null,blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"unknown",
+      child_source:"unavailable",child_doing:"current state unavailable"}],
+    valid:false,reason:"missing structured backlog",invalidity:{kind:"missing_backlog",ids:[]},
+    state:"unknown",active_children:[],decisions_open:[],holds:[],queued:[],landed:[],endpoints:[],
+    counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:1,
+      queued:0,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z \
+    run_remote_ledger_bearings "$home" "$sshbin" 1785520800 >/dev/null
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    run_remote_ledger_bearings "$home" "$sshbin" 1785607200)
+  printf '%s' "$json" | jq -e '
+    (.secondmates | any(.id == "fatal-mate" and .state == "unknown"
+      and .provenance == "unknown" and (.reason | contains("missing structured backlog"))))
+      and (.secondmate_reconcile | any(.id == "fatal-mate"
+        and .kind == "missing_backlog" and .ids == []))
+      and (.in_flight | any(.id == "fatal-mate/fatal-expired-unknown") | not)
+      and (.gates | any(.id == "fatal-expired-unknown") | not)
+  ' >/dev/null || fail "expiry rehabilitated a structurally invalid cached ledger: $json"
+  pass "expiry preserves fatal cached ledger invalidity"
+}
+
+test_expired_queued_worker_is_unowned() {
+  local home mate fakebin canonical
+  home=$(make_home expired-queued-worker)
+  mate="$TMP_ROOT/expired-queued-worker-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home queued-worker-mate "$mate"
+  append_secondmate_registry "$home" queued-worker-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[{id:"queued-live-child",title:"Queued row with live child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"queued",
+      current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"working",
+      child_source:"status-log",child_doing:"running without ownership"}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],queued:[],landed:[],endpoints:[],
+    counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:1,
+      queued:0,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "queued-worker-mate")
+    | .provenance.summary_valid == false
+      and .provenance.trust == "partial-structured"
+      and .invalidity == {kind:"unowned_current",ids:["queued-live-child"]}
+      and (.current.reason | contains("queued-live-child"))
+      and (.queued | any(.id == "queued-live-child"))
+  ' >/dev/null || fail "expired queued worker hid its live ownership contradiction: $canonical"
+  pass "expired queued workers are classified as unowned"
+}
+
+test_expired_unknown_preserves_unknown_with_orphan_primary() {
+  local home mate fakebin canonical
+  home=$(make_home expired-mixed-invalidity)
+  mate="$TMP_ROOT/expired-mixed-invalidity-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home mixed-expiry-mate "$mate"
+  append_secondmate_registry "$home" mixed-expiry-mate "$mate"
+  jq -n --arg home "$mate" 'def row($id;$state):
+    {id:$id,title:$id,repo:"parked-app",project_posture:"parked",parked_until:"2026-08-01",
+     backlog_state:"in_flight",current_role:"worker",blocked_by:null,blocked_by_ids:[],
+     unresolved_blocker_ids:[],blocked_reason:null,hold_reason:null,hold_kind:null,
+     hold_until:null,hold_bucket:null,hold_age_days:null,captain_actionable:false,
+     kind:"ship",child_state:$state,child_source:null,child_doing:null};
+  {
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[row("expired-orphan";null),row("expired-unknown";"unknown")],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[row("expired-orphan";null),row("expired-unknown";"unknown")],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:2,queued:2,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "mixed-expiry-mate")
+    | .current.state == "unknown"
+      and .invalidity == {kind:"orphan_in_flight",ids:["expired-orphan"]}
+      and (.current.reason | contains("expired-orphan"))
+      and (.queued | any(.id == "expired-orphan" or .id == "expired-unknown") | not)
+  ' >/dev/null || fail "coexisting expired unknown child yielded an idle home: $canonical"
+  pass "expired unknown children preserve unknown with another primary invalidity"
+}
+
+test_bounded_unknown_child_preserves_unknown_home_state() {
+  local home mate fakebin canonical
+  home=$(make_home bounded-unknown-child)
+  mate="$TMP_ROOT/bounded-unknown-child-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home bounded-unknown-mate "$mate"
+  append_secondmate_registry "$home" bounded-unknown-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"active-app",repo:"active-app",posture:"active",parked_until:null,delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[],valid:false,
+    reason:"in-flight backlog item has no child metadata: visible-orphan",
+    invalidity:{kind:"orphan_in_flight",ids:["visible-orphan"]},state:"unknown",
+    active_children:[],decisions_open:[],holds:[],queued:[],landed:[],
+    endpoints:[{id:"visible-child",repo:"active-app",state:"working",source:"status-log",
+      endpoint:{target:"visible-target",exists:true,agent_alive:"not_checked"}}],
+    counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:0,
+      queued:0,landed:0,endpoints:2},
+    omitted:[{surface:"endpoints",count:1}]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "bounded-unknown-mate")
+    | .current.state == "unknown"
+      and .invalidity == {kind:"orphan_in_flight",ids:["visible-orphan"]}
+  ' >/dev/null || fail "bounded unknown child was normalized into an idle home: $canonical"
+  pass "bounded unknown children preserve unknown home state"
+}
+
+test_expired_task_only_child_preserves_queue_omission() {
+  local home mate fakebin canonical
+  home=$(make_home expired-task-only-queue-count)
+  mate="$TMP_ROOT/expired-task-only-queue-count-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home task-only-mate "$mate"
+  append_secondmate_registry "$home" task-only-mate "$mate"
+  jq -n --arg home "$mate" '
+    def queued($n): {id:("active-" + ($n | tostring)),title:"Active queued work",
+      repo:"active-app",project_posture:"active",parked_until:null,
+      backlog_state:"queued",current_role:null,child_state:null,child_source:null,
+      child_doing:null,blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+      hold_age_days:null,captain_actionable:false,kind:"ship"};
+    {
+      schema:"fm-secondmate-home-summary.v1",
+      hold_classifier_schema:"fm-captain-hold-buckets.v1",
+      generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+      projects:[
+        {name:"active-app",repo:"active-app",posture:"active",parked_until:null,delivery:"no-mistakes"},
+        {name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+      bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+      lifecycle_inventory:[{id:"task-only-child",title:"Parked task-only child",repo:"parked-app",
+        project_posture:"parked",parked_until:"2026-08-01",backlog_state:null,
+        current_role:null,child_state:null,child_source:null,child_doing:null,
+        blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],blocked_reason:null,
+        hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,hold_age_days:null,
+        captain_actionable:false,kind:"ship"}],
+      valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+      active_children:[],decisions_open:[],holds:[],queued:[range(0;20) | queued(.)],
+      landed:[],endpoints:[],
+      counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:1,
+        queued:21,landed:0,endpoints:0},
+      omitted:[{surface:"queued",count:1}]
+    }
+  ' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "task-only-mate")
+    | .counts.queued == 21
+      and (.queued | length) == 20
+      and (.omitted | any(.surface == "queued" and .count == 1))
+  ' >/dev/null || fail "expired task-only child consumed the queued omission count: $canonical"
+  pass "expired task-only children preserve queued omission counts"
+}
+
+test_expired_active_worker_leaves_cached_queue() {
+  local home mate fakebin canonical
+  home=$(make_home expired-active-queue)
+  mate="$TMP_ROOT/expired-active-queue-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home active-expiry-mate "$mate"
+  append_secondmate_registry "$home" active-expiry-mate "$mate"
+  jq -n --arg home "$mate" 'def row:
+    {id:"expired-active",title:"Expired active worker",repo:"parked-app",
+     project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+     current_role:"worker",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+     blocked_reason:null,hold_reason:null,hold_kind:null,hold_until:null,hold_bucket:null,
+     hold_age_days:null,captain_actionable:false,kind:"ship",child_state:"working",
+     child_source:"status-log",child_doing:"active after expiry"};
+  {
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[row],valid:true,reason:null,invalidity:{kind:null,ids:[]},
+    state:"no_active_work",active_children:[],decisions_open:[],holds:[],queued:[row],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:1,queued:1,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "active-expiry-mate")
+    | .current.state == "active_child_work"
+      and [.active_children[].id] == ["expired-active"]
+      and (.queued | any(.id == "expired-active") | not)
+      and .counts.active_children == 1
+      and .counts.queued == 0
+  ' >/dev/null || fail "expired active worker remained in the cached queue: $canonical"
+  pass "expired active workers leave the cached queue"
+}
+
+test_expired_held_park_stays_valid() {
+  local home mate fakebin canonical
+  home=$(make_home expired-held-park)
+  mate="$TMP_ROOT/expired-held-park-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home held-mate "$mate"
+  append_secondmate_registry "$home" held-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-31T18:00:00Z",generated_epoch:1785520800,home:$home,
+    projects:[{name:"parked-app",repo:"parked-app",posture:"parked",parked_until:"2026-08-01",delivery:"no-mistakes"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[{id:"expired-held",title:"Held parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"held",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:"choose route",hold_kind:"captain",hold_until:null,
+      hold_bucket:"live",hold_age_days:0,captain_actionable:true,kind:"ship",
+      child_state:null,child_source:null,child_doing:null}],
+    valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],
+    queued:[{id:"expired-held",title:"Held parked child",repo:"parked-app",
+      project_posture:"parked",parked_until:"2026-08-01",backlog_state:"in_flight",
+      current_role:"held",blocked_by:null,blocked_by_ids:[],unresolved_blocker_ids:[],
+      blocked_reason:null,hold_reason:"choose route",hold_kind:"captain",hold_until:null,
+      hold_bucket:"live",hold_age_days:0,captain_actionable:true,kind:"ship",
+      child_state:null,child_source:null,child_doing:null}],
+    landed:[],endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,
+      lifecycle_inventory:1,queued:1,landed:0,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "held-mate")
+    | .provenance.summary_valid == true
+      and .provenance.trust == "complete"
+      and .current.state == "captain_decision"
+      and .invalidity.kind == null
+      and (.decisions_open | any(.id == "expired-held"))
+  ' >/dev/null || fail "expired held work was falsely treated as orphaned: $canonical"
+  pass "expired held parks stay valid without child metadata"
+}
+
+test_archive_filter_updates_summary_counts() {
+  local home mate fakebin canonical json
+  home=$(make_home archive-filter-counts)
+  mate="$TMP_ROOT/archive-filter-counts-mate"
+  make_valid_secondmate_home count-mate "$mate"
+  append_secondmate_registry "$home" count-mate "$mate"
+  jq -n --arg home "$mate" '{
+    schema:"fm-secondmate-home-summary.v1",
+    hold_classifier_schema:"fm-captain-hold-buckets.v1",
+    generated:"2026-07-11T18:00:00Z",generated_epoch:1783792800,home:$home,
+    projects:[{name:"archived-app",repo:"archived-app",posture:"archived",parked_until:null,delivery:"local-only"}],
+    bounds:{active_children:10,decisions_open:10,holds:20,queued:20},
+    lifecycle_inventory:[],valid:true,reason:null,invalidity:{kind:null,ids:[]},state:"no_active_work",
+    active_children:[],decisions_open:[],holds:[],queued:[],
+    landed:[{id:"identified-archived-done",title:"Identified archived completion",repo:"archived-app",
+      pr_url:null,report_path:null,local_note:"done",completion:{date:"2026-07-10"}}],
+    endpoints:[],counts:{active_children:0,decisions_open:0,holds:0,lifecycle_inventory:0,
+      queued:0,landed:1,endpoints:0},omitted:[]
+  }' > "$mate/state/home-summary.json"
+  fakebin=$(make_fakebin "$home")
+  canonical=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z \
+    "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+  printf '%s' "$canonical" | jq -e '
+    .secondmate_current.records[] | select(.id == "count-mate")
+    | (.landed | length) == 0 and .counts.landed == 0
+  ' >/dev/null || fail "archive filtering left stale secondmate landed totals: $canonical"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_BEARINGS_NOW=2026-07-11T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json)
+  printf '%s' "$json" | jq -e '
+    (.landed | any(.id == "identified-archived-done") | not)
+      and (.omitted | any(.surface == "secondmate home Done capped at the snapshot layer for 1 home(s)") | not)
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+  ' >/dev/null || fail "archive filtering emitted a false landed-bound disclosure: $json"
+  pass "archive filtering keeps summary counts consistent"
+}
+
+test_archived_main_orphan_does_not_emit_inventory_gate() {
+  local home fakebin json
+  home=$(make_home archived-main-orphan)
+  : > "$home/data/secondmates.md"
+  cat > "$home/data/projects.md" <<'EOF'
+- archived-app [local-only archived] - Archived app (added 2026-07-01)
+EOF
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+- [ ] archived-orphan - Archived work without child metadata (repo: archived-app) (kind: ship)
+
+## Queued
+
+## Done
+EOF
+  fakebin=$(make_fakebin "$home")
+  json=$(run "$home" "$fakebin" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "(main-inventory)" or .id == "archived-orphan") | not)
+      and (.in_flight | any(.id == "archived-orphan") | not)
+      and (.omitted | any(.surface == "archived project work omitted: archived-app"))
+      and (.omitted | any(.surface | startswith("main in-flight backlog item(s) have no child metadata")) | not)
+  ' >/dev/null || fail "archived orphan emitted a main inventory repair gate: $json"
+  pass "archived main orphans do not invalidate visible inventory"
+}
+
+test_long_secondmate_project_identity_is_preserved() {
+  local home mate fakebin project summary json
+  home=$(make_home long-secondmate-project)
+  mate="$TMP_ROOT/long-secondmate-project-mate"
+  project=$(printf 'long-%0125d' 0)
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home long-project-mate "$mate"
+  append_secondmate_registry "$home" long-project-mate "$mate"
+  printf -- '- %s [direct-PR parked:2026-08-01] - Long parked project (added 2026-07-01)\n' \
+    "$project" > "$mate/data/projects.md"
+  printf '## In flight\n- [ ] long-project-live - Long parked child (repo: %s) (kind: ship)\n\n## Queued\n\n## Done\n' \
+    "$project" > "$mate/data/backlog.md"
+  mkdir -p "$mate/projects/$project"
+  fm_write_meta "$mate/state/long-project-live.meta" \
+    "window=firstmate:fm-long-project-live" "worktree=$mate/projects/$project" \
+    "project=$mate/projects/$project" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" long-project-live busy
+  printf 'working: long parked project\n' > "$mate/state/long-project-live.status"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$mate" \
+    FM_SNAPSHOT_NOW=2026-07-11T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1783792800 \
+    "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e --arg project "$project" '
+    (.projects | any(.name == $project and .repo == $project))
+      and (.lifecycle_inventory | any(.id == "long-project-live" and .repo == $project))
+      and (.queued | any(.id == "long-project-live" and .repo == $project))
+      and (.endpoints | any(.id == "long-project-live" and .repo == $project))
+  ' >/dev/null || fail "secondmate summary truncated a canonical project identity: $summary"
+  json=$(run "$home" "$fakebin" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    .gates | any(.id == "long-project-live" and .owner == "long-project-mate"
+      and .reason == "project parked until 2026-08-01")
+  ' >/dev/null || fail "long parked project escaped lifecycle placement: $json"
+  pass "secondmate summaries preserve long canonical project identities"
+}
+
+test_lifecycle_inventory_is_bounded_and_disclosed() {
+  local home mate fakebin summary json i large_hold inventory_count omitted_count
+  home=$(make_home expired-park-inventory-cap)
+  mate="$TMP_ROOT/expired-park-inventory-cap-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home inventory-mate "$mate"
+  append_secondmate_registry "$home" inventory-mate "$mate"
+  cat > "$mate/data/projects.md" <<'EOF'
+- active-app [no-mistakes] - Active app (added 2026-07-01)
+- expired-app [direct-PR parked:2026-07-31] - Expired app (added 2026-07-01)
+- future-app [direct-PR parked:2026-09-01] - Future app (added 2026-07-01)
+EOF
+  mkdir -p "$mate/projects/expired-app"
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+- [ ] a-expired-live - Expired live child (repo: expired-app) (kind: ship)
+
+## Queued
+EOF
+  i=1
+  while [ "$i" -le 20 ]; do
+    printf -- '- [ ] active-%02d - Active gate %02d (repo: active-app) (kind: ship)\n' "$i" "$i" \
+      >> "$mate/data/backlog.md"
+    i=$((i + 1))
+  done
+  large_hold=$(printf '%040000d' 0)
+  i=1
+  while [ "$i" -le 250 ]; do
+    if [ "$i" -le 10 ]; then
+      printf -- '- [ ] b-future-%04d - Future parked gate %04d (repo: future-app) (kind: captain) (hold: %s) (hold-kind: captain)\n' \
+        "$i" "$i" "$large_hold" >> "$mate/data/backlog.md"
+    else
+      printf -- '- [ ] b-future-%04d - Future parked gate %04d (repo: future-app) (kind: ship)\n' "$i" "$i" \
+        >> "$mate/data/backlog.md"
+    fi
+    i=$((i + 1))
+  done
+  cat >> "$mate/data/backlog.md" <<'EOF'
+- [ ] z-future-park - Future parked gate (repo: future-app) (kind: ship)
+
+## Done
+EOF
+  i=1
+  while [ "$i" -le 600 ]; do
+    printf -- '- [x] historical-%03d - Historical parked completion retained only in Done (repo: future-app) (kind: ship) (done 2026-07-01)\n' \
+      "$i" >> "$mate/data/backlog.md"
+    i=$((i + 1))
+  done
+  fm_write_meta "$mate/state/a-expired-live.meta" \
+    "window=firstmate:fm-a-expired-live" "worktree=$mate/projects/expired-app" \
+    "project=expired-app" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" a-expired-live busy
+  printf 'working: expired park is active again\n' > "$mate/state/a-expired-live.status"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$mate" \
+    FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785607200 \
+    FM_SNAPSHOT_SECONDMATE_QUEUED=20 "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e '
+    (.lifecycle_inventory | length) > 0
+      and (.lifecycle_inventory | length) < 200
+      and (.lifecycle_inventory | any(.id == "b-future-0001" and .repo == "future-app"))
+      and (.lifecycle_inventory | any(.id == "b-future-0011" and .repo == "future-app"))
+      and (.lifecycle_inventory | any(.id == "historical-600") | not)
+      and ((.lifecycle_inventory | length) as $kept
+        | .omitted | any(.surface == "lifecycle_inventory" and .count == (251 - $kept)))
+      and (.active_children | map(select(.id == "a-expired-live")) | length) == 1
+      and .counts.active_children == 1
+      and (.queued | length) == 20
+      and (.queued | any(.id == "z-future-park") | not)
+  ' >/dev/null || fail "lifecycle inventory retained history or fresh active counts changed: $summary"
+  [ "$(wc -c < "$mate/state/home-summary.json" | tr -d ' ')" -le 262144 ] \
+    || fail "current lifecycle inventory exceeded the remote summary byte limit"
+  inventory_count=$(printf '%s' "$summary" | jq '.lifecycle_inventory | length')
+  omitted_count=$((251 - inventory_count))
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-queued)
+  printf '%s' "$json" | jq -e --argjson omitted_count "$omitted_count" '
+    (.gates | any(.id == "z-future-park" and .owner == "inventory-mate") | not)
+      and ([.in_flight[] | select(.id == "inventory-mate/a-expired-live")] | length) == 1
+      and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: future-app"))
+      and (.omitted | any(.surface == ("secondmate inventory-mate parked lifecycle facts omitted by summary bound: " + ($omitted_count | tostring))))
+  ' >/dev/null || fail "bounded future parks bypassed lifecycle disclosure: $json"
+  pass "lifecycle inventory is bounded with explicit omission disclosure"
+}
+
+test_expired_secondmate_park_survives_summary_bounds_and_cache() {
+  local home mate fakebin sshbin summary json i
+  home=$(make_home expired-secondmate-park-cache)
+  mate="$TMP_ROOT/expired-secondmate-park-cache-mate"
+  make_valid_secondmate_home expiry-mate "$mate"
+  printf -- '- expiry-mate - fixture domain (host: expiry-host; root: /remote/root; home: %s; scope: fixture; projects: active-app, parked-app; added 2026-07-31)\n' \
+    "$mate" > "$home/data/secondmates.md"
+  fm_write_meta "$home/state/expiry-mate.meta" \
+    "kind=secondmate" "mode=secondmate" "harness=pi" \
+    "remote_host=expiry-host" "remote_root=/remote/root" "home=$mate"
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+
+## Done
+EOF
+  cat > "$mate/data/projects.md" <<'EOF'
+- active-app [no-mistakes] - Active app (added 2026-07-01)
+- parked-app [direct-PR parked:2026-08-01] - Parked app (added 2026-07-01)
+EOF
+  mkdir -p "$mate/projects/parked-app"
+  cat > "$mate/data/backlog.md" <<'EOF'
+## In flight
+- [ ] z-parked-live - Parked child beyond queue bound (repo: parked-app) (kind: ship)
+
+## Queued
+EOF
+  i=1
+  while [ "$i" -le 20 ]; do
+    printf -- '- [ ] active-%02d - Active gate %02d (repo: active-app) (kind: ship)\n' "$i" "$i" \
+      >> "$mate/data/backlog.md"
+    i=$((i + 1))
+  done
+  printf -- '- [ ] z-parked-queued - Parked queue beyond queue bound (repo: parked-app) (kind: ship)\n' \
+    >> "$mate/data/backlog.md"
+  printf '\n## Done\n' >> "$mate/data/backlog.md"
+  fm_write_meta "$mate/state/z-parked-live.meta" \
+    "window=firstmate:fm-z-parked-live" "worktree=$mate/projects/parked-app" \
+    "project=parked-app" "harness=claude" "kind=ship" "mode=direct-PR"
+  record_claude_state "$mate/state" z-parked-live busy
+  printf 'working: parked child retained for expiry\n' > "$mate/state/z-parked-live.status"
+  fakebin=$(make_fakebin "$home")
+  PATH="$fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$mate" \
+    FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785520800 \
+    FM_SNAPSHOT_SECONDMATE_QUEUED=20 "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null
+  summary=$(<"$mate/state/home-summary.json")
+  printf '%s' "$summary" | jq -e '
+    (.queued | length) == 20
+      and (.queued | any(.id == "z-parked-live") | not)
+      and (.queued | any(.id == "z-parked-queued") | not)
+      and (.lifecycle_inventory | any(.id == "z-parked-live"
+        and .repo == "parked-app" and .child_state == "working"
+        and (has("project_posture") | not) and (has("parked_until") | not)))
+      and (.lifecycle_inventory | any(.id == "z-parked-queued"
+        and .backlog_state == "queued"
+        and (has("project_posture") | not) and (has("parked_until") | not)))
+  ' >/dev/null || fail "parked task facts were lost behind the owning-summary bound: $summary"
+  sshbin=$(make_remote_ledger_ssh "$home/remote-ssh")
+  mkdir -p "$home/ledger-active"
+  : > "$home/ledger-calls.log"
+  : > "$home/ledger-pids.log"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
+    FM_SSH_BIN="$sshbin/fake-ssh" FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" \
+    FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" \
+    FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" FM_SNAPSHOT_BUDGET=3 \
+    FM_SNAPSHOT_NOW=2026-07-31T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785520800 \
+    FM_BEARINGS_NOW=2026-07-31T18:00:00Z NET_LOG="$home/net.log" \
+    "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "z-parked-live" and .owner == "expiry-mate") | not)
+      and (.gates | any(.id == "z-parked-queued" and .owner == "expiry-mate") | not)
+      and (.in_flight | any(.id == "expiry-mate/z-parked-live") | not)
+      and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: parked-app"))
+  ' >/dev/null || fail "bounded parked task bypassed its cached-ledger disclosure: $json"
+  mv "$mate/state/home-summary.json" "$mate/state/home-summary.offline"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
+    FM_SSH_BIN="$sshbin/fake-ssh" FM_TEST_LEDGER_CALL_LOG="$home/ledger-calls.log" \
+    FM_TEST_LEDGER_PID_LOG="$home/ledger-pids.log" FM_TEST_LEDGER_ACTIVE_DIR="$home/ledger-active" \
+    FM_SNAPSHOT_CACHE_DIR="$home/state/summary-cache" FM_SNAPSHOT_BUDGET=3 \
+    FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785607200 \
+    FM_BEARINGS_NOW=2026-08-01T18:00:00Z NET_LOG="$home/net.log" \
+    "$BEARINGS" --json --all-in-flight --all-queued)
+  printf '%s' "$json" | jq -e '
+    (.in_flight | any(.id == "expiry-mate/z-parked-live"))
+      and (.gates | any(.id == "z-parked-live") | not)
+      and (.gates | any(.id == "z-parked-queued" and .owner == "expiry-mate") | not)
+      and (.secondmates | any(.id == "expiry-mate" and .freshness == "cached"
+        and .provenance == "structured-home-cache"))
+      and (.omitted | any(.surface == "parked project work omitted by secondmate summary bound: parked-app") | not)
+      and (.omitted | any(.surface == "secondmate expiry-mate queued work omitted by snapshot bound: 1"))
+  ' >/dev/null || fail "cached bounded park was lost or bypassed its owner bound after expiry: $json"
+  pass "expired secondmate parks survive summary bounds and cached reads"
+}
+
+test_expired_project_park_resurfaces_with_one_wake() {
+  local home fakebin json check first second
+  home=$(make_home expired-park)
+  : > "$home/data/secondmates.md"
+  cat > "$home/data/projects.md" <<'EOF'
+- app [direct-PR] - Expiry fixture (added 2026-07-01)
+EOF
+  cat > "$home/data/backlog.md" <<'EOF'
+## In flight
+
+## Queued
+- [ ] app-next - Work on a dated park (repo: app) (kind: ship)
+
+## Done
+EOF
+  FM_HOME="$home" "$ROOT/bin/fm-project-posture.sh" set app parked:2026-08-01 >/dev/null
+  check="$home/state/project-posture-expiry.check.sh"
+  assert_present "$check" "dated park did not arm the expiry check"
+  fakebin=$(make_fakebin "$home")
+  json=$(run "$home" "$fakebin" --json)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "app-next" and .reason == "project parked until 2026-08-01"))
+      and (.in_flight | any(.id == "app-next") | not)
+  ' >/dev/null || fail "future dated park did not sink to Charted Next: $json"
+  first=$(FM_PROJECT_POSTURE_TODAY=2026-07-11 "$check")
+  [ -z "$first" ] || fail "future park woke early: $first"
+  json=$(FM_BEARINGS_NOW=2026-08-01T18:00:00Z PATH="$fakebin:$PATH" FM_HOME="$home" \
+    FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z NET_LOG="$home/net.log" "$BEARINGS" --json)
+  printf '%s' "$json" | jq -e '
+    (.gates | any(.id == "app-next" and .reason == "-"))
+      and (.omitted | any(.surface | startswith("archived project work omitted")) | not)
+  ' >/dev/null || fail "expired park did not resurface as active Charted Next work: $json"
+  first=$(FM_PROJECT_POSTURE_TODAY=2026-08-01 "$check")
+  assert_contains "$first" 'project posture expired: app (parked until 2026-08-01)' \
+    "due park did not emit its expiry wake"
+  second=$(FM_PROJECT_POSTURE_TODAY=2026-08-02 "$check")
+  [ -z "$second" ] || fail "expired park repeated its wake on a later run: $second"
+  pass "an expired park resurfaces in Bearings and emits exactly one expiry wake"
+}
+
 test_task_teardown_during_metadata_capture_does_not_abort_snapshot
 test_current_state_uses_captured_status_observation
 test_relaunched_task_does_not_inherit_reused_endpoint_state
@@ -3053,6 +4380,7 @@ test_open_decision_surfaces_end_to_end
 test_report_pointers_surface
 test_queued_item_prose_never_hides_it
 test_include_prs_is_the_only_fetch_path
+test_shared_origin_prs_respect_project_lifecycle
 test_partial_github_failure_degrades
 test_perl_fallback_bounds_github_call
 test_section_caps_and_expansion_flags
@@ -3063,3 +4391,23 @@ test_revealed_deferred_holds_show_their_deferral_reason
 test_pr_repository_cap_and_expansion
 test_per_repository_pr_cap_is_disclosed
 test_projection_and_toon_fail_closed
+test_project_lifecycle_surface_and_bearings_projection
+test_duplicate_project_identity_fails_closed
+test_secondmate_project_posture_is_honored_from_structured_state
+test_secondmate_lifecycle_precedes_owning_summary_bounds
+test_expired_unknown_park_revalidates_cached_summary
+test_expired_unknown_park_preserves_strict_primary_invalidity
+test_expired_orphan_replaces_cached_unknown_primary
+test_expiry_preserves_fatal_cached_invalidity
+test_expired_queued_worker_is_unowned
+test_expired_unknown_preserves_unknown_with_orphan_primary
+test_bounded_unknown_child_preserves_unknown_home_state
+test_expired_task_only_child_preserves_queue_omission
+test_expired_active_worker_leaves_cached_queue
+test_expired_held_park_stays_valid
+test_archive_filter_updates_summary_counts
+test_archived_main_orphan_does_not_emit_inventory_gate
+test_long_secondmate_project_identity_is_preserved
+test_lifecycle_inventory_is_bounded_and_disclosed
+test_expired_secondmate_park_survives_summary_bounds_and_cache
+test_expired_project_park_resurfaces_with_one_wake
