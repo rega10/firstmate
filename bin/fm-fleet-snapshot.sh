@@ -241,10 +241,10 @@ Its invalidity object names the normalized failure kind and affected ids.
 Actionable tasks-axi captain holds appear as decisions_open and stay visible in
 queued with hold_reason, hold_kind, hold_until,
 hold_bucket, hold_age_days, and plural blocker fields for downstream
-projections. Each summary byte-bounds lifecycle_inventory within the fixed
-262144-byte publication limit while retaining current parked task facts in
-deterministic order. omitted[] discloses additional parked facts; those tasks may
-not resurface at expiry until the bound clears.
+projections. Each summary budgets lifecycle_inventory toward the fixed
+262144-byte reader limit while retaining current parked task facts in deterministic
+order. omitted[] discloses additional parked facts; those tasks may not resurface at
+expiry until the budget clears. Other base summary surfaces remain unbounded.
 A captain hold is actionable only when every blocker is Done, any
 hold-until date has arrived, and an undated hold remains below the aging threshold.
 Cross-home collection uses FM_SNAPSHOT_SECONDMATES (default 20, 0 lifts the

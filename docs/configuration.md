@@ -51,7 +51,7 @@ Changing or clearing the posture resets that project's receipt, and removing the
 `bin/fm-project-posture.sh` remains the only writer.
 A permanent or future dated park keeps that project's work at the bottom of Charted Next with the park date.
 A dated park is due and active on its date.
-Archived project work is omitted from every work surface and named in `omitted[]`.
+Archived project work is omitted from every posture-aware work surface and named in `omitted[]`; live PR enrichment keeps the accepted secondmate suppression limitation documented in [`docs/scripts.md`](scripts.md#bearings-snapshot-contract).
 A secondmate home's own structured `projects[]` is the authority for work that home owns.
 `posture` is `active`, `parked`, or `archived`; `parked_until` is a `YYYY-MM-DD` string for a dated park and otherwise null; `repo` is the registry's project key; and `delivery` is the unchanged registered mode with ` +yolo` when enabled.
 The rows are ordered with active and due projects first, permanent parks next, future dated parks next, and archived projects last, with project name as the deterministic tie-breaker.
