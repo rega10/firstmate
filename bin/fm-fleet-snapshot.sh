@@ -241,10 +241,10 @@ Its invalidity object names the normalized failure kind and affected ids.
 Actionable tasks-axi captain holds appear as decisions_open and stay visible in
 queued with hold_reason, hold_kind, hold_until,
 hold_bucket, hold_age_days, and plural blocker fields for downstream
-projections. Each summary also publishes a complete lifecycle_inventory of parked
-and archived task facts so dated posture is evaluated when read without depending
-on ordinary projection bounds. Its size is bounded by the parked and archived
-task inventory rather than a separate snapshot cap.
+projections. Each summary also publishes a complete lifecycle_inventory of current
+parked task facts so dated posture is evaluated when read without depending on
+ordinary projection bounds. Its size is bounded by current parked work rather than
+archived or terminal history.
 A captain hold is actionable only when every blocker is Done, any
 hold-until date has arrived, and an undated hold remains below the aging threshold.
 Cross-home collection uses FM_SNAPSHOT_SECONDMATES (default 20, 0 lifts the
@@ -1021,13 +1021,15 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
         | if (.backlog | type) == "object" then .backlog.repo = $project else . end)) as $tasks
     | (([ $backlog.records[]? as $record
           | lifecycle($record.repo) as $life
-          | select($life.parked or $life.archived)
+          | select($life.parked)
+          | select($record.state == "in_flight" or $record.state == "queued")
           | (first($tasks[]? | select(.id == $record.id)) // null) as $task
           | lifecycle_item($record; $task) ]
         + [ $tasks[]? as $task
             | select([$backlog.records[]?.id] | index($task.id) | not)
             | lifecycle($task.project) as $life
-            | select($life.parked or $life.archived)
+            | select($life.parked)
+            | select($task.current_state.state != "done" and $task.current_state.state != "failed")
             | lifecycle_item(null; $task) ])
        | sort_by(.id)) as $lifecycle_inventory_all
     | ([ $tasks[] | select(lifecycle(.project).archived | not) ]) as $visible_tasks

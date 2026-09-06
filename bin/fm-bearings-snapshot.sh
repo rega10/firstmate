@@ -318,28 +318,52 @@ if [ "$INCLUDE_PRS" = 1 ]; then
              project:.[0].project,
              worktree:([.[].worktree | select(. != null)][0] // null)})') \
       || { echo "fm-bearings-snapshot: could not classify PR lifecycle" >&2; exit 1; }
-    SUPPRESSED_PR_REF_LINES=$(
-      while IFS= read -r ref; do
-        [ -n "$ref" ] || continue
-        ref_url=$(printf '%s' "$ref" | jq -r '.url // empty')
-        ref_project=$(printf '%s' "$ref" | jq -r '.project // empty')
-        ref_worktree=$(printf '%s' "$ref" | jq -r '.worktree // empty')
+    SUPPRESSED_PR_RESOLUTION_LINES=$(
+      while IFS= read -r ref_url; do
+        [ -n "$ref_url" ] || continue
         ref_repo=$(repo_slug "$ref_url")
-        if [ -z "$ref_repo" ] && [ -n "$ref_worktree" ] && [ -d "$ref_worktree" ]; then
+        jq -cn --arg kind url --arg key "$ref_url" --arg repository "$ref_repo" \
+          '{kind:$kind,key:$key,repository:$repository}'
+      done <<EOF
+$(printf '%s' "$SUPPRESSED_PR_REFS_RAW" | jq -r '[.[] | .url // empty] | unique[]')
+EOF
+      while IFS= read -r ref_worktree; do
+        [ -n "$ref_worktree" ] || continue
+        ref_repo=
+        if [ -d "$ref_worktree" ]; then
           ref_origin=$(git -C "$ref_worktree" remote get-url origin 2>/dev/null || true)
           ref_repo=$(repo_slug "$ref_origin")
         fi
-        if [ -z "$ref_repo" ] && [ -n "$ref_project" ] && [ -d "$FM_HOME_PATH/projects/$ref_project" ]; then
+        jq -cn --arg kind worktree --arg key "$ref_worktree" --arg repository "$ref_repo" \
+          '{kind:$kind,key:$key,repository:$repository}'
+      done <<EOF
+$(printf '%s' "$SUPPRESSED_PR_REFS_RAW" | jq -r '[.[] | .worktree // empty] | unique[]')
+EOF
+      while IFS= read -r ref_project; do
+        [ -n "$ref_project" ] || continue
+        ref_repo=
+        if [ -d "$FM_HOME_PATH/projects/$ref_project" ]; then
           ref_origin=$(git -C "$FM_HOME_PATH/projects/$ref_project" remote get-url origin 2>/dev/null || true)
           ref_repo=$(repo_slug "$ref_origin")
         fi
-        printf '%s' "$ref" | jq -c --arg repository "$ref_repo" \
-          '. + {repository:($repository | if . == "" then null else . end)} | del(.worktree)'
+        jq -cn --arg kind project --arg key "$ref_project" --arg repository "$ref_repo" \
+          '{kind:$kind,key:$key,repository:$repository}'
       done <<EOF
-$(printf '%s' "$SUPPRESSED_PR_REFS_RAW" | jq -c '.[]')
+$(printf '%s' "$SUPPRESSED_PR_REFS_RAW" | jq -r '[.[] | .project // empty] | unique[]')
 EOF
     ) || { echo "fm-bearings-snapshot: could not resolve PR lifecycle repositories" >&2; exit 1; }
-    SUPPRESSED_PR_REFS=$(printf '%s\n' "$SUPPRESSED_PR_REF_LINES" | jq -s '.') \
+    SUPPRESSED_PR_RESOLUTIONS=$(printf '%s\n' "$SUPPRESSED_PR_RESOLUTION_LINES" | jq -s '.') \
+      || { echo "fm-bearings-snapshot: could not resolve PR lifecycle repositories" >&2; exit 1; }
+    SUPPRESSED_PR_REFS=$(printf '%s' "$SUPPRESSED_PR_REFS_RAW" | jq -c \
+      --argjson resolutions "$SUPPRESSED_PR_RESOLUTIONS" '
+      def resolved($kind; $key):
+        first($resolutions[]
+          | select(.kind == $kind and .key == $key and .repository != "")
+          | .repository) // null;
+      map(. + {repository:(resolved("url"; .url)
+                            // resolved("worktree"; .worktree)
+                            // resolved("project"; .project))}
+          | del(.worktree))') \
       || { echo "fm-bearings-snapshot: could not resolve PR lifecycle repositories" >&2; exit 1; }
     # Candidate repos: recorded pr= URLs plus live worktree origins. Deduped.
     repos=""

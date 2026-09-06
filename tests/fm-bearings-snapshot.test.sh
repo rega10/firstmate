@@ -1438,7 +1438,7 @@ test_include_prs_is_the_only_fetch_path() {
 }
 
 test_shared_origin_prs_respect_project_lifecycle() {
-  local home fakebin json capped cross_repo
+  local home fakebin json capped cross_repo real_git origin_log REAL_GIT TRACKED_PROJECT_PATH ORIGIN_LOG
   home=$(make_home shared-origin-prs)
   write_fixture "$home"
   cat > "$home/data/projects.md" <<'EOF'
@@ -1450,6 +1450,11 @@ EOF
   sed '/^## Queued$/i\
 - [ ] parked-task - Parked shared-origin work (repo: parked-app) (kind: ship)\
 - [ ] fallback-parked - Parked backlog-only work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-1 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-2 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-3 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-4 - Additional parked backlog work (repo: app-b) (kind: ship)\
+- [ ] fallback-extra-5 - Additional parked backlog work (repo: app-b) (kind: ship)\
 - [ ] archived-other-task - Archived work in another repository (repo: archived-other) (kind: ship)\
 ' "$home/data/backlog.md" > "$home/data/backlog.next"
   mv "$home/data/backlog.next" "$home/data/backlog.md"
@@ -1478,11 +1483,29 @@ EOF
   record_claude_state "$home/state" archived-other-task busy
   printf 'working: unrelated archived task\n' > "$home/state/archived-other-task.status"
   fakebin=$(make_fakebin "$home")
-  json=$(FAKE_GH_SHARED_ORIGIN=1 run "$home" "$fakebin" --include-prs --json)
+  real_git=$(command -v git)
+  origin_log="$home/origin.log"
+  TRACKED_PROJECT_PATH="$home/projects/app-b"
+  export REAL_GIT="$real_git" TRACKED_PROJECT_PATH ORIGIN_LOG="$origin_log"
+  : > "$origin_log"
+  cat > "$fakebin/git" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = "-C" ] && [ "${2:-}" = "$TRACKED_PROJECT_PATH" ] \
+  && [ "${3:-}" = "remote" ] && [ "${4:-}" = "get-url" ] && [ "${5:-}" = "origin" ]; then
+  printf '%s\n' "$2" >> "$ORIGIN_LOG"
+fi
+exec "$REAL_GIT" "$@"
+SH
+  chmod +x "$fakebin/git"
+  json=$(REAL_GIT="$real_git" TRACKED_PROJECT_PATH="$home/projects/app-b" \
+    ORIGIN_LOG="$origin_log" FAKE_GH_SHARED_ORIGIN=1 \
+    run "$home" "$fakebin" --include-prs --json)
   printf '%s' "$json" | jq -e '
     [.candidate_prs[].task] == ["ship-task"]
       and (.gates | any(.id == "parked-task" and .reason == "project parked until 2026-08-01"))
   ' >/dev/null || fail "shared-origin PR discovery exposed parked work: $json"
+  [ "$(grep -Fc "$home/projects/app-b" "$origin_log")" = 1 ] \
+    || fail "suppressed PR resolution repeated the project origin lookup: $(<"$origin_log")"
   : > "$home/net.log"
   capped=$(FAKE_GH_SUPPRESSED_CAP=1 FM_BEARINGS_PR_LIMIT=2 \
     run "$home" "$fakebin" --include-prs --json)
@@ -3348,6 +3371,9 @@ EOF
       and (.holds | any(.id == "mate-parked-call") | not)
       and (.queued | any(.id == "mate-parked-call"
         and (has("project_posture") | not) and (has("parked_until") | not)))
+      and (.lifecycle_inventory | any(.id == "mate-parked-live"))
+      and (.lifecycle_inventory | any(.id == "mate-parked-done") | not)
+      and (.lifecycle_inventory | any(.repo == "archived-app") | not)
   ' >/dev/null || fail "a parked queued hold changed the owning-home state: $summary"
   summary_tmp="$mate/state/home-summary.json.tmp"
   jq '.generated = "2026-07-31T18:00:00Z"
@@ -4124,6 +4150,12 @@ EOF
 
 ## Done
 EOF
+  i=1
+  while [ "$i" -le 600 ]; do
+    printf -- '- [x] historical-%03d - Historical parked completion retained only in Done (repo: future-app) (kind: ship) (done 2026-07-01)\n' \
+      "$i" >> "$mate/data/backlog.md"
+    i=$((i + 1))
+  done
   fm_write_meta "$mate/state/a-expired-live.meta" \
     "window=firstmate:fm-a-expired-live" "worktree=$mate/projects/expired-app" \
     "project=expired-app" "harness=claude" "kind=ship" "mode=direct-PR"
@@ -4138,12 +4170,15 @@ EOF
     (.lifecycle_inventory | length) == 202
       and (.lifecycle_inventory | any(.id == "b-future-201"))
       and (.lifecycle_inventory | any(.id == "z-future-park"))
+      and (.lifecycle_inventory | any(.id == "historical-600") | not)
       and (.omitted | any(.surface == "lifecycle_inventory") | not)
       and (.active_children | map(select(.id == "a-expired-live")) | length) == 1
       and .counts.active_children == 1
       and (.queued | length) == 20
       and (.queued | any(.id == "z-future-park") | not)
-  ' >/dev/null || fail "lifecycle inventory was capped or fresh active counts changed: $summary"
+  ' >/dev/null || fail "lifecycle inventory retained history or fresh active counts changed: $summary"
+  [ "$(wc -c < "$mate/state/home-summary.json" | tr -d ' ')" -le 262144 ] \
+    || fail "current lifecycle inventory exceeded the remote summary byte limit"
   json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
     FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
     NET_LOG="$home/net.log" "$BEARINGS" --json --all-in-flight --all-queued)
