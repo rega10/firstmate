@@ -13,8 +13,8 @@ Changing persisted context to remove hidden content, filtering provider context,
 ## Compatibility evidence
 
 [`calm.md`](calm.md#pi-compatibility) owns the current Pi compatibility contract.
-Pi 0.81.1 was installed when Calm was first built, and Pi 0.82.0 was the later reverification target.
-The inspected Pi CHANGELOG shows no relevant presentation API introduced at either version, so those versions remain verification evidence rather than compatibility bounds.
+Pi 0.81.1 was installed when Calm was first built, Pi 0.82.0 was the later reverification target, and Pi 0.84.4 and 0.85.1 were subsequently verified.
+The inspected Pi CHANGELOG shows no relevant Calm presentation API introduced at those verification points, so those versions remain verification evidence rather than compatibility bounds; the Pi 0.85.1 ToolExecutionComponent compatibility change is documented below.
 The exported classes used by the adapters (`AssistantMessageComponent` and `InteractiveMode`) are undocumented internals with no stated version guarantee.
 `tests/fm-calm-pi-extension.test.sh` records the installed Pi version as evidence without gating on it and covers both newer synthetic versions and an unavailable adapter seam.
 
@@ -217,7 +217,7 @@ No other `.pi/extensions` file registers or supplies a tool. Commands, lifecycle
 The taxonomy was derived from Pi 0.81.1's installed public declarations, documentation, examples, `interactive-mode.js`, and its exported component implementations.
 The test fixture enumerates every class below through the centralized policy, and the interactive fixture exercises the screenshot classes, current user-role operational input, and legacy synthetic presentation entries.
 
-| Policy class | Pi transcript path | Calm result (baseline verified on Pi 0.81.1 through 0.82.0; newer evidence noted per row) |
+| Policy class | Pi transcript path | Calm result (baseline verified on Pi 0.81.1, 0.82.0, 0.84.4, and 0.85.1; newer evidence noted per row) |
 | --- | --- | --- |
 | `genuine-user-prompt` | `UserMessageComponent` | Visible, including every tested operational near miss. |
 | `genuine-agent-response` | Assistant text in `AssistantMessageComponent` | Visible. |
@@ -242,7 +242,7 @@ The test fixture enumerates every class below through the centralized policy, an
 | `unknown` | Future or unclassified transcript component | Policy-hidden, but no generic renderer exists; never claimed as covered. |
 
 The installed extension API has no supported global transcript filter, user-message renderer, assistant-message renderer, chat-container API, or generic custom-tool wrapper.
-Pi 0.81.1 through 0.82.0 and Pi 0.84.4 export `AssistantMessageComponent` and `InteractiveMode`, so Calm uses separate idempotent, API-probed adapters for assistant thinking layout and the complete operational-user transcript row while leaving all message data and non-Calm rendering unchanged; see the [compatibility contract](calm.md#pi-compatibility) for how a future Pi lacking one of those exports is handled.
+Pi 0.81.1, 0.82.0, 0.84.4, and 0.85.1 export `AssistantMessageComponent` and `InteractiveMode`, so Calm uses separate idempotent, API-probed adapters for assistant thinking layout and the complete operational-user transcript row while leaving all message data and non-Calm rendering unchanged; see the [compatibility contract](calm.md#pi-compatibility) for how a future Pi lacking one of those exports is handled.
 General component replacement, ANSI cursor erasure, provider-context mutation, and installed-file patching remain rejected as unsupported or preservation-breaking workarounds.
 
 ## Cross-harness verification record
@@ -267,7 +267,7 @@ grok 0.2.106 (bde89716f679)
 | Claude Code 2.1.218 | Not feasible through the inspected supported project surface. | Project hooks can observe lifecycle and tool events, while the plugin CLI packages supported components; neither inspected surface exposes a transcript-row renderer or transcript-wide redraw API. |
 | Codex CLI 0.144.6 | Not feasible through the inspected supported project surface. | The tracked hooks expose session, pre-tool, and stop handling, while the plugin and feature inventories expose no TUI tool-row renderer or transcript redraw control. |
 | OpenCode 1.17.18 | Not feasible without violating the preservation boundary. | Plugins expose events and tool execution hooks, not a built-in transcript-row renderer; same-name tool replacement changes execution rather than presentation alone. |
-| Pi (verified 0.81.1 through 0.82.0) | Partially feasible with two API-probed exported-class adapters. | Public APIs control working visibility, collapsed labels, known tool slots, custom entries, and expansion redraws; exported assistant and interactive-mode classes provide the collapsed-thinking and operational-user layout boundaries, gated on the exact method's presence rather than a version number, while generic user, tool, and status filtering remains unavailable. |
+| Pi (verified 0.81.1, 0.82.0, 0.84.4, and 0.85.1) | Partially feasible with two API-probed exported-class adapters. | Public APIs control working visibility, collapsed labels, known tool slots, custom entries, and expansion redraws; exported assistant and interactive-mode classes provide the collapsed-thinking and operational-user layout boundaries, gated on the exact method's presence rather than a version number, while generic user, tool, and status filtering remains unavailable. |
 | Grok CLI 0.2.106 | Not feasible through the inspected supported project surface. | Project hooks expose lifecycle and tool interception, while the plugin CLI exposes no row-renderer contract; `--minimal` changes the whole screen mode rather than selected transcript rows. |
 
 These conclusions are deliberately limited to the named versions and supported surfaces.
@@ -286,7 +286,7 @@ The operational provider path covers Calm loaded on, loaded off, default prefere
 It asserts one persisted and rendered captain answer, exact user-role operational envelopes in order, no replacement custom messages, one processing result, zero operational transcript rows, and the two-row neighboring-assistant geometry for live, adjacent, and restart paths.
 Quoted current markers, ASCII-only labels, ordinary text before a marker, unrelated U+2063 placement, and image-bearing input remain visible in component and native transcript checks.
 `tests/fm-pi-primary-live-e2e.test.sh` also proves the working ship replaces the built-in `Working...` row while Calm is active on the credentialed provider path, and that it clears when the run settles, before continuing its ordinary watcher lifecycle.
-`tests/fm-pi-primary-types.test.sh` performs strict no-emit TypeScript checking against the installed Pi declarations, currently package version 0.84.4.
+`tests/fm-pi-primary-types.test.sh` performs strict no-emit TypeScript checking against the installed Pi declarations, currently package version 0.85.1.
 
 The relevant commands are:
 
@@ -540,3 +540,25 @@ FM_TEST_END 2026-08-29T01:01:30Z tests/fm-pi-branch-extension.test.sh exit=0 dur
 ```
 
 The real renderer comparison exercised twelve outcome lines and reported collapsed and expanded parity with Pi stock, zero visible rows under Calm, restored stock parity after toggling Calm off, and delegated stock HTML export fallback.
+
+## 2026-09-06 Pi 0.85.1 Calm-off renderer compatibility verification
+
+Between the previously verified Pi 0.84.x component and Pi 0.85.1, `ToolExecutionComponent` stopped synthesizing a built-in `ToolDefinition` when its definition argument is omitted.
+Pi 0.85.1's `InteractiveMode` passes the registered definition explicitly, so Pi's own `read` renderer remains active in the real transcript.
+The old Calm regression fixture omitted the definition for its stock baseline, which used Pi's generic fallback on Pi 0.85.1 while Calm's wrapper correctly delegated the built-in `read` renderer.
+Pi 0.84.3 still synthesized the built-in definition, confirming that this was a Pi component compatibility change rather than a Calm renderer change.
+The fixture now builds Pi's stock definitions through `createAllToolDefinitions()` and compares the Calm wrapper with those definitions in both collapsed and expanded states.
+The byte-identical assertions remain unchanged.
+The wrapper's Calm-off `read` output matched Pi's stock definition on both Pi 0.85.1 and the cached Pi 0.84.3 package.
+
+```text
+$ pi --version
+0.85.1
+
+$ bash tests/fm-calm-pi-extension.test.sh >/dev/null
+$ echo $?
+0
+
+$ npm exec --yes --package=typescript@5.9.3 -- bash tests/fm-pi-primary-types.test.sh
+ok - tracked Pi extensions pass strict no-emit typecheck against Pi 0.85.1
+```

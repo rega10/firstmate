@@ -17,8 +17,8 @@ PI_OPERATIONAL_INPUT="$ROOT/.pi/extensions/lib/fm-operational-input.ts"
 PI_PACKAGE_DIR=${FM_PI_PACKAGE_DIR:-"$(npm root -g 2>/dev/null)/@earendil-works/pi-coding-agent"}
 TMUX_SOCKET="fm-calm-$$"
 TMUX_SESSION="fm-calm-e2e"
-# Verified against Pi 0.81.1 and 0.82.0 (docs/calm-mode-feasibility.md). This is
-# known-good evidence, not a support ceiling: the fixtures below run against whatever
+# Verified against Pi 0.81.1, 0.82.0, 0.84.4, and 0.85.1 (docs/calm-mode-feasibility.md).
+# This is known-good evidence, not a support ceiling: the fixtures below run against whatever
 # Pi is actually installed, and record_pi_version_evidence never rejects a newer
 # version. The tracked presentation adapters probe the exact API they patch (see
 # .pi/extensions/fm-calm.ts) instead of relying on version inference, so a version
@@ -189,12 +189,12 @@ test_pi_compat_no_upper_bound() {
   local version
   for version in 0.83.0 0.90.0 1.0.0 2.3.4 0.82.1 10.20.30; do
     record_pi_version_evidence "$version" "synthetic newer Pi" \
-      || fail "record_pi_version_evidence rejected Pi $version solely for being newer than 0.82.0"
+      || fail "record_pi_version_evidence rejected Pi $version solely for being newer than a previously verified version"
   done
   if (record_pi_version_evidence "" "malformed Pi version probe") 2>/dev/null; then
     fail "record_pi_version_evidence accepted a missing/malformed Pi version"
   fi
-  pass "Pi calm compatibility evidence never rejects a Pi version for being newer than 0.82.0, and still fails closed on a missing or malformed version"
+  pass "Pi calm compatibility evidence never rejects a Pi version solely for being newer than a previously verified version, and still fails closed on a missing or malformed version"
 }
 
 test_pi_compat_degraded_adapter() {
@@ -712,6 +712,9 @@ const [{ AssistantMessageComponent }, { CustomEntryComponent }, { ToolExecutionC
   import(pathToFileURL(`${packageRoot}/node_modules/@earendil-works/pi-tui/dist/index.js`).href),
   import(pathToFileURL(`${packageRoot}/dist/core/export-html/tool-renderer.js`).href),
 ]);
+const { createAllToolDefinitions } = await import(
+  pathToFileURL(`${packageRoot}/dist/core/tools/index.js`).href,
+);
 initTheme("dark");
 setCapabilities({ images: null, trueColor: true, hyperlinks: false });
 
@@ -885,9 +888,16 @@ const cases = [
 ];
 const renderUi = { requestRender() {} };
 const rows = [];
+const stockDefinitions = createAllToolDefinitions(process.cwd());
 for (const [name, args, result] of cases) {
   const wrapped = tools.find((tool) => tool.name === name);
-  const baseline = new ToolExecutionComponent(name, `baseline-${name}`, args, { showImages: false }, undefined, renderUi, process.cwd());
+  const stock = stockDefinitions[name];
+  if (!stock) throw new Error(`Pi stock definition missing for ${name}`);
+  // Pi 0.84.x filled an omitted definition from the tool name; Pi 0.85.1
+  // now receives the registered definition from InteractiveMode explicitly.
+  // Pass that same stock definition here so the baseline is Pi's actual renderer
+  // on both versions, rather than the generic fallback used for unknown tools.
+  const baseline = new ToolExecutionComponent(name, `baseline-${name}`, args, { showImages: false }, stock, renderUi, process.cwd());
   const actual = new ToolExecutionComponent(name, `wrapped-${name}`, args, { showImages: false }, wrapped, renderUi, process.cwd());
   for (const row of [baseline, actual]) {
     row.markExecutionStarted();
