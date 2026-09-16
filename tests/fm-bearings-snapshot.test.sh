@@ -3495,6 +3495,10 @@ test_contract_describes_json_output_and_fails_on_undeclared_field() {
   [ "$contract" = "$("$BEARINGS" --contract)" ] || fail "--contract output is not deterministic"
   printf '%s' "$contract" | jq -e '.schema == "fm-bearings.v1"' >/dev/null \
     || fail "contract schema anchor is not fm-bearings.v1: $contract"
+  printf '%s' "$contract" | jq -e '
+    (.enums.secondmate_provenance | index("structured-home-cache")) != null
+      and ((.enums.secondmate_freshness | index("cached")) != null)
+  ' >/dev/null || fail "contract omits cached secondmate snapshot vocabulary: $contract"
   # Every surface the widest --json output emits must validate against the contract.
   json=$(run "$home" "$fakebin" --json --include-prs \
     --fields bodies,paths,actions,endpoints --all-secondmates)

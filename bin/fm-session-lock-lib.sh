@@ -171,7 +171,7 @@ fm_session_lock_owner_valid() {  # <owner>
     codex:?*) return 0 ;;
     ''|*[!0-9]*) return 1 ;;
   esac
-  [ "$owner" -gt 1 ]
+  [ "$owner" -ge 1 ]
 }
 
 fm_session_lock_owner_read() {  # <state-dir>
