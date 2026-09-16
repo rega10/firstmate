@@ -1,0 +1,20 @@
+Command: bin/fm-bearings-snapshot.sh --contract
+{
+  "schema": "fm-bearings.v1",
+  "cached_provenance": 1,
+  "cached_freshness": 1,
+  "secondmate_provenance": [
+    "structured-home",
+    "structured-home-cache",
+    "parent-event-fallback",
+    "registered-table",
+    "unknown"
+  ],
+  "secondmate_freshness": [
+    "fresh",
+    "cached",
+    "historical-event",
+    "unavailable",
+    "unknown"
+  ]
+}
