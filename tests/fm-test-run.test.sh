@@ -116,6 +116,7 @@ init_changed_fixture_repo() {
     fm-pi-watch-extension.test.sh \
     fm-pi-windows-shell-invocation.test.sh \
     fm-afk-return.test.sh \
+    fm-bearings-board-render.test.sh \
     fm-bearings-snapshot.test.sh \
     fm-claude-automic-vault.test.sh \
     fm-backend-cmux.test.sh \
@@ -145,6 +146,12 @@ init_changed_fixture_repo() {
   mkdir -p "$repo/tests/fixtures/demo"
   : >"$repo/tests/fixtures/demo/demo-fixture.sh"
   printf '# tests/fixtures/demo\n' >>"$repo/tests/fm-backend-orca.test.sh"
+  # A browser harness under tests/assets is an executable input owned by its
+  # rendering suite, and therefore must select that reader when it changes.
+  mkdir -p "$repo/tests/assets"
+  : >"$repo/tests/assets/board-render-harness.mjs"
+  printf '# tests/assets/board-render-harness.mjs\n' \
+    >>"$repo/tests/fm-bearings-board-render.test.sh"
   # A shared helper with no curated family of its own, named by exactly ONE
   # script of the expensive real-Herdr family and consumed by one curated
   # watcher script. This is the shape that made a one-line helper change select
@@ -1375,6 +1382,12 @@ test_changed_shared_fixture_selects_its_readers() {
   grep -Fq 'no changed-test mapping for source path: tests/unread-thing.sh' "$tmp/err" \
     || fail "the refusal did not name the unread tests/ path: $(cat "$tmp/err")"
   git -C "$repo" checkout -q -- tests/unread-thing.sh
+
+  printf '\n' >>"$repo/tests/assets/board-render-harness.mjs"
+  listed=$(cd "$repo" && bin/fm-test-run.sh --list --changed --base HEAD)
+  assert_contains "$listed" "tests/fm-bearings-board-render.test.sh" \
+    "a changed browser test asset selects its rendering suite"
+  git -C "$repo" checkout -q -- tests/assets/board-render-harness.mjs
 
   # A nested tests/fixtures/<dir>/<name>-fixture.sh still reaches the
   # directory-scan arm rather than the top-level fixture arm's basename scan.

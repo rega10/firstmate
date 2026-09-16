@@ -1608,6 +1608,13 @@ families_for_changed_path() {
           || printf '%s\n' "__unmapped__:$path"
       fi
       ;;
+    tests/assets/*)
+      # Browser and renderer harnesses are shared executable test inputs. A
+      # change must select the suites that consume the asset, just like a
+      # top-level shared fixture, instead of being rejected as an unread test.
+      families_for_test_reference "$path" \
+        || printf '%s\n' "__unmapped__:$path"
+      ;;
     tests/lib.sh|tests/*-helpers.sh|tests/fixtures.sh|tests/*-fixture.sh)
       # Shared top-level test files, selected by the suites that name them.
       # Must stay below the tests/fixtures/*/* arm: a case glob's * spans /, so
