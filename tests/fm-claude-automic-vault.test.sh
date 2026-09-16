@@ -334,12 +334,16 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (getenv("CLAUDE_CODE_SUBPROCESS_ENV_SCRUB")) {
-    if (!has_arg(argc, argv, "--permission-mode") || !has_arg(argc, argv, "bypassPermissions") ||
+    if (has_arg(argc, argv, "auto")) {
+      if (!has_arg(argc, argv, "--permission-mode") || has_arg(argc, argv, "bypassPermissions") ||
+          has_arg(argc, argv, "--allowedTools") || has_arg(argc, argv, "--dangerously-skip-permissions")) return 54;
+      append_line(path, "permission=auto");
+    } else if (!has_arg(argc, argv, "--permission-mode") || !has_arg(argc, argv, "bypassPermissions") ||
         !has_arg(argc, argv, "--allowedTools") || !has_arg(argc, argv, "Bash")) {
       append_line(path, "approval=required");
       return 52;
     }
-    append_line(path, "permission=bypassPermissions");
+    if (!has_arg(argc, argv, "auto")) append_line(path, "permission=bypassPermissions");
   }
   if (getenv("FM_FAKE_TOOL_NAME")) {
     const char *tool = getenv("FM_FAKE_TOOL_NAME");
@@ -600,6 +604,7 @@ test_enabled_disabled_and_non_claude_launches() {
   injected_settings=$(printf '%s\n' "$injected_argv" | sed -n 's/.*<--settings> <\([^>]*\)>.*/\1/p')
   printf '%s' "$injected_settings" | "$JQ_BIN" -e \
     'has("apiKeyHelper") and .apiKeyHelper == null and .feedbackDrafts == "off" and
+      .attribution == {commit:"",pr:"",sessionUrl:false} and
       (.env | keys | sort) == ([
         "ANTHROPIC_API_KEY",
         "ANTHROPIC_AUTH_TOKEN",
@@ -636,6 +641,43 @@ test_enabled_disabled_and_non_claude_launches() {
   if printf '%s\n' "$injected_worker_args" | grep -qE '<--settings(>|=)|worker'; then
     fail "worker settings survived into the injected Claude exec arguments"
   fi
+
+  # Exercise empty remaining arguments with the platform shell: stock macOS
+  # Bash 3.2 treats an empty array as unset under the relay's nounset policy.
+  local permission_mode
+  for permission_mode in bypassPermissions auto; do
+    ready="$dir/injected-empty-$permission_mode-ready"
+    FM_FAKE_STATE="$state" TEST_FAKE_SECRET="$SECRET" CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 \
+      /bin/bash "$AV_LAUNCH" --injected "$ready" "$fakebin/claude" "$injected_settings" \
+        --permission-mode "$permission_mode" 3>&1 4>&2 >/dev/null 2>&1 \
+      || fail "empty worker argument list failed in $permission_mode mode"
+    [ -e "$ready" ] || fail "empty worker argument launch did not signal readiness"
+    assert_grep "permission=$permission_mode" "$state/claude-env.log" \
+      "empty worker argument launch lost its permission policy"
+  done
+
+  # The upstream auto-mode preference must survive the Vault relay without
+  # retaining the bypass-mode Bash grant or duplicating the settings object.
+  printf 'auto\n' > "$home/config/claude-permission-mode"
+  : > "$launchlog"
+  record=$(make_ship "$dir" "$home" auth-auto)
+  proj=${record%%$'\t'*}
+  wt=${record#*$'\t'}
+  output=$(run_spawn "$home" "$fakebin" "$state" "$launchlog" "$wt" \
+    auth-auto "$proj" claude --mode local-only --yolo off 2>&1)
+  status=$?
+  expect_code 0 "$status" "enabled Claude auto-permission spawn"
+  launch=$(last_launch_command "$launchlog")
+  executed=$(cd "$wt" && FM_FAKE_STATE="$state" PATH="$fakebin:$BASE_PATH" \
+    bash -c "$launch" 2>&1) || fail "Vault launch did not honor auto permission mode"
+  assert_not_contains "$executed" "$SECRET" "auto-mode launch displayed synthetic secret"
+  assert_grep 'permission=auto' "$state/claude-env.log" "Vault relay lost auto permission mode"
+  injected_argv=$(grep '^claude ' "$state/claude-argv.log" | tail -1)
+  assert_not_contains "$injected_argv" '<--allowedTools>' "auto mode received a bypass Bash grant"
+  assert_not_contains "$injected_argv" 'bypassPermissions' "auto mode received bypass permissions"
+  settings_count=$(printf '%s\n' "$injected_argv" | grep -oE '<--settings(>|=)' | wc -l | tr -d ' ')
+  [ "$settings_count" = 1 ] || fail "auto mode did not retain exactly one authoritative settings object"
+  rm "$home/config/claude-permission-mode"
 
   : > "$launchlog"
   record=$(make_ship "$dir" "$home" production-attestation)

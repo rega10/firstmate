@@ -32,6 +32,12 @@ printf '%s\n' "$*" >> "${FAKE_HERDR_LOG:?}"
 default='{"error":{"code":"unexpected"}}'
 case "$1 $2" in
   "pane get") printf '%s\n' "${FAKE_PANE_GET:-$default}" ;;
+  "pane process-info")
+    # Upstream verifies a registration through process-info before calling it
+    # live. The default models the fixture's registered Claude foreground.
+    live='{"result":{"type":"pane_process_info","process_info":{"pane_id":"wG:p38","shell_pid":4242,"foreground_processes":[{"pid":4243,"name":"claude","argv0":"claude"}]}}}'
+    printf '%s\n' "${FAKE_PANE_PROCESS_INFO:-$live}"
+    ;;
   "agent get") printf '%s\n' "${FAKE_AGENT_GET:-$default}" ;;
   "tab list") printf '%s\n' "${FAKE_TAB_LIST:-$default}" ;;
   *) printf '%s\n' "$default" ;;
@@ -180,6 +186,14 @@ test_legacy_landed_idle_agent_and_husk_repair() {
   local dir rc=0
   dir=$(make_case legacy-idle)
   write_legacy_meta "$dir" legacy-idle
+  # The same public repair must refuse an idle registration without readable
+  # process evidence, then succeed when that one missing observation is supplied.
+  FAKE_PANE_GET=$(pane_present_json "$TABID" "$dir/worktree") \
+    FAKE_AGENT_GET='{"result":{"agent":{"agent":"claude","agent_status":"idle"}}}' \
+    FAKE_PANE_PROCESS_INFO='not json' \
+    FAKE_TAB_LIST="{\"result\":{\"tabs\":[{\"tab_id\":\"$TABID\",\"label\":\"fm-legacy-idle\"}]}}" \
+    assert_refused_unchanged "$dir" legacy-idle "agent state is unknown" \
+      "idle registration without process evidence"
   rc=0
   FAKE_PANE_GET=$(pane_present_json "$TABID" "$dir/worktree") \
     FAKE_AGENT_GET='{"result":{"agent":{"agent":"claude","agent_status":"idle"}}}' \

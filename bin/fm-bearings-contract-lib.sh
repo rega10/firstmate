@@ -112,12 +112,13 @@ fm_bearings_emit_contract() {
     "in_flight": {
       "type": "array",
       "presence": "always",
-      "notes": "Work under way in this home, plus a per-secondmate row summarizing active child work.",
+      "notes": "Work under way in this home, plus one namespaced row for every visible active child in a readable secondmate home.",
       "fields": {
         "id": {"type": "string"},
         "kind": {"type": "string", "enum": "task_kind"},
         "state": {"type": "string", "enum": "task_state"},
         "repo": {"type": "string"},
+        "name": {"type": "string", "notes": "Durable task title, falling back to the task id."},
         "doing": {"type": "string", "notes": "Truncated current-activity summary; free text."}
       }
     },
@@ -174,13 +175,14 @@ fm_bearings_emit_contract() {
     "gates": {
       "type": "array",
       "presence": "always",
-      "notes": "Charted Next: queued or blocked work, parked-project work, and a synthetic \"(main-inventory)\" row when main current state is invalid. No field on a gate row is enum-typed: blocked_by and reason are free text and id is a task id or that sentinel.",
+      "notes": "Charted Next: queued or blocked work, parked-project work, and synthetic \"(main-inventory)\" and \"(return-catchup)\" rows for invalid main inventory or a pending away-return catch-up. No field on a gate row is enum-typed: blocked_by and reason are free text and id is a task id or that sentinel.",
       "fields": {
         "id": {"type": "string"},
         "title": {"type": "string"},
         "blocked_by": {"type": "string", "notes": "Comma-joined blocker task ids, or \"-\"."},
         "reason": {"type": "string"},
-        "owner": {"type": "string", "notes": "\"(main)\" or the owning secondmate id."}
+        "owner": {"type": "string", "notes": "\"(main)\" or the owning secondmate id."},
+        "filed": {"type": "string", "notes": "Durable filed date for newest-first ordering; null on synthetic rows."}
       }
     },
     "reports": {

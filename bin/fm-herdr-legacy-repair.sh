@@ -38,7 +38,7 @@
 #   - The worktree is clean (same uncommitted-change test as teardown, with the
 #     same harness-artifact allowances) and its committed work has landed:
 #     every commit reachable from a remote-tracking ref, or proven landed by
-#     bin/fm-landed-lib.sh's shared merged-PR/content-in-default predicates -
+#     bin/fm-work-landed-lib.sh's shared merged-PR/content-in-default predicates -
 #     the same owner bin/fm-teardown.sh uses.
 #   - The recorded live endpoint agrees, through read-only Herdr calls against
 #     the recorded named session only: either the exact pane is structurally
@@ -103,8 +103,8 @@ META="$STATE/$ID.meta"
 . "$SCRIPT_DIR/fm-wake-lib.sh"
 # shellcheck source=bin/fm-backend.sh
 . "$SCRIPT_DIR/fm-backend.sh"
-# shellcheck source=bin/fm-landed-lib.sh
-. "$SCRIPT_DIR/fm-landed-lib.sh"
+# shellcheck source=bin/fm-work-landed-lib.sh
+. "$SCRIPT_DIR/fm-work-landed-lib.sh"
 
 CONTROL_LOCK="$STATE/.control-$ID.lock"
 CONTROL_LOCK_HELD=0
@@ -246,7 +246,7 @@ if [ "$WT_ORIGIN_DIR" != "$PROJ_REAL" ] \
 fi
 
 # Clean-and-landed evidence: the same dirty allowances as teardown, then full
-# remote reachability or the shared landed predicates (bin/fm-landed-lib.sh).
+# remote reachability or the shared landed predicates (bin/fm-work-landed-lib.sh).
 DIRTY_RAW=$(git -C "$WT_REAL" status --porcelain 2>/dev/null) \
   || refuse "cannot inspect worktree $WT for uncommitted changes."
 DIRTY=$(printf '%s\n' "$DIRTY_RAW" | grep -vE '^\?\? (\.claude/|\.fm-(grok|kimi)-turnend$)' | head -1 || true)
