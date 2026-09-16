@@ -60,9 +60,9 @@ SH
   ln -s "$ROOT/bin/fm-cursor-lib.sh" "$fake/bin/fm-cursor-lib.sh"
   ln -s "$ROOT/bin/fm-composer-lib.sh" "$fake/bin/fm-composer-lib.sh"
   ln -s "$ROOT/bin/fm-nm-run-lib.sh" "$fake/bin/fm-nm-run-lib.sh"
-  # fm-landed-lib.sh: teardown sources the shared landed-work predicates; a
+  # fm-work-landed-lib.sh: teardown sources the shared landed-work predicates; a
   # missing sourced sibling aborts teardown mid-kill under set -e.
-  ln -s "$ROOT/bin/fm-landed-lib.sh" "$fake/bin/fm-landed-lib.sh"
+  ln -s "$ROOT/bin/fm-work-landed-lib.sh" "$fake/bin/fm-work-landed-lib.sh"
   # fm-lock-lib.sh: teardown sources it for the shared lock-staleness proof.
   ln -s "$ROOT/bin/fm-lock-lib.sh" "$fake/bin/fm-lock-lib.sh"
   # fm-lease-lib.sh: teardown sources it for the supervision lease guard.
@@ -111,6 +111,8 @@ SH
   # fused backlog close is skipped and the follow-up echo takes the plain-message
   # path; there is no tasks-axi and no backlog in this fixture.
   cat > "$fake/bin/fm-tasks-axi-lib.sh" <<'SH'
+FM_TASKS_AXI_MIN=0.2.4
+fm_tasks_axi_backend() { printf 'markdown\n'; }
 fm_tasks_axi_backend_available() { return 1; }
 fm_tasks_axi_compatible() { return 1; }
 fm_backlog_backend_manual() { return 1; }
@@ -164,9 +166,9 @@ SH
   ln -s "$ROOT/bin/fm-cursor-lib.sh" "$fake/bin/fm-cursor-lib.sh"
   ln -s "$ROOT/bin/fm-composer-lib.sh" "$fake/bin/fm-composer-lib.sh"
   ln -s "$ROOT/bin/fm-nm-run-lib.sh" "$fake/bin/fm-nm-run-lib.sh"
-  # fm-landed-lib.sh: teardown sources the shared landed-work predicates; a
+  # fm-work-landed-lib.sh: teardown sources the shared landed-work predicates; a
   # missing sourced sibling aborts teardown mid-kill under set -e.
-  ln -s "$ROOT/bin/fm-landed-lib.sh" "$fake/bin/fm-landed-lib.sh"
+  ln -s "$ROOT/bin/fm-work-landed-lib.sh" "$fake/bin/fm-work-landed-lib.sh"
   ln -s "$ROOT/bin/fm-lock-lib.sh" "$fake/bin/fm-lock-lib.sh"
   # fm-lease-lib.sh: teardown sources it for the supervision lease guard.
   ln -s "$ROOT/bin/fm-lease-lib.sh" "$fake/bin/fm-lease-lib.sh"
@@ -204,6 +206,8 @@ exit 0
 SH
   chmod +x "$fake/bin/fm-fleet-sync.sh"
   cat > "$fake/bin/fm-tasks-axi-lib.sh" <<'SH'
+FM_TASKS_AXI_MIN=0.2.4
+fm_tasks_axi_backend() { printf 'markdown\n'; }
 fm_tasks_axi_backend_available() { return 1; }
 fm_tasks_axi_compatible() { return 1; }
 fm_backlog_backend_manual() { return 1; }

@@ -19,14 +19,16 @@
 # shellcheck source=bin/fm-cursor-lib.sh
 . "$(dirname -- "${BASH_SOURCE[0]}")/fm-cursor-lib.sh"
 
-# Known harness command names; extend when a new adapter is verified.
-FM_HARNESS_RE='claude|codex|opencode|grok|kimi|^pi$|^pi-signed$'
+# Known harness command names; extend when a new adapter is verified. omp is
+# anchored exactly like pi: its process name is the bare word `omp` (verified,
+# omp 18.1.11), and a substring match would claim ompd or comp.
+FM_HARNESS_RE='claude|codex|opencode|grok|kimi|^pi$|^pi-signed$|^omp$'
 
 # The same harnesses as exact executable names. Keep in sync with
 # FM_HARNESS_RE. Used only for the stricter path evidence below, where the
 # loose regex would also match ordinary firstmate paths such as
 # bin/fm-claude-stop-autoarm.sh.
-FM_HARNESS_NAMES=(claude codex opencode grok kimi pi-signed pi)
+FM_HARNESS_NAMES=(claude codex opencode grok kimi pi-signed pi omp)
 
 # Print the stable hosted Codex owner token only in the environment where
 # process inspection is known to be denied by the seatbelt sandbox.
@@ -131,7 +133,12 @@ fm_harness_ancestry_pids() {
       break
     fi
     pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
-    [ -n "$pid" ] && [ "$pid" -gt 1 ] || break
+    # Examine the top of the chain before stopping. Inside a PID namespace the
+    # harness itself is pid 1, so stopping as soon as the next pid is 1 hides the
+    # very process this walk exists to find. A host's real pid 1 (init, systemd,
+    # launchd) is not harness-shaped, so fm_harness_process_matches rejects it.
+    case "$pid" in '' | *[!0-9]*) break ;; esac
+    [ "$pid" -ge 1 ] || break
   done
   [ "$printed" -eq 1 ]
 }
@@ -164,7 +171,7 @@ fm_session_lock_owner_valid() {  # <owner>
     codex:?*) return 0 ;;
     ''|*[!0-9]*) return 1 ;;
   esac
-  [ "$owner" -gt 1 ]
+  [ "$owner" -ge 1 ]
 }
 
 fm_session_lock_owner_read() {  # <state-dir>

@@ -38,29 +38,47 @@ if [ "${1:-}" = --injected ]; then
   unset FM_CLAUDE_AV_WORKER_PATH
   worker_args=()
   drop_settings_value=0
+  permission_mode=bypassPermissions
+  read_permission_mode=0
   # Drop any --settings the worker template carries so the credential-scrubbing
   # AV settings ($settings, exec'd below) is the sole --settings Claude sees:
   # a duplicate could win last and silently drop the apiKeyHelper/auth-env
   # neutralization, breaking the "no fallback credential" guarantee in
-  # fm-claude-automic-vault-lib.sh. That AV settings also carries feedbackDrafts:off.
+  # fm-claude-automic-vault-lib.sh. Those settings also carry the feedback and
+  # attribution policies from the canonical Claude template.
   for worker_arg in "$@"; do
+    if [ "$read_permission_mode" = 1 ]; then
+      permission_mode=$worker_arg
+      read_permission_mode=0
+      continue
+    fi
     if [ "$drop_settings_value" = 1 ]; then
       drop_settings_value=0
       continue
     fi
     case "$worker_arg" in
-      --dangerously-skip-permissions) continue ;;
+      --dangerously-skip-permissions) permission_mode=bypassPermissions; continue ;;
+      --permission-mode) read_permission_mode=1; continue ;;
+      --permission-mode=*) permission_mode=${worker_arg#*=}; continue ;;
       --settings) drop_settings_value=1; continue ;;
       --settings=*) continue ;;
     esac
     worker_args+=("$worker_arg")
   done
+  # Preserve the selected auto permission policy without an unconditional Bash
+  # allow grant; the historical bypass path still needs its verified grant.
+  [ "$read_permission_mode" = 0 ] || exit 2
+  case "$permission_mode" in
+    bypassPermissions) worker_args=(--allowedTools Bash ${worker_args[@]+"${worker_args[@]}"}) ;;
+    auto) ;;
+    *) exit 2 ;;
+  esac
   : > "$ready" || exit 1
   exec 1>&3 2>&4 3>&- 4>&-
   PATH=$worker_path
   export PATH
-  exec "$claude" --settings "$settings" --permission-mode bypassPermissions \
-    --allowedTools Bash "${worker_args[@]}"
+  exec "$claude" --settings "$settings" --permission-mode "$permission_mode" \
+    ${worker_args[@]+"${worker_args[@]}"}
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
