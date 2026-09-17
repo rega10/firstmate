@@ -21,7 +21,9 @@
 # never ambiguous.
 #
 # This wrapper consumes canonical status decisions plus canonically normalized
-# backlog roles, unresolved blockers, and captain actionability. It never infers
+# backlog roles, unresolved blockers, and captain actionability.
+# Contributions project cached coverage and required actors from fm-contributions.sh;
+# only captain rows are exposed, with counts for the other actors and unmeasured homes. It never infers
 # decisions from report or visual-review prose or reimplements snapshot semantics.
 # Underway (in_flight) projects every main live worker plus every active child
 # from every readable secondmate ledger, independently of that home's
@@ -55,6 +57,11 @@
 # from every work surface and named in omitted[]. Lifecycle never changes
 # delivery or merge authority, and it never reclassifies captain holds;
 # hold_bucket remains the only hold classification.
+# Contribution actor counts and coverage remain complete across lifecycle
+# postures. Only their captain-call rows are suppressed; lifecycle_suppressed
+# counts archived and parked calls separately and omitted[] discloses the total.
+# Secondmate calls carry their owning home's project identity; legacy summaries
+# without it remain visible rather than borrowing the parent's registry.
 #
 # Ordinary Charted Next gates are ordered by durable filed date, newest first,
 # before the FM_BEARINGS_GATES bound is applied. Gates without a comparable filed
@@ -821,6 +828,43 @@ MODEL=$(printf '%s' "$SNAP" | jq -L "$SCRIPT_DIR" \
       generated: $now,
       prs: $prs,
       projects: (.projects // []),
+      contributions:(
+        ([($snap.contributions | .captain |= map(. as $call
+              | . + {repo:(first($snap.backlog.records[]? | select(.id == ($call.hold // $call.task)) | .repo)
+                           // task_repo(($call.hold // $call.task); $tasks))}))
+            + {owner:"(main)",_projects:$projects}]
+          + [($snap.secondmate_current.records // [])[] as $m
+             | if $m.contributions == null then null
+               else $m.contributions + {owner:$m.id,_projects:($m.projects // [])} end])
+        | map(if . != null and .owner != "(main)" and .known > 0 and (.valid_until // 0) < ($now | fromdateiso8601)
+              then .complete=false | .proven_clear=false | .checked=0 | .captain=[]
+                | .unmeasured=(.unmeasured // 0)
+                | .counts={captain:0,fleet:(.known - .unmeasured),maintainer:0,nobody:0}
+              else . end) as $homes
+        | ([$homes[] | select(. != null)]) as $measured
+        | ([$measured[] as $h | $h.captain[]?
+            | . + {owner:$h.owner,_lifecycle:lifecycle(.repo; $h._projects)}]) as $calls
+        | {scope:"owned contributions per home",known:([$measured[].known] | add // 0),
+           checked:([$measured[].checked] | add // 0),
+           counts:{captain:([$measured[].counts.captain] | add // 0),fleet:([$measured[].counts.fleet] | add // 0),
+                   maintainer:([$measured[].counts.maintainer] | add // 0),nobody:([$measured[].counts.nobody] | add // 0)},
+           complete:(all($homes[]; . != null and .complete) and ($snap.secondmate_current.truncated // 0) == 0
+                     and $snap.secondmate_current.registry.available != false
+                     and $snap.secondmate_current.registry.input_truncated != true
+                     and $snap.secondmate_current.registry.records_truncated != true),
+           proven_clear:(all($homes[]; . != null and .proven_clear) and ($snap.secondmate_current.truncated // 0) == 0
+                     and $snap.secondmate_current.registry.available != false
+                     and $snap.secondmate_current.registry.input_truncated != true
+                     and $snap.secondmate_current.registry.records_truncated != true),
+           unmeasured_homes:([$homes[] | select(. == null)] | length),
+           unreadable_records:([$measured[].unreadable_records] | add // 0),
+           unmeasured:([$measured[].unmeasured] | add // 0),
+           stale_verdicts:([$measured[].stale_verdicts] | add // 0),
+           missing_verdicts:([$measured[].missing_verdicts] | add // 0),
+           captain_omitted:([$measured[].captain_omitted] | add // 0),
+           lifecycle_suppressed:{archived:([$calls[] | select(._lifecycle.archived)] | length),
+                                 parked:([$calls[] | select(._lifecycle.parked)] | length)},
+           captain:[$calls[] | select((._lifecycle.archived or ._lifecycle.parked) | not) | del(._lifecycle)]}),
       in_flight: (if $all_in_flight == 1 then $in_flight_all else $in_flight_all[:$in_flight_n] end),
       secondmates: (if $all_secondmates == 1 then $secondmates_all else $secondmates_all[:$secondmates_n] end),
       secondmate_reconcile: [ (.secondmate_current.records // [])[]
@@ -843,8 +887,12 @@ MODEL=$(printf '%s' "$SNAP" | jq -L "$SCRIPT_DIR" \
   | . + (if $f_paths then {paths:[ $snap.tasks[] | select(lifecycle((.backlog.repo // .project); $projects).archived | not) | {id, worktree:(.paths.worktree.path // "-"), home:(.paths.home.path // "-"), status:.paths.status_log.path, report:.paths.report.path} ]} else {} end)
   | . + (if $f_actions then {actions:[ $snap.tasks[] | select(lifecycle((.backlog.repo // .project); $projects).archived | not) | {id, watch:(.actions.watch // .actions.send // "-"), steer:(.actions.steer // .actions.send // "-")} ]} else {} end)
   | . + (if $f_endpoints then {endpoints:[ $snap.tasks[] | select(lifecycle((.backlog.repo // .project); $projects).archived | not) | {id, backend, target:(.endpoint.target // "-"), exists:.endpoint.exists, agent:.endpoint.agent_alive} ]} else {} end)
+  | .contributions.lifecycle_suppressed as $contribution_suppressed
   | . + {omitted: (
       [ (if $f_bodies then empty else {surface:"backlog item bodies", reveal:"--fields bodies"} end),
+        (if ($contribution_suppressed.archived + $contribution_suppressed.parked) > 0
+         then {surface:("contribution calls suppressed by project lifecycle: \($contribution_suppressed.archived + $contribution_suppressed.parked) (archived: \($contribution_suppressed.archived), parked: \($contribution_suppressed.parked))"),
+               reveal:"Charted Next for parked work; bin/fm-project-posture.sh set <project> active in the owning home"} else empty end),
         (if ($archived_projects | length) > 0 then {surface:("archived project work omitted: " + ($archived_projects | join(", "))), reveal:"bin/fm-project-posture.sh set <project> active"} else empty end),
         (if ($gate_bounded_parked_projects | length) > 0 then {surface:("parked project work omitted by gates bound: " + ($gate_bounded_parked_projects | join(", "))), reveal:"--all-queued"} else empty end),
         (if ($summary_bounded_parked_projects | length) > 0 then {surface:("parked project work omitted by secondmate summary bound: " + ($summary_bounded_parked_projects | join(", "))), reveal:"raise FM_SNAPSHOT_SECONDMATE_QUEUED or FM_SNAPSHOT_SECONDMATE_CHILDREN"} else empty end),
@@ -906,8 +954,8 @@ if [ "$FORMAT" = json ]; then
 fi
 
 # --- TOON renderer (output boundary; parity with the JSON model) ------------
-# The model is a flat object of scalar fields plus arrays of uniform scalar
-# objects, so the encoder only needs object scalars, the tabular array form
+# Nested objects use indented keys; arrays of uniform scalar objects use
+# the tabular array form
 # (key[N]{fields}: + comma rows at +2 indent), and the empty-array form (key: []),
 # per the TOON spec. Quoting follows the spec exactly.
 TOON=$(printf '%s\n' "$MODEL" | jq -r '
@@ -928,7 +976,9 @@ TOON=$(printf '%s\n' "$MODEL" | jq -r '
     elif type == "number" then tostring
     else q end;
   def emit($k; $v):
-    if ($v | type) == "array" then
+    if ($v | type) == "object" then
+      "\($k): ", ($v | to_entries[] | emit(.key;.value) | "  " + .)
+    elif ($v | type) == "array" then
       if ($v | length) == 0 then "\($k): []"
       else
         ($v[0] | keys_unsorted) as $ks
