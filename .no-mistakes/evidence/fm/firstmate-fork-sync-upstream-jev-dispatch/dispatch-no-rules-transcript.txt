@@ -1,0 +1,7 @@
+$ TYPESAFE_API_KEY=<nonempty test value> FM_HOME=<isolated-home-with-no-rules> bin/fm-dispatch-resolve.sh <brief>
+exit=0
+stdout:
+dispatch-resolve:
+  status: escalate
+  reason: no rules to match
+stderr:

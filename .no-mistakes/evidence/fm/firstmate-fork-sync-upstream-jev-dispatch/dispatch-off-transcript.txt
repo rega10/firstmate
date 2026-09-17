@@ -1,0 +1,5 @@
+$ env -u TYPESAFE_API_KEY FM_HOME=<isolated-home> bin/fm-dispatch-resolve.sh
+exit=0
+stdout:
+stderr:
+dispatch-resolve: off (TYPESAFE_API_KEY absent from the environment and /Users/rega1011/.no-mistakes/evidence/01M2Q5D39PMHXSDCV8MSYQH9VJ/dispatch-off-home/.env)
