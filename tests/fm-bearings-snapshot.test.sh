@@ -1952,7 +1952,12 @@ test_landed_preserves_kindless_v1_summary_reports() {
   make_remote_ledger_fleet "$parent" 1
   remote_home="$TMP_ROOT/remote-ledger-home-1"
   fakebin=$(make_remote_ledger_ssh "$parent/remote-ssh")
+  printf -- '- sample [no-mistakes archived] - Parent registry (added 2026-09-01)\n' > "$parent/data/projects.md"
   jq '
+    .contributions = {known:1,checked:1,counts:{captain:1,fleet:0,maintainer:0,nobody:0},
+        complete:true,proven_clear:false,unmeasured:0,valid_until:("2026-09-01T22:05:00Z" | fromdateiso8601),
+        captain:[{task:"legacy-report",url:"https://github.com/o/r/pull/2",hold:"legacy-report"}]}
+    |
     .landed = [
       {id:"legacy-report",title:"Scout report",report_path:"data/scout/report.md",completion:{verb:"reported",date:"2026-09-01"}},
       {id:"legacy-pr",title:"Merged change",report_path:"data/scout/report.md",pr_url:"https://github.com/o/r/pull/1",completion:{verb:"merged",date:"2026-09-01"}},
@@ -1965,6 +1970,9 @@ test_landed_preserves_kindless_v1_summary_reports() {
       || fail "kindless v1 summary bearings failed"
     printf '%s' "$json" | jq -e --arg freshness "$freshness" '
       (.secondmates | any(.id == "ledger-1" and .freshness == $freshness))
+      and .contributions.lifecycle_suppressed == {archived:0,parked:0}
+      and (.contributions.captain | length) == 1
+      and .contributions.captain[0].task == "legacy-report"
       and (.landed | map({id,artifact,owner}) | sort_by(.id)) == [
         {id:"legacy-local",artifact:"local main",owner:"ledger-1"},
         {id:"legacy-pr",artifact:"https://github.com/o/r/pull/1",owner:"ledger-1"},
@@ -1974,7 +1982,7 @@ test_landed_preserves_kindless_v1_summary_reports() {
     rm -f "$remote_home/state/home-summary.json"
     epoch=1200
   done
-  pass "kindless v1 summaries retain report artifacts from fresh and cached ledgers"
+  pass "legacy summaries retain reports and contribution calls without project identity from fresh and cached ledgers"
 }
 
 test_landed_default_balances_dominant_and_sparse_homes() {

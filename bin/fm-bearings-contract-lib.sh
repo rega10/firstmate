@@ -97,6 +97,12 @@ fm_bearings_emit_contract() {
       "presence": "always",
       "notes": "Free-text status of live PR discovery. Begins with \"not_requested\" on the default local-only path and \"checked\"/\"unavailable\" under --include-prs. Not an enum."
     },
+    "contributions": {
+      "type": "scalar",
+      "value_type": "object",
+      "presence": "always",
+      "notes": "Published-contribution coverage aggregated across owned homes: actor counts, required-captain rows, and explicit incomplete or unmeasured coverage. bin/fm-contributions.sh and bin/fm-contributions.jq own the contribution record and verdict contract. The snapshot adds each row's owning home and repo, filters calls by that home's lifecycle, and discloses archived and parked call counts in lifecycle_suppressed and omitted without reducing total coverage or actor counts."
+    },
     "projects": {
       "type": "array",
       "presence": "always",
