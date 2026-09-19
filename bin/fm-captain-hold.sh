@@ -242,6 +242,7 @@ CAPTAIN_META_LOCK=
 CAPTAIN_META_LOCK_HELD=0
 CAPTAIN_CONTROL_LOCK=
 CAPTAIN_CONTROL_LOCK_HELD=0
+CAPTAIN_COMPLETION_CONTROL_LOCKS=()
 captain_hold_cleanup() {
   if [ "$CAPTAIN_META_LOCK_HELD" = 1 ]; then
     fm_lock_release "$CAPTAIN_META_LOCK" || true
@@ -251,6 +252,11 @@ captain_hold_cleanup() {
     fm_lock_release "$CAPTAIN_CONTROL_LOCK" || true
     CAPTAIN_CONTROL_LOCK_HELD=0
   fi
+  local i
+  for ((i=${#CAPTAIN_COMPLETION_CONTROL_LOCKS[@]} - 1; i >= 0; i--)); do
+    fm_lock_release "${CAPTAIN_COMPLETION_CONTROL_LOCKS[$i]}" || true
+  done
+  CAPTAIN_COMPLETION_CONTROL_LOCKS=()
 }
 trap captain_hold_cleanup EXIT
 
@@ -293,6 +299,26 @@ release_task_control_lock() {
   fm_lock_release "$CAPTAIN_CONTROL_LOCK"
   CAPTAIN_CONTROL_LOCK_HELD=0
   CAPTAIN_CONTROL_LOCK=
+}
+
+acquire_completion_control_locks() {  # <newline-separated-task-ids>
+  local ids=$1 id lock
+  while IFS= read -r id; do
+    [ -n "$id" ] || continue
+    lock="$STATE/.control-$id.lock"
+    fm_lock_acquire_wait "$lock"
+    CAPTAIN_COMPLETION_CONTROL_LOCKS+=("$lock")
+  done <<EOF
+$ids
+EOF
+}
+
+release_completion_control_locks() {
+  local i
+  for ((i=${#CAPTAIN_COMPLETION_CONTROL_LOCKS[@]} - 1; i >= 0; i--)); do
+    fm_lock_release "${CAPTAIN_COMPLETION_CONTROL_LOCKS[$i]}" || return 1
+  done
+  CAPTAIN_COMPLETION_CONTROL_LOCKS=()
 }
 
 sha256_text() {  # <text>
@@ -355,14 +381,9 @@ require_tasks_axi() {
     || fail "tasks-axi does not expose the captain-hold contract"
 }
 
-# Read one row into TASK_SHOW_OUTPUT; a non-zero return means the row is
-# absent. A read that could not finish inside its bound is NOT absence, and
-# every caller below would otherwise spend it as one - minting a duplicate task,
-# skipping a keyed answer, or reporting a task that exists as missing. So the
-# bound's own status stops the command instead, loudly and by name, and it
-# leaves 124 intact rather than collapsing to fail's 1 so a caller running this
-# inside a command substitution can still tell a wedged backend from a
-# genuinely unknown id.
+# Read one row into TASK_SHOW_OUTPUT. Return 1 only for an explicit NOT_FOUND
+# response, 2 for every other backend failure, and 124 for a bounded read that
+# did not finish. Callers may spend only 1 as absence.
 TASK_SHOW_OUTPUT=
 task_show() {  # <id>; sets TASK_SHOW_OUTPUT
   local data status=0 reason
@@ -374,7 +395,15 @@ task_show() {  # <id>; sets TASK_SHOW_OUTPUT
       "${reason:-tasks-axi show $1 exceeded its backlog read bound}" >&2
     exit 124
   fi
-  return "$status"
+  [ "$status" -ne 0 ] || return 0
+  if printf '%s\n' "$TASK_SHOW_OUTPUT" | grep -q '^code: NOT_FOUND$'; then
+    TASK_SHOW_OUTPUT=
+    return 1
+  fi
+  reason=${TASK_SHOW_OUTPUT%%$'\n'*}
+  printf 'fm-captain-hold: %s\n' \
+    "${reason:-tasks-axi show $1 failed with status $status}" >&2
+  return 2
 }
 
 # Read one row into `show`, failing with <absence-message> only when the read
@@ -382,10 +411,14 @@ task_show() {  # <id>; sets TASK_SHOW_OUTPUT
 # task_show must be called in THIS shell, not inside a command substitution:
 # it carries the row in TASK_SHOW_OUTPUT, which a subshell cannot hand back.
 task_show_or_fail() {  # <id> <absence-message>; sets show
-  task_show "$1" || {
-    [ "$?" -ne 124 ] || fail "the backlog backend exceeded its read bound reading $1"
-    fail "$2"
-  }
+  local status=0
+  task_show "$1" || status=$?
+  case "$status" in
+    0) ;;
+    1) fail "$2" ;;
+    124) fail "the backlog backend exceeded its read bound reading $1" ;;
+    *) exit "$status" ;;
+  esac
   show=$TASK_SHOW_OUTPUT
 }
 
@@ -638,7 +671,7 @@ captain_migration_scan_load() {  # <resolved-data-dir>
 # guess, so it only runs when no marker line matches any identity and it accepts
 # a row solely when that row is itself still held for the captain.
 resolve_migrated_entry() {  # <origin-or-empty> <entry>
-  local origin=$1 entry=$2 data root entries prefix derived show backend
+  local origin=$1 entry=$2 data root entries prefix derived show backend rc
   local candidate candidate_matches prefixed matches count prefixed_matches prefixed_count
   data=$(fm_backlog_data_absolute "$DATA") || {
     printf 'fm-captain-hold: the migrated hold of %s cannot be resolved: %s\n' \
@@ -701,10 +734,13 @@ resolve_migrated_entry() {  # <origin-or-empty> <entry>
     esac
     # Same shell rule as task_show_or_fail: the row is read out of
     # TASK_SHOW_OUTPUT, so the read cannot sit inside a command substitution.
-    task_show "$prefixed" 2>/dev/null || {
-      [ "$?" -ne 124 ] || return 124
-      continue
-    }
+    rc=0
+    task_show "$prefixed" 2>/dev/null || rc=$?
+    case "$rc" in
+      0) ;;
+      1) continue ;;
+      *) return "$rc" ;;
+    esac
     show=$TASK_SHOW_OUTPUT
     [ "$(show_field_value "$show" hold_kind)" = captain ] || continue
     prefixed_matches="${prefixed_matches}${prefixed_matches:+$NL_SEP}$prefixed"
@@ -726,16 +762,22 @@ resolve_migrated_entry() {  # <origin-or-empty> <entry>
 # migrated-prefix, so a caller can record which evidence carried the attestation.
 resolve_entry() {  # <origin-or-empty> <entry>; prints "<id> <how>" or returns nonzero
   local origin=$1 entry=$2 legacy migrated rc
-  if task_show "$entry"; then
-    printf '%s exact' "$entry"
-    return 0
-  fi
+  rc=0
+  task_show "$entry" || rc=$?
+  case "$rc" in
+    0) printf '%s exact' "$entry"; return 0 ;;
+    1) ;;
+    *) return "$rc" ;;
+  esac
   if [ -n "$origin" ] && [ "$origin" != "$BINDING_ANY" ]; then
     legacy=$(legacy_hold_id "$origin" "$entry")
-    if task_show "$legacy"; then
-      printf '%s legacy' "$legacy"
-      return 0
-    fi
+    rc=0
+    task_show "$legacy" || rc=$?
+    case "$rc" in
+      0) printf '%s legacy' "$legacy"; return 0 ;;
+      1) ;;
+      *) return "$rc" ;;
+    esac
   fi
   rc=0
   migrated=$(resolve_migrated_entry "$origin" "$entry") || rc=$?
@@ -831,11 +873,12 @@ verify_entry_settled_or_absent() {  # <origin> <entry>
   esac
   id=${resolved%% *}
   task_show "$id" || show_status=$?
-  if [ "$show_status" -ne 0 ]; then
-    [ "$show_status" -ne 124 ] \
-      || fail "the backlog backend exceeded its read bound reading $id"
-    return 0
-  fi
+  case "$show_status" in
+    0) ;;
+    1) return 0 ;;
+    124) fail "the backlog backend exceeded its read bound reading $id" ;;
+    *) exit "$show_status" ;;
+  esac
   show=$TASK_SHOW_OUTPUT
   state=$(show_field "$show" state)
   hold_kind=$(show_field_value "$show" hold_kind)
@@ -848,9 +891,30 @@ verify_entry_settled_or_absent() {  # <origin> <entry>
   fail "captain-held task $id is neither Done nor carrying a recorded resolution; --none cannot retire it from $origin's inventory"
 }
 
+completion_none_lock_ids() {  # <origin> <comma-separated-entries>
+  local origin=$1 entries=$2 entry legacy resolved resolve_status
+  while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
+    validate_slug task-id "$entry"
+    printf '%s\n' "$entry"
+    legacy=$(legacy_hold_id "$origin" "$entry")
+    [ "$legacy" = "$entry" ] || printf '%s\n' "$legacy"
+    resolve_status=0
+    resolved=$(resolve_entry "$origin" "$entry") || resolve_status=$?
+    case "$resolve_status" in
+      0) resolved=${resolved%% *}; validate_slug task-id "$resolved"; printf '%s\n' "$resolved" ;;
+      1) ;;
+      124) fail "the backlog backend exceeded its read bound resolving $entry" ;;
+      *) exit "$resolve_status" ;;
+    esac
+  done <<EOF
+$(printf '%s\n' "$entries" | tr ',' '\n')
+EOF
+}
+
 command_hold() {
   local id=${1:-} title='' reason='' repo='' origin='' until='' show state existing_title body='' hold_kind hold_set occurrence
-  local existing_hold_kind='' existing_held='' preserve_hold_set=0
+  local existing_hold_kind='' existing_held='' preserve_hold_set=0 show_status=0
   [ "$#" -ge 1 ] || { usage >&2; exit 2; }
   shift
   while [ "$#" -gt 0 ]; do
@@ -883,7 +947,8 @@ command_hold() {
   esac
   acquire_task_control_lock "$id"
   require_tasks_axi
-  if task_show "$id"; then
+  task_show "$id" || show_status=$?
+  if [ "$show_status" -eq 0 ]; then
     show=$TASK_SHOW_OUTPUT
     state=$(show_field "$show" state)
     [ "$state" != "done" ] \
@@ -897,7 +962,7 @@ command_hold() {
       existing_title=$(show_field_value "$show" title)
       [ "$existing_title" = "$title" ] || fail "existing task $id has a different title"
     fi
-  else
+  elif [ "$show_status" -eq 1 ]; then
     [ -n "$title" ] || fail "--title is required to create task $id"
     validate_one_line title "$title"
     if [ -z "$repo" ] && [ -n "$origin" ] && [ -f "$STATE/$origin.meta" ]; then
@@ -915,6 +980,8 @@ command_hold() {
       tasks_axi add "$id" "$title" --kind captain --repo "$repo" >/dev/null \
         || fail "could not create task $id"
     fi
+  else
+    exit "$show_status"
   fi
   # Publish the timestamp before the captain-hold annotation. A concurrent
   # snapshot may see the harmless stamp by itself, but can never see a newly
@@ -1658,18 +1725,12 @@ reconcile_note() {
 command_complete() {
   local origin=${1:-} meta previous='' supplied='' keys='' entry key status_file open has_meta=0 transfer_rc resolved
   local resolved_how attested_by_prefix=''
-  local none_supplied=0
+  local none_supplied=0 previous_snapshot='' lock_ids=''
   [ "$#" -ge 2 ] || { usage >&2; exit 2; }
   validate_slug origin-id "$origin"
   shift
   meta="$STATE/$origin.meta"
   [ -f "$meta" ] && has_meta=1
-  if [ "$has_meta" = 1 ]; then
-    CAPTAIN_META_LOCK=$(fm_meta_lock_path "$meta") || fail "could not resolve task metadata lock"
-    fm_lock_acquire_wait "$CAPTAIN_META_LOCK"
-    CAPTAIN_META_LOCK_HELD=1
-    [ -f "$meta" ] || fail "task metadata disappeared while recording completion"
-  fi
   require_tasks_axi
   origin_exists_here "$origin" || fail "origin $origin is not owned by the active home $FM_HOME"
   if [ "$#" -eq 1 ] && [ "$1" = --none ]; then
@@ -1684,7 +1745,22 @@ command_complete() {
     done
   fi
   if [ "$has_meta" = 1 ]; then
+    CAPTAIN_META_LOCK=$(fm_meta_lock_path "$meta") || fail "could not resolve task metadata lock"
+    if [ "$none_supplied" = 1 ]; then
+      previous_snapshot=$(meta_value "$meta" decision_keys)
+      if [ -n "$previous_snapshot" ]; then
+        lock_ids=$(completion_none_lock_ids "$origin" "$previous_snapshot") || exit $?
+        lock_ids=$(printf '%s\n' "$lock_ids" | sed '/^$/d' | LC_ALL=C sort -u)
+        acquire_completion_control_locks "$lock_ids"
+      fi
+    fi
+    fm_lock_acquire_wait "$CAPTAIN_META_LOCK"
+    CAPTAIN_META_LOCK_HELD=1
+    [ -f "$meta" ] || fail "task metadata disappeared while recording completion"
     previous=$(meta_value "$meta" decision_keys)
+    if [ "$none_supplied" = 1 ] && [ "$previous" != "$previous_snapshot" ]; then
+      fail "captain-call inventory changed while --none was acquiring its task locks; retry completion"
+    fi
   fi
   if [ "$none_supplied" = 1 ]; then
     if [ -n "$previous" ]; then
@@ -1725,6 +1801,8 @@ EOF
     fi
     fm_lock_release "$CAPTAIN_META_LOCK"
     CAPTAIN_META_LOCK_HELD=0
+    release_completion_control_locks \
+      || fail "cannot release captain-call inventory control locks"
 
     # Transfer every still-open status decision to the durable captain-held
     # inventory so the live status fold does not duplicate the same Captain's
