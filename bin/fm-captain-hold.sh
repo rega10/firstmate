@@ -127,13 +127,18 @@
 # captain-held tasks that carry the origin's unresolved captain calls.
 # `--none` is an explicit semantic attestation that the just-reviewed surface
 # has no unresolved captain call, and is refused while the origin still has an
-# open keyed status decision. With a non-empty inventory, every listed task is
-# verified durable (actively captain-held, or closed with a recorded answer),
-# the inventory is unioned idempotently into the metadata, and every still-open
-# keyed status decision is transferred to its durable owner with a
-# `captain-held [key=...]` status close naming the inventory. Later review
-# passes may add ids. A post-teardown visual review can complete against the
-# surviving report and tasks without recreating task state.
+# open keyed status decision. When an earlier attestation named tasks, --none
+# replaces that inventory only after every prior entry is absent, Done, or
+# otherwise carries a recorded resolution; an entry still held for the captain
+# refuses the reset. This reconciles metadata that outlived a closed task after
+# Done retention pruned it without letting --none hide a live call. With a
+# non-empty inventory, every listed task is verified durable (actively
+# captain-held, or closed with a recorded answer), the inventory is unioned
+# idempotently into the metadata, and every still-open keyed status decision is
+# transferred to its durable owner with a `captain-held [key=...]` status close
+# naming the inventory. Later non-empty review passes may add ids. A
+# post-teardown visual review can complete against the surviving report and
+# tasks without recreating task state.
 # `verify` is read-only and is called by scout teardown, so teardown cannot
 # erase a source before this gate has succeeded: every recorded inventory
 # entry must still be durable and no keyed status decision may be open.
@@ -719,7 +724,7 @@ resolve_migrated_entry() {  # <origin-or-empty> <entry>
 # beads backend - the migrated row the markdown-to-beads hold migration wrote.
 # Prints "<resolved id> <how>", where <how> is exact, legacy, migrated-note or
 # migrated-prefix, so a caller can record which evidence carried the attestation.
-resolve_entry() {  # <origin-or-empty> <entry>; prints "<id> <how>" or fails
+resolve_entry() {  # <origin-or-empty> <entry>; prints "<id> <how>" or returns nonzero
   local origin=$1 entry=$2 legacy migrated rc
   if task_show "$entry"; then
     printf '%s exact' "$entry"
@@ -739,6 +744,11 @@ resolve_entry() {  # <origin-or-empty> <entry>; prints "<id> <how>" or fails
     2) return 2 ;;
     124) return 124 ;;
   esac
+  return 1
+}
+
+fail_entry_absent() {  # <origin-or-empty> <entry>
+  local origin=$1 entry=$2 legacy
   if [ -n "$origin" ] && [ "$origin" != "$BINDING_ANY" ]; then
     legacy=$(legacy_hold_id "$origin" "$entry")
     fail "no captain-held task $entry and no migrated hold for it in this home's configured backlog (data directory $DATA); the nearest legacy identity $legacy also resolves to nothing"
@@ -798,10 +808,44 @@ verify_entry_durable() {  # <origin-or-empty> <entry>; prints "<id> <how>"
   if [ "$resolve_status" -ne 0 ]; then
     [ "$resolve_status" -ne 124 ] \
       || fail "the backlog backend exceeded its read bound resolving $entry"
+    [ "$resolve_status" -ne 1 ] || fail_entry_absent "$origin" "$entry"
     exit "$resolve_status"
   fi
   printf '%s\n' "$resolved"
   verify_hold_durable "${resolved%% *}"
+}
+
+# An explicit --none review replaces an older inventory only when every entry
+# is no longer an open captain call. Absence is accepted because the earlier
+# attestation proved the row existed and Done retention may since have archived
+# it. A surviving Done row is equally settled even if it predates resolution
+# records, while a surviving live captain hold always refuses the reset.
+verify_entry_settled_or_absent() {  # <origin> <entry>
+  local origin=$1 entry=$2 resolved resolve_status=0 id show show_status=0 state hold_kind body
+  resolved=$(resolve_entry "$origin" "$entry") || resolve_status=$?
+  case "$resolve_status" in
+    0) ;;
+    1) return 0 ;;
+    124) fail "the backlog backend exceeded its read bound resolving $entry" ;;
+    *) exit "$resolve_status" ;;
+  esac
+  id=${resolved%% *}
+  task_show "$id" || show_status=$?
+  if [ "$show_status" -ne 0 ]; then
+    [ "$show_status" -ne 124 ] \
+      || fail "the backlog backend exceeded its read bound reading $id"
+    return 0
+  fi
+  show=$TASK_SHOW_OUTPUT
+  state=$(show_field "$show" state)
+  hold_kind=$(show_field_value "$show" hold_kind)
+  body=$(show_field "$show" body)
+  if [ "$state" != "done" ] && [ "$hold_kind" = captain ]; then
+    fail "captain-held task $id is still an open captain call; --none cannot retire it from $origin's inventory"
+  fi
+  [ "$state" = "done" ] && return 0
+  body_has_resolution_record "$body" && return 0
+  fail "captain-held task $id is neither Done nor carrying a recorded resolution; --none cannot retire it from $origin's inventory"
 }
 
 command_hold() {
@@ -1614,6 +1658,7 @@ reconcile_note() {
 command_complete() {
   local origin=${1:-} meta previous='' supplied='' keys='' entry key status_file open has_meta=0 transfer_rc resolved
   local resolved_how attested_by_prefix=''
+  local none_supplied=0
   [ "$#" -ge 2 ] || { usage >&2; exit 2; }
   validate_slug origin-id "$origin"
   shift
@@ -1628,6 +1673,7 @@ command_complete() {
   require_tasks_axi
   origin_exists_here "$origin" || fail "origin $origin is not owned by the active home $FM_HOME"
   if [ "$#" -eq 1 ] && [ "$1" = --none ]; then
+    none_supplied=1
     supplied=''
   else
     while [ "$#" -gt 0 ]; do
@@ -1640,7 +1686,19 @@ command_complete() {
   if [ "$has_meta" = 1 ]; then
     previous=$(meta_value "$meta" decision_keys)
   fi
-  keys=$(sorted_key_union "$previous" "$supplied")
+  if [ "$none_supplied" = 1 ]; then
+    if [ -n "$previous" ]; then
+      while IFS= read -r entry; do
+        [ -n "$entry" ] || continue
+        verify_entry_settled_or_absent "$origin" "$entry"
+      done <<EOF
+$(printf '%s\n' "$previous" | tr ',' '\n')
+EOF
+    fi
+    keys=''
+  else
+    keys=$(sorted_key_union "$previous" "$supplied")
+  fi
   if [ -n "$keys" ]; then
     while IFS= read -r entry; do
       [ -n "$entry" ] || continue

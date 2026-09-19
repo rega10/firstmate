@@ -758,6 +758,57 @@ EOF
   pass "the completion gate attests captain-held inventory and transfers open status decisions"
 }
 
+# A prior completion attestation may outlive the Done rows it named because
+# tasks-axi retention archives and prunes those rows. An explicit later --none
+# review must be able to retire that stale inventory without manual metadata
+# edits, while an inventory entry that is still an open captain call remains a
+# hard refusal.
+test_none_completion_retires_pruned_inventory_only() {
+  local home origin retired active latest
+  home=$(make_home none-after-done-retention)
+  origin=sample-retained-review
+  retired=sample-retired-call
+  active=sample-active-call
+  write_origin_meta "$home" "$origin"
+  printf 'done: report complete\n' > "$home/state/$origin.status"
+
+  run_captain "$home" hold "$retired" \
+    --title "Choose the retired route" --reason "captain route choice pending" \
+    --repo sample --origin "$origin" >/dev/null \
+    || fail "could not create the captain call that Done retention will prune"
+  printf 'decisions_reviewed=1\ndecision_keys=%s\n' "$retired" \
+    >> "$home/state/$origin.meta"
+  tasks_in "$home" "done" "$retired" --keep 0 >/dev/null \
+    || fail "could not reproduce Done retention pruning the attested captain call"
+  if tasks_in "$home" show "$retired" --full >/dev/null 2>&1; then
+    fail "Done retention kept the captain call, so the regression fixture is not faithful"
+  fi
+
+  run_captain "$home" complete "$origin" --none > "$home/none.out" \
+    || fail "--none refused an attested inventory whose Done task was already pruned"
+  latest=$(grep '^decision_keys=' "$home/state/$origin.meta" | tail -1 | cut -d= -f2-)
+  [ -z "$latest" ] || fail "--none retained the pruned captain-call inventory: $latest"
+  run_captain "$home" verify "$origin" >/dev/null \
+    || fail "the reconciled empty inventory did not verify"
+
+  run_captain "$home" hold "$active" \
+    --title "Choose the active route" --reason "captain route choice still pending" \
+    --repo sample --origin "$origin" >/dev/null \
+    || fail "could not create the still-open captain call"
+  run_captain "$home" complete "$origin" "$active" >/dev/null \
+    || fail "could not attest the still-open captain call"
+  if run_captain "$home" complete "$origin" --none \
+    > "$home/active-none.out" 2> "$home/active-none.err"; then
+    fail "--none retired an inventory entry that is still an open captain call"
+  fi
+  latest=$(grep '^decision_keys=' "$home/state/$origin.meta" | tail -1 | cut -d= -f2-)
+  [ "$latest" = "$active" ] \
+    || fail "the refused --none review changed the active inventory: $latest"
+  assert_grep "still an open captain call" "$home/active-none.err" \
+    "the active-inventory refusal did not explain what remains open"
+  pass "--none retires only inventory entries no longer waiting on the captain"
+}
+
 # The recorded-answer rule: answering closes with the captain's exact words, an
 # exact retry is idempotent, a drifted retry is rejected, dependent work routed
 # behind the answered task is released by the close, and the completion gate is
@@ -3994,6 +4045,7 @@ test_uninventoried_report_decision_refuses_completion
 test_hold_decodes_a_bare_scalar_body_without_the_nonref_default
 test_retained_body_keeps_its_utf8_bytes
 test_completion_gate_attests_and_transfers
+test_none_completion_retires_pruned_inventory_only
 test_answer_records_and_closes
 test_release_frees_held_work
 test_hold_stamp_precedes_hold_visibility

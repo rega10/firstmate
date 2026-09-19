@@ -22,9 +22,12 @@ An exact retry is idempotent only when the requested close mode matches the newe
 On a task closed outside the script, `answer` records the missing block only when the captain-hold annotations tasks-axi preserves through a close prove the captain owned it, and it verifies the task stays closed.
 A hold whose `--until` date has passed keeps those annotations while tasks-axi reports it no longer held, so an expired deferral remains answerable.
 
-The `complete` subcommand unions the reviewed captain-held task ids into `decision_keys=` and appends `decisions_reviewed=1` while originating task metadata is live.
+The `complete` subcommand unions a non-empty reviewed set of captain-held task ids into `decision_keys=` and appends `decisions_reviewed=1` while originating task metadata is live.
 A post-teardown visual review can complete against the surviving report and durable tasks without recreating volatile task metadata.
-It accepts `--none` as an explicit semantic inventory result, refused while the origin still has a lifecycle-open keyed status decision, and verifies every listed task against tasks-axi before recording completion.
+It accepts `--none` as an explicit semantic inventory result, refused while the origin still has a lifecycle-open keyed status decision.
+When prior metadata names an inventory, `--none` replaces it only after every old entry is absent, Done, or carries a recorded resolution, and refuses while any entry remains an open captain hold.
+An absent entry is safe in this narrow path because its earlier attestation proved it existed and tasks-axi Done retention may since have archived it; the last `decision_keys=` value becomes empty so later `verify` reads the reconciled inventory.
+Every task in a non-empty review is verified against tasks-axi before completion is recorded.
 With a non-empty inventory it appends a `captain-held [key=<key>]: tracked by <inventory>` transfer event for every still-open keyed status decision, which `bin/fm-classify-lib.sh` recognizes as closing the live status copy without claiming that the captain has answered it.
 
 Scout teardown calls the read-only `verify` subcommand after checking for the report and before removing any source state.
@@ -215,3 +218,4 @@ That suite drives its Lavish session through a protocol-shaped stub, and `tests/
 
 Projection regressions live in `tests/fm-fleet-snapshot-view.test.sh` (the total structured-only bucket classifier, hold-until parsing, kind-independent captain actionability, undated-hold aging, and title stripping) and `tests/fm-bearings-snapshot.test.sh` (default and expanded decision-bucket membership, deferral explanations, blocker-overflow disclosure, working-hold dual surfaces, remote-summary schema invalidation, exact leading-kind inference, artifact-kind mismatch and answered-question exclusion, kind-bearing and kindless local-only landings publishing their recorded note, and scout-report precedence over competing pull-request links).
 The exact commands and their summarized outputs are recorded in the shipping PR's evidence; run the four suites above plus `tests/fm-send-resolve-key.test.sh`, `tests/fm-bearings-board.test.sh`, `tests/fm-procevent.test.sh`, and `bin/fm-lint.sh` to refresh this record, and `FM_BEARINGS_LAVISH_LIVE=1 tests/fm-bearings-board-lavish-live-e2e.test.sh` after a lavish-axi upgrade.
+The completion coverage also proves that `--none` retires a prior inventory after its captain-held task is pruned by zero-Done retention, while the same command refuses and preserves an inventory whose task is still an open captain call.
