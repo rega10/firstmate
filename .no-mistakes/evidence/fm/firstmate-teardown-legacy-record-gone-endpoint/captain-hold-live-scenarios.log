@@ -1,0 +1,3 @@
+ok - --none retires only inventory entries no longer waiting on the captain
+ok - --none serializes settlement and empty inventory publication against re-hold
+ok - --none fails closed when an inventoried task cannot be read

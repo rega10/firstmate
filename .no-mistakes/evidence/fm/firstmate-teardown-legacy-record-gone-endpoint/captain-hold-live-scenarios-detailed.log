@@ -1,0 +1,7 @@
+pruned inventory result: prior=sample-retired-call reconciled_latest= verify=passed
+active inventory preserved: decision_keys=sample-active-call refusal=fm-captain-hold: captain-held task sample-active-call is still an open captain call; --none cannot retire it from sample-retained-review's inventory 
+ok - --none retires only inventory entries no longer waiting on the captain
+race result: decision_keys= final_hold_kind=captain concurrent_hold_completed=1
+ok - --none serializes settlement and empty inventory publication against re-hold
+read-error result: decision_keys=sample-unreadable-call refusal=fm-captain-hold: error: simulated backlog read failure 
+ok - --none fails closed when an inventoried task cannot be read
