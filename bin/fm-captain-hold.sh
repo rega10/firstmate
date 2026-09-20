@@ -388,7 +388,7 @@ TASK_SHOW_OUTPUT=
 task_show() {  # <id>; sets TASK_SHOW_OUTPUT
   local data status=0 reason
   data=$(fm_backlog_data_absolute "$DATA") || fail "data directory cannot be resolved: $DATA"
-  TASK_SHOW_OUTPUT=$(fm_backlog_row_show "$data" "$1" --full 2>/dev/null) || status=$?
+  TASK_SHOW_OUTPUT=$(fm_backlog_row_show "$data" "$1" --full 2>&1) || status=$?
   if [ "$status" -eq 124 ]; then
     reason=${TASK_SHOW_OUTPUT%%$'\n'*}
     printf 'fm-captain-hold: %s\n' \
