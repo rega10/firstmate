@@ -24,6 +24,8 @@ set -u
 # shellcheck source=/dev/null
 . "$ROOT/bin/fm-control-lib.sh"
 # shellcheck source=/dev/null
+. "$ROOT/bin/fm-pr-lib.sh"
+# shellcheck source=/dev/null
 . "$ROOT/bin/fm-trace-context-lib.sh"
 
 CONTROL="$ROOT/bin/fm-control.sh"
@@ -430,6 +432,50 @@ test_relaunch_preserves_durable_task_metadata() {
   [ "$(meta_field "$dir" rl19 decisions_reviewed)" = 1 ] \
     || fail "the task decision state must survive relaunch"
   pass "fm-control relaunch: durable task metadata survives replacement launch publication"
+}
+
+test_relaunch_keeps_an_armed_pr_poll_authenticated() {
+  local dir out rc url
+  dir=$(new_case armed-pr-poll rl45)
+  add_ship_task "$dir" rl45 claude
+  url=https://github.com/example/repo/pull/45
+  printf 'pr=%s\n' "$url" >> "$dir/home/state/rl45.meta"
+  fm_pr_poll_prepare "$dir/home/state" rl45 github "$url" github.com example/repo 45 \
+    "$ROOT/bin/fm-pr-poll.sh" || fail "could not prepare the armed PR poll fixture"
+  fm_pr_poll_publish_prepared || fail "could not publish the armed PR poll fixture"
+  fm_pr_poll_artifacts_valid "$dir/home/state" rl45 "$ROOT/bin/fm-pr-poll.sh" \
+    || fail "the PR poll fixture was not authenticated before relaunch"
+
+  out=$(run_control "$dir" rl45 relaunch --note "continuing after review"); rc=$?
+
+  expect_code 0 "$rc" "relaunch with an armed PR poll should succeed"$'\n'"$out"
+  fm_pr_poll_artifacts_valid "$dir/home/state" rl45 "$ROOT/bin/fm-pr-poll.sh" \
+    || fail "relaunch invalidated the task's armed PR poll"
+  pass "fm-control relaunch: an armed PR poll stays authenticated"
+}
+
+test_spawn_relaunch_with_tracing_keeps_an_armed_pr_poll_authenticated() {
+  local dir out rc url traceparent
+  dir=$(new_case armed-pr-poll-trace rl46)
+  add_ship_task "$dir" rl46 claude
+  url=https://github.com/example/repo/pull/46
+  printf 'pr=%s\n' "$url" >> "$dir/home/state/rl46.meta"
+  fm_pr_poll_prepare "$dir/home/state" rl46 github "$url" github.com example/repo 46 \
+    "$ROOT/bin/fm-pr-poll.sh" || fail "could not prepare the traced PR poll fixture"
+  fm_pr_poll_publish_prepared || fail "could not publish the traced PR poll fixture"
+  printf '%s\n' "$$" > "$dir/home/state/.lock"
+  printf '%s on\n' "$$" > "$dir/home/state/.trace-context-effective"
+  printf 'zsh' > "$dir/fake/command"
+
+  out=$(run_spawn "$dir" rl46 --relaunch); rc=$?
+
+  expect_code 0 "$rc" "direct relaunch with tracing and an armed PR poll should succeed"$'\n'"$out"
+  traceparent=$(meta_field "$dir" rl46 traceparent)
+  fm_trace_context_valid "$traceparent" \
+    || fail "direct relaunch did not record a valid replacement trace carrier"
+  fm_pr_poll_artifacts_valid "$dir/home/state" rl46 "$ROOT/bin/fm-pr-poll.sh" \
+    || fail "traced direct relaunch invalidated the task's armed PR poll"
+  pass "fm-spawn --relaunch: trace metadata keeps an armed PR poll authenticated"
 }
 
 test_relaunch_serializes_concurrent_durable_metadata_publication() {
@@ -1686,6 +1732,8 @@ test_relaunch_refuses_before_exit_when_the_composer_holds_pending_text
 test_relaunch_refuses_before_exit_when_the_composer_state_is_unproven
 test_relaunch_from_linked_home_preserves_recorded_worktree
 test_relaunch_preserves_durable_task_metadata
+test_relaunch_keeps_an_armed_pr_poll_authenticated
+test_spawn_relaunch_with_tracing_keeps_an_armed_pr_poll_authenticated
 test_relaunch_serializes_concurrent_durable_metadata_publication
 test_disabled_relaunch_clears_prior_trace_context
 test_relaunch_appends_the_progress_note_to_the_instructions
