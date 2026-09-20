@@ -88,6 +88,31 @@ run_captain() {  # <home> <command args...>
     FM_CONFIG_OVERRIDE="$home/config" "$ROOT/bin/fm-captain-hold.sh" "$@"
 }
 
+install_captain_tasks_axi_interceptor() {  # <home>
+  local home=$1
+  cat > "$home/fakebin/tasks-axi" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = show ] && [ "${2:-}" = "${FM_TEST_SHOW_ID:-}" ]; then
+  if [ "${FM_TEST_SHOW_FAIL:-}" = 1 ]; then
+    printf 'error: simulated backlog read failure\n' >&2
+    exit 7
+  fi
+  if [ -n "${FM_TEST_SHOW_COUNT:-}" ]; then
+    count=0
+    [ ! -f "$FM_TEST_SHOW_COUNT" ] || count=$(cat "$FM_TEST_SHOW_COUNT")
+    count=$((count + 1))
+    printf '%s\n' "$count" > "$FM_TEST_SHOW_COUNT"
+    if [ "$count" = "${FM_TEST_SHOW_BLOCK_AT:-2}" ]; then
+      : > "$FM_TEST_SHOW_READY"
+      while [ ! -e "$FM_TEST_SHOW_RELEASE" ]; do sleep 0.01; done
+    fi
+  fi
+fi
+exec "$REAL_TASKS_AXI" "$@"
+SH
+  chmod +x "$home/fakebin/tasks-axi"
+}
+
 request_reconciles() {  # <home> <source-id> <task-id>...
   local home=$1 source_id=$2 id
   shift 2
@@ -756,6 +781,130 @@ EOF
       and (.in_flight | any(.id == "sample-systems-review") | not)
   ' >/dev/null || fail "teardown or archival erased a captain-held task: $json"
   pass "the completion gate attests captain-held inventory and transfers open status decisions"
+}
+
+# A prior completion attestation may outlive the Done rows it named because
+# tasks-axi retention archives and prunes those rows. An explicit later --none
+# review must be able to retire that stale inventory without manual metadata
+# edits, while an inventory entry that is still an open captain call remains a
+# hard refusal.
+test_none_completion_retires_pruned_inventory_only() {
+  local home origin retired active latest
+  home=$(make_home none-after-done-retention)
+  origin=sample-retained-review
+  retired=sample-retired-call
+  active=sample-active-call
+  write_origin_meta "$home" "$origin"
+  printf 'done: report complete\n' > "$home/state/$origin.status"
+
+  run_captain "$home" hold "$retired" \
+    --title "Choose the retired route" --reason "captain route choice pending" \
+    --repo sample --origin "$origin" >/dev/null \
+    || fail "could not create the captain call that Done retention will prune"
+  printf 'decisions_reviewed=1\ndecision_keys=%s\n' "$retired" \
+    >> "$home/state/$origin.meta"
+  tasks_in "$home" "done" "$retired" --keep 0 >/dev/null \
+    || fail "could not reproduce Done retention pruning the attested captain call"
+  if tasks_in "$home" show "$retired" --full >/dev/null 2>&1; then
+    fail "Done retention kept the captain call, so the regression fixture is not faithful"
+  fi
+
+  run_captain "$home" complete "$origin" --none > "$home/none.out" \
+    || fail "--none refused an attested inventory whose Done task was already pruned"
+  latest=$(grep '^decision_keys=' "$home/state/$origin.meta" | tail -1 | cut -d= -f2-)
+  [ -z "$latest" ] || fail "--none retained the pruned captain-call inventory: $latest"
+  run_captain "$home" verify "$origin" >/dev/null \
+    || fail "the reconciled empty inventory did not verify"
+
+  run_captain "$home" hold "$active" \
+    --title "Choose the active route" --reason "captain route choice still pending" \
+    --repo sample --origin "$origin" >/dev/null \
+    || fail "could not create the still-open captain call"
+  run_captain "$home" complete "$origin" "$active" >/dev/null \
+    || fail "could not attest the still-open captain call"
+  if run_captain "$home" complete "$origin" --none \
+    > "$home/active-none.out" 2> "$home/active-none.err"; then
+    fail "--none retired an inventory entry that is still an open captain call"
+  fi
+  latest=$(grep '^decision_keys=' "$home/state/$origin.meta" | tail -1 | cut -d= -f2-)
+  [ "$latest" = "$active" ] \
+    || fail "the refused --none review changed the active inventory: $latest"
+  assert_grep "still an open captain call" "$home/active-none.err" \
+    "the active-inventory refusal did not explain what remains open"
+  pass "--none retires only inventory entries no longer waiting on the captain"
+}
+
+test_none_completion_serializes_rehold_with_inventory_commit() {
+  local home origin id complete_pid hold_pid latest show
+  home=$(make_home none-rehold-race)
+  origin=sample-race-review
+  id=sample-race-call
+  write_origin_meta "$home" "$origin"
+  printf 'done: report complete\n' > "$home/state/$origin.status"
+  printf 'captain chose the first route\n' > "$home/decision.txt"
+
+  run_captain "$home" hold "$id" \
+    --title "Choose the race route" --reason "captain route choice pending" \
+    --repo sample --origin "$origin" >/dev/null \
+    || fail "could not create the captain call for the re-hold race"
+  run_captain "$home" complete "$origin" "$id" >/dev/null \
+    || fail "could not attest the captain call for the re-hold race"
+  run_captain "$home" answer "$id" --decision-file "$home/decision.txt" --release >/dev/null \
+    || fail "could not release the settled captain call for the re-hold race"
+
+  install_captain_tasks_axi_interceptor "$home"
+  FM_TEST_SHOW_ID="$id" FM_TEST_SHOW_COUNT="$home/show.count" \
+    FM_TEST_SHOW_READY="$home/show.ready" FM_TEST_SHOW_RELEASE="$home/show.release" \
+    run_captain "$home" complete "$origin" --none \
+      > "$home/none-race.out" 2> "$home/none-race.err" &
+  complete_pid=$!
+  wait_for_test_file "$home/show.ready" "$complete_pid" \
+    || fail "--none did not reach its locked settlement read"
+
+  run_captain "$home" hold "$id" \
+    --reason "captain must choose again" --origin "$origin" \
+    > "$home/rehold.out" 2> "$home/rehold.err" &
+  hold_pid=$!
+  sleep 0.1
+  kill -0 "$hold_pid" 2>/dev/null \
+    || fail "a concurrent re-hold crossed the locked --none inventory commit"
+  : > "$home/show.release"
+  wait "$complete_pid" \
+    || fail "--none failed after its settlement read was released"
+  wait "$hold_pid" \
+    || fail "the serialized re-hold failed after --none committed"
+
+  latest=$(grep '^decision_keys=' "$home/state/$origin.meta" | tail -1 | cut -d= -f2-)
+  [ -z "$latest" ] || fail "--none did not publish the empty inventory before the re-hold: $latest"
+  show=$(tasks_in "$home" show "$id" --full) \
+    || fail "the serialized re-hold task disappeared"
+  [ "$(printf '%s\n' "$show" | sed -n 's/^  hold_kind: //p')" = captain ] \
+    || fail "the waiting re-hold did not run after --none released its task lock"
+  pass "--none serializes settlement and empty inventory publication against re-hold"
+}
+
+test_none_completion_refuses_backlog_read_error() {
+  local home origin id latest
+  home=$(make_home none-read-error)
+  origin=sample-read-error-review
+  id=sample-unreadable-call
+  write_origin_meta "$home" "$origin"
+  printf 'done: report complete\n' > "$home/state/$origin.status"
+  printf 'decisions_reviewed=1\ndecision_keys=%s\n' "$id" \
+    >> "$home/state/$origin.meta"
+  install_captain_tasks_axi_interceptor "$home"
+
+  if FM_TEST_SHOW_ID="$id" FM_TEST_SHOW_FAIL=1 \
+    run_captain "$home" complete "$origin" --none \
+      > "$home/read-error.out" 2> "$home/read-error.err"; then
+    fail "--none spent a backlog read error as an absent inventory entry"
+  fi
+  latest=$(grep '^decision_keys=' "$home/state/$origin.meta" | tail -1 | cut -d= -f2-)
+  [ "$latest" = "$id" ] \
+    || fail "the backlog read error changed the captain-call inventory: $latest"
+  assert_grep "simulated backlog read failure" "$home/read-error.err" \
+    "the backlog read error was not reported"
+  pass "--none fails closed when an inventoried task cannot be read"
 }
 
 # The recorded-answer rule: answering closes with the captain's exact words, an
@@ -3994,6 +4143,9 @@ test_uninventoried_report_decision_refuses_completion
 test_hold_decodes_a_bare_scalar_body_without_the_nonref_default
 test_retained_body_keeps_its_utf8_bytes
 test_completion_gate_attests_and_transfers
+test_none_completion_retires_pruned_inventory_only
+test_none_completion_serializes_rehold_with_inventory_commit
+test_none_completion_refuses_backlog_read_error
 test_answer_records_and_closes
 test_release_frees_held_work
 test_hold_stamp_precedes_hold_visibility
