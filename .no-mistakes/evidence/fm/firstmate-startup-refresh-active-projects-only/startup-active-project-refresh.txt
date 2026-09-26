@@ -1,0 +1,9 @@
+LIVE STARTUP REFRESH VALIDATION
+product command: FM_HOME=<isolated-home> bin/fm-bootstrap.sh
+BOOTSTRAP_INFO: project clone refresh: 2 of 5 project clones have no work under way or queued, so they refresh when work on them starts
+active-repo    moved=yes matches-upstream-head=yes
+queued-repo    moved=yes matches-upstream-head=yes
+metadata-repo  moved=yes matches-upstream-head=yes
+idle-repo      moved=no  matches-upstream-head=no
+done-repo      moved=no  matches-upstream-head=no
+result: PASS
