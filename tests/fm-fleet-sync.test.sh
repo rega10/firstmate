@@ -564,7 +564,7 @@ test_active_only_refreshes_only_clones_with_backlog_work() {
   backlog "$home" add t-blocked "blocked work" --repo blocked-clone
   backlog "$home" block t-blocked --by t-queued
   backlog "$home" add t-done "finished work" --repo done-clone
-  backlog "$home" done t-done
+  backlog "$home" 'done' t-done
   backlog "$home" add t-norepo "work with no repo"
   idle_head=$(head_sha "$home/projects/idle-clone")
   done_head=$(head_sha "$home/projects/done-clone")
