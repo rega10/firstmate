@@ -29,18 +29,20 @@
 # With no argument every clone under projects/ is refreshed.
 # --active-only is the session-start form bin/fm-bootstrap.sh runs: it refreshes
 # only the clones named as the `repo` of a backlog item that is In flight or
-# Queued (held and blocked items included), because each private-clone fetch can
-# cost the operator a separate credential approval. It reads the backlog through
-# bin/fm-tasks-axi.sh, bounded at 10s, and prints one summary line before any
-# fetch when clones were left out:
+# Queued (held and blocked items included), plus clones named by `project=` in
+# live task metadata, because each private-clone fetch can cost the operator a
+# separate credential approval. It reads the backlog through bin/fm-tasks-axi.sh,
+# bounded at 10s, and prints one summary line before any fetch when clones were
+# left out:
 #   "fleet: on demand: <n> of <m> project clones have no work under way or
 #    queued, so they refresh when work on them starts"
-# A clone left out is refreshed by fm-spawn's own fetch when work on it is
-# dispatched, and by every other form of this script. A manual backlog backend
-# keeps refreshing every clone silently. A backlog that cannot be read - tasks-axi
-# absent or incompatible, no readable markdown backlog file, a failed or
-# timed-out listing, or output this script cannot parse - also refreshes every
-# clone and prints one line naming why, so a failure never silently stops refreshes:
+# A repo-less queued item is refreshed by fm-spawn's own fetch when it is
+# dispatched. Every other clone left out is also refreshed by every other form
+# of this script. A manual backlog backend keeps refreshing every clone silently.
+# A backlog that cannot be read - tasks-axi absent or incompatible, no readable
+# markdown backlog file, a failed or timed-out listing, or output this script
+# cannot parse - also refreshes every clone and prints one line naming why, so a
+# failure never silently stops refreshes:
 #   "fleet: refreshing every clone: backlog unreadable: <reason>"
 # The single-project form accepts either a path (absolute, or relative to the
 # caller's cwd) or a bare "<name>"/"projects/<name>" form, resolved against
@@ -530,10 +532,36 @@ active_repos_in_state() {
   esac
 }
 
+# Append clones named by project= in this home's live task records. A task record
+# exists for the lifetime of dispatched work and is removed by teardown, so it
+# covers in-flight work whose backlog item has no repo.
+active_repos_from_live_tasks() {
+  local state meta project repo projects_dir
+  state="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
+  [ -d "$state" ] || return 0
+  projects_dir=${PROJECTS%/}
+  for meta in "$state"/*.meta; do
+    [ -e "$meta" ] || continue
+    fm_backlog_record_present "$meta" "task record" "$state" 2>/dev/null || continue
+    project=$(awk -F= '
+      $1 == "project" { value = substr($0, index($0, "=") + 1); count++ }
+      END { if (count != 1) exit 1; print value }
+    ' "$meta") || continue
+    case "$project" in
+      "$projects_dir"/*)
+        repo=${project#"$projects_dir"/}
+        case "$repo" in ''|*/*) continue ;; esac
+        [ -d "$projects_dir/$repo" ] || continue
+        ACTIVE_REPOS=$(printf '%s\n%s\n' "$ACTIVE_REPOS" "$repo")
+        ;;
+    esac
+  done
+}
+
 # select_active_repos: set ACTIVE_REPOS to the repos with In-flight or Queued
-# backlog work, or fail with BACKLOG_UNREADABLE naming why. A manual backend
-# fails with BACKLOG_UNREADABLE empty, which the caller treats as a silent
-# refresh-every-clone.
+# backlog work or a live task record, or fail with BACKLOG_UNREADABLE naming why.
+# A manual backend fails with BACKLOG_UNREADABLE empty, which the caller treats
+# as a silent refresh-every-clone.
 select_active_repos() {
   local config data
   config="${FM_CONFIG_OVERRIDE:-$FM_HOME/config}"
@@ -554,7 +582,9 @@ select_active_repos() {
     return 1
   fi
   ACTIVE_REPOS=
-  active_repos_in_state in_flight && active_repos_in_state queued
+  active_repos_in_state in_flight &&
+    active_repos_in_state queued &&
+    active_repos_from_live_tasks
 }
 
 if [ "${1:-}" = "--active-only" ]; then

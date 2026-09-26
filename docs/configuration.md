@@ -659,7 +659,8 @@ An absent or too-old `quota-axi` reports `MISSING: quota-axi (install: npm insta
 Bootstrap also reports a `TANGLE:` line when `FM_ROOT` is on a named non-default branch; follow the printed checkout remediation rather than treating it as an installable tool problem.
 In a read-only session that did not get the fleet lock, the same line is advisory and omits the checkout command.
 The locked session-start deferred network stage runs bootstrap's best-effort project clone refresh through `fm-fleet-sync.sh`; [`fm-bootstrap.sh`'s header](../bin/fm-bootstrap.sh) owns the exact clone-refresh overlap, liveness-before-convergence, per-mate concurrency, ordered diagnostic replay, and sequential-fallback contract.
-That startup refresh fetches only the clones named by a backlog item that is In flight or Queued, including held and blocked items, because each private-clone fetch can cost a separate credential approval; [`fm-fleet-sync.sh`'s header](../bin/fm-fleet-sync.sh) owns the selection.
+That startup refresh fetches only the clones named by a backlog item that is In flight or Queued, including held and blocked items, plus clones named by live task metadata, because each private-clone fetch can cost a separate credential approval; [`fm-fleet-sync.sh`'s header](../bin/fm-fleet-sync.sh) owns the selection.
+A repo-less queued item is refreshed by `fm-spawn.sh` when it is dispatched, which is the normal on-demand refresh for work not yet started.
 A clone left out is refreshed when work on it is dispatched, after a merged PR, or by an explicit `fm-fleet-sync.sh <project>`, and its drift is reported then rather than at startup.
 The network-check report names how many clones were left out in one `BOOTSTRAP_INFO:` line, never a wake.
 A manual backlog backend, or a backlog that cannot be read, refreshes every clone as before, and an unreadable backlog adds one `BOOTSTRAP_INFO:` line naming why.

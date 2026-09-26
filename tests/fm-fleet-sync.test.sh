@@ -29,10 +29,10 @@
 # non-packed-refs.lock fetch failure keeps today's behavior with no retry.
 #
 # It also pins the session-start --active-only selection: only clones named by an
-# In-flight or Queued backlog item (held and blocked included) are fetched, the
-# rest are counted in one summary line that bootstrap relays as a no-action
-# BOOTSTRAP_INFO fact, and a manual backend or an unreadable backlog keeps
-# refreshing every clone.
+# In-flight or Queued backlog item (held and blocked included), or by a live task
+# record, are fetched, the rest are counted in one summary line that bootstrap
+# relays as a no-action BOOTSTRAP_INFO fact, and a manual backend or an unreadable
+# backlog keeps refreshing every clone.
 set -u
 
 # shellcheck source=tests/lib.sh
@@ -599,6 +599,29 @@ test_active_only_all_clones_active_prints_no_summary() {
   pass "active-only prints no summary when every clone has work"
 }
 
+test_active_only_refreshes_repo_less_inflight_task_project() {
+  require_tasks_axi "active-only repo-less in-flight task" || return 0
+  local home out idle_head
+  home=$(new_home)
+  seed_backlog "$home"
+  behind_clone "$home" metadata-clone
+  behind_clone "$home" idle-clone
+  backlog "$home" add t-metadata "repo-less in-flight work" --start
+  mkdir -p "$home/state"
+  printf 'project=%s\n' "$home/projects/metadata-clone" > "$home/state/t-metadata.meta"
+  idle_head=$(head_sha "$home/projects/idle-clone")
+
+  out=$(run_sync "$home" --active-only)
+
+  assert_contains "$out" "metadata-clone: synced" \
+    "active-only did not refresh the clone named by live task metadata"
+  assert_not_contains "$out" "idle-clone:" "active-only touched a clone with no live work"
+  [ "$(head_sha "$home/projects/idle-clone")" = "$idle_head" ] || fail "active-only moved the idle clone"
+  assert_contains "$out" "fleet: on demand: 1 of 2 project clones have no work under way or queued" \
+    "active-only did not count only the clone without live work"
+  pass "active-only refreshes a repo-less in-flight task's metadata project"
+}
+
 test_active_only_manual_backend_refreshes_every_clone_silently() {
   local home out
   home=$(new_home)
@@ -887,6 +910,7 @@ test_whole_fleet_form
 test_bootstrap_relays_recovered_and_stuck
 test_active_only_refreshes_only_clones_with_backlog_work
 test_active_only_all_clones_active_prints_no_summary
+test_active_only_refreshes_repo_less_inflight_task_project
 test_active_only_manual_backend_refreshes_every_clone_silently
 test_active_only_unreadable_backlog_refreshes_every_clone
 test_bootstrap_relays_on_demand_summary_as_info
