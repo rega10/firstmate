@@ -25,6 +25,25 @@
 # it is retried with a bounded wait and removed only when provably stale; see
 # fetch_with_packed_refs_lock_guard and the FM_FLEET_SYNC_PACKED_REFS_LOCK_* knobs.
 # Usage: fm-fleet-sync.sh [<project-dir-or-name>]
+#        fm-fleet-sync.sh --active-only
+# With no argument every clone under projects/ is refreshed.
+# --active-only is the session-start form bin/fm-bootstrap.sh runs: it refreshes
+# only the clones named as the `repo` of a backlog item that is In flight or
+# Queued (held and blocked items included), plus clones named by `project=` in
+# live task metadata, because each private-clone fetch can cost the operator a
+# separate credential approval. It reads the backlog through bin/fm-tasks-axi.sh,
+# bounded at 10s, and prints one summary line before any fetch when clones were
+# left out:
+#   "fleet: on demand: <n> of <m> project clones have no work under way or
+#    queued, so they refresh when work on them starts"
+# A repo-less queued item is refreshed by fm-spawn's own fetch when it is
+# dispatched. Every other clone left out is also refreshed by every other form
+# of this script. A manual backlog backend keeps refreshing every clone silently.
+# A backlog that cannot be read - tasks-axi absent or incompatible, no readable
+# markdown backlog file, a failed or timed-out listing, or output this script
+# cannot parse - also refreshes every clone and prints one line naming why, so a
+# failure never silently stops refreshes:
+#   "fleet: refreshing every clone: backlog unreadable: <reason>"
 # The single-project form accepts either a path (absolute, or relative to the
 # caller's cwd) or a bare "<name>"/"projects/<name>" form, resolved against
 # this home's projects dir ($FM_HOME/projects, or $FM_PROJECTS_OVERRIDE).
@@ -43,6 +62,13 @@ PROJECTS="${FM_PROJECTS_OVERRIDE:-$FM_HOME/projects}"
 # Inert unless FM_TIMING_LOG names a file; only the deferred network stage sets it.
 # shellcheck source=bin/fm-timing-lib.sh
 . "$SCRIPT_DIR/fm-timing-lib.sh"
+# Backlog addressing and bounded execution for --active-only's backlog read.
+# shellcheck source=bin/fm-timeout-lib.sh
+. "$SCRIPT_DIR/fm-timeout-lib.sh"
+# shellcheck source=bin/fm-tasks-axi-lib.sh
+. "$SCRIPT_DIR/fm-tasks-axi-lib.sh"
+# shellcheck source=bin/fm-backlog-transition-lib.sh
+. "$SCRIPT_DIR/fm-backlog-transition-lib.sh"
 FM_LOCK_LOG_PREFIX=fleet-sync
 "$FM_ROOT/bin/fm-guard.sh" || true
 
@@ -63,7 +89,7 @@ if ! [[ "$FLEET_SYNC_PACKED_REFS_LOCK_RETRY_WAIT_SECS" =~ ^([0-9]+([.][0-9]*)?|[
 fi
 
 usage() {
-  echo "usage: fm-fleet-sync.sh [<project-dir-or-name>]" >&2
+  echo "usage: fm-fleet-sync.sh [<project-dir-or-name> | --active-only]" >&2
 }
 
 if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
@@ -440,15 +466,163 @@ sync_project() {
   return 0
 }
 
-if [ $# -eq 1 ]; then
-  sync_project "$(resolve_project_arg "$1")"
-  exit 0
+# backlog_repos_in_state <state>: print the `repo` of every backlog item in
+# <state>, one per line, skipping items with no repo. Returns 1 when the listing
+# cannot be run and 2 when its output is not the complete table this parser
+# expects, so a changed or truncated listing can never be read as "no work".
+# Callers capture its output in a subshell, so the status carries the reason.
+backlog_repos_in_state() {
+  local state=$1 out
+  out=$(fm_run_timed 10 env FM_HOME="$FM_HOME" "$SCRIPT_DIR/fm-tasks-axi.sh" list --state "$state" 2>/dev/null) || return 1
+  # tasks-axi prints a count line, then either a zero-item line or a
+  # `tasks[N]{fields}:` header followed by exactly N indented CSV rows whose
+  # values may be double-quoted. The repo column is located from the header.
+  printf '%s
+' "$out" | awk '
+    function split_row(s, out,   n, i, c, field, inq) {
+      n = 0; field = ""; inq = 0
+      for (i = 1; i <= length(s); i++) {
+        c = substr(s, i, 1)
+        if (inq) {
+          if (c == "\\") { i++; field = field substr(s, i, 1); continue }
+          if (c == "\"") { inq = 0; continue }
+          field = field c
+        } else {
+          if (c == "\"") { inq = 1; continue }
+          if (c == ",") { out[++n] = field; field = ""; continue }
+          field = field c
+        }
+      }
+      out[++n] = field
+      return n
+    }
+    /^count: [0-9]+$/ { count = $2 + 0; have_count = 1; next }
+    /^tasks[[][0-9]+[]][{][^}]*[}]:$/ {
+      header = $0
+      sub(/^tasks[[][0-9]+[]][{]/, "", header)
+      sub(/[}]:$/, "", header)
+      nf = split(header, names, ",")
+      for (i = 1; i <= nf; i++) if (names[i] == "repo") repo_idx = i
+      in_rows = 1
+      next
+    }
+    in_rows && /^  / {
+      rows++
+      if (split_row(substr($0, 3), cols) < repo_idx) bad = 1
+      else if (repo_idx && cols[repo_idx] != "" && cols[repo_idx] != "-") print cols[repo_idx]
+      next
+    }
+    { in_rows = 0 }
+    END {
+      if (!have_count || bad) exit 2
+      if (count > 0 && (!repo_idx || rows != count)) exit 2
+    }
+  ' || return 2
+}
+
+# active_repos_in_state <state>: append <state>'s repos to ACTIVE_REPOS, or fail
+# with BACKLOG_UNREADABLE naming why.
+active_repos_in_state() {
+  local state=$1 repos status=0
+  repos=$(backlog_repos_in_state "$state") || status=$?
+  case "$status" in
+    0) ACTIVE_REPOS=$(printf '%s\n%s\n' "$ACTIVE_REPOS" "$repos") ;;
+    1) BACKLOG_UNREADABLE="listing $state items failed"; return 1 ;;
+    *) BACKLOG_UNREADABLE="could not parse the $state listing"; return 1 ;;
+  esac
+}
+
+# Append clones named by project= in this home's live task records. A task record
+# exists for the lifetime of dispatched work and is removed by teardown, so it
+# covers in-flight work whose backlog item has no repo.
+active_repos_from_live_tasks() {
+  local state meta project repo projects_dir
+  state="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
+  [ -d "$state" ] || return 0
+  projects_dir=${PROJECTS%/}
+  for meta in "$state"/*.meta; do
+    [ -e "$meta" ] || continue
+    fm_backlog_record_present "$meta" "task record" "$state" 2>/dev/null || continue
+    project=$(awk -F= '
+      $1 == "project" { value = substr($0, index($0, "=") + 1); count++ }
+      END { if (count != 1) exit 1; print value }
+    ' "$meta") || continue
+    case "$project" in
+      "$projects_dir"/*)
+        repo=${project#"$projects_dir"/}
+        case "$repo" in ''|*/*) continue ;; esac
+        [ -d "$projects_dir/$repo" ] || continue
+        ACTIVE_REPOS=$(printf '%s\n%s\n' "$ACTIVE_REPOS" "$repo")
+        ;;
+    esac
+  done
+}
+
+# select_active_repos: set ACTIVE_REPOS to the repos with In-flight or Queued
+# backlog work or a live task record, or fail with BACKLOG_UNREADABLE naming why.
+# A manual backend fails with BACKLOG_UNREADABLE empty, which the caller treats
+# as a silent refresh-every-clone.
+select_active_repos() {
+  local config data
+  config="${FM_CONFIG_OVERRIDE:-$FM_HOME/config}"
+  data="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
+  BACKLOG_UNREADABLE=
+  fm_backlog_backend_manual "$config" && return 1
+  if ! fm_tasks_axi_compatible; then
+    BACKLOG_UNREADABLE="tasks-axi is absent or incompatible"
+    return 1
+  fi
+  FM_BACKLOG_TRANSITION_ERROR=
+  if ! fm_backlog_tasks_axi_addressing "$data" 2>/dev/null; then
+    BACKLOG_UNREADABLE="${FM_BACKLOG_TRANSITION_ERROR:-data directory cannot be resolved: $data}"
+    return 1
+  fi
+  if [ -n "$FM_BACKLOG_AXI_FILE" ] && { [ ! -f "$FM_BACKLOG_AXI_FILE" ] || [ ! -r "$FM_BACKLOG_AXI_FILE" ]; }; then
+    BACKLOG_UNREADABLE="no readable backlog file at $FM_BACKLOG_AXI_FILE"
+    return 1
+  fi
+  ACTIVE_REPOS=
+  active_repos_in_state in_flight &&
+    active_repos_in_state queued &&
+    active_repos_from_live_tasks
+}
+
+if [ "${1:-}" = "--active-only" ]; then
+  ACTIVE_ONLY=1
+else
+  ACTIVE_ONLY=0
+  if [ $# -eq 1 ]; then
+    sync_project "$(resolve_project_arg "$1")"
+    exit 0
+  fi
 fi
 
 [ -d "$PROJECTS" ] || exit 0
+
+if [ "$ACTIVE_ONLY" -eq 1 ]; then
+  if select_active_repos; then
+    total=0
+    left=0
+    for proj in "$PROJECTS"/*; do
+      [ -d "$proj" ] || continue
+      total=$((total + 1))
+      printf '%s\n' "$ACTIVE_REPOS" | grep -qxF -- "$(basename "$proj")" || left=$((left + 1))
+    done
+    if [ "$left" -gt 0 ]; then
+      echo "fleet: on demand: $left of $total project clones have no work under way or queued, so they refresh when work on them starts"
+    fi
+  else
+    ACTIVE_ONLY=0
+    [ -z "$BACKLOG_UNREADABLE" ] || echo "fleet: refreshing every clone: backlog unreadable: $BACKLOG_UNREADABLE"
+  fi
+fi
+
 for proj in "$PROJECTS"/*; do
   [ -e "$proj" ] || continue
   [ -d "$proj" ] || continue
+  if [ "$ACTIVE_ONLY" -eq 1 ] && ! printf '%s\n' "$ACTIVE_REPOS" | grep -qxF -- "$(basename "$proj")"; then
+    continue
+  fi
   # Per-clone elapsed, so a fleet refresh that runs long names WHICH clone cost
   # the time instead of only its total. Recording is a no-op unless the deferred
   # network stage asked for it.
