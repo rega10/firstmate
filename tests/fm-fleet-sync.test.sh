@@ -27,6 +27,12 @@
 # worktree dir as its cwd also blocks removal (the clone-dir liveness check); a
 # transient lock that self-clears is retried without a force-remove; and any
 # non-packed-refs.lock fetch failure keeps today's behavior with no retry.
+#
+# It also pins the session-start --active-only selection: only clones named by an
+# In-flight or Queued backlog item (held and blocked included) are fetched, the
+# rest are counted in one summary line that bootstrap relays as a no-action
+# BOOTSTRAP_INFO fact, and a manual backend or an unreadable backlog keeps
+# refreshing every clone.
 set -u
 
 # shellcheck source=tests/lib.sh
@@ -35,15 +41,16 @@ set -u
 fm_git_identity fmtest fmtest@example.invalid
 
 TMP_ROOT=$(fm_test_tmproot fm-fleet-sync-tests)
-HOME_N=0
 
 # --- fixtures ---------------------------------------------------------------
 
 # new_home: fresh isolated FM_HOME with an empty projects/ dir. Each test gets its
-# own so the whole-fleet form never sees another test's clones.
+# own so the whole-fleet form never sees another test's clones. Callers capture
+# it with $(new_home), a subshell, so uniqueness comes from mktemp rather than a
+# counter that would never advance in the caller.
 new_home() {
-  HOME_N=$((HOME_N + 1))
-  local h="$TMP_ROOT/home-$HOME_N"
+  local h
+  h=$(mktemp -d "$TMP_ROOT/home-XXXXXX") || fail "could not create an isolated home"
   mkdir -p "$h/projects"
   printf '%s\n' "$h"
 }
@@ -510,6 +517,173 @@ test_bootstrap_relays_recovered_and_stuck() {
   pass "bootstrap relays recovered: and STUCK: fleet-sync outcomes"
 }
 
+# --- session-start --active-only selection ---------------------------------
+
+# seed_backlog <home>: a markdown backlog pinned per home, so the developer's
+# ambient tasks-axi config can never select a different backend for the case.
+seed_backlog() {
+  local home=$1
+  mkdir -p "$home/data"
+  printf '%s\n' '# Backlog' '' '## In flight' '' '## Queued' '' '## Done' > "$home/data/backlog.md"
+  printf '%s\n' 'backend = "markdown"' > "$home/.tasks.toml"
+}
+
+# backlog <home> <tasks-axi args...>: mutate the home's backlog through the same
+# wrapper every firstmate script uses.
+backlog() {
+  local home=$1
+  shift
+  FM_HOME="$home" "$ROOT/bin/fm-tasks-axi.sh" "$@" >/dev/null || fail "backlog fixture: tasks-axi $* failed"
+}
+
+# behind_clone <home> <name>: a clone one commit behind its origin, so a refresh
+# is observable as a moved HEAD and its absence as an unchanged one.
+behind_clone() {
+  build_pair "$1" "$2" >/dev/null
+  advance_origin "$1" "$2" C1
+}
+
+require_tasks_axi() {  # <case>
+  tasks-axi --version >/dev/null 2>&1 && return 0
+  printf 'ok - skipped %s (tasks-axi is not installed or cannot run)\n' "$1"
+  return 1
+}
+
+test_active_only_refreshes_only_clones_with_backlog_work() {
+  require_tasks_axi "active-only selection" || return 0
+  local home out name idle_head done_head
+  home=$(new_home)
+  seed_backlog "$home"
+  for name in inflight-clone queued-clone held-clone blocked-clone idle-clone done-clone; do
+    behind_clone "$home" "$name"
+  done
+  backlog "$home" add t-inflight "in flight work" --repo inflight-clone --start
+  backlog "$home" add t-queued "queued work" --repo queued-clone
+  backlog "$home" add t-held "held work" --repo held-clone
+  backlog "$home" hold t-held --reason "captain decision pending" --kind captain
+  backlog "$home" add t-blocked "blocked work" --repo blocked-clone
+  backlog "$home" block t-blocked --by t-queued
+  backlog "$home" add t-done "finished work" --repo done-clone
+  backlog "$home" done t-done
+  backlog "$home" add t-norepo "work with no repo"
+  idle_head=$(head_sha "$home/projects/idle-clone")
+  done_head=$(head_sha "$home/projects/done-clone")
+
+  out=$(run_sync "$home" --active-only)
+
+  for name in inflight-clone queued-clone held-clone blocked-clone; do
+    assert_contains "$out" "$name: synced" "active-only did not refresh $name, which has backlog work"
+  done
+  assert_not_contains "$out" "idle-clone:" "active-only touched a clone with no backlog work"
+  assert_not_contains "$out" "done-clone:" "active-only touched a clone whose only item is done"
+  [ "$(head_sha "$home/projects/idle-clone")" = "$idle_head" ] || fail "active-only moved the idle clone"
+  [ "$(head_sha "$home/projects/done-clone")" = "$done_head" ] || fail "active-only moved the done-only clone"
+  assert_contains "$out" "fleet: on demand: 2 of 6 project clones have no work under way or queued" \
+    "active-only did not summarize the clones it left for on-demand refresh"
+  [ "$(printf '%s\n' "$out" | grep -c '^fleet:')" = 1 ] || fail "active-only printed more than one summary line: $out"
+  pass "active-only refreshes only clones with in-flight, queued, held, or blocked work"
+}
+
+test_active_only_all_clones_active_prints_no_summary() {
+  require_tasks_axi "active-only all-active" || return 0
+  local home out
+  home=$(new_home)
+  seed_backlog "$home"
+  behind_clone "$home" busy-clone
+  backlog "$home" add t-busy "busy work" --repo busy-clone
+
+  out=$(run_sync "$home" --active-only)
+
+  assert_contains "$out" "busy-clone: synced" "active-only did not refresh the only active clone"
+  assert_not_contains "$out" "fleet:" "active-only printed a summary although no clone was left out"
+  pass "active-only prints no summary when every clone has work"
+}
+
+test_active_only_manual_backend_refreshes_every_clone_silently() {
+  local home out
+  home=$(new_home)
+  seed_backlog "$home"
+  mkdir -p "$home/config"
+  printf '%s\n' manual > "$home/config/backlog-backend"
+  behind_clone "$home" manual-a
+  behind_clone "$home" manual-b
+
+  out=$(run_sync "$home" --active-only)
+
+  assert_contains "$out" "manual-a: synced" "manual backend did not refresh every clone"
+  assert_contains "$out" "manual-b: synced" "manual backend did not refresh every clone"
+  assert_not_contains "$out" "fleet:" "manual backend printed a selection line"
+  pass "active-only on a manual backlog backend refreshes every clone silently"
+}
+
+test_active_only_unreadable_backlog_refreshes_every_clone() {
+  require_tasks_axi "active-only unreadable backlog" || return 0
+  local home out fakebin real
+  home=$(new_home)
+  seed_backlog "$home"
+  behind_clone "$home" listed-clone
+  behind_clone "$home" other-clone
+  backlog "$home" add t-listed "listed work" --repo listed-clone
+
+  # A compatible tasks-axi whose listing fails: the backlog cannot be read.
+  fakebin=$(fm_fakebin "$home")
+  real=$(command -v tasks-axi)
+  cat > "$fakebin/tasks-axi" <<SH
+#!/usr/bin/env bash
+[ "\${1:-}" != list ] || { echo 'error: backlog is corrupt' >&2; exit 1; }
+exec '$real' "\$@"
+SH
+  chmod +x "$fakebin/tasks-axi"
+  out=$(PATH="$fakebin:$PATH" run_sync "$home" --active-only)
+  assert_contains "$out" "listed-clone: synced" "unreadable backlog stopped refreshing a clone"
+  assert_contains "$out" "other-clone: synced" "unreadable backlog stopped refreshing a clone"
+  assert_contains "$out" "fleet: refreshing every clone: backlog unreadable: listing in_flight items failed" \
+    "a failed listing did not name why every clone was refreshed"
+
+  # Output this parser does not recognize is unreadable too, never "no work".
+  cat > "$fakebin/tasks-axi" <<SH
+#!/usr/bin/env bash
+[ "\${1:-}" != list ] || { printf 'count: 1\\nsomething unexpected\\n'; exit 0; }
+exec '$real' "\$@"
+SH
+  advance_origin "$home" listed-clone C2
+  advance_origin "$home" other-clone C2
+  out=$(PATH="$fakebin:$PATH" run_sync "$home" --active-only)
+  assert_contains "$out" "other-clone: synced" "unparseable listing stopped refreshing a clone"
+  assert_contains "$out" "backlog unreadable: could not parse the in_flight listing" \
+    "an unparseable listing did not name why every clone was refreshed"
+
+  # A home with no backlog file at all is refreshed in full as well.
+  rm -f "$home/data/backlog.md"
+  advance_origin "$home" other-clone C3
+  out=$(run_sync "$home" --active-only)
+  assert_contains "$out" "other-clone: synced" "a missing backlog file stopped refreshing a clone"
+  assert_contains "$out" "backlog unreadable: no readable backlog file at" \
+    "a missing backlog file did not name why every clone was refreshed"
+  pass "active-only with an unreadable backlog refreshes every clone and says why"
+}
+
+test_bootstrap_relays_on_demand_summary_as_info() {
+  require_tasks_axi "bootstrap on-demand relay" || return 0
+  local home out idle_head
+  home=$(new_home)
+  seed_backlog "$home"
+  behind_clone "$home" work-clone
+  behind_clone "$home" quiet-clone
+  backlog "$home" add t-work "work" --repo work-clone
+  idle_head=$(head_sha "$home/projects/quiet-clone")
+
+  out=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null)
+
+  assert_contains "$out" "BOOTSTRAP_INFO: project clone refresh: 1 of 2 project clones have no work under way or queued" \
+    "bootstrap did not relay the on-demand summary as a no-action fact"
+  assert_not_contains "$out" "FLEET_SYNC: fleet:" "bootstrap relayed the on-demand summary as a FLEET_SYNC alarm"
+  [ "$(head_sha "$home/projects/quiet-clone")" = "$idle_head" ] || fail "bootstrap refreshed a clone with no backlog work"
+  git -C "$home/projects/work-clone" merge-base --is-ancestor origin/main HEAD \
+    || fail "bootstrap did not refresh the clone with backlog work"
+  pass "bootstrap refreshes only active clones and relays the summary as BOOTSTRAP_INFO"
+}
+
 # --- packed-refs.lock guard tests -------------------------------------------
 
 test_orphaned_stale_packed_refs_lock_recovers() {
@@ -711,6 +885,11 @@ test_single_project_by_projects_relative_name_ignores_cwd_shadow
 test_single_project_unresolvable_name_still_skips
 test_whole_fleet_form
 test_bootstrap_relays_recovered_and_stuck
+test_active_only_refreshes_only_clones_with_backlog_work
+test_active_only_all_clones_active_prints_no_summary
+test_active_only_manual_backend_refreshes_every_clone_silently
+test_active_only_unreadable_backlog_refreshes_every_clone
+test_bootstrap_relays_on_demand_summary_as_info
 test_orphaned_stale_packed_refs_lock_recovers
 test_live_packed_refs_lock_is_never_removed
 test_live_git_cwd_in_clone_dir_blocks_removal
