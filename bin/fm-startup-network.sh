@@ -5,7 +5,7 @@
 # BEFORE the digest printed, on a hook that blocks session initialization: `gh
 # auth status`, the secondmate liveness and convergence sweeps (per-secondmate
 # remote probes, which bootstrap runs concurrently), pending remote
-# handoff delivery, and the fleet-sync fetch of every project clone. None of
+# handoff delivery, and the fleet-sync fetch of project clones. None of
 # those calls is individually bounded, so one unreachable host could consume the
 # whole FM_SESSION_START_TIMEOUT budget and truncate the digest outright, turning
 # a slow network into a startup that never printed the work queue at all.
@@ -96,8 +96,9 @@
 #                             secondmate liveness, secondmate convergence, handoff
 #                             delivery, fleet sync), one per secondmate for the
 #                             remote-touching steps (id and host), and one per
-#                             project clone. Published for a timed-out or failed
-#                             run too, where a partial record is the answer.
+#                             project clone refreshed. Published for a timed-out
+#                             or failed run too, where a partial record is the
+#                             answer.
 #                             Diagnostic only: nothing reads it to make a
 #                             decision, and losing it never downgrades a run.
 #   .startup-network.lock     serializes publication, harvest acknowledgement,

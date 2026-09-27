@@ -77,10 +77,16 @@
 #          X mode is OPTIONAL and inert unless FM_HOME/.env has a non-empty
 #          FMX_PAIRING_TOKEN. When opted in, bootstrap requires curl+jq, writes
 #          the relay poll shim and 30s cadence config, and prints an FMX line.
-#          Fleet sync fetches, fast-forwards safe default-branch states, reports
-#          recovered and STUCK clone drift, and prunes gone local branches; it is
-#          bounded by FM_FLEET_SYNC_BOOTSTRAP_TIMEOUT when it is a non-empty
-#          numeric override, while non-numeric values fall back to 20s.
+#          Fleet sync runs fm-fleet-sync.sh --active-only, which refreshes only
+#          the clones with In-flight or Queued backlog work (its header owns the
+#          selection and its every-clone fallback); the rest refresh when work on
+#          them starts. Its summary of the clones left out, and any fallback
+#          reason, are relayed as BOOTSTRAP_INFO facts, never FLEET_SYNC alarms.
+#          For each clone it refreshes, it fetches, fast-forwards safe
+#          default-branch states, reports recovered and STUCK clone drift, and
+#          prunes gone local branches. The whole refresh is bounded by
+#          FM_FLEET_SYNC_BOOTSTRAP_TIMEOUT when it is a non-empty numeric
+#          override, while non-numeric values fall back to 20s.
 #          When the override is unset or blank, the timeout is
 #          max(20, 5 + 3 * origin-backed project clone count). A timed-out
 #          refresh relays any completed fm-fleet-sync.sh output before the
@@ -306,9 +312,21 @@ fleet_sync_bootstrap_timeout() {
   echo "$timeout"
 }
 
+# fleet_sync_relay_info <line>: relay fm-fleet-sync.sh's --active-only summary
+# lines as no-action facts and fail for every other line, so both relays below
+# classify them the same way and neither can turn them into a FLEET_SYNC alarm.
+fleet_sync_relay_info() {
+  case "$1" in
+    'fleet: on demand: '*) echo "BOOTSTRAP_INFO: project clone refresh: ${1#fleet: on demand: }" ;;
+    'fleet: refreshing every clone: '*) echo "BOOTSTRAP_INFO: project clone refresh covered every clone: ${1#fleet: refreshing every clone: }" ;;
+    *) return 1 ;;
+  esac
+}
+
 fleet_sync_relay_filtered_output() {
   local tmp=$1 line
   while IFS= read -r line; do
+    fleet_sync_relay_info "$line" && continue
     case "$line" in
       *': skipped: local-only project') ;;
       *': skipped: no origin remote') ;;
@@ -323,6 +341,7 @@ fleet_sync_relay_all_output() {
   local tmp=$1 line
   while IFS= read -r line; do
     [ -n "$line" ] || continue
+    fleet_sync_relay_info "$line" && continue
     echo "FLEET_SYNC: $line"
   done < "$tmp"
 }
@@ -336,7 +355,7 @@ fleet_sync() {
   monitor_was_on=0
   case $- in *m*) monitor_was_on=1 ;; esac
   set -m 2>/dev/null || true
-  "$FM_ROOT/bin/fm-fleet-sync.sh" >"$tmp" 2>/dev/null &
+  "$FM_ROOT/bin/fm-fleet-sync.sh" --active-only >"$tmp" 2>/dev/null &
   pid=$!
 
   start=$SECONDS
