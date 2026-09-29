@@ -438,10 +438,10 @@ export default function (pi: ExtensionAPI) {
       const active = !calmPresentationIsActive();
       persistCalmPreference(active);
       setCalmPresentation(active);
-      // A row constructed with Calm's self shell cannot switch back to Pi's
-      // stock shell in place. Reload after persisting off so Pi reconstructs
-      // every restored row with its genuine stock definition and framing.
-      if (!active && ctx.reload) {
+      // A row cannot switch between Calm's self shell and Pi's stock shell in
+      // place. Reload after persisting either choice so Pi reconstructs every
+      // restored row with the selected definition and framing.
+      if (ctx.reload) {
         await ctx.reload();
         return;
       }

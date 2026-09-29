@@ -1261,8 +1261,8 @@ const earlyActivationUi = {
   setWorkingVisible() {},
   notify() {},
 };
-await calmCommand.handler("", { reload: async () => {}, ui: earlyActivationUi });
-await calmCommand.handler("", { reload: async () => {}, ui: earlyActivationUi });
+await calmCommand.handler("", { ui: earlyActivationUi });
+await calmCommand.handler("", { ui: earlyActivationUi });
 
 const names = tools.map((tool) => tool.name);
 const expectedNames = ["read", "bash", "edit", "write", "grep", "find", "ls"];
@@ -1543,11 +1543,7 @@ let hiddenThinkingLabel = "unset";
 const statuses = new Map();
 const sessionEntries = [{ type: "message", message: { role: "toolResult", content: "kept" } }];
 const entriesBefore = JSON.stringify(sessionEntries);
-let reloads = 0;
 const commandContext = {
-  async reload() {
-    reloads += 1;
-  },
   sessionManager: { getEntries: () => sessionEntries },
   ui: {
     getEditorText: () => editorText,
@@ -1765,9 +1761,6 @@ if (JSON.stringify(sessionEntries) !== entriesBefore) {
 }
 
 await calmCommand.handler("", commandContext);
-if (reloads !== 1) {
-  throw new Error(`turning Calm off requested ${reloads} transcript reloads instead of one`);
-}
 if (readFileSync(`${process.env.FM_HOME}/config/calm`, "utf8") !== "off\n") {
   throw new Error("Calm did not persist the inactive choice in the effective Firstmate home");
 }
@@ -1796,6 +1789,19 @@ const [originalResult, wrappedResult] = await Promise.all([
 ]);
 if (JSON.stringify(wrappedResult) !== JSON.stringify(originalResult)) {
   throw new Error("calm wrapper changed built-in read execution or result data");
+}
+
+let reloads = 0;
+const reloadContext = {
+  ...commandContext,
+  async reload() {
+    reloads += 1;
+  },
+};
+await calmCommand.handler("", reloadContext);
+await calmCommand.handler("", reloadContext);
+if (reloads !== 2) {
+  throw new Error(`two Calm toggle directions requested ${reloads} transcript reloads instead of two`);
 }
 JS
   status=$?
@@ -2900,15 +2906,11 @@ TS
   assert_contains "$(cat "$calm_off_snapshot")" "Thinking..." "turning Calm off did not restore collapsed thinking labels"
   tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" -l '/calm'
   tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" Enter
-  i=0
-  while [ "$i" -lt 120 ]; do
-    capture_geometry_viewport "$snapshot"
-    if ! grep -Fq "probe-one.txt" "$snapshot" && ! grep -Fq "Thinking..." "$snapshot"; then
-      break
-    fi
-    sleep 0.05
-    i=$((i + 1))
-  done
+  wait_for_geometry_transition \
+    "$snapshot" \
+    "probe-one.txt" \
+    "CALM_GEOMETRY_FINAL" \
+    || fail "turning Calm back on did not complete the settled transcript transition"
   assert_geometry_gap "$snapshot" "Calm redraw of existing transcript"
 
   tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" -l '/quit'
