@@ -209,6 +209,11 @@ export default function (pi: ExtensionAPI) {
   const repaintCalmToolRows = (): void => {
     for (const invalidate of calmToolRowRepaints.values()) invalidate();
   };
+  const resetAndRepaintCalmToolRows = (): void => {
+    const invalidates = [...calmToolRowRepaints.values()];
+    calmToolRowRepaints.clear();
+    for (const invalidate of invalidates) invalidate();
+  };
 
   function wrapBuiltIn<TParams extends TSchema, TDetails, TState>(
     factory: DefinitionFactory<TParams, TDetails, TState>,
@@ -363,10 +368,13 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_start", (_event, ctx) => {
     reportBuiltInLosses();
-    calmToolRowRepaints.clear();
     exportRendering = false;
     setCalmPresentation(loadCalmPreference());
     setCalmStockExportRendering(false);
+    // /reload rebuilds and renders tool rows before session_start restores the
+    // persisted Calm preference. Repaint those rows under the authoritative state
+    // before forgetting the previous session lifetime's invalidators.
+    resetAndRepaintCalmToolRows();
     publishPresentationState();
     agentRunActive = false;
     workingShipShown = false;

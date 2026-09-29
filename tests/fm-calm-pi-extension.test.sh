@@ -1330,7 +1330,8 @@ const cases = [
   ["find", { pattern: "*.txt", path: "." }, { content: [{ type: "text", text: "sample.txt" }], details: {}, isError: false }],
   ["ls", { path: "." }, { content: [{ type: "text", text: "sample.txt" }], details: {}, isError: false }],
 ];
-const renderUi = { requestRender() {} };
+let renderRequests = 0;
+const renderUi = { requestRender() { renderRequests += 1; } };
 const rows = [];
 for (const [name, args, result] of cases) {
   const wrapped = tools.find((tool) => tool.name === name);
@@ -1770,7 +1771,17 @@ if (
   throw new Error("turning Calm off did not restore synthetic user-row presentation");
 }
 
-await calmCommand.handler("", commandContext);
+// Pi /reload reconstructs tool rows before the replacement extension receives
+// session_start. Model that ordering: rows rendered under the module's initial
+// Calm-off state must be invalidated once session_start restores the persisted
+// active preference.
+writeFileSync(`${process.env.FM_HOME}/config/calm`, "on\n");
+for (const { actual } of rows) actual.render(100);
+const renderRequestsBeforeReload = renderRequests;
+await handlers.get("session_start")[0]({ reason: "reload" }, commandContext);
+if (renderRequests - renderRequestsBeforeReload < rows.length) {
+  throw new Error("reload did not invalidate every built-in tool row rendered before session_start restored Calm");
+}
 for (const reason of ["startup", "new", "resume", "fork", "reload"]) {
   await handlers.get("session_start")[0]({ reason }, commandContext);
   for (const row of rows) row.actual.setExpanded(expanded);
