@@ -799,38 +799,57 @@ const renderTheme = {
 };
 const renderContext = { state: {}, isError: false, isPartial: false };
 const stockResult = { content: [{ type: "text", text: "OUTCOME_DUMP" }] };
-const assertStockDelegation = (label) => {
-  let callDelegated = false;
-  let resultDelegated = false;
-  try {
-    outcomesTool.renderCall({}, renderTheme, renderContext);
-  } catch {
-    callDelegated = true;
-  }
-  try {
-    outcomesTool.renderResult(stockResult, { expanded: false, isPartial: false }, renderTheme, renderContext);
-  } catch {
-    resultDelegated = true;
-  }
-  if (!callDelegated || !resultDelegated) {
-    throw new Error(`fm_branch_outcomes replaced Pi stock ${label} rendering`);
-  }
+const calmOffCall = outcomesTool.renderCall({}, renderTheme, renderContext);
+const calmOffResult = outcomesTool.renderResult(stockResult, { expanded: false, isPartial: false }, renderTheme, renderContext);
+if (calmOffCall.constructor.name !== "Box" || calmOffCall.paddingX !== 1 || calmOffCall.paddingY !== 1) {
+  throw new Error("fm_branch_outcomes changed its ordinary shell rendering");
+}
+if (calmOffResult.constructor.name !== "Container" || calmOffCall.children[0]?.text !== "fm_branch_outcomes" || calmOffCall.children[1]?.text !== "OUTCOME_DUMP") {
+  throw new Error("fm_branch_outcomes changed its ordinary call or result rendering");
+}
+const legacyStockResult = {
+  content: [{
+    type: "text",
+    text: Array.from({ length: 12 }, (_, index) => `LEGACY_OUTCOME_${String(index + 1).padStart(2, "0")}`).join("\n"),
+  }],
 };
-if (outcomesTool.renderShell !== "default") throw new Error("fm_branch_outcomes did not use Pi's stock Calm-off shell");
-assertStockDelegation("Calm-off");
+const legacyRenderContext = { state: {}, isError: false, isPartial: false };
+const legacyCall = outcomesTool.renderCall({}, renderTheme, legacyRenderContext);
+outcomesTool.renderResult(legacyStockResult, { expanded: false, isPartial: false }, renderTheme, legacyRenderContext);
+const collapsedLegacyText = legacyCall.children[1]?.text;
+if (!collapsedLegacyText?.includes("LEGACY_OUTCOME_12") || collapsedLegacyText.includes("more lines")) {
+  throw new Error("legacy all-line stock capability did not preserve collapsed Calm-off output");
+}
+outcomesTool.renderResult(legacyStockResult, { expanded: true, isPartial: false }, renderTheme, legacyRenderContext);
+if (legacyCall.children[1]?.text !== collapsedLegacyText) {
+  throw new Error("legacy all-line stock capability changed expanded Calm-off output");
+}
 pi.events.emit("firstmate:calm-presentation", { active: true, stockExportRendering: false });
-if (outcomesTool.renderShell !== "self") throw new Error("fm_branch_outcomes did not claim its zero-height Calm shell");
 const calmOnCall = outcomesTool.renderCall({}, renderTheme, renderContext);
 const calmOnResult = outcomesTool.renderResult(stockResult, { expanded: false, isPartial: false }, renderTheme, renderContext);
 if (calmOnCall.constructor.name !== "Container" || calmOnCall.render(100).length !== 0 || calmOnResult.constructor.name !== "Container" || calmOnResult.render(100).length !== 0) {
   throw new Error("fm_branch_outcomes remained visible while Calm was on");
 }
 pi.events.emit("firstmate:calm-presentation", { active: false, stockExportRendering: false });
-if (outcomesTool.renderShell !== "default") throw new Error("fm_branch_outcomes did not restore Pi's stock shell when Calm was turned off");
-assertStockDelegation("restored Calm-off");
+if (outcomesTool.renderCall({}, renderTheme, renderContext).constructor.name !== "Box" || outcomesTool.renderResult(stockResult, { expanded: false, isPartial: false }, renderTheme, renderContext).constructor.name !== "Container") {
+  throw new Error("fm_branch_outcomes did not restore ordinary rendering when Calm was turned off");
+}
 pi.events.emit("firstmate:calm-presentation", { active: true, stockExportRendering: true });
-if (outcomesTool.renderShell !== "default") throw new Error("fm_branch_outcomes did not use Pi's stock export shell");
-assertStockDelegation("export");
+let exportCallFellBack = false;
+let exportResultFellBack = false;
+try {
+  outcomesTool.renderCall({}, renderTheme, renderContext);
+} catch {
+  exportCallFellBack = true;
+}
+try {
+  outcomesTool.renderResult(stockResult, { expanded: false, isPartial: false }, renderTheme, renderContext);
+} catch {
+  exportResultFellBack = true;
+}
+if (!exportCallFellBack || !exportResultFellBack) {
+  throw new Error("fm_branch_outcomes replaced Pi stock export rendering");
+}
 const listed = await outcomesTool.execute("call-4", { recent: 2 }, undefined, undefined, {});
 const listedText = listed.content[0].text;
 if (listedText.split("\n").length !== 2 || !listedText.includes("checks green")) {

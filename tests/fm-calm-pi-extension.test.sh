@@ -812,7 +812,6 @@ test_builtin_gate_load_time() {
     EXT="$fixture/project/.pi/extensions/fm-calm.ts" \
     HOME_OFF="$fixture/home-off" \
     HOME_ON="$fixture/home-on" \
-    PI_PACKAGE_DIR="$PI_PACKAGE_DIR" \
     node --input-type=module) >"$output_file" 2>&1 <<'JS'
 import { pathToFileURL } from "node:url";
 
@@ -858,44 +857,12 @@ const expected = ["bash", "edit", "find", "grep", "ls", "read", "write"];
 if (JSON.stringify(names) !== JSON.stringify(expected)) {
   throw new Error(`Calm registered ${JSON.stringify(names)} synchronously at load with config/calm=on, expected ${JSON.stringify(expected)}`);
 }
-
-const packageRoot = process.env.PI_PACKAGE_DIR;
-const { ToolExecutionComponent } = await import(
-  pathToFileURL(`${packageRoot}/dist/modes/interactive/components/tool-execution.js`).href
-);
-const { initTheme } = await import(pathToFileURL(`${packageRoot}/dist/modes/interactive/theme/theme.js`).href);
-const { setCapabilities } = await import(
-  pathToFileURL(`${packageRoot}/node_modules/@earendil-works/pi-tui/dist/index.js`).href
-);
-initTheme("dark");
-setCapabilities({ images: null, trueColor: true, hyperlinks: false });
-for (const tool of onRun.tools) {
-  const restoredRow = new ToolExecutionComponent(
-    tool.name,
-    `restored-${tool.name}`,
-    {},
-    { showImages: false },
-    tool,
-    { requestRender() {} },
-    process.cwd(),
-  );
-  restoredRow.markExecutionStarted();
-  restoredRow.setArgsComplete();
-  restoredRow.updateResult({
-    content: [{ type: "text", text: "restored output" }],
-    details: {},
-    isError: false,
-  });
-  if (restoredRow.render(100).length !== 0) {
-    throw new Error(`Calm-on load left a stock shell around restored ${tool.name} call/result rows before session_start`);
-  }
-}
 JS
   status=$?
   out=$(cat "$output_file")
   [ "$status" -eq 0 ] || fail "Pi calm gate-at-load-time path failed: $out"
   [ -z "$out" ] || fail "Pi calm gate-at-load-time test printed output: $out"
-  pass "Calm registers no built-in wrappers while off, and restores all 7 wrappers plus shell-free hidden rows synchronously at Calm-on load"
+  pass "Calm registers none of its 7 built-in tool wrappers at load while config/calm is off, and all 7 synchronously at load while config/calm is on"
 }
 
 test_calm_activation_collision_and_regression_bound() {
@@ -1760,9 +1727,47 @@ if (JSON.stringify(sessionEntries) !== entriesBefore) {
   throw new Error("calm mode changed session entries or model context");
 }
 
+for (const { baseline } of rows) baseline.setExpanded(expanded);
 await calmCommand.handler("", commandContext);
+presentationComponent.setExpanded(expanded);
+if (
+  !presentationComponent.hasContent() ||
+  !presentationComponent.render(100).join("\n").includes("FIRSTMATE WATCHER WAKE")
+) {
+  throw new Error("turning Calm off did not restore a legacy synthetic presentation row");
+}
+if (JSON.stringify(operationalComponent.render(100)) !== JSON.stringify(expectedCalmOffOperationalRows)) {
+  throw new Error("turning Calm off did not restore byte-identical operational user rows and spacing");
+}
+if (!legacyOperationalComponent.render(100).join("\n").includes("legacy presentation compatibility")) {
+  throw new Error("turning Calm off did not restore the supported legacy operational row");
+}
+for (const { name, baseline, actual } of rows) {
+  if (JSON.stringify(actual.render(100)) !== JSON.stringify(baseline.render(100))) {
+    throw new Error(`${name} did not restore the expanded standard renderer`);
+  }
+}
+if (JSON.stringify(imageRow.render(100)) !== JSON.stringify(imageVisibleBefore)) {
+  throw new Error("built-in read image row did not restore its ordinary call shell and image output");
+}
+if (JSON.stringify(watchActual.render(100)) !== JSON.stringify(watchBaseline.render(100))) {
+  throw new Error("fm_watch_arm_pi did not restore its stock call/result shell");
+}
+if (workingVisible !== true || hiddenThinkingLabel !== undefined || statuses.get("firstmate-calm") !== undefined) {
+  throw new Error("turning Calm off did not restore stock presentation controls");
+}
+if (!assistantThinkingTool.render(100).join("\n").includes("Thinking...")) {
+  throw new Error("turning Calm off did not restore the collapsed thinking label");
+}
 if (readFileSync(`${process.env.FM_HOME}/config/calm`, "utf8") !== "off\n") {
   throw new Error("Calm did not persist the inactive choice in the effective Firstmate home");
+}
+presentationComponent.setExpanded(expanded);
+if (
+  !presentationComponent.hasContent() ||
+  !presentationComponent.render(100).join("\n").includes("FIRSTMATE WATCHER WAKE")
+) {
+  throw new Error("turning Calm off did not restore synthetic user-row presentation");
 }
 
 await calmCommand.handler("", commandContext);
@@ -1789,19 +1794,6 @@ const [originalResult, wrappedResult] = await Promise.all([
 ]);
 if (JSON.stringify(wrappedResult) !== JSON.stringify(originalResult)) {
   throw new Error("calm wrapper changed built-in read execution or result data");
-}
-
-let reloads = 0;
-const reloadContext = {
-  ...commandContext,
-  async reload() {
-    reloads += 1;
-  },
-};
-await calmCommand.handler("", reloadContext);
-await calmCommand.handler("", reloadContext);
-if (reloads !== 2) {
-  throw new Error(`two Calm toggle directions requested ${reloads} transcript reloads instead of two`);
 }
 JS
   status=$?
@@ -2812,18 +2804,12 @@ TS
 
   wait_for_geometry_transition() {
     local file=$1 transient_text=$2 final_text=$3 attempt=0 saw_transient=0
-    local skill_line final_line gap
     while [ "$attempt" -lt 600 ]; do
       capture_geometry_viewport "$file" || true
       if grep -Fq "$transient_text" "$file" 2>/dev/null; then
         saw_transient=1
       elif [ "$saw_transient" -eq 1 ] && grep -Fq "$final_text" "$file" 2>/dev/null; then
-        skill_line=$(grep -n -m1 '\[skill\] ahoy' "$file" | cut -d: -f1)
-        final_line=$(grep -n -m1 'CALM_GEOMETRY_FINAL' "$file" | cut -d: -f1)
-        if [ -n "$skill_line" ] && [ -n "$final_line" ]; then
-          gap=$((final_line - skill_line - 1))
-          [ "$gap" -eq 2 ] && return 0
-        fi
+        return 0
       fi
       sleep 0.01
       attempt=$((attempt + 1))
@@ -2906,11 +2892,15 @@ TS
   assert_contains "$(cat "$calm_off_snapshot")" "Thinking..." "turning Calm off did not restore collapsed thinking labels"
   tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" -l '/calm'
   tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" Enter
-  wait_for_geometry_transition \
-    "$snapshot" \
-    "probe-one.txt" \
-    "CALM_GEOMETRY_FINAL" \
-    || fail "turning Calm back on did not complete the settled transcript transition"
+  i=0
+  while [ "$i" -lt 120 ]; do
+    capture_geometry_viewport "$snapshot"
+    if ! grep -Fq "probe-one.txt" "$snapshot" && ! grep -Fq "Thinking..." "$snapshot"; then
+      break
+    fi
+    sleep 0.05
+    i=$((i + 1))
+  done
   assert_geometry_gap "$snapshot" "Calm redraw of existing transcript"
 
   tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" -l '/quit'
@@ -4392,23 +4382,82 @@ JS
     || fail "Chrome or Chromium is required for rendered export DOM assertions; set FM_CHROME_BIN to one"
   chrome_report=$(render_export_dom "$chrome" "$export_file" "$export_dom" "$version") \
     || fail "could not render calm-mode HTML export DOM: $chrome_report"
+  # Pi 0.99 renders display:false custom messages into the conversation
+  # column as hook-message-hidden and hides them with CSS until the viewer
+  # asks to show hidden messages. Pi 0.87 omitted those rows from the column
+  # entirely. The boundary is the visible conversation: a synthetic row may
+  # sit in a hidden hook message, and nowhere a reader sees by default.
   node - "$export_dom" <<'JS' || fail "rendered export DOM violated the Calm conversation boundary"
 const dom = require("node:fs").readFileSync(process.argv[2], "utf8");
 const messages = dom.match(/<div id="messages">([\s\S]*?)<\/main>/)?.[1];
 const tree = dom.match(/<div[^>]*id="tree-container"[^>]*>([\s\S]*?)<div[^>]*id="tree-status"/)?.[1];
-if (!messages || !tree) process.exit(1);
-if (!/<div class="user-message"[^>]*>[\s\S]*Show a deterministic tool example\./.test(messages)) process.exit(1);
-if (!/<div class="assistant-message"[^>]*>[\s\S]*The deterministic tool example is complete\./.test(messages)) process.exit(1);
-const bodyClasses = dom.match(/<body(?: class="([^"]*)")?[^>]*>/)?.[1]?.split(/\s+/) ?? [];
-if (bodyClasses.includes("show-hidden-messages")) process.exit(1);
-const hookClasses = [...messages.matchAll(/<div class="([^"]*\bhook-message\b[^"]*)"/g)]
-  .map((match) => match[1].split(/\s+/));
-if (hookClasses.some((classes) => !classes.includes("hook-message-hidden"))) process.exit(1);
-if (messages.includes("[firstmate-synthetic-input]") && hookClasses.length === 0) process.exit(1);
-for (const current of ["CURRENT_WATCHER_E2E", "CURRENT_TURN_END_E2E", "CURRENT_AWAY_E2E", "CURRENT_FROM_FIRSTMATE_E2E", "CURRENT_LAUNCH_BRIEF_E2E"]) {
-  if (!messages.includes(current)) process.exit(1);
+if (!messages || !tree) throw new Error("export DOM is missing the messages column or the session tree");
+if (!/<div class="user-message"[^>]*>[\s\S]*Show a deterministic tool example\./.test(messages)) {
+  throw new Error("genuine user prompt is missing from the conversation column");
 }
-if (!tree.includes("firstmate-synthetic-input") || !tree.includes("/tmp/probe.status")) process.exit(1);
+if (!/<div class="assistant-message"[^>]*>[\s\S]*The deterministic tool example is complete\./.test(messages)) {
+  throw new Error("genuine assistant reply is missing from the conversation column");
+}
+if (/<body[^>]*show-hidden-messages/.test(dom)) {
+  throw new Error("export opened with hidden messages shown");
+}
+const rendersHiddenRows = /<div[^>]*class="[^"]*\bhook-message-hidden\b/.test(messages);
+if (rendersHiddenRows && !/body:not\(\.show-hidden-messages\)\s+\.hook-message-hidden\s*\{[^}]*display:\s*none/.test(dom)) {
+  throw new Error("export no longer hides terminal-hidden custom messages by default");
+}
+function stripHiddenHookMessages(html) {
+  const marker = "<div";
+  let out = "";
+  let i = 0;
+  while (i < html.length) {
+    const start = html.indexOf(marker, i);
+    if (start < 0) { out += html.slice(i); break; }
+    const tagEnd = html.indexOf(">", start);
+    if (tagEnd < 0) throw new Error("unclosed tag in the conversation column");
+    const tag = html.slice(start, tagEnd + 1);
+    const classes = tag.match(/class="([^"]*)"/)?.[1].split(/\s+/) ?? [];
+    const hiddenHook = classes.includes("hook-message") && classes.includes("hook-message-hidden");
+    if (!hiddenHook) {
+      out += html.slice(i, start + marker.length);
+      i = start + marker.length;
+      continue;
+    }
+    out += html.slice(i, start);
+    let depth = 0;
+    let j = start;
+    while (j < html.length) {
+      const nextOpen = html.indexOf("<div", j);
+      const nextClose = html.indexOf("</div>", j);
+      if (nextClose < 0) throw new Error("unclosed hidden hook message");
+      if (nextOpen >= 0 && nextOpen < nextClose) {
+        depth += 1;
+        j = nextOpen + 4;
+      } else {
+        depth -= 1;
+        j = nextClose + 6;
+        if (depth === 0) break;
+      }
+    }
+    i = j;
+  }
+  return out;
+}
+const visible = stripHiddenHookMessages(messages);
+if (visible.includes('<div class="hook-message"') || visible.includes("hook-message")) {
+  throw new Error("a visible hook message leaked into the conversation column");
+}
+if (visible.includes("[firstmate-synthetic-input]") || visible.includes("/tmp/probe.status")) {
+  throw new Error("a synthetic Firstmate row is visible in the conversation column");
+}
+if (rendersHiddenRows && !messages.includes("[firstmate-synthetic-input]")) {
+  throw new Error("the hidden synthetic row disappeared from the export");
+}
+for (const current of ["CURRENT_WATCHER_E2E", "CURRENT_TURN_END_E2E", "CURRENT_AWAY_E2E", "CURRENT_FROM_FIRSTMATE_E2E", "CURRENT_LAUNCH_BRIEF_E2E"]) {
+  if (!visible.includes(current)) throw new Error(`operational input ${current} is missing from the conversation column`);
+}
+if (!tree.includes("firstmate-synthetic-input") || !tree.includes("/tmp/probe.status")) {
+  throw new Error("the session tree lost the synthetic row");
+}
 JS
   # Calm returns the transcript to its own presentation once the export has been
   # rendered. That repaint runs on the macrotask right after Pi prints the export

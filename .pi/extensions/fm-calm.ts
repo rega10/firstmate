@@ -45,7 +45,7 @@ import {
   createReadToolDefinition,
   createWriteToolDefinition,
 } from "@earendil-works/pi-coding-agent";
-import { Container, getKeybindings } from "@earendil-works/pi-tui";
+import { Box, Container, getKeybindings, type Component } from "@earendil-works/pi-tui";
 import type { TSchema } from "typebox";
 import { installCalmAssistantLayout } from "./lib/fm-calm-assistant-layout.ts";
 import { installCalmOperationalUserLayout } from "./lib/fm-calm-operational-user-layout.ts";
@@ -86,6 +86,12 @@ type RenderTheme<TParams extends TSchema, TDetails, TState> = Parameters<
 type RenderResult<TParams extends TSchema, TDetails, TState> = Parameters<
   NonNullable<ToolDefinition<TParams, TDetails, TState>["renderResult"]>
 >[0];
+
+type StandardShellState = {
+  shell?: Box;
+  call?: Component;
+  result?: Component;
+};
 
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
@@ -170,12 +176,6 @@ export default function (pi: ExtensionAPI) {
     }
     return stored === "on" || stored === "max";
   };
-  // Pi rebuilds restored transcript rows before emitting session_start during
-  // /reload. Restore Calm now so those rows select the self-render shell when
-  // they are constructed; changing only their inner renderers afterwards leaves
-  // the stock shell's framing behind.
-  setCalmPresentation(loadCalmPreference());
-  setCalmStockExportRendering(false);
   const persistCalmPreference = (active: boolean): void => {
     mkdirSync(dirname(calmPreferencePath), { recursive: true });
     const temporaryPath = `${calmPreferencePath}.${process.pid}.${randomUUID()}.tmp`;
@@ -215,6 +215,7 @@ export default function (pi: ExtensionAPI) {
   const repaintCalmToolRows = (): void => {
     for (const invalidate of calmToolRowRepaints.values()) invalidate();
   };
+
   function wrapBuiltIn<TParams extends TSchema, TDetails, TState>(
     factory: DefinitionFactory<TParams, TDetails, TState>,
   ): ToolDefinition<TParams, TDetails, TState> {
@@ -231,16 +232,47 @@ export default function (pi: ExtensionAPI) {
     const original = definitionFor(process.cwd());
     const originalRenderCall = original.renderCall;
     const originalRenderResult = original.renderResult;
+    const originalSelfShell = original.renderShell === "self";
+    const standardShells = new WeakMap<object, StandardShellState>();
+
     if (!originalRenderCall || !originalRenderResult) {
       throw new Error(`Firstmate calm mode requires both render slots for Pi built-in tool ${original.name}`);
     }
 
+    const shellStateFor = (
+      context: RenderContext<TParams, TDetails, TState>,
+    ): StandardShellState => {
+      const rowState = context.state as object;
+      let shellState = standardShells.get(rowState);
+      if (!shellState) {
+        shellState = {};
+        standardShells.set(rowState, shellState);
+      }
+      return shellState;
+    };
+
+    const refreshStandardShell = (
+      state: StandardShellState,
+      theme: RenderTheme<TParams, TDetails, TState>,
+      context: RenderContext<TParams, TDetails, TState>,
+    ): Box => {
+      const background = context.isPartial
+        ? (text: string) => theme.bg("toolPendingBg", text)
+        : context.isError
+          ? (text: string) => theme.bg("toolErrorBg", text)
+          : (text: string) => theme.bg("toolSuccessBg", text);
+      const shell = state.shell ?? new Box(1, 1, background);
+      state.shell = shell;
+      shell.setBgFn(background);
+      shell.clear();
+      if (state.call) shell.addChild(state.call);
+      if (state.result) shell.addChild(state.result);
+      return shell;
+    };
+
     return {
       ...original,
-      get renderShell(): "default" | "self" {
-        if (calmPresentationIsActive() && !exportRendering) return "self";
-        return original.renderShell ?? "default";
-      },
+      renderShell: "self",
 
       async execute(toolCallId, params, signal, onUpdate, ctx) {
         return definitionFor(ctx.cwd).execute(toolCallId, params, signal, onUpdate, ctx);
@@ -252,9 +284,16 @@ export default function (pi: ExtensionAPI) {
         context: RenderContext<TParams, TDetails, TState>,
       ) {
         rememberCalmToolRow(context.state as object, context.invalidate);
-        if (exportRendering || !calmPresentationIsActive()) return originalRenderCall(args, theme, context);
+        if (exportRendering) return originalRenderCall(args, theme, context);
         if (calmPresentationHides("assistant-tool-call")) return new Container();
-        return originalRenderCall(args, theme, context);
+        if (originalSelfShell) return originalRenderCall(args, theme, context);
+
+        const state = shellStateFor(context);
+        state.call = originalRenderCall(args, theme, {
+          ...context,
+          lastComponent: state.call,
+        });
+        return refreshStandardShell(state, theme, context);
       },
 
       renderResult(
@@ -264,9 +303,17 @@ export default function (pi: ExtensionAPI) {
         context: RenderContext<TParams, TDetails, TState>,
       ) {
         rememberCalmToolRow(context.state as object, context.invalidate);
-        if (exportRendering || !calmPresentationIsActive()) return originalRenderResult(result, options, theme, context);
+        if (exportRendering) return originalRenderResult(result, options, theme, context);
         if (calmPresentationHides("tool-result")) return new Container();
-        return originalRenderResult(result, options, theme, context);
+        if (originalSelfShell) return originalRenderResult(result, options, theme, context);
+
+        const state = shellStateFor(context);
+        state.result = originalRenderResult(result, options, theme, {
+          ...context,
+          lastComponent: state.result,
+        });
+        refreshStandardShell(state, theme, context);
+        return new Container();
       },
     };
   }
@@ -438,13 +485,6 @@ export default function (pi: ExtensionAPI) {
       const active = !calmPresentationIsActive();
       persistCalmPreference(active);
       setCalmPresentation(active);
-      // A row cannot switch between Calm's self shell and Pi's stock shell in
-      // place. Reload after persisting either choice so Pi reconstructs every
-      // restored row with the selected definition and framing.
-      if (ctx.reload) {
-        await ctx.reload();
-        return;
-      }
       if (active) activateBuiltInsIfNeeded(ctx.ui);
       publishPresentationState();
       applyWorkingPresentation(ctx.ui, true);
