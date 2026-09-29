@@ -1105,13 +1105,14 @@ test_lavish_absent_config_preserves_destination_ambient() {
 printf '%s\n' "${LAVISH_AXI_HOST-unset}" > "$FM_LAVISH_SEEN"
 SH
   chmod +x "$FAKEBIN_DIR/claude"
-  out=$(FM_FAKE_PANE_LOG="$pane_log" \
+  out=$(FM_TEST_PANE_LOG="$pane_log" \
     run_ship_spawn "$HOME_DIR" "$WT_DIR" "$FAKEBIN_DIR" "$LAUNCH_LOG" "$id" "$PROJ_DIR")
   status=$?
   expect_code 0 "$status" "an absent Lavish host configuration should allow the worker spawn"
   launch=$(cat "$LAUNCH_LOG")
   assert_not_contains "$launch" "LAVISH_AXI_HOST" \
     "an absent configuration changed the host in the worker launch"
+  [ -s "$pane_log" ] || fail "the destination pane did not record the launch"
   assert_not_contains "$(cat "$pane_log")" "LAVISH_AXI_HOST" \
     "an absent configuration changed the host in the destination pane"
   FM_LAVISH_SEEN="$seen" LAVISH_AXI_HOST=destination.example PATH="$FAKEBIN_DIR:$PATH" \
