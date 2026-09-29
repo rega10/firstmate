@@ -812,6 +812,7 @@ test_builtin_gate_load_time() {
     EXT="$fixture/project/.pi/extensions/fm-calm.ts" \
     HOME_OFF="$fixture/home-off" \
     HOME_ON="$fixture/home-on" \
+    PI_PACKAGE_DIR="$PI_PACKAGE_DIR" \
     node --input-type=module) >"$output_file" 2>&1 <<'JS'
 import { pathToFileURL } from "node:url";
 
@@ -857,12 +858,44 @@ const expected = ["bash", "edit", "find", "grep", "ls", "read", "write"];
 if (JSON.stringify(names) !== JSON.stringify(expected)) {
   throw new Error(`Calm registered ${JSON.stringify(names)} synchronously at load with config/calm=on, expected ${JSON.stringify(expected)}`);
 }
+
+const packageRoot = process.env.PI_PACKAGE_DIR;
+const { ToolExecutionComponent } = await import(
+  pathToFileURL(`${packageRoot}/dist/modes/interactive/components/tool-execution.js`).href
+);
+const { initTheme } = await import(pathToFileURL(`${packageRoot}/dist/modes/interactive/theme/theme.js`).href);
+const { setCapabilities } = await import(
+  pathToFileURL(`${packageRoot}/node_modules/@earendil-works/pi-tui/dist/index.js`).href
+);
+initTheme("dark");
+setCapabilities({ images: null, trueColor: true, hyperlinks: false });
+for (const tool of onRun.tools) {
+  const restoredRow = new ToolExecutionComponent(
+    tool.name,
+    `restored-${tool.name}`,
+    {},
+    { showImages: false },
+    tool,
+    { requestRender() {} },
+    process.cwd(),
+  );
+  restoredRow.markExecutionStarted();
+  restoredRow.setArgsComplete();
+  restoredRow.updateResult({
+    content: [{ type: "text", text: "restored output" }],
+    details: {},
+    isError: false,
+  });
+  if (restoredRow.render(100).length !== 0) {
+    throw new Error(`Calm-on load left a stock shell around restored ${tool.name} call/result rows before session_start`);
+  }
+}
 JS
   status=$?
   out=$(cat "$output_file")
   [ "$status" -eq 0 ] || fail "Pi calm gate-at-load-time path failed: $out"
   [ -z "$out" ] || fail "Pi calm gate-at-load-time test printed output: $out"
-  pass "Calm registers none of its 7 built-in tool wrappers at load while config/calm is off, and all 7 synchronously at load while config/calm is on"
+  pass "Calm registers no built-in wrappers while off, and restores all 7 wrappers plus shell-free hidden rows synchronously at Calm-on load"
 }
 
 test_calm_activation_collision_and_regression_bound() {
@@ -1228,8 +1261,8 @@ const earlyActivationUi = {
   setWorkingVisible() {},
   notify() {},
 };
-await calmCommand.handler("", { ui: earlyActivationUi });
-await calmCommand.handler("", { ui: earlyActivationUi });
+await calmCommand.handler("", { reload: async () => {}, ui: earlyActivationUi });
+await calmCommand.handler("", { reload: async () => {}, ui: earlyActivationUi });
 
 const names = tools.map((tool) => tool.name);
 const expectedNames = ["read", "bash", "edit", "write", "grep", "find", "ls"];
@@ -1330,8 +1363,7 @@ const cases = [
   ["find", { pattern: "*.txt", path: "." }, { content: [{ type: "text", text: "sample.txt" }], details: {}, isError: false }],
   ["ls", { path: "." }, { content: [{ type: "text", text: "sample.txt" }], details: {}, isError: false }],
 ];
-let renderRequests = 0;
-const renderUi = { requestRender() { renderRequests += 1; } };
+const renderUi = { requestRender() {} };
 const rows = [];
 for (const [name, args, result] of cases) {
   const wrapped = tools.find((tool) => tool.name === name);
@@ -1511,7 +1543,11 @@ let hiddenThinkingLabel = "unset";
 const statuses = new Map();
 const sessionEntries = [{ type: "message", message: { role: "toolResult", content: "kept" } }];
 const entriesBefore = JSON.stringify(sessionEntries);
+let reloads = 0;
 const commandContext = {
+  async reload() {
+    reloads += 1;
+  },
   sessionManager: { getEntries: () => sessionEntries },
   ui: {
     getEditorText: () => editorText,
@@ -1728,60 +1764,15 @@ if (JSON.stringify(sessionEntries) !== entriesBefore) {
   throw new Error("calm mode changed session entries or model context");
 }
 
-for (const { baseline } of rows) baseline.setExpanded(expanded);
 await calmCommand.handler("", commandContext);
-presentationComponent.setExpanded(expanded);
-if (
-  !presentationComponent.hasContent() ||
-  !presentationComponent.render(100).join("\n").includes("FIRSTMATE WATCHER WAKE")
-) {
-  throw new Error("turning Calm off did not restore a legacy synthetic presentation row");
-}
-if (JSON.stringify(operationalComponent.render(100)) !== JSON.stringify(expectedCalmOffOperationalRows)) {
-  throw new Error("turning Calm off did not restore byte-identical operational user rows and spacing");
-}
-if (!legacyOperationalComponent.render(100).join("\n").includes("legacy presentation compatibility")) {
-  throw new Error("turning Calm off did not restore the supported legacy operational row");
-}
-for (const { name, baseline, actual } of rows) {
-  if (JSON.stringify(actual.render(100)) !== JSON.stringify(baseline.render(100))) {
-    throw new Error(`${name} did not restore the expanded standard renderer`);
-  }
-}
-if (JSON.stringify(imageRow.render(100)) !== JSON.stringify(imageVisibleBefore)) {
-  throw new Error("built-in read image row did not restore its ordinary call shell and image output");
-}
-if (JSON.stringify(watchActual.render(100)) !== JSON.stringify(watchBaseline.render(100))) {
-  throw new Error("fm_watch_arm_pi did not restore its stock call/result shell");
-}
-if (workingVisible !== true || hiddenThinkingLabel !== undefined || statuses.get("firstmate-calm") !== undefined) {
-  throw new Error("turning Calm off did not restore stock presentation controls");
-}
-if (!assistantThinkingTool.render(100).join("\n").includes("Thinking...")) {
-  throw new Error("turning Calm off did not restore the collapsed thinking label");
+if (reloads !== 1) {
+  throw new Error(`turning Calm off requested ${reloads} transcript reloads instead of one`);
 }
 if (readFileSync(`${process.env.FM_HOME}/config/calm`, "utf8") !== "off\n") {
   throw new Error("Calm did not persist the inactive choice in the effective Firstmate home");
 }
-presentationComponent.setExpanded(expanded);
-if (
-  !presentationComponent.hasContent() ||
-  !presentationComponent.render(100).join("\n").includes("FIRSTMATE WATCHER WAKE")
-) {
-  throw new Error("turning Calm off did not restore synthetic user-row presentation");
-}
 
-// Pi /reload reconstructs tool rows before the replacement extension receives
-// session_start. Model that ordering: rows rendered under the module's initial
-// Calm-off state must be invalidated once session_start restores the persisted
-// active preference.
-writeFileSync(`${process.env.FM_HOME}/config/calm`, "on\n");
-for (const { actual } of rows) actual.render(100);
-const renderRequestsBeforeReload = renderRequests;
-await handlers.get("session_start")[0]({ reason: "reload" }, commandContext);
-if (renderRequests - renderRequestsBeforeReload < rows.length) {
-  throw new Error("reload did not invalidate every built-in tool row rendered before session_start restored Calm");
-}
+await calmCommand.handler("", commandContext);
 for (const reason of ["startup", "new", "resume", "fork", "reload"]) {
   await handlers.get("session_start")[0]({ reason }, commandContext);
   for (const row of rows) row.actual.setExpanded(expanded);

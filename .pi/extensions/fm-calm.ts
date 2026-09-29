@@ -170,6 +170,12 @@ export default function (pi: ExtensionAPI) {
     }
     return stored === "on" || stored === "max";
   };
+  // Pi rebuilds restored transcript rows before emitting session_start during
+  // /reload. Restore Calm now so those rows select the self-render shell when
+  // they are constructed; changing only their inner renderers afterwards leaves
+  // the stock shell's framing behind.
+  setCalmPresentation(loadCalmPreference());
+  setCalmStockExportRendering(false);
   const persistCalmPreference = (active: boolean): void => {
     mkdirSync(dirname(calmPreferencePath), { recursive: true });
     const temporaryPath = `${calmPreferencePath}.${process.pid}.${randomUUID()}.tmp`;
@@ -209,12 +215,6 @@ export default function (pi: ExtensionAPI) {
   const repaintCalmToolRows = (): void => {
     for (const invalidate of calmToolRowRepaints.values()) invalidate();
   };
-  const resetAndRepaintCalmToolRows = (): void => {
-    const invalidates = [...calmToolRowRepaints.values()];
-    calmToolRowRepaints.clear();
-    for (const invalidate of invalidates) invalidate();
-  };
-
   function wrapBuiltIn<TParams extends TSchema, TDetails, TState>(
     factory: DefinitionFactory<TParams, TDetails, TState>,
   ): ToolDefinition<TParams, TDetails, TState> {
@@ -368,13 +368,10 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_start", (_event, ctx) => {
     reportBuiltInLosses();
+    calmToolRowRepaints.clear();
     exportRendering = false;
     setCalmPresentation(loadCalmPreference());
     setCalmStockExportRendering(false);
-    // /reload rebuilds and renders tool rows before session_start restores the
-    // persisted Calm preference. Repaint those rows under the authoritative state
-    // before forgetting the previous session lifetime's invalidators.
-    resetAndRepaintCalmToolRows();
     publishPresentationState();
     agentRunActive = false;
     workingShipShown = false;
@@ -441,6 +438,13 @@ export default function (pi: ExtensionAPI) {
       const active = !calmPresentationIsActive();
       persistCalmPreference(active);
       setCalmPresentation(active);
+      // A row constructed with Calm's self shell cannot switch back to Pi's
+      // stock shell in place. Reload after persisting off so Pi reconstructs
+      // every restored row with its genuine stock definition and framing.
+      if (!active && ctx.reload) {
+        await ctx.reload();
+        return;
+      }
       if (active) activateBuiltInsIfNeeded(ctx.ui);
       publishPresentationState();
       applyWorkingPresentation(ctx.ui, true);
