@@ -1,0 +1,44 @@
+Error: Failed to load extension "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3QFBAGF5T2WP
+QQ08NGXGYJC/.test-run-tmp/pi-geometry/project/.pi/extensions/fm-calm.ts": Failed to load extension:
+Cannot find module './fm-calm-preservation.ts'
+Require stack:
+- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3QFBAGF5T2WPQQ08NGXGYJC/.test-run-tmp/pi-ge
+ometry/project/.pi/extensions/lib/fm-calm-assistant-layout.ts
+Hint: Start without extensions using "pi -ne".
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

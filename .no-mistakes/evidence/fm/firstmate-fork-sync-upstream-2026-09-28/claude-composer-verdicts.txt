@@ -1,0 +1,2 @@
+Claude Code 2.1.284 idle viewport: empty
+Claude Code 2.1.284 typed draft viewport: pending

@@ -1,0 +1,5 @@
+Captain Fixture <captain@example.invalid>
+fix: preserve human attribution
+
+Co-authored-by: Jane Doe <jane@example.com>
+

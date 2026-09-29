@@ -1,0 +1,44 @@
+Claude Code's fullscreen renderer didn't finish starting last time on this machine, so this launch i
+s using the classic renderer. It will try fullscreen again next launch; /tui default keeps the class
+ic renderer.
+ ▐▛███▛█   Claude Code v2.1.284
+▝▜██████▀  Opus 5.5 · API Usage Billing
+ ▝▝   ▝▝   /…/422718388d14/01M3QFBAGF5T2WPQQ08NGXGYJC/.test-run-tmp/claude-composer/project
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ draft from captain
+────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ bypass permissions on (shift+tab to cycle)                         Not logged in · Run /login
+                                                                                ◐ medium · /effort
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

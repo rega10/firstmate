@@ -1,0 +1,7 @@
+ok - provision, recovery, renewal, and preflight keep the synthetic credential off every output and file
+ok - enabled Claude launches inject narrowly while disabled and non-Claude launches remain unchanged
+ok - Vault, token, version-surface, inconclusive, and direct or forwarding wrapper failures all block before launch
+ok - auth and live preflight classification remain redacted under inherited xtrace controls
+ok - launch-time failures are redacted, identity stays pinned, and successful worker I/O stays interactive
+ok - secondmate launch, relaunch, inheritance, and nested worker all use the same local injection contract
+# all fm-claude-automic-vault tests passed
