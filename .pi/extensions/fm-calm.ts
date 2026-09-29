@@ -45,7 +45,7 @@ import {
   createReadToolDefinition,
   createWriteToolDefinition,
 } from "@earendil-works/pi-coding-agent";
-import { Box, Container, getKeybindings, type Component } from "@earendil-works/pi-tui";
+import { Container, getKeybindings } from "@earendil-works/pi-tui";
 import type { TSchema } from "typebox";
 import { installCalmAssistantLayout } from "./lib/fm-calm-assistant-layout.ts";
 import { installCalmOperationalUserLayout } from "./lib/fm-calm-operational-user-layout.ts";
@@ -86,12 +86,6 @@ type RenderTheme<TParams extends TSchema, TDetails, TState> = Parameters<
 type RenderResult<TParams extends TSchema, TDetails, TState> = Parameters<
   NonNullable<ToolDefinition<TParams, TDetails, TState>["renderResult"]>
 >[0];
-
-type StandardShellState = {
-  shell?: Box;
-  call?: Component;
-  result?: Component;
-};
 
 const extensionFile = fileURLToPath(import.meta.url);
 const extensionDir = dirname(extensionFile);
@@ -232,47 +226,16 @@ export default function (pi: ExtensionAPI) {
     const original = definitionFor(process.cwd());
     const originalRenderCall = original.renderCall;
     const originalRenderResult = original.renderResult;
-    const originalSelfShell = original.renderShell === "self";
-    const standardShells = new WeakMap<object, StandardShellState>();
-
     if (!originalRenderCall || !originalRenderResult) {
       throw new Error(`Firstmate calm mode requires both render slots for Pi built-in tool ${original.name}`);
     }
 
-    const shellStateFor = (
-      context: RenderContext<TParams, TDetails, TState>,
-    ): StandardShellState => {
-      const rowState = context.state as object;
-      let shellState = standardShells.get(rowState);
-      if (!shellState) {
-        shellState = {};
-        standardShells.set(rowState, shellState);
-      }
-      return shellState;
-    };
-
-    const refreshStandardShell = (
-      state: StandardShellState,
-      theme: RenderTheme<TParams, TDetails, TState>,
-      context: RenderContext<TParams, TDetails, TState>,
-    ): Box => {
-      const background = context.isPartial
-        ? (text: string) => theme.bg("toolPendingBg", text)
-        : context.isError
-          ? (text: string) => theme.bg("toolErrorBg", text)
-          : (text: string) => theme.bg("toolSuccessBg", text);
-      const shell = state.shell ?? new Box(1, 1, background);
-      state.shell = shell;
-      shell.setBgFn(background);
-      shell.clear();
-      if (state.call) shell.addChild(state.call);
-      if (state.result) shell.addChild(state.result);
-      return shell;
-    };
-
     return {
       ...original,
-      renderShell: "self",
+      get renderShell(): "default" | "self" {
+        if (calmPresentationIsActive() && !exportRendering) return "self";
+        return original.renderShell ?? "default";
+      },
 
       async execute(toolCallId, params, signal, onUpdate, ctx) {
         return definitionFor(ctx.cwd).execute(toolCallId, params, signal, onUpdate, ctx);
@@ -284,16 +247,9 @@ export default function (pi: ExtensionAPI) {
         context: RenderContext<TParams, TDetails, TState>,
       ) {
         rememberCalmToolRow(context.state as object, context.invalidate);
-        if (exportRendering) return originalRenderCall(args, theme, context);
+        if (exportRendering || !calmPresentationIsActive()) return originalRenderCall(args, theme, context);
         if (calmPresentationHides("assistant-tool-call")) return new Container();
-        if (originalSelfShell) return originalRenderCall(args, theme, context);
-
-        const state = shellStateFor(context);
-        state.call = originalRenderCall(args, theme, {
-          ...context,
-          lastComponent: state.call,
-        });
-        return refreshStandardShell(state, theme, context);
+        return originalRenderCall(args, theme, context);
       },
 
       renderResult(
@@ -303,17 +259,9 @@ export default function (pi: ExtensionAPI) {
         context: RenderContext<TParams, TDetails, TState>,
       ) {
         rememberCalmToolRow(context.state as object, context.invalidate);
-        if (exportRendering) return originalRenderResult(result, options, theme, context);
+        if (exportRendering || !calmPresentationIsActive()) return originalRenderResult(result, options, theme, context);
         if (calmPresentationHides("tool-result")) return new Container();
-        if (originalSelfShell) return originalRenderResult(result, options, theme, context);
-
-        const state = shellStateFor(context);
-        state.result = originalRenderResult(result, options, theme, {
-          ...context,
-          lastComponent: state.result,
-        });
-        refreshStandardShell(state, theme, context);
-        return new Container();
+        return originalRenderResult(result, options, theme, context);
       },
     };
   }

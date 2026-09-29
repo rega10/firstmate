@@ -4389,8 +4389,12 @@ const tree = dom.match(/<div[^>]*id="tree-container"[^>]*>([\s\S]*?)<div[^>]*id=
 if (!messages || !tree) process.exit(1);
 if (!/<div class="user-message"[^>]*>[\s\S]*Show a deterministic tool example\./.test(messages)) process.exit(1);
 if (!/<div class="assistant-message"[^>]*>[\s\S]*The deterministic tool example is complete\./.test(messages)) process.exit(1);
-if (messages.includes('<div class="hook-message"')) process.exit(1);
-if (messages.includes("[firstmate-synthetic-input]")) process.exit(1);
+const bodyClasses = dom.match(/<body(?: class="([^"]*)")?[^>]*>/)?.[1]?.split(/\s+/) ?? [];
+if (bodyClasses.includes("show-hidden-messages")) process.exit(1);
+const hookClasses = [...messages.matchAll(/<div class="([^"]*\bhook-message\b[^"]*)"/g)]
+  .map((match) => match[1].split(/\s+/));
+if (hookClasses.some((classes) => !classes.includes("hook-message-hidden"))) process.exit(1);
+if (messages.includes("[firstmate-synthetic-input]") && hookClasses.length === 0) process.exit(1);
 for (const current of ["CURRENT_WATCHER_E2E", "CURRENT_TURN_END_E2E", "CURRENT_AWAY_E2E", "CURRENT_FROM_FIRSTMATE_E2E", "CURRENT_LAUNCH_BRIEF_E2E"]) {
   if (!messages.includes(current)) process.exit(1);
 }
