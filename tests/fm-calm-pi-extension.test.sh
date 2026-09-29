@@ -2804,12 +2804,18 @@ TS
 
   wait_for_geometry_transition() {
     local file=$1 transient_text=$2 final_text=$3 attempt=0 saw_transient=0
+    local skill_line final_line gap
     while [ "$attempt" -lt 600 ]; do
       capture_geometry_viewport "$file" || true
       if grep -Fq "$transient_text" "$file" 2>/dev/null; then
         saw_transient=1
       elif [ "$saw_transient" -eq 1 ] && grep -Fq "$final_text" "$file" 2>/dev/null; then
-        return 0
+        skill_line=$(grep -n -m1 '\[skill\] ahoy' "$file" | cut -d: -f1)
+        final_line=$(grep -n -m1 'CALM_GEOMETRY_FINAL' "$file" | cut -d: -f1)
+        if [ -n "$skill_line" ] && [ -n "$final_line" ]; then
+          gap=$((final_line - skill_line - 1))
+          [ "$gap" -eq 2 ] && return 0
+        fi
       fi
       sleep 0.01
       attempt=$((attempt + 1))
