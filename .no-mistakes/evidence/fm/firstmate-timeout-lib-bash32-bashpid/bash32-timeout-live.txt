@@ -1,0 +1,39 @@
+/bin/bash 3.2, set -u, real fm_backlog_atomic_transition dispatch, real tasks-axi
+BEFORE:
+task:
+  id: timeout-live
+  title: Worker launch transition probe
+  state: queued
+  blocked: no
+  blocked_by: none
+  held: no
+  hold_reason: "-"
+  hold_kind: "-"
+  hold_until: "-"
+  kind: ship
+  repo: "-"
+  priority: "-"
+  created: 2026-09-29
+  closed: "-"
+  deps: none
+  links: none
+  body: ""
+AFTER:
+task:
+  id: timeout-live
+  title: Worker launch transition probe
+  state: in_flight
+  blocked: no
+  blocked_by: none
+  held: no
+  hold_reason: "-"
+  hold_kind: "-"
+  hold_until: "-"
+  kind: ship
+  repo: "-"
+  priority: "-"
+  created: 2026-09-29
+  closed: "-"
+  deps: none
+  links: none
+  body: ""
