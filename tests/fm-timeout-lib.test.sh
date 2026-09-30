@@ -109,7 +109,7 @@ test_the_bound_replaces_the_calling_shell() {
     rm -f "$dir/caller" "$dir/parent"
     (
       . "$ROOT/bin/fm-timeout-lib.sh"
-      printf '%s\n' "$BASHPID" > "$dir/caller"
+      bash -c 'printf "%s\n" "$PPID" > "$1"' _ "$dir/caller"
       PATH=$path fm_exec_timed 5 1 bash -c 'echo "$PPID" > "$1"' _ "$dir/parent"
     ) || fail "the bounded probe failed under PATH=$path"
     caller=$(cat "$dir/caller")
@@ -172,6 +172,13 @@ test_a_signal_to_the_bounding_process_reaches_the_command() {
   pass "fm_exec_timed forwards a TERM it receives to the bounded command"
 }
 
+# Stock macOS /bin/bash is 3.2, which has no $BASHPID; the cases that name it
+# also run under it where it exists.
+STOCK_BASH32=
+if [ -x /bin/bash ] && [ "$(/bin/bash -c 'printf "%s.%s" "${BASH_VERSINFO[0]}" "${BASH_VERSINFO[1]}"')" = 3.2 ]; then
+  STOCK_BASH32=/bin/bash
+fi
+
 # A caller that names its owner before launching the watchdog is watched even
 # when that owner died while the watchdog was still starting: the watchdog's
 # parent is then not the named owner, so the escalation starts at once rather
@@ -204,30 +211,87 @@ test_a_named_owner_that_is_gone_ends_the_command() {
 # fm_exec_timed - the watchdog then starts already reparented - is still
 # detected instead of leaving the command running to its bound.
 test_an_owner_that_dies_during_startup_ends_the_command() {
-  local dir watchdog started
-  dir="$TMP_ROOT/startup-owner"
-  mkdir -p "$dir"
-  # shellcheck disable=SC2016
-  PATH=$PERL_ONLY bash -c '
-    . "$1/bin/fm-timeout-lib.sh"
-    (
-      echo "$BASHPID" > "$2/watchdog"
-      while kill -0 "$$" 2>/dev/null; do sleep 0.05; done
-      fm_exec_timed 60 1 bash -c "exec sleep 300"
-    ) >/dev/null 2>&1 &
-    exit 0
-  ' _ "$ROOT" "$dir"
-  wait_for_file "$dir/watchdog"
-  watchdog=$(cat "$dir/watchdog")
-  started=$SECONDS
-  while kill -0 "$watchdog" 2>/dev/null; do
-    if [ "$((SECONDS - started))" -ge 15 ]; then
-      kill -KILL "$watchdog" 2>/dev/null || true
-      fail "a watchdog whose owner died during startup ran on toward its bound"
-    fi
-    sleep 0.02
+  local shell dir watchdog started
+  for shell in bash $STOCK_BASH32; do
+    dir="$TMP_ROOT/startup-owner-${shell//\//_}"
+    mkdir -p "$dir"
+    # The subshell's own pid comes from a child's $PPID, since bash 3.2 has no
+    # $BASHPID.
+    # shellcheck disable=SC2016
+    PATH=$PERL_ONLY "$shell" -c '
+      set -u
+      . "$1/bin/fm-timeout-lib.sh"
+      (
+        bash -c "echo \"\$PPID\"" > "$2/watchdog"
+        while kill -0 "$$" 2>/dev/null; do sleep 0.05; done
+        fm_exec_timed 60 1 bash -c "exec sleep 300"
+      ) >/dev/null 2>&1 &
+      exit 0
+    ' _ "$ROOT" "$dir"
+    wait_for_file "$dir/watchdog"
+    watchdog=$(cat "$dir/watchdog")
+    started=$SECONDS
+    while kill -0 "$watchdog" 2>/dev/null; do
+      if [ "$((SECONDS - started))" -ge 15 ]; then
+        kill -KILL "$watchdog" 2>/dev/null || true
+        fail "under $shell, a watchdog whose owner died during startup ran on toward its bound"
+      fi
+      sleep 0.02
+    done
   done
   pass "fm_exec_timed ends the command when its owner dies during watchdog startup"
+}
+
+# A stock-bash caller under set -u runs the bounded command and gets its
+# status back, rather than dying on a variable bash 3.2 does not define.
+test_stock_bash32_runs_the_bounded_command() {
+  local out rc=0
+  if [ -z "$STOCK_BASH32" ]; then
+    printf 'skip - stock Bash 3.2 is unavailable\n'
+    return 0
+  fi
+  out=$("$STOCK_BASH32" -c '
+    set -u
+    . "$1/bin/fm-timeout-lib.sh"
+    PATH=$2 fm_exec_timed 5 1 bash -c "echo ran; exit 7"
+  ' _ "$ROOT" "$PERL_ONLY" 2>&1) || rc=$?
+  [ "$rc" -eq 7 ] || fail "stock Bash 3.2 did not pass the command's status through (rc=$rc): $out"
+  [ "$out" = ran ] || fail "stock Bash 3.2 printed '$out' instead of the command's output"
+  pass "fm_exec_timed runs the bounded command under stock Bash 3.2 with set -u"
+}
+
+# Called directly from a script rather than a subshell, the exec replaces the
+# script itself, so the owner is the script's parent. A parent that dies while
+# the watchdog is still starting - the watchdog then starts already
+# reparented - is detected instead of leaving the command running to its
+# bound, on every bash the host has, including one with no $BASHPID.
+test_a_direct_callers_parent_that_dies_during_startup_ends_the_command() {
+  local shell dir watchdog started
+  for shell in bash $STOCK_BASH32; do
+    dir="$TMP_ROOT/direct-owner-${shell//\//_}"
+    mkdir -p "$dir"
+    # shellcheck disable=SC2016
+    printf '%s\n' \
+      'set -u' \
+      '. "$1/bin/fm-timeout-lib.sh"' \
+      'echo "$$" > "$2/watchdog"' \
+      'while kill -0 "$PPID" 2>/dev/null; do sleep 0.05; done' \
+      'fm_exec_timed 60 1 bash -c "exec sleep 300"' > "$dir/caller.sh"
+    # shellcheck disable=SC2016
+    PATH=$PERL_ONLY "$shell" -c '"$0" "$1" "$2" "$3" >/dev/null 2>&1 & exit 0' \
+      "$shell" "$dir/caller.sh" "$ROOT" "$dir"
+    wait_for_file "$dir/watchdog"
+    watchdog=$(cat "$dir/watchdog")
+    started=$SECONDS
+    while kill -0 "$watchdog" 2>/dev/null; do
+      if [ "$((SECONDS - started))" -ge 15 ]; then
+        kill -KILL "$watchdog" 2>/dev/null || true
+        fail "under $shell, a watchdog whose direct caller's parent died during startup ran on toward its bound"
+      fi
+      sleep 0.02
+    done
+  done
+  pass "fm_exec_timed ends the command when a direct caller's parent dies during watchdog startup"
 }
 
 # perl is preferred whenever it exists, because only its watchdog can reap a
@@ -337,6 +401,8 @@ test_a_descendant_holding_the_output_cannot_outlast_the_bound
 test_a_signal_to_the_bounding_process_reaches_the_command
 test_a_named_owner_that_is_gone_ends_the_command
 test_an_owner_that_dies_during_startup_ends_the_command
+test_stock_bash32_runs_the_bounded_command
+test_a_direct_callers_parent_that_dies_during_startup_ends_the_command
 test_perl_is_preferred_over_timeout
 test_refuses_rather_than_running_unbounded
 test_rejects_malformed_bounds_before_running_anything

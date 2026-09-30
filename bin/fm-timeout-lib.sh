@@ -24,19 +24,20 @@
 #       command chose to die.
 #
 #   fm_exec_timed <seconds> <grace-seconds> <command> [args...]
-#       Replaces the calling shell with the bounded command, so it must be the
-#       last command of a subshell: the bound kills the command, not the
-#       caller. The command runs in its own process group; TERM goes to that
-#       group at the bound, and KILL once <grace-seconds> more have passed,
+#       Replaces the calling shell with the watchdog, so call it as the final
+#       command in the shell or subshell to be replaced. The command runs in
+#       its own process group; TERM goes to that group at the bound, and KILL
+#       once <grace-seconds> more have passed,
 #       for a command that ignores TERM or is mid-way through work it will not
 #       abandon. A TERM, INT, or HUP delivered to the bounding process is
 #       forwarded to the group and starts the same grace. The perl watchdog
 #       also starts that escalation when its own parent dies before it could
 #       be signalled (an owner torn down by an outer group-kill cannot leave
-#       the bounded subtree orphaned behind it). The owner is captured before
-#       the watchdog starts: FM_EXEC_TIMED_OWNER_PID when the caller names it,
-#       else the calling script ($$) when fm_exec_timed runs in a subshell,
-#       else the shell's parent. The escalation starts once that owner is gone
+#       the bounded subtree orphaned behind it). The shell passes an owner
+#       candidate to the watchdog: FM_EXEC_TIMED_OWNER_PID when the caller
+#       names it, else $$. When that candidate is the watchdog's own pid
+#       because the calling shell was replaced, the watchdog uses the shell's
+#       parent instead. The escalation starts once that owner is gone
 #       or the watchdog's parent changes, so an owner that dies while the
 #       watchdog is still starting is detected too. The timeout/gtimeout
 #       fallback does not track the owner: it bounds the command only by its
@@ -220,12 +221,16 @@ fm_exec_timed() {  # <seconds> <grace-seconds> <command...>
     echo "fm_exec_timed: usage: fm_exec_timed <positive-seconds> <positive-grace-seconds> <command> [args...]" >&2
     exit 125
   fi
+  # The watchdog resolves an owner that is its own pid - the calling shell
+  # itself rather than a subshell, which the exec replaces - to that shell's
+  # parent. It decides this from its own pid because $BASHPID, which would
+  # tell a subshell from the calling shell here, does not exist in bash 3.2.
   owner=${FM_EXEC_TIMED_OWNER_PID:-$$}
-  [ "$owner" != "$BASHPID" ] || owner=$PPID
   unset FM_EXEC_TIMED_OWNER_PID
   if command -v perl >/dev/null 2>&1; then
     exec perl -MPOSIX=WNOHANG,setpgid -MTime::HiRes=time -e '
-      my ($bound, $grace, $owner) = (shift, shift, shift);
+      my ($bound, $grace, $owner, $caller_parent) = (shift, shift, shift, shift);
+      $owner = $caller_parent if $owner == $$;
       my $parent = getppid();
       my ($pid, $pending, $kill_at, $timed_out) = (0, "", 0, 0);
       for my $sig (qw(TERM INT HUP)) {
@@ -272,7 +277,7 @@ fm_exec_timed() {  # <seconds> <grace-seconds> <command...>
         }
         select undef, undef, undef, 0.05;
       }
-    ' -- "$seconds" "$grace" "$owner" "$@"
+    ' -- "$seconds" "$grace" "$owner" "$PPID" "$@"
   elif command -v timeout >/dev/null 2>&1; then
     exec timeout -k "$grace" "$seconds" "$@"
   elif command -v gtimeout >/dev/null 2>&1; then
