@@ -441,7 +441,17 @@ assert_secret_absent() {  # <case-dir> <captured-output>
 }
 
 last_launch_command() {
-  grep -v '^export GOTMPDIR=' "$1" | grep -v '^$' | tail -1
+  local command launch_file
+  command=$(grep -v '^export GOTMPDIR=' "$1" | grep -v '^$' | tail -1)
+  case "$command" in
+    ". '"*"'")
+      launch_file=${command#". '"}
+      launch_file=${launch_file%"'"}
+      [ -f "$launch_file" ] || fail "staged launch file is missing: $launch_file"
+      cat "$launch_file"
+      ;;
+    *) printf '%s\n' "$command" ;;
+  esac
 }
 
 assert_sanitized_launch() {
@@ -1299,18 +1309,21 @@ test_launch_time_failure_redaction_and_interactive_io() {
           exit 92
         fi
         relay_pid=$(cat "$pidfile")
-        kill -s "$signal" "$relay_pid" || {
+        kill -s "$signal" -- "-$relay_pid" || {
           : > "$block.release"
           exit 93
         }
         : > "$block.release"
       ) &
       watcher_pid=$!
-      FM_TEST_PIDFILE="$pidfile" FM_TEST_LAUNCH="$launch" FM_FAKE_STATE="$state" \
-        FM_FAKE_AV_BLOCK_FILE="$block" \
-        PATH="$fakebin:$BASE_PATH" bash -c \
-        'printf "%s\n" "$$" > "$FM_TEST_PIDFILE"; exec bash -c "$FM_TEST_LAUNCH"'
+      set -m
+      FM_FAKE_STATE="$state" FM_FAKE_AV_BLOCK_FILE="$block" \
+        PATH="$fakebin:$BASE_PATH" bash -c "$launch" &
+      relay_pid=$!
+      printf '%s\n' "$relay_pid" > "$pidfile"
+      wait "$relay_pid"
       status=$?
+      set +m
       wait "$watcher_pid"
       watcher_status=$?
       [ "$watcher_status" -eq 0 ] || exit "$watcher_status"
