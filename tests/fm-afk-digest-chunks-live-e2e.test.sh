@@ -192,21 +192,31 @@ drain_typed() {
   wait_idle 120 || fail "$WHO never finished the last typed chunk's turn"
 }
 
-escalate_add "$TYPED_STATE" "lab-1.status: done: regression fixture event, reply with just OK (catch-all scan)"
-escalate_add "$TYPED_STATE" "lab-2.status: done: regression fixture event, reply with just OK (catch-all scan)"
+TYPED_EXPECTED="$TMP_ROOT/typed-expected"
+: > "$TYPED_EXPECTED"
+for i in 1 2; do
+  line="lab-$i.status: done: regression fixture event, reply with just OK (catch-all scan)"
+  printf '%s\n' "$line" >> "$TYPED_EXPECTED"
+  escalate_add "$TYPED_STATE" "$line"
+done
 drain_typed
 [ "$(delivered_sums "$LOG" typed | wc -l | tr -d ' ')" -eq 1 ] \
   || fail "$WHO: a batch below the typed bound was not one submission: $(cat "$LOG")"
 
 i=3
 while [ "$i" -le 11 ]; do
-  escalate_add "$TYPED_STATE" "lab-$i.status: done: PR https://example.invalid/fixture/pull/$i checks green, regression fixture event number $i, nothing to do, reply with just OK (catch-all scan)"
+  line="done: PR https://example.invalid/fixture/pull/$i checks green, regression fixture event number $i ; literal prose, nothing to do, reply with just OK"
+  printf '%s\n' "$line" >> "$TYPED_STATE/lab-batch.status"
+  printf 'lab-batch.status: %s (catch-all scan)\n' "$line" >> "$TYPED_EXPECTED"
   i=$((i + 1))
 done
+FM_ESCALATE_BATCH_SECS=90 FM_MAX_DEFER_SECS=0 FM_HEARTBEAT_SCAN_SECS=0 housekeeping "$TYPED_STATE"
 big="lab-12.status: blocked: regression fixture event, reply with just OK"
 while [ "${#big}" -lt 1500 ]; do big+=" ; oversized fixture filler"; done
 escalate_add "$TYPED_STATE" "$big"
-escalate_add "$TYPED_STATE" "lab-13.status: done: regression fixture event, reply with just OK (catch-all scan)"
+line="lab-13.status: done: regression fixture event, reply with just OK (catch-all scan)"
+printf '%s\n' "$line" >> "$TYPED_EXPECTED"
+escalate_add "$TYPED_STATE" "$line"
 drain_typed
 
 TYPED_SENT=$(delivered_sums "$LOG" typed | wc -l | tr -d ' ')
@@ -231,24 +241,38 @@ while IFS= read -r sum; do
   esac
   [ "$(sha256_of "$FM_OPERATIONAL_MARK$row")" = "$sum" ] \
     || fail "$WHO recorded typed chunk $n differently from the bytes the sender logged (sha256 $sum): ${row:0:80}"
-  seen+=$(printf '%s' "$row" | grep -o 'lab-[0-9]*\.status' | tr '\n' ';')
+  seen+=$(printf '%s' "$row" | grep -oE 'lab-[0-9]*\.status|fixture event number [0-9]*' | tr '\n' ';')
 done < <(delivered_sums "$LOG" typed)
 want=
 i=1
-while [ "$i" -le 13 ]; do want+="lab-$i.status;"; i=$((i + 1)); done
+while [ "$i" -le 13 ]; do
+  if [ "$i" -ge 3 ] && [ "$i" -le 11 ]; then want+="fixture event number $i;"; else want+="lab-$i.status;"; fi
+  i=$((i + 1))
+done
 [ "$seen" = "$want" ] || fail "$WHO: typed chunks did not reassemble every event once, in order: $seen"
-grep -l 'bytes\]' "$TMP_ROOT"/rows-typed/* >/dev/null \
-  || fail "$WHO: the event larger than a chunk was not delivered as a bounded summary"
+while IFS= read -r line; do
+  [ "$(grep -F -l "$line" "$TMP_ROOT"/rows-typed/* | wc -l | tr -d ' ')" -eq 1 ] \
+    || fail "$WHO: a short event from one status span did not arrive whole exactly once: $line"
+done < "$TYPED_EXPECTED"
+summary="oversized event [source=lab-12.status, kind=blocked, bytes=$(printf '%s' "$big" | LC_ALL=C wc -c | tr -d ' '), sha256=$(sha256_of "$big")]"
+grep -F -l "$summary" "$TMP_ROOT"/rows-typed/* >/dev/null \
+  || fail "$WHO: the event larger than a chunk was not delivered as a structured summary"
+full=$(sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p' "$TMP_ROOT"/rows-typed/*)
+[ -n "$full" ] && [ -f "$full" ] && [ "$(cat "$full")" = "$big" ] \
+  || fail "$WHO: the structured summary lacks its verbatim durable event"
 pass "live away digest chunks: $WHO recorded $TYPED_SENT typed chunks, each starting with the operational prefix and byte-identical to the sender's logged SHA-256, every event once and in order"
 
 # --- record carrier: the real daemon's first catch-all scan ------------------
 REC_STATE="$TMP_ROOT/record"
 mkdir -p "$REC_STATE"
+REC_EXPECTED="$TMP_ROOT/record-expected"
+: > "$REC_EXPECTED"
 i=1
 while [ "$i" -le 12 ]; do
   line="done: PR https://example.invalid/fixture/pull/$i checks green, regression fixture event, nothing to do"
   while [ "${#line}" -lt 850 ]; do line+=" ; fixture filler"; done
   printf '%s\n' "$line" > "$REC_STATE/labrec-$i.status"
+  printf 'labrec-%s.status: %s (catch-all scan)\n' "$i" "$line" >> "$REC_EXPECTED"
   i=$((i + 1))
 done
 afk_enter "$REC_STATE"
@@ -300,6 +324,10 @@ while IFS= read -r sum; do
 done < <(delivered_sums "$REC_LOG" record)
 [ "$(printf '%s' "$seen" | tr ';' '\n' | sort)" = "$(i=1; while [ "$i" -le 12 ]; do printf 'labrec-%s.status\n' "$i"; i=$((i + 1)); done | sort)" ] \
   || fail "$WHO: the first catch-all batch's records do not hold every event exactly once: $seen"
+while IFS= read -r line; do
+  [ "$(grep -F -l "$line" "$REC_STATE"/operational-inbox/*.msg | wc -l | tr -d ' ')" -eq 1 ] \
+    || fail "$WHO: a record-carrier event did not arrive whole exactly once: $line"
+done < "$REC_EXPECTED"
 pass "live away digest chunks: $WHO recorded the real daemon's first catch-all batch as $REC_SENT doorbells, each naming a current away-supervisor record and byte-identical to the sender's logged SHA-256, every event exactly once"
 
 # --- informational canary: the fault the typed bound exists for --------------

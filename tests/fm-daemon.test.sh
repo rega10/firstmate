@@ -1649,7 +1649,8 @@ test_escalate_batch_age_uses_first_append() {
   capture="$dir/pane.txt"; printf '\342\235\257 \n' > "$capture"  # a proven-empty bare claude composer: STRICT injection needs positive proof
   escalate_add "$state" "event A: done: PR 1"
   escalate_add "$state" "event B: done: PR 2"
-  echo $(( $(date +%s) - 100 )) > "$state/.subsuper-escalations.since"
+  since=$(( $(date +%s) - 100 ))
+  echo "$since" > "$state/.subsuper-escalations.since"
   afk_enter "$state"
   PATH="$fakebin:$PATH" FM_FAKE_TMUX_PANE_ALIVE=1 FM_FAKE_TMUX_SENT="$sent" \
     FM_FAKE_TMUX_CAPTURE="$capture" FM_ESCALATE_BATCH_SECS=90 FM_HOUSEKEEPING_TICK=0 \
@@ -2348,13 +2349,12 @@ test_normal_flush_clears_stale_wedge_marker() {
   pass "normal flush clears a stale wedge marker"
 }
 
-# The start-up catch-all scan turns each status log's unread span into one
-# buffered item, so a first digest can exceed the 131,071 bytes one transport
-# argument can carry. The fake tmux refuses any literal send above that.
+# A buffer containing oversized single events can exceed the 131,071 bytes
+# one transport argument can carry. The fake tmux refuses any send above that.
 test_oversized_digest_is_bounded_and_kept_durable() {
-  local dir state fakebin sent raw digest full i item
+  local dir state sent raw digest full i item
   dir=$(make_bordered_case digest-oversized)
-  state="$dir/state"; fakebin="$dir/fakebin"
+  state="$dir/state"
   sent="$dir/sent.log"; : > "$sent"
   for i in a b c; do
     item="secondmate-$i.status: "
@@ -2366,22 +2366,27 @@ test_oversized_digest_is_bounded_and_kept_durable() {
   raw=$(LC_ALL=C wc -c < "$dir/buffer.orig" | tr -d ' ')
   [ "$raw" -gt 131071 ] || fail "fixture buffer is only $raw bytes; it must exceed one argument's 131,071-byte ceiling"
   afk_enter "$state"
-  LOG="$dir/daemon.log" PATH="$fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" FM_FAKE_SENT="$sent" \
-    FM_FAKE_SEND_MAX_BYTES=131071 FM_INJECT_CONFIRM_SLEEP=0.05 escalate_flush "$state" \
-    || fail "oversized digest was not delivered: $(cat "$dir/daemon.log" 2>/dev/null)"
+  FM_FAKE_SEND_MAX_BYTES=131071 flush_until_empty "$dir"
   digest=$(delivered_digest "$sent" | grep -F 'Supervisor escalate')
-  [ "$(printf '%s\n' "$digest" | wc -l | tr -d ' ')" -eq 1 ] || fail "expected exactly one typed digest"
+  [ "$(printf '%s\n' "$digest" | wc -l | tr -d ' ')" -eq 4 ] || fail "expected three summary chunks and one whole event"
   [ "$(printf '%s' "$digest" | LC_ALL=C wc -c | tr -d ' ')" -le 16384 ] \
     || fail "delivered digest is not bounded well below the transport ceilings"
-  assert_contains "$digest" 'Supervisor escalate (4 event(s)): secondmate-a.status: done:' "digest lost its header or first event"
+  assert_contains "$digest" 'Supervisor escalate (1 event(s), 3 more queued): oversized event [source=secondmate-a.status, kind=done,' "digest lost its structured summary"
   assert_contains "$digest" 'secondmate-a.status: needs-decision [key=pick]: pick A or B' "a short event did not survive whole"
-  printf '%s' "$digest" | grep -E '\[\+[0-9]+ bytes\]' >/dev/null || fail "truncated items carry no omitted-bytes marker"
+  for i in a b c; do
+    item=$(sed -n "/^secondmate-$i.status: done:/p" "$dir/buffer.orig")
+    assert_contains "$digest" "oversized event [source=secondmate-$i.status, kind=done, bytes=$(printf '%s' "$item" | LC_ALL=C wc -c | tr -d ' '), sha256=$(sha256_of "$item")]" "oversized event $i lacks structured metadata"
+  done
+  assert_not_contains "$digest" 'café fix shipped' "oversized prose was sliced into the digest"
   if command -v iconv >/dev/null 2>&1; then
-    printf '%s' "$digest" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1 || fail "truncation split a UTF-8 sequence"
+    printf '%s' "$digest" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1 || fail "the summary is not valid UTF-8"
   fi
-  full=$(printf '%s' "$digest" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
-  [ -n "$full" ] && [ -f "$full" ] || fail "bounded digest names no readable full-text file: $digest"
-  cmp -s "$full" "$dir/buffer.orig" || fail "full-text file does not hold every buffered event verbatim"
+  : > "$dir/full-events"
+  while IFS= read -r full; do
+    [ -n "$full" ] && [ -f "$full" ] || fail "bounded digest names no readable full-text file: $digest"
+    cat "$full" >> "$dir/full-events"
+  done < <(printf '%s' "$digest" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
+  head -3 "$dir/buffer.orig" | cmp -s - "$dir/full-events" || fail "full-text files do not hold each summarized event verbatim"
   [ ! -s "$state/.subsuper-escalations" ] || fail "buffer not cleared after the bounded digest was delivered"
   pass "an oversized buffered digest is delivered bounded, with the full text kept durable"
 }
@@ -2413,13 +2418,13 @@ test_digest_past_budget_is_delivered_as_whole_event_chunks() {
   state="$dir/state"
   sent="$dir/sent.log"; : > "$sent"
   for i in $(seq 1 20); do
-    escalate_add "$state" "event $i: $(printf 'x%.0s' $(seq 1 1000)) end $i"
+    escalate_add "$state" "event $i: $(printf 'x%.0s' $(seq 1 3000)) end $i"
   done
   afk_enter "$state"
   flush_until_empty "$dir"
   digests=$(delivered_digest "$sent" | grep -F 'Supervisor escalate')
   n=$(printf '%s\n' "$digests" | wc -l | tr -d ' ')
-  [ "$n" -gt 1 ] || fail "a 20KB buffer was delivered as one digest"
+  [ "$n" -gt 1 ] || fail "a 60KB buffer was delivered as one digest"
   [ "$(grep -c '\[ENTER\]' "$sent")" -eq "$n" ] || fail "each chunk must be one submission"
   seen=$(printf '%s\n' "$digests" | grep -o 'event [0-9][0-9]*: x*x end [0-9][0-9]*' | sed 's/: x*x end / /' | tr '\n' ';')
   [ "$seen" = "$(for i in $(seq 1 20); do printf 'event %s %s;' "$i" "$i"; done)" ] \
@@ -2441,6 +2446,65 @@ EOF_DIGESTS
     && fail "events that fit a chunk whole were cut"
   [ ! -e "$state/.subsuper-digests" ] || fail "an uncut batch wrote a full-text file"
   pass "a digest past its byte budget is delivered as whole-event chunks with nothing lost or repeated"
+}
+
+test_status_events_reach_every_digest_path_whole() {
+  local harness route dir state sent i task event expected digests seen count
+  for harness in claude codex; do
+    for route in scan signal needs-decision stale enriched-stale; do
+      dir=$(make_bordered_case "digest-status-$harness-$route")
+      state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
+      : > "$dir/expected"
+      for i in $(seq 1 12); do
+        task=task-one
+        case "$route" in signal|needs-decision) [ "$i" -le 6 ] || task=task-two ;; esac
+        event="done: event-$i café shipped ; literal prose | still event-$i end-$i"
+        case "$i" in
+          3) event="needs-decision [key=choice-3]: event-$i café choice ; literal prose | end-$i" ;;
+          5) event="blocked [key=wait-5]: event-$i café wait ; literal prose | end-$i" ;;
+          7) event="needs-decision [key=choice-7]: event-$i café choice ; literal prose | end-$i" ;;
+          9) event="blocked: event-$i café wait ; literal prose | end-$i" ;;
+        esac
+        printf '%s\n' "$event" >> "$state/$task.status"
+        case "$route" in
+          scan) expected="$task.status: $event (catch-all scan)" ;;
+          stale|enriched-stale) expected="stale + actionable status: $event" ;;
+          *) expected="$task.status: $event" ;;
+        esac
+        printf '%s\n' "$expected" >> "$dir/expected"
+      done
+      afk_enter "$state"
+      case "$route" in
+        scan)
+          LOG="$dir/daemon.log" FM_ESCALATE_BATCH_SECS=90 FM_MAX_DEFER_SECS=0 FM_HEARTBEAT_SCAN_SECS=0 housekeeping "$state"
+          ;;
+        signal|needs-decision)
+          LOG="$dir/daemon.log" FM_ESCALATE_BATCH_SECS=90 handle_wake "$route: $state/task-one.status $state/task-two.status" "$state" || fail "$route routing failed"
+          ;;
+        *)
+          printf 'kind=secondmate\nbackend=tmux\nwindow=firstmate:task-one\n' > "$state/task-one.meta"
+          event='stale: firstmate:task-one'
+          if [ "$route" = enriched-stale ]; then
+            event+=' (idle 600s, possible wedge, escalation 1)'
+            printf '%s\n' "${event#stale: }" >> "$dir/expected"
+          fi
+          LOG="$dir/daemon.log" FM_ESCALATE_BATCH_SECS=90 handle_wake "$event" "$state" || fail "$route routing failed"
+          ;;
+      esac
+      cmp -s "$dir/expected" "$state/.subsuper-escalations" || fail "$harness $route did not buffer distinct whole events"
+      flush_until_empty "$dir" "$harness"
+      digests=$(delivered_digest "$sent" | grep -F 'Supervisor escalate')
+      while IFS= read -r expected; do
+        count=$(printf '%s\n' "$digests" | grep -F -c "$expected")
+        [ "$count" -eq 1 ] || fail "$harness $route delivered a whole event $count times: $expected"
+      done < "$dir/expected"
+      seen=$(printf '%s\n' "$digests" | grep -o 'end-[0-9]*' | tr '\n' ';')
+      [ "$seen" = "$(for i in $(seq 1 12); do printf 'end-%s;' "$i"; done)" ] || fail "$harness $route changed event order: $seen"
+      assert_not_contains "$digests" 'oversized event [' "$harness $route summarized events that fit whole"
+      [ ! -e "$state/.subsuper-digests" ] || fail "$harness $route archived events that fit whole"
+    done
+  done
+  pass "all status digest paths preserve event boundaries and literal prose for both carriers"
 }
 
 # The typed envelope is the transport-exposed carrier: every chunk must start
@@ -2482,7 +2546,7 @@ test_typed_digest_chunks_are_bounded_and_independently_prefixed() {
 # Progress is durable per chunk: a chunk that cannot be delivered leaves
 # exactly the undelivered events buffered, due again at once.
 test_chunk_progress_survives_a_failed_later_chunk() {
-  local dir state sent i left
+  local dir state sent i left since
   dir=$(make_bordered_case digest-chunk-progress)
   state="$dir/state"
   sent="$dir/sent.log"; : > "$sent"
@@ -2490,7 +2554,8 @@ test_chunk_progress_survives_a_failed_later_chunk() {
     escalate_add "$state" "task-$i.status: done: PR https://x/y/pull/$i checks green (catch-all scan) end $i"
   done
   cp "$state/.subsuper-escalations" "$dir/buffer.orig"
-  echo $(( $(date +%s) - 100 )) > "$state/.subsuper-escalations.since"
+  since=$(( $(date +%s) - 100 ))
+  echo "$since" > "$state/.subsuper-escalations.since"
   afk_enter "$state"
   LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" FM_FAKE_SENT="$sent" \
     FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex FM_ESCALATE_BATCH_SECS=90 \
@@ -2508,8 +2573,8 @@ test_chunk_progress_survives_a_failed_later_chunk() {
     FM_MAX_DEFER_SECS=300 FM_HEARTBEAT_SCAN_SECS=999999 housekeeping "$state"
   [ "$(grep -c '\[ENTER\]' "$sent")" -eq 1 ] || fail "a chunk was typed into a pending composer"
   cmp -s "$dir/buffer.left" "$state/.subsuper-escalations" || fail "a deferred chunk changed the buffer"
-  [ ! -e "$state/.subsuper-inject-wedged" ] \
-    || fail "a delivered chunk did not restart the max-defer clock for the events behind it"
+  [ "$(cat "$state/.subsuper-escalations.since")" = "$since" ] \
+    || fail "a delivered or deferred chunk changed the remaining buffer's original age"
   printf '╭─────╮\n│ >   │\n╰─────╯\n' > "$dir/composer"
   LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" FM_FAKE_SENT="$sent" \
     FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex FM_ESCALATE_BATCH_SECS=90 \
@@ -2524,6 +2589,28 @@ test_chunk_progress_survives_a_failed_later_chunk() {
   pass "a deferred later chunk keeps exactly the undelivered events and resumes without loss or repeat"
 }
 
+test_typed_whole_event_before_summary_stays_whole() {
+  local dir state sent budget item big digest
+  dir=$(make_bordered_case digest-whole-before-summary)
+  state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
+  FM_DAEMON_PRIMARY_HARNESS=codex escalate_chunk_budget "$state" 0 budget
+  item='before.status: done: '
+  while [ "${#item}" -lt "$budget" ]; do item+=x; done
+  big='big.status: failed: '
+  while [ "${#big}" -le "$budget" ]; do big+=y; done
+  escalate_add "$state" "$item"
+  escalate_add "$state" "$big"
+  afk_enter "$state"
+  flush_until_empty "$dir" codex
+  [ "$(grep -c '\[ENTER\]' "$sent")" -eq 2 ] || fail "a whole event and one oversized event must arrive in separate chunks"
+  digest=$(grep -v '^\[ENTER\]$' "$sent" | head -1)
+  assert_contains "$digest" "$item" "an event that fits the whole typed budget was summarized"
+  assert_not_contains "$digest" 'digest bounded' "a whole event wrote a full-text pointer"
+  digest=$(grep -v '^\[ENTER\]$' "$sent" | tail -1)
+  assert_contains "$digest" 'oversized event [source=big.status, kind=failed,' "the genuinely oversized event lacks its summary"
+  pass "a whole event preceding an oversized event retains the full typed budget"
+}
+
 # One event larger than a typed chunk cannot be split at an event boundary:
 # it goes out as a bounded summary naming the file that keeps it verbatim.
 test_typed_oversized_event_is_summarized_with_durable_pointer() {
@@ -2531,8 +2618,8 @@ test_typed_oversized_event_is_summarized_with_durable_pointer() {
   dir=$(make_bordered_case digest-typed-oversized)
   state="$dir/state"
   sent="$dir/sent.log"; : > "$sent"
-  item="secondmate-z.status: "
-  while [ "${#item}" -lt 3000 ]; do item+="blocked: café review pending ; "; done
+  item="secondmate-z.status: blocked: café review pending"
+  while [ "${#item}" -lt 3000 ]; do item+=" ; additional café review detail"; done
   escalate_add "$state" "$item"
   escalate_add "$state" "task-after.status: done: PR https://x/y/pull/9"
   cp "$state/.subsuper-escalations" "$dir/buffer.orig"
@@ -2541,13 +2628,14 @@ test_typed_oversized_event_is_summarized_with_durable_pointer() {
   line=$(grep -v '^\[ENTER\]$' "$sent" | head -1)
   bytes=$(printf '%s' "$line" | LC_ALL=C wc -c | tr -d ' ')
   [ "$bytes" -lt 1024 ] || fail "the summarized oversized event was typed as $bytes bytes, a whole transport write or more"
-  printf '%s' "$line" | grep -E '\[\+[0-9]+ bytes\]' >/dev/null || fail "the cut event carries no omitted-bytes marker"
+  assert_contains "$line" "oversized event [source=secondmate-z.status, kind=blocked, bytes=$(printf '%s' "$item" | LC_ALL=C wc -c | tr -d ' '), sha256=$(sha256_of "$item")]" "the oversized event lacks structured summary metadata"
+  assert_not_contains "$line" 'café review pending' "the oversized event was sliced as prose"
   if command -v iconv >/dev/null 2>&1; then
-    printf '%s' "$line" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1 || fail "the cut split a UTF-8 sequence"
+    printf '%s' "$line" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1 || fail "the summary is not valid UTF-8"
   fi
   full=$(printf '%s' "$line" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
-  [ -n "$full" ] && [ -f "$full" ] || fail "the cut chunk names no readable full-text file: $line"
-  head -1 "$dir/buffer.orig" | cmp -s - "$full" || fail "the full-text file does not hold the cut event verbatim"
+  [ -n "$full" ] && [ -f "$full" ] || fail "the summary chunk names no readable full-text file: $line"
+  head -1 "$dir/buffer.orig" | cmp -s - "$full" || fail "the full-text file does not hold the summarized event verbatim"
   grep -v '^\[ENTER\]$' "$sent" | tail -1 | grep -F 'task-after.status: done: PR https://x/y/pull/9' >/dev/null \
     || fail "the event behind the oversized one was not delivered whole"
   pass "an event larger than a typed chunk is summarized within the bound with a durable full-text pointer"
@@ -2559,7 +2647,7 @@ test_inject_send_failure_logs_stage_stderr_and_bytes() {
   state="$dir/state"; fakebin="$dir/fakebin"; log="$dir/daemon.log"
   sent="$dir/sent.log"; : > "$sent"
   item="secondmate-b.status: "
-  while [ "${#item}" -lt 5000 ]; do item+="blocked: waiting on review ; "; done
+  while [ "${#item}" -lt 10000 ]; do item+="blocked: waiting on review ; "; done
   escalate_add "$state" "$item"
   cp "$state/.subsuper-escalations" "$dir/buffer.orig"
   afk_enter "$state"
@@ -2617,7 +2705,7 @@ test_bounded_digest_full_text_kept_after_typing() {
   sent="$dir/sent.log"; : > "$sent"
   touch "$dir/.swallow"
   item="secondmate-c.status: "
-  while [ "${#item}" -lt 5000 ]; do item+="blocked: waiting on review ; "; done
+  while [ "${#item}" -lt 10000 ]; do item+="blocked: waiting on review ; "; done
   escalate_add "$state" "$item"
   cp "$state/.subsuper-escalations" "$dir/buffer.orig"
   afk_enter "$state"
@@ -3385,8 +3473,10 @@ test_max_defer_pending_composer_alarms_without_typing
 test_normal_flush_clears_stale_wedge_marker
 test_oversized_digest_is_bounded_and_kept_durable
 test_digest_past_budget_is_delivered_as_whole_event_chunks
+test_status_events_reach_every_digest_path_whole
 test_typed_digest_chunks_are_bounded_and_independently_prefixed
 test_chunk_progress_survives_a_failed_later_chunk
+test_typed_whole_event_before_summary_stays_whole
 test_typed_oversized_event_is_summarized_with_durable_pointer
 test_inject_send_failure_logs_stage_stderr_and_bytes
 test_inject_enter_failure_logs_confirmation_stage

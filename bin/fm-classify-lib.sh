@@ -2238,7 +2238,7 @@ EOF
 # one size-and-identity snapshot.
 # The record form produces `<endpoint>\t<identity>\t<events>` and returns 0 when
 # the span has actionable events, joining every such event in source order with
-# ` ; ` so callers report the complete captured span before committing it.
+# ` ; ` (or the supplied <event-separator>) so callers report the complete captured span before committing it.
 # With optional <record-var>, it assigns that record instead of printing it; with
 # optional <needs-decision-var>, it also assigns 1 when the span newly surfaces a
 # needs-decision, captain-held declaration, or pending-reply escalation, otherwise
@@ -2305,8 +2305,9 @@ _fm_status_open_decision_origins() {  # <status-file> [<kind>]
   printf '%s' "$origins"
 }
 
-status_span_first_actionable_record() {  # <status-file> <start-offset> [record-var] [needs-decision-var]
+status_span_first_actionable_record() {  # <status-file> <start-offset> [record-var] [needs-decision-var] [event-separator]
   local f=$1 start=${2:-0} output_var=${3-} needs_var=${4-} size ident cur_ident scratch chunk_file result
+  local separator=${5-' ; '}
   local line verb key origins='' folded=0 rc=1 failed=0 line_number=0 live_line='' events='' _line _key _fm_span_needs_decision=0
   [ -e "$f" ] || { [ -L "$f" ] && return 2; return 1; }
   [ -f "$f" ] && [ -r "$f" ] && [ ! -L "$f" ] || return 2
@@ -2350,14 +2351,14 @@ status_span_first_actionable_record() {  # <status-file> <start-offset> [record-
     case "$verb" in
       needs-decision|blocked)
         key=$(_fm_decision_key "$line") || {
-          [ -n "$events" ] && events="${events} ; "
+          [ -n "$events" ] && events="${events}${separator}"
           events="${events}${line}"
           [ "$verb" = needs-decision ] && _fm_span_needs_decision=1
           rc=0
           continue
         }
         _fm_decision_key_transition_allowed "$key" "$(status_line_note "$line")" || {
-          [ -n "$events" ] && events="${events} ; "
+          [ -n "$events" ] && events="${events}${separator}"
           events="${events}reconciliation-required: ${line}"
           [ "$verb" = needs-decision ] && _fm_span_needs_decision=1
           rc=0
@@ -2374,7 +2375,7 @@ $origins
 EOF
 )
         [ -n "$live_line" ] && [ "$line_number" -eq "$live_line" ] || continue
-        [ -n "$events" ] && events="${events} ; "
+        [ -n "$events" ] && events="${events}${separator}"
         events="${events}${line}"
         if [ "$verb" = needs-decision ] || { [ "$verb" = blocked ] &&
           _fm_is_pending_reply_escalation "$key" "$(status_line_note "$line")"; }; then
@@ -2383,7 +2384,7 @@ EOF
         rc=0
         ;;
       *)
-        [ -n "$events" ] && events="${events} ; "
+        [ -n "$events" ] && events="${events}${separator}"
         events="${events}${line}"
         rc=0
         ;;

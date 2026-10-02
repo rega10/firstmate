@@ -1210,7 +1210,9 @@ At 1,080, 2,180, and 3,080 encoded bytes it recorded only the text after the las
 `bin/fm-supervise-daemon.sh` therefore submits a batch as event-aligned chunks, each encoded on its own and typed within `ESCALATE_TYPED_BYTES` (768), and logs the byte length and SHA-256 of every typed value before the send and on its outcome.
 A record-backed primary is typed only the constant doorbell, so its chunk is bounded by the record budget instead.
 
-The portable regressions in `tests/fm-daemon.test.sh` pin the chunk boundaries, the per-chunk prefix, durable per-chunk progress, the oversized-event summary, and the log lines.
+The portable regressions in `tests/fm-daemon.test.sh` exercise signal, needs-decision, stale, enriched stale, and catch-all routing of multiple events from one status span through both carriers, asserting whole events in order without interpreting prose separators as event boundaries.
+They also check per-chunk progress with the original buffer age, events larger than the former per-item cap that still fit a record chunk, structured oversized-event metadata with a verbatim durable pointer, and sender log lines.
+The live guard now checks whole short events from a shared status span and the oversized event's structured metadata and durable file; the earlier observation below predates those stronger assertions.
 Refresh the live Claude proof with:
 
 ```sh

@@ -12,7 +12,7 @@
 # declared-wait recheck reach the LLM, and even then as one pre-read digest per
 # batch window. A batch too large for one bounded submission goes out as
 # event-aligned chunks, one per flush, each encoded on its own (see
-# escalate_flush); a chunk that cuts an oversized event names a
+# escalate_flush); a chunk that summarizes an oversized event names a
 # state/.subsuper-digests/ file holding that chunk's events verbatim.
 #
 # PRESENCE-GATING (the /afk contract). The daemon is the away-mode engine: it
@@ -363,10 +363,9 @@ _collapse_newlines() {  # <text>
 # the single classifier shared with bin/fm-watch.sh. The decision-string wrappers
 # and dedup state below layer the daemon's escalation-digest concerns on top.
 #
-# Decision protocol: every classifier prints exactly one line on stdout of the
-# form "<action>|<distilled>" where action is "self" or "escalate". The distilled
-# field for "self" is informational (logged); for "escalate" it is the pre-read
-# summary firstmate would otherwise have to re-read.
+# Decision protocol: every classifier prints "<action>|<distilled>" where
+# action is "self" or "escalate". Distilled events are newline-separated until
+# enqueue; the chunker joins whole events into each single-line submission.
 
 classify_signal() {  # <reason-after-colon> <state>
   local reason=$1 state=$2 f last event record rest endpoint ident rc distilled="" rel="" seen_rel="" task sig marker
@@ -375,14 +374,14 @@ classify_signal() {  # <reason-after-colon> <state>
     [ -e "$f" ] || [ -L "$f" ] || continue
     task=$(basename "$f"); task="${task%.status}"
     record=$(status_span_first_actionable_record "$f" \
-      "$(status_seen_offset "$state" "$task")")
+      "$(status_seen_offset "$state" "$task")" '' '' $'\n')
     rc=$?
     [ "$rc" -eq 1 ] && [ -z "$record" ] && continue
     if [ "$rc" -eq 2 ]; then
       sig=$(status_observed_signature "$f")
       marker=$(_seen_status_path "$state" "$task")
       status_presentation_marker_reported_matches "$marker" "$sig" && continue
-      distilled="${distilled}$(basename "$f"): unreadable status span | "
+      distilled="${distilled}$(basename "$f"): unreadable status span"$'\n'
       [ -n "${FM_STATUS_SPAN_ENDPOINT_FILE:-}" ] \
         && printf 'ERROR\t%s\t%s\n' "$task" "$sig" >> "$FM_STATUS_SPAN_ENDPOINT_FILE"
       rel=1
@@ -393,22 +392,22 @@ classify_signal() {  # <reason-after-colon> <state>
     [ -n "${FM_STATUS_SPAN_ENDPOINT_FILE:-}" ] \
       && printf '%s\t%s\t%s\n' "$task" "$endpoint" "$ident" >> "$FM_STATUS_SPAN_ENDPOINT_FILE"
     if [ "$rc" -eq 0 ]; then
-      event=${rest#*$'\t'}
-      distilled="${distilled}$(basename "$f"): ${event} | "
+      while IFS= read -r event; do
+        distilled="${distilled}$(basename "$f"): ${event}"$'\n'
+      done <<< "${rest#*$'\t'}"
       rel=1
       continue
     fi
     last=$(last_status_line "$f")
     [ -n "$last" ] || continue
-    distilled="${distilled}$(basename "$f"): ${last} | "
+    distilled="${distilled}$(basename "$f"): ${last}"$'\n'
     # Nothing captain-relevant is left ahead of the recorded offset. When the log
     # nonetheless ends on a captain-relevant line, this signal is a re-notification
     # of something already escalated, not a routine one; position is the whole
     # dedupe, so no separate seen-marker comparison is needed.
     status_is_captain_relevant "$last" && seen_rel=1
   done
-  # strip a trailing " | " separator so the distilled line is clean
-  distilled="${distilled% | }"
+  distilled=${distilled%$'\n'}
   if [ -n "$rel" ]; then
     printf 'escalate|%s' "$distilled"
   elif [ -n "$seen_rel" ]; then
@@ -428,7 +427,7 @@ classify_stale() {  # <window> <state> [<span-record> <span-status>]
   task=$(window_to_task "$win" "$state")
   if [ -z "$rc" ]; then
     record=$(status_span_first_actionable_record "$state/$task.status" \
-      "$(status_seen_offset "$state" "$task")")
+      "$(status_seen_offset "$state" "$task")" '' '' $'\n')
     rc=$?
   fi
   last=$(last_status_line "$state/$task.status")
@@ -439,7 +438,10 @@ classify_stale() {  # <window> <state> [<span-record> <span-status>]
   if [ "$rc" -eq 0 ]; then
     rest=${record#*$'\t'}
     event=${rest#*$'\t'}
-    printf 'escalate|stale + actionable status: %s' "$event"
+    printf 'escalate|'
+    while IFS= read -r last; do
+      printf 'stale + actionable status: %s\n' "$last"
+    done <<< "$event"
     return
   fi
   declared=$(status_declared_wait_line "$state/$task.status")
@@ -804,12 +806,11 @@ _utf8_prefix() {  # <text> <max-bytes> <out-var>
 # `send-keys -l` or Linux's 131,071-byte MAX_ARG_STRLEN would refuse.
 # A chunk holds whole events: one that does not fit the room left opens the
 # next chunk, and events past the chunk stay buffered. Only an event too large
-# for a chunk of its own is cut, at a UTF-8 boundary with an omitted-bytes
-# marker, and that chunk names a full-text file under ESCALATE_FULL_DIR that
+# for a chunk of its own is summarized by kind, byte length, and SHA-256,
+# and that chunk names a full-text file under ESCALATE_FULL_DIR that
 # keeps its events verbatim.
 ESCALATE_TYPED_BYTES=768
 ESCALATE_DIGEST_BYTES=8192
-ESCALATE_ITEM_BYTES=2048
 ESCALATE_ITEM_MIN_BYTES=128
 ESCALATE_FULL_DIR=.subsuper-digests
 
@@ -817,17 +818,17 @@ ESCALATE_FULL_DIR=.subsuper-digests
 escalate_wrap() {  # <events> <pending> <body> <out-var>
   local _more=''
   [ "$2" -eq 0 ] || _more=", $2 more queued"
-  printf -v "$4" 'Supervisor escalate (%s event(s)%s): %s (pre-read; re-arm not needed — watcher daemon-managed)' "$1" "$_more" "$3"
+  printf -v "$4" 'Supervisor escalate (%s event(s)%s): %s (pre-read; re-arm not needed - watcher daemon-managed)' "$1" "$_more" "$3"
 }
 
-# escalate_full_note: the pointer a chunk with a cut event carries.
+# escalate_full_note: the pointer a chunk with a summarized event carries.
 escalate_full_note() {  # <full-text-path> <out-var>
   printf -v "$2" ' (digest bounded; full text of every event: %s)' "$1"
 }
 
 # escalate_chunk_budget: bytes of joined events one submission may carry, with
-# room reserved for the full-text pointer when <cut> is 1.
-escalate_chunk_budget() {  # <state> <cut: 0|1> <out-var>
+# room reserved for the full-text pointer when <bounded> is 1.
+escalate_chunk_budget() {  # <state> <bounded: 0|1> <out-var>
   local LC_ALL=C _room _probe _note=''
   if fm_operational_harness_needs_record "$(fm_daemon_primary_harness)"; then
     _room=$ESCALATE_DIGEST_BYTES
@@ -842,35 +843,49 @@ escalate_chunk_budget() {  # <state> <cut: 0|1> <out-var>
   printf -v "$3" '%s' "$_room"
 }
 
+escalate_event_summary() {  # <event> <budget> <out-var>
+  local LC_ALL=C detail=$1 source='' kind sum _summary _candidate
+  case "$detail" in
+    *.status:\ *) source=${detail%%: *}; detail=${detail#*: } ;;
+    'stale + actionable status: '*) detail=${detail#stale + actionable status: } ;;
+  esac
+  kind=$(status_line_verb "$detail")
+  case "$kind" in
+    done|failed|blocked|needs-decision|reconciliation-required|check) ;;
+    *) kind=event ;;
+  esac
+  sum=$(_sha256 "$1")
+  _summary="oversized event [kind=$kind, bytes=${#1}, sha256=$sum]"
+  if [ -n "$source" ]; then
+    _candidate="oversized event [source=$source, kind=$kind, bytes=${#1}, sha256=$sum]"
+    [ "${#_candidate}" -gt "$2" ] || _summary=$_candidate
+  fi
+  printf -v "$3" '%s' "$_summary"
+}
+
 # escalate_chunk_body: join <buf>'s leading items with " | " inside <budget>.
 # Sets ESCALATE_BODY, ESCALATE_EVENTS (items in this chunk), ESCALATE_PENDING
-# (items left buffered behind it), and ESCALATE_BOUNDED (1 when an item was cut).
+# (items left buffered behind it), and ESCALATE_BOUNDED (1 when an item was summarized).
 escalate_chunk_body() {  # <buf> <budget>
-  local LC_ALL=C buf=$1 remaining=$2 item='' sep cut cap shown=0 total=0 marker
+  local LC_ALL=C buf=$1 budget=$2 remaining=$2 item='' sep shown=0 total=0 bounded
   ESCALATE_BODY=
   ESCALATE_BOUNDED=0
   while IFS= read -r item || [ -n "$item" ]; do
     total=$((total + 1))
-    [ "$shown" -eq "$((total - 1))" ] || continue
+    [ "$shown" -eq "$((total - 1))" ] && [ "$ESCALATE_BOUNDED" -eq 0 ] || continue
     sep=
-    cap=$ESCALATE_ITEM_BYTES
-    if [ "$shown" -eq 0 ]; then
-      [ "$remaining" -ge "$cap" ] || cap=$remaining
-    else
-      sep=' | '
-      [ "$(( ${#sep} + ${#item} ))" -le "$remaining" ] || [ "${#item}" -gt "$cap" ] || continue
+    [ "$shown" -eq 0 ] || sep=' | '
+    bounded=0
+    if [ "${#item}" -gt "$budget" ]; then
+      [ "$shown" -eq 0 ] || continue
+      escalate_event_summary "$item" "$remaining" item
+      bounded=1
     fi
-    if [ "${#item}" -gt "$cap" ]; then
-      marker=" [+${#item} bytes]"
-      _utf8_prefix "$item" "$((cap - ${#marker}))" cut
-      cut="$cut [+$(( ${#item} - ${#cut} )) bytes]"
-      [ "$shown" -eq 0 ] || [ "$(( ${#sep} + ${#cut} ))" -le "$remaining" ] || continue
-      item=$cut
-      ESCALATE_BOUNDED=1
-    fi
+    [ "$(( ${#sep} + ${#item} ))" -le "$remaining" ] || continue
     ESCALATE_BODY+="$sep$item"
     remaining=$((remaining - ${#sep} - ${#item}))
     shown=$((shown + 1))
+    [ "$bounded" -eq 0 ] || ESCALATE_BOUNDED=1
   done < "$buf"
   ESCALATE_EVENTS=$shown
   ESCALATE_PENDING=$((total - shown))
@@ -895,9 +910,8 @@ escalate_full_text_save() {  # <state> <chunk>
 # chunk was delivered (or the buffer is empty), non-zero on inject failure
 # (buffer preserved for retry / catch-up). Progress is durable per chunk: a
 # delivered chunk's events leave the buffer at once, so a later failure neither
-# drops nor repeats them, and the events behind it are due on the next pass -
-# their sidecar is rewritten one batch window back, which also restarts the
-# max-defer clock from this delivery. A cut chunk's full-text file is kept once
+# drops nor repeats them, and the events behind it retain their original age.
+# A summarized chunk's full-text file is kept once
 # the submit ran, because the digest naming it may have been typed;
 # ESCALATE_KEPT_FULL remembers it so a retry of the same chunk reuses it
 # instead of writing another copy.
@@ -948,9 +962,7 @@ escalate_flush() {  # <state>
     rm -f "$state/.subsuper-inject-wedged"
     if [ "$ESCALATE_PENDING" -eq 0 ]; then
       : > "$buf"; rm -f "${buf}.since"
-    elif tail -n +"$((ESCALATE_EVENTS + 1))" "$buf" > "$chunk" && mv -f "$chunk" "$buf"; then
-      echo $(( $(_now) - ${FM_ESCALATE_BATCH_SECS:-$ESCALATE_BATCH_SECS_DEFAULT} )) > "${buf}.since"
-    else
+    elif ! { tail -n +"$((ESCALATE_EVENTS + 1))" "$buf" > "$chunk" && mv -f "$chunk" "$buf"; }; then
       log "delivered $ESCALATE_EVENTS event(s) could not be removed from $buf; they may be delivered again"
     fi
     ESCALATE_KEPT_FULL=
@@ -1429,7 +1441,7 @@ housekeeping() {  # <state>
       [ -e "$f" ] || [ -L "$f" ] || continue
       task=$(basename "$f"); task="${task%.status}"
       record=$(status_span_first_actionable_record "$f" \
-        "$(status_seen_offset "$state" "$task")")
+        "$(status_seen_offset "$state" "$task")" '' '' $'\n')
       rc=$?
       if [ "$rc" -eq 2 ]; then
         ident=$(status_observed_signature "$f")
@@ -1444,8 +1456,11 @@ housekeeping() {  # <state>
       endpoint=${record%%$'\t'*}
       rest=${record#*$'\t'}; ident=${rest%%$'\t'*}
       if [ "$rc" -eq 0 ]; then
-        event=${rest#*$'\t'}
-        if escalate_add "$state" "$(basename "$f"): $event (catch-all scan)"; then
+        rc=0
+        while IFS= read -r event; do
+          escalate_add "$state" "$(basename "$f"): $event (catch-all scan)" || rc=1
+        done <<< "${rest#*$'\t'}"
+        if [ "$rc" -eq 0 ]; then
           mark_status_seen "$state" "$task" "$endpoint" "$ident" || true
         fi
       elif ! mark_status_seen "$state" "$task" "$endpoint" "$ident"; then
@@ -1650,7 +1665,7 @@ handle_wake() {  # <reason> <state>
               task=$(window_to_task "$arg" "$state")
               if [ -n "$task" ]; then
                 span_record=$(status_span_first_actionable_record "$state/$task.status" \
-                  "$(status_seen_offset "$state" "$task")")
+                  "$(status_seen_offset "$state" "$task")" '' '' $'\n')
                 span_rc=$?
                 case "$span_rc" in
                   0|1)
@@ -1690,8 +1705,13 @@ handle_wake() {  # <reason> <state>
                 *) case "$stale_detail" in
                      idle\ *s,\ possible\ wedge,\ escalation\ *)
                        last=$(status_declared_wait_line "$state/$task.status")
-                       status_is_paused_or_captain_held "$last" \
-                         || decision="escalate|${reason#stale: }"
+                       if ! status_is_paused_or_captain_held "$last"; then
+                         if [ "$span_rc" -eq 0 ]; then
+                           decision="$decision"$'\n'"${reason#stale: }"
+                         else
+                           decision="escalate|${reason#stale: }"
+                         fi
+                       fi
                        ;;
                    esac ;;
               esac ;;
