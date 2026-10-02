@@ -3125,6 +3125,7 @@ test_inject_msg_defers_on_shell_with_agent_glyph() {
       i=$((i + 1))
     done
     fm_backend_source herdr || fail "could not load the Herdr adapter"
+    # shellcheck disable=SC2329 # Invoked indirectly by the sourced Herdr adapter.
     fm_backend_herdr_cli() {
       [ "$1 $2 $3" = 'default pane process-info' ] || fail "unexpected Herdr read: $*"
       jq -n --argjson pid "$fixture_shell_pid" \
