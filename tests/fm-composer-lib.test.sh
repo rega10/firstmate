@@ -219,6 +219,51 @@ test_matrix_claude_arrow_statusline_footer() {
   pass "matrix: claude's arrow statusline is footer furniture, not a composer holding text"
 }
 
+test_matrix_claude_titled_top_rule() {
+  # Real claude 2.1.284 on herdr 0.9.1 (captured live 2026-10-02): once a
+  # session carries a title - a resumed or backgrounded conversation, which is
+  # what a long-lived primary is - claude writes that title into the composer's
+  # TOP rule. The rule stopped being a solid separator, no pair formed, the
+  # closing rule read as an unpaired separator below the `❯` row, and the idle
+  # composer answered `unknown`: the away daemon deferred every escalation for
+  # hours. The rows below are that capture, rules shortened to 46 columns.
+  local grey reset rule titled footer idle typed claude_idle out
+  claude_idle=$(printf 'claude\tidle')
+  grey="${ESC}[0m${ESC}[38;5;7m"; reset="${ESC}[0m"
+  rule="${grey}──────────────────────────────────────────────${reset}"
+  titled="${grey}──────────────── Firstmate operational input ─${reset}"
+  footer="  ${grey}Sonnet 5.5 | Context: 7% used${reset}"$'\n'"  ${ESC}[0m${ESC}[38;5;11m⏵⏵ auto mode on${reset}${ESC}[38;5;7m · ← for agents · ${reset}${ESC}[38;5;14m1 shell${reset}"
+  idle="${grey}✻ Baked for 17s · done 6:05 AM · 1 shell still running${reset}"$'\n\n'"$titled"$'\n❯'"$NBSP"$'\n'"$rule"$'\n'"$footer"
+  assert_screen "titled claude idle on herdr" empty "$CAPS_STYLED" "$idle" '' "$claude_idle"
+  assert_screen "titled claude idle, identity probe absent" empty "$CAPS_STYLED" "$idle" '' probe-absent
+  assert_screen "titled claude idle on zellij" empty "$CAPS_STYLED_NOID" "$idle"
+  assert_screen "titled claude idle on cmux/orca" empty "$CAPS_PLAIN" "$idle"
+  # Guard 1: text really pending in that same titled composer still defers.
+  typed="$titled"$'\n❯'"$NBSP"$'half typed captain draft\n'"$rule"$'\n'"$footer"
+  assert_screen "titled claude with a typed draft" pending "$CAPS_STYLED" "$typed" '' "$claude_idle"
+  assert_screen "titled claude with a typed draft, plain capture" unknown "$CAPS_PLAIN" "$typed"
+  # Guard 2: a dead shell prompt under a titled rule proves nothing - a shell
+  # glyph is never the agent-glyph proof the titled pair requires.
+  for out in '$' '%' '#' '>'; do
+    assert_screen "dead shell '$out' under a titled rule" unknown "$CAPS_STYLED" \
+      "$titled"$'\n'"$out "$'\n'"$rule" '' probe-absent
+  done
+  assert_screen "dead shell below a titled claude pair" unknown "$CAPS_STYLED" \
+    "$titled"$'\n❯'"$NBSP"$'\n'"$rule"$'\nuser@host project\n$ ' '' "$claude_idle"
+  # Guard 3: an unreadable pane - no capture, or a titled rule with no glyph
+  # row and nothing else - stays unknown; the title alone opens no pair, so a
+  # blank region under it is still the strict blank-row rule's unknown.
+  assert_screen "empty capture" unknown "$CAPS_STYLED" '' '' probe-absent
+  assert_screen "titled rule over a blank region" unknown "$CAPS_STYLED" \
+    "$titled"$'\n\n'"$rule" '' "$claude_idle"
+  assert_screen "titled rule over a blank region, pi identity" unknown "$CAPS_STYLED" \
+    "$titled"$'\n\n'"$rule" '' "$(printf 'pi\tidle')"
+  # The title must be IN a rule: text that merely contains dashes is not one.
+  assert_screen "an untitled-looking text row is not a rule" unknown "$CAPS_STYLED" \
+    $'see ──────── notes ─\n\n'"$rule" '' "$claude_idle"
+  pass "matrix: claude's titled composer top rule reads empty when idle and still defers on a draft, a dead shell, or an unreadable pane"
+}
+
 test_composer_footer_demotion_needs_a_proven_pair() {
   # The demotion is bounded in three directions, and each bound is a case
   # where a lower glyph row IS the live composer.
@@ -969,6 +1014,7 @@ test_idle_placeholder_case_mode_is_explicit
 test_real_text_is_pending
 test_matrix_claude_bare_nbsp_row
 test_matrix_claude_arrow_statusline_footer
+test_matrix_claude_titled_top_rule
 test_composer_footer_demotion_needs_a_proven_pair
 test_composer_footer_zone_is_shape_independent
 test_composer_footer_zone_refuses_rather_than_allows

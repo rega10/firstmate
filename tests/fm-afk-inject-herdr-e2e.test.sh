@@ -229,7 +229,10 @@ done
 LOOP
 chmod +x "$LOOP_SCRIPT"
 
-fm_backend_herdr_send_text_line "$SUPERVISOR_TARGET" "bash '$LOOP_SCRIPT' '$LOG_FILE'" \
+# The simulated composer also needs a harness-named foreground process for
+# the injection guard; a plain bash loop is correctly refused as shell-only.
+cp "$(command -v bash)" "$STATE_DIR/claude"
+fm_backend_herdr_send_text_line "$SUPERVISOR_TARGET" "'$STATE_DIR/claude' '$LOOP_SCRIPT' '$LOG_FILE'" \
   || fail "could not start the supervisor-loop script in the scratch herdr pane"
 sleep 1  # let the loop start and settle
 

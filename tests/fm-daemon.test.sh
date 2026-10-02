@@ -3092,6 +3092,8 @@ test_inject_msg_herdr_submits_through_backend_dispatch() {
     fm_backend_target_exists() { return 0; }
     pane_is_busy() { return 1; }
     fm_backend_composer_state() { printf 'empty'; }
+    fm_backend_herdr_parse_target() { FM_BACKEND_HERDR_SESSION=default; FM_BACKEND_HERDR_PANE=w1:p2; }
+    fm_backend_herdr_pane_process_state() { printf 'agent'; }
     fm_backend_send_text_submit() {
       [ "$1" = herdr ] && [ "$2" = "default:w1:p2" ] || fail "unexpected send_text_submit args: $1 $2"
       printf '%s\n' "$3" > "$dir/sent.log"
@@ -3103,6 +3105,94 @@ test_inject_msg_herdr_submits_through_backend_dispatch() {
   delivered_digest "$dir/sent.log" | grep -F 'hello' >/dev/null \
     || fail "digest text missing from send_text_submit: $(cat "$dir/sent.log")"
   pass "inject_msg: dispatches busy-guard/composer-guard/submit through the herdr backend and succeeds on a confirmed empty composer"
+}
+
+# A real shell can draw Claude's prompt glyph after Claude exits. Its emitted
+# prompt passes the composer classifier, but its process must block injection.
+test_inject_msg_defers_on_shell_with_agent_glyph() {
+  local dir state
+  dir=$(make_supercase inject-shell-agent-glyph)
+  state="$dir/state"
+  afk_enter "$state"
+  (
+    local fixture_shell_pid i=0 out
+    mkfifo "$dir/input"
+    bash -c 'printf "❯"; read -r line < "$1"' _ "$dir/input" > "$dir/prompt" &
+    fixture_shell_pid=$!
+    trap 'kill "$fixture_shell_pid" 2>/dev/null || true; wait "$fixture_shell_pid" 2>/dev/null || true' EXIT
+    while [ ! -s "$dir/prompt" ] && [ "$i" -lt 30 ]; do
+      sleep 0.1
+      i=$((i + 1))
+    done
+    fm_backend_source herdr || fail "could not load the Herdr adapter"
+    # shellcheck disable=SC2329 # Invoked indirectly by the sourced Herdr adapter.
+    fm_backend_herdr_cli() {
+      [ "$1 $2 $3" = 'default pane process-info' ] || fail "unexpected Herdr read: $*"
+      jq -n --argjson pid "$fixture_shell_pid" \
+        --arg name "$(ps -p "$fixture_shell_pid" -o comm=)" \
+        --arg args "$(ps -p "$fixture_shell_pid" -o args=)" '{result: {type: "pane_process_info", process_info: {
+        pane_id: "w1:p2", shell_pid: $pid, foreground_process_group_id: $pid,
+        foreground_processes: [{pid: $pid, name: $name, cmdline: $args, argv0: ($args | split(" ")[0])}]
+      }}}'
+    }
+    fm_backend_target_exists() { return 0; }
+    pane_is_busy() { return 1; }
+    fm_backend_composer_state() { fm_composer_classify_content 0 "$(cat "$dir/prompt")"; }
+    fm_backend_send_text_submit() { printf '%s\n' "$3" >> "$dir/sent.log"; printf 'empty'; }
+    out=$(fm_backend_herdr_pane_process_state default w1:p2)
+    [ "$out" = shell ] || fail "the real shell must classify shell, got '$out'"
+    out=$(fm_backend_composer_state herdr default:w1:p2)
+    [ "$out" = empty ] || fail "the emitted shell glyph must reproduce the empty-composer ambiguity, got '$out'"
+    escalate_add "$state" 'needs-decision: release approval'
+    if FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET=default:w1:p2 escalate_flush "$state"; then
+      fail "a shell displaying Claude's glyph accepted the escalation"
+    fi
+    [ ! -s "$dir/sent.log" ] || fail "the escalation was typed into the shell"
+    [ "$INJECT_SUBMIT_ATTEMPTED" = 0 ] || fail "a submit was attempted into the shell"
+    [ -s "$state/.subsuper-escalations" ] || fail "the rejected escalation was lost"
+    [ ! -d "$state/operational-inbox" ] || fail "a doorbell was published before verifying a live harness"
+
+    # Keep the same prompt and transport but give the portable fixture a
+    # harness process identity, as the real-Herdr composer simulator does.
+    kill "$fixture_shell_pid" 2>/dev/null || true
+    wait "$fixture_shell_pid" 2>/dev/null || true
+    cp "$(command -v bash)" "$dir/claude"
+    # shellcheck disable=SC2016  # $1 must expand in the child shell, not here
+    "$dir/claude" -c 'printf "❯"; read -r line < "$1"' _ "$dir/input" > "$dir/prompt" &
+    fixture_shell_pid=$!
+    out=$(fm_backend_herdr_pane_process_state default w1:p2)
+    [ "$out" = agent ] || fail "the harness-named fixture must classify agent, got '$out'"
+    FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET=default:w1:p2 escalate_flush "$state" \
+      || fail "a positive harness-process proof did not allow the queued escalation"
+    [ ! -s "$state/.subsuper-escalations" ] || fail "the delivered escalation remained buffered"
+    [ "$(wc -l < "$dir/sent.log" | tr -d ' ')" = 1 ] || fail "the escalation was not typed exactly once"
+    delivered_digest "$dir/sent.log" | grep -F 'release approval' >/dev/null \
+      || fail "the delivered escalation lost its body"
+  ) || fail "shell-glyph injection regression failed"
+  pass "inject_msg: a real shell with Claude's glyph refuses injection and preserves the escalation"
+}
+
+test_inject_msg_herdr_requires_positive_process_proof() {
+  local dir state process_state
+  dir=$(make_supercase inject-herdr-process-proof)
+  state="$dir/state"
+  afk_enter "$state"
+  for process_state in other unreadable '' future-state; do
+    (
+      fm_backend_target_exists() { return 0; }
+      pane_is_busy() { return 1; }
+      fm_backend_composer_state() { printf 'empty'; }
+      fm_backend_herdr_parse_target() { FM_BACKEND_HERDR_SESSION=default; FM_BACKEND_HERDR_PANE=w1:p2; }
+      fm_backend_herdr_pane_process_state() { printf '%s' "$process_state"; }
+      fm_backend_send_text_submit() { printf 'sent\n' >> "$dir/sent.log"; printf 'empty'; }
+      if FM_SUPERVISOR_BACKEND=herdr FM_SUPERVISOR_TARGET=default:w1:p2 inject_msg hello "$state"; then
+        fail "process state '$process_state' licensed injection without a live harness"
+      fi
+      [ ! -s "$dir/sent.log" ] || fail "process state '$process_state' allowed typing"
+      [ "$INJECT_SUBMIT_ATTEMPTED" = 0 ] || fail "process state '$process_state' attempted a submit"
+    ) || fail "Herdr process-proof regression failed"
+  done
+  pass "inject_msg: Herdr requires positive harness-process proof before typing"
 }
 
 # Safety-critical (task fm-composer-shellglyph-safety): the away-mode injector
@@ -3143,6 +3233,14 @@ test_inject_msg_defers_on_unrecognized_composer_state() {
   ) || fail "unrecognized composer-state inject_msg subshell failed"
   pass "inject_msg: unrecognized composer states defer by default"
 }
+
+# Positional function names allow focused verification without a suite walk.
+if [ "$#" -gt 0 ]; then
+  for selected_test in "$@"; do
+    "$selected_test" || exit 1
+  done
+  exit 0
+fi
 
 test_afk_start_refuses_when_flag_cannot_be_written
 test_afk_start_ignores_stale_pidfile_without_lock
@@ -3279,5 +3377,7 @@ test_inject_msg_herdr_busy_guard_defers
 test_inject_msg_herdr_composer_guard_defers
 test_inject_msg_herdr_pane_gone_defers
 test_inject_msg_herdr_submits_through_backend_dispatch
+test_inject_msg_defers_on_shell_with_agent_glyph
+test_inject_msg_herdr_requires_positive_process_proof
 test_inject_msg_defers_on_dead_shell_unknown
 test_inject_msg_defers_on_unrecognized_composer_state

@@ -724,6 +724,24 @@ Cursor is deliberately outside this cursor-anchored empty-composer matrix becaus
 
 `zellij action dump-screen --pane-id <id> --ansi` was verified at zellij 0.44.0 to preserve ANSI styling (real Claude Code rendered inside a zellij pane dumped `ESC[m` `❯` U+00A0 for its idle composer row), which is the capability the zellij composer classifier reads.
 
+### 2026-10-02 claude 2.1.284 titled composer rule through Herdr
+
+Verified on 2026-10-02 on macOS arm64 (Darwin 25.6.0) against Claude Code 2.1.284 in an isolated `fm-lab-` session on Herdr 0.9.1, read through Herdr's ANSI viewport capture with its exact capability descriptor (`styled=1`, `cursor=0`, `identity=1`).
+Once a Claude session carries a title, which a resumed or backgrounded conversation does, Claude writes that title into the composer's top rule: `──────── Firstmate operational input ─`, then the bare `❯` + U+00A0 row, then a solid `─` closing rule.
+The titled rule is not a solid separator, so no pair formed, the closing rule read as an unpaired separator below the `❯` row, and the idle composer classified `unknown`.
+A lab primary's away daemon reproduced the production log line for that screen on every tick:
+
+```text
+inject deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+```
+
+Pressing left opens Claude's agents view and moves the conversation to the background; Escape returns to it, and from then on the top rule carries the title.
+The classifier now lets a titled rule open a pair only when an agent-glyph row sits between it and the next solid rule.
+On the same live pane the unmodified library answered `unknown` and the fixed library answered `empty`, one escalation was then typed and submitted, a typed draft in the titled composer answered `pending`, and Claude's agents view (`❯ describe a task for a new session`) answered `pending` under this home's `dark-ansi` theme.
+
+`test_matrix_claude_titled_top_rule` in `tests/fm-composer-lib.test.sh` carries the captured rows and pins the three refusals the fix must keep: a typed draft, a dead shell prompt under or below a titled rule, and an unreadable or blank region.
+For a shell that displays an agent glyph, `test_inject_msg_defers_on_shell_with_agent_glyph` and `test_inject_msg_herdr_requires_positive_process_proof` in `tests/fm-daemon.test.sh` pin the separate [injection safety boundary](../herdr-backend.md#away-mode-injection).
+
 ### 2026-09-20 claude 2.1.236 statusLine footer through Herdr
 
 Verified on 2026-09-20 on macOS arm64 (Darwin 25.6.0) against Claude Code 2.1.236 running as Firstmate workers in Herdr 0.8.0 panes, read through Herdr's ANSI capture with its exact capability descriptor (`styled=1`, `cursor=0`, `identity=1`, `rows=20`).
