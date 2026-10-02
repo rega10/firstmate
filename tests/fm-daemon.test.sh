@@ -2386,27 +2386,171 @@ test_oversized_digest_is_bounded_and_kept_durable() {
   pass "an oversized buffered digest is delivered bounded, with the full text kept durable"
 }
 
-test_digest_budget_counts_omitted_events() {
-  local dir state fakebin sent digest full i shown more
+sha256_of() {  # <text>
+  if command -v shasum >/dev/null 2>&1; then
+    printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1
+  else
+    printf '%s' "$1" | sha256sum | cut -d' ' -f1
+  fi
+}
+
+# Flush <state>'s buffer one chunk per call, as successive housekeeping passes
+# do, until it is empty. The fake composer is emptied by each confirmed Enter.
+flush_until_empty() {  # <dir> [harness]
+  local dir=$1 harness=${2:-claude} n=0
+  while [ -s "$dir/state/.subsuper-escalations" ]; do
+    n=$((n + 1))
+    [ "$n" -le 40 ] || fail "the buffer never drained: $(wc -l < "$dir/state/.subsuper-escalations") event(s) left"
+    LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+      FM_FAKE_SENT="$dir/sent.log" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
+      escalate_flush "$dir/state" || fail "chunk $n was not delivered: $(cat "$dir/daemon.log" 2>/dev/null)"
+  done
+}
+
+test_digest_past_budget_is_delivered_as_whole_event_chunks() {
+  local dir state sent digests i n line seen more
   dir=$(make_bordered_case digest-many)
-  state="$dir/state"; fakebin="$dir/fakebin"
+  state="$dir/state"
   sent="$dir/sent.log"; : > "$sent"
   for i in $(seq 1 20); do
-    escalate_add "$state" "event $i: $(printf 'x%.0s' $(seq 1 1000))"
+    escalate_add "$state" "event $i: $(printf 'x%.0s' $(seq 1 1000)) end $i"
+  done
+  afk_enter "$state"
+  flush_until_empty "$dir"
+  digests=$(delivered_digest "$sent" | grep -F 'Supervisor escalate')
+  n=$(printf '%s\n' "$digests" | wc -l | tr -d ' ')
+  [ "$n" -gt 1 ] || fail "a 20KB buffer was delivered as one digest"
+  [ "$(grep -c '\[ENTER\]' "$sent")" -eq "$n" ] || fail "each chunk must be one submission"
+  seen=$(printf '%s\n' "$digests" | grep -o 'event [0-9][0-9]*: x*x end [0-9][0-9]*' | sed 's/: x*x end / /' | tr '\n' ';')
+  [ "$seen" = "$(for i in $(seq 1 20); do printf 'event %s %s;' "$i" "$i"; done)" ] \
+    || fail "chunks did not reassemble every event whole, once, in order: $seen"
+  while IFS= read -r line; do
+    case "$line" in
+      "${FM_OPERATIONAL_PREFIX}v1 away-supervisor: Supervisor escalate ("*) ;;
+      *) fail "a chunk record does not start with the operational prefix: ${line:0:80}" ;;
+    esac
+    [ "$(printf '%s' "$line" | LC_ALL=C wc -c | tr -d ' ')" -le 8400 ] || fail "a chunk exceeds its record budget"
+  done <<EOF_DIGESTS
+$digests
+EOF_DIGESTS
+  more=$(printf '%s\n' "$digests" | head -1 | sed -n 's/.*event(s), \([0-9][0-9]*\) more queued).*/\1/p')
+  [ -n "$more" ] && [ "$more" -gt 0 ] || fail "the first chunk does not say more events are queued"
+  printf '%s\n' "$digests" | tail -1 | grep -F 'more queued' >/dev/null \
+    && fail "the last chunk still claims queued events"
+  printf '%s\n' "$digests" | grep -E '\[\+[0-9]+ bytes\]|digest bounded' >/dev/null \
+    && fail "events that fit a chunk whole were cut"
+  [ ! -e "$state/.subsuper-digests" ] || fail "an uncut batch wrote a full-text file"
+  pass "a digest past its byte budget is delivered as whole-event chunks with nothing lost or repeated"
+}
+
+# The typed envelope is the transport-exposed carrier: every chunk must start
+# with the operational prefix at byte zero and stay inside the typed bound.
+test_typed_digest_chunks_are_bounded_and_independently_prefixed() {
+  local dir state sent i n line seen bytes
+  dir=$(make_bordered_case digest-typed-chunks)
+  state="$dir/state"
+  sent="$dir/sent.log"; : > "$sent"
+  for i in $(seq 1 12); do
+    escalate_add "$state" "task-$i.status: done: PR https://x/y/pull/$i checks green, café shipped (catch-all scan) end $i"
+  done
+  afk_enter "$state"
+  flush_until_empty "$dir" codex
+  n=0; seen=
+  while IFS= read -r line; do
+    [ "$line" = '[ENTER]' ] && continue
+    n=$((n + 1))
+    case "$line" in
+      "${FM_OPERATIONAL_PREFIX}v1 away-supervisor: Supervisor escalate ("*) ;;
+      *) fail "typed chunk $n does not start with the operational prefix at byte zero: ${line:0:80}" ;;
+    esac
+    bytes=$(printf '%s' "$line" | LC_ALL=C wc -c | tr -d ' ')
+    [ "$bytes" -le 768 ] || fail "typed chunk $n is $bytes bytes, past the 768-byte typed bound"
+    grep -F "inject send: carrier=typed bytes=$bytes sha256=$(sha256_of "$line")" "$dir/daemon.log" >/dev/null \
+      || fail "typed chunk $n has no sender-side length and digest log line: $(cat "$dir/daemon.log")"
+    grep -F "inject delivered: carrier=typed bytes=$bytes sha256=$(sha256_of "$line")" "$dir/daemon.log" >/dev/null \
+      || fail "typed chunk $n has no delivery outcome log line"
+    seen+=$(printf '%s' "$line" | grep -o 'task-[0-9]*\.status: [^|]* end [0-9]*' | sed 's/\.status: .* end / /' | tr '\n' ';')
+  done < "$sent"
+  [ "$n" -gt 1 ] || fail "a batch past the typed bound was typed as one envelope"
+  [ "$seen" = "$(for i in $(seq 1 12); do printf 'task-%s %s;' "$i" "$i"; done)" ] \
+    || fail "typed chunks did not reassemble every event whole, once, in order: $seen"
+  grep -F 'done: PR' "$dir/daemon.log" >/dev/null && fail "the daemon log carries digest body text"
+  [ ! -e "$state/operational-inbox" ] || fail "a marker-preserving primary published a record"
+  pass "a typed digest is submitted as bounded chunks, each prefixed at byte zero and logged by length and digest"
+}
+
+# Progress is durable per chunk: a chunk that cannot be delivered leaves
+# exactly the undelivered events buffered, due again at once.
+test_chunk_progress_survives_a_failed_later_chunk() {
+  local dir state sent i left
+  dir=$(make_bordered_case digest-chunk-progress)
+  state="$dir/state"
+  sent="$dir/sent.log"; : > "$sent"
+  for i in $(seq 1 12); do
+    escalate_add "$state" "task-$i.status: done: PR https://x/y/pull/$i checks green (catch-all scan) end $i"
   done
   cp "$state/.subsuper-escalations" "$dir/buffer.orig"
+  echo $(( $(date +%s) - 100 )) > "$state/.subsuper-escalations.since"
   afk_enter "$state"
-  LOG="$dir/daemon.log" PATH="$fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" FM_FAKE_SENT="$sent" \
-    FM_INJECT_CONFIRM_SLEEP=0.05 escalate_flush "$state" || fail "many-event digest was not delivered"
-  digest=$(delivered_digest "$sent" | grep -F 'Supervisor escalate')
-  assert_contains "$digest" 'Supervisor escalate (20 event(s)): event 1: x' "digest header must count every buffered event"
-  more=$(printf '%s' "$digest" | sed -n 's/.* | +\([0-9][0-9]*\) more event(s).*/\1/p')
-  [ -n "$more" ] || fail "an exhausted budget left no '+K more event(s)' tail: $digest"
-  shown=$(printf '%s' "$digest" | grep -o 'event [0-9][0-9]*: x' | wc -l | tr -d ' ')
-  [ "$((shown + more))" -eq 20 ] || fail "shown ($shown) plus omitted ($more) events do not account for all 20"
-  full=$(printf '%s' "$digest" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
-  cmp -s "$full" "$dir/buffer.orig" || fail "omitted events are missing from the full-text file"
-  pass "a digest past its byte budget counts the omitted events and keeps them in the full text"
+  LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" FM_FAKE_SENT="$sent" \
+    FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex FM_ESCALATE_BATCH_SECS=90 \
+    FM_MAX_DEFER_SECS=300 FM_HEARTBEAT_SCAN_SECS=999999 housekeeping "$state"
+  [ "$(grep -c '\[ENTER\]' "$sent")" -eq 1 ] || fail "one housekeeping pass must submit exactly one chunk"
+  left=$(wc -l < "$state/.subsuper-escalations" | tr -d ' ')
+  [ "$left" -gt 0 ] && [ "$left" -lt 12 ] || fail "the first chunk left $left of 12 events buffered"
+  tail -n "$left" "$dir/buffer.orig" | cmp -s - "$state/.subsuper-escalations" \
+    || fail "the buffer does not hold exactly the undelivered events"
+  # The primary is now mid-draft: the next chunk must defer and change nothing.
+  printf '╭─────────────────╮\n│ > human draft   │\n╰─────────────────╯\n' > "$dir/composer"
+  cp "$state/.subsuper-escalations" "$dir/buffer.left"
+  LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" FM_FAKE_SENT="$sent" \
+    FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex FM_ESCALATE_BATCH_SECS=90 \
+    FM_MAX_DEFER_SECS=300 FM_HEARTBEAT_SCAN_SECS=999999 housekeeping "$state"
+  [ "$(grep -c '\[ENTER\]' "$sent")" -eq 1 ] || fail "a chunk was typed into a pending composer"
+  cmp -s "$dir/buffer.left" "$state/.subsuper-escalations" || fail "a deferred chunk changed the buffer"
+  [ ! -e "$state/.subsuper-inject-wedged" ] \
+    || fail "a delivered chunk did not restart the max-defer clock for the events behind it"
+  printf '╭─────╮\n│ >   │\n╰─────╯\n' > "$dir/composer"
+  LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" FM_FAKE_SENT="$sent" \
+    FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex FM_ESCALATE_BATCH_SECS=90 \
+    FM_MAX_DEFER_SECS=300 FM_HEARTBEAT_SCAN_SECS=999999 housekeeping "$state"
+  [ "$(grep -c '\[ENTER\]' "$sent")" -eq 2 ] \
+    || fail "the events behind a delivered chunk were not due on the next housekeeping pass"
+  flush_until_empty "$dir" codex
+  [ "$(grep -v '^\[ENTER\]$' "$sent" | grep -o 'task-[0-9]*\.status' | tr '\n' ';')" = \
+    "$(for i in $(seq 1 12); do printf 'task-%s.status;' "$i"; done)" ] \
+    || fail "events were lost or repeated across a deferred chunk"
+  [ ! -e "$state/.subsuper-escalations.since" ] || fail "a drained buffer kept its batch timer"
+  pass "a deferred later chunk keeps exactly the undelivered events and resumes without loss or repeat"
+}
+
+# One event larger than a typed chunk cannot be split at an event boundary:
+# it goes out as a bounded summary naming the file that keeps it verbatim.
+test_typed_oversized_event_is_summarized_with_durable_pointer() {
+  local dir state sent item line full bytes
+  dir=$(make_bordered_case digest-typed-oversized)
+  state="$dir/state"
+  sent="$dir/sent.log"; : > "$sent"
+  item="secondmate-z.status: "
+  while [ "${#item}" -lt 3000 ]; do item+="blocked: café review pending ; "; done
+  escalate_add "$state" "$item"
+  escalate_add "$state" "task-after.status: done: PR https://x/y/pull/9"
+  cp "$state/.subsuper-escalations" "$dir/buffer.orig"
+  afk_enter "$state"
+  flush_until_empty "$dir" codex
+  line=$(grep -v '^\[ENTER\]$' "$sent" | head -1)
+  bytes=$(printf '%s' "$line" | LC_ALL=C wc -c | tr -d ' ')
+  [ "$bytes" -lt 1024 ] || fail "the summarized oversized event was typed as $bytes bytes, a whole transport write or more"
+  printf '%s' "$line" | grep -E '\[\+[0-9]+ bytes\]' >/dev/null || fail "the cut event carries no omitted-bytes marker"
+  if command -v iconv >/dev/null 2>&1; then
+    printf '%s' "$line" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1 || fail "the cut split a UTF-8 sequence"
+  fi
+  full=$(printf '%s' "$line" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
+  [ -n "$full" ] && [ -f "$full" ] || fail "the cut chunk names no readable full-text file: $line"
+  head -1 "$dir/buffer.orig" | cmp -s - "$full" || fail "the full-text file does not hold the cut event verbatim"
+  grep -v '^\[ENTER\]$' "$sent" | tail -1 | grep -F 'task-after.status: done: PR https://x/y/pull/9' >/dev/null \
+    || fail "the event behind the oversized one was not delivered whole"
+  pass "an event larger than a typed chunk is summarized within the bound with a durable full-text pointer"
 }
 
 test_inject_send_failure_logs_stage_stderr_and_bytes() {
@@ -2423,7 +2567,7 @@ test_inject_send_failure_logs_stage_stderr_and_bytes() {
     FM_FAKE_SEND_MAX_BYTES=100 FM_INJECT_CONFIRM_SLEEP=0.05 escalate_flush "$state"; then
     fail "escalate_flush reported success although the transport refused the send"
   fi
-  grep -E 'inject failed at initial send or Enter delivery \(verdict=send-failed, bytes=[0-9]+;[^)]*\): command too long' "$log" >/dev/null \
+  grep -E 'inject failed at initial send or Enter delivery \(verdict=send-failed, bytes=[0-9]+, sha256=[0-9a-f]{64};[^)]*\): command too long' "$log" >/dev/null \
     || fail "send failure did not log its stage, byte count, and transport stderr: $(cat "$log")"
   if grep -F 'Enter confirmation' "$log" >/dev/null; then
     fail "an initial-send failure was reported as an Enter-confirmation failure: $(cat "$log")"
@@ -2458,7 +2602,7 @@ test_inject_enter_failure_logs_confirmation_stage() {
     escalate_flush "$state"; then
     fail "escalate_flush reported success on a swallowed Enter"
   fi
-  grep -E 'inject failed at Enter confirmation: submit unconfirmed after 3 retries \(verdict=pending[a-z-]*, bytes=[0-9]+, text may be in composer\)' "$log" >/dev/null \
+  grep -E 'inject failed at Enter confirmation: submit unconfirmed after 3 retries \(verdict=pending[a-z-]*, bytes=[0-9]+, sha256=[0-9a-f]{64}, text may be in composer\)' "$log" >/dev/null \
     || fail "Enter-confirmation failure did not log its stage and byte count: $(cat "$log")"
   if grep -F 'initial send' "$log" >/dev/null; then
     fail "an Enter-confirmation failure was reported as an initial-send failure"
@@ -3240,7 +3384,10 @@ test_max_defer_flushes_empty_idle_pane
 test_max_defer_pending_composer_alarms_without_typing
 test_normal_flush_clears_stale_wedge_marker
 test_oversized_digest_is_bounded_and_kept_durable
-test_digest_budget_counts_omitted_events
+test_digest_past_budget_is_delivered_as_whole_event_chunks
+test_typed_digest_chunks_are_bounded_and_independently_prefixed
+test_chunk_progress_survives_a_failed_later_chunk
+test_typed_oversized_event_is_summarized_with_durable_pointer
 test_inject_send_failure_logs_stage_stderr_and_bytes
 test_inject_enter_failure_logs_confirmation_stage
 test_bounded_digest_full_text_kept_after_typing

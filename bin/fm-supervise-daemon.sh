@@ -10,9 +10,10 @@
 # signal/stale/heartbeat wakes cost zero firstmate context; only done/
 # needs-decision/blocked/failed/persistent-wedge/check-output events and a
 # declared-wait recheck reach the LLM, and even then as one pre-read digest per
-# batch window. That digest is byte-bounded (see escalate_flush); when it cuts
-# or omits anything it names a state/.subsuper-digests/ file holding every
-# buffered event verbatim.
+# batch window. A batch too large for one bounded submission goes out as
+# event-aligned chunks, one per flush, each encoded on its own (see
+# escalate_flush); a chunk that cuts an oversized event names a
+# state/.subsuper-digests/ file holding that chunk's events verbatim.
 #
 # PRESENCE-GATING (the /afk contract). The daemon is the away-mode engine: it
 # injects ONLY when the durable away-mode flag state/.afk is present. Invoking
@@ -742,6 +743,18 @@ stale_window_is_busy() {  # <window> <state>
   [ "${verdict%% *}" = busy ]
 }
 
+# _sha256: the SHA-256 of <text>'s exact bytes, or "unavailable".
+_sha256() {  # <text>
+  local sum=''
+  if command -v shasum >/dev/null 2>&1; then
+    sum=$(printf '%s' "$1" | shasum -a 256 2>/dev/null)
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sum=$(printf '%s' "$1" | sha256sum 2>/dev/null)
+  fi
+  sum=${sum%% *}
+  printf '%s' "${sum:-unavailable}"
+}
+
 escalate_add() {  # <state> <distilled-item>
   local state=$1 item=$2 buf line
   if line=$(unknown_wake_line "$item"); then
@@ -778,70 +791,119 @@ _utf8_prefix() {  # <text> <max-bytes> <out-var>
   printf -v "$3" '%s' "$s"
 }
 
-# The injected digest is bounded so it always fits one transport argument:
-# tmux refuses an oversized `send-keys -l` command, and Linux refuses to exec
-# any single argument above 131,071 bytes (MAX_ARG_STRLEN), which is how the
-# herdr, zellij, orca, and cmux adapters pass text. Each item is cut to
-# ESCALATE_ITEM_BYTES at a UTF-8 boundary with an omitted-bytes marker, the
-# joined items stop at ESCALATE_DIGEST_BYTES with a "+K more event(s)" tail,
-# and a bounded digest names a full-text file under ESCALATE_FULL_DIR that
-# keeps every buffered item verbatim.
+# One flush submits one bounded, event-aligned chunk of the buffer, and every
+# chunk is encoded on its own, so each submission starts with the operational
+# prefix (or is its own record-backed doorbell). The bound is on what is TYPED:
+# herdr hands `pane send-text` to the pane in 1,024-byte writes, and Claude Code
+# 2.1.284 on herdr 0.9.1 turned each full write of a longer typed envelope into
+# a paste placeholder and submitted only the unmarked tail (measured intact at
+# 379, 679, and 779 encoded bytes; cut at 1,080, 2,180, and 3,080). A typed
+# envelope therefore stays within ESCALATE_TYPED_BYTES, wrapper included. A
+# record-backed primary is typed only the constant doorbell, so its record
+# carries up to ESCALATE_DIGEST_BYTES of events, far below what tmux's
+# `send-keys -l` or Linux's 131,071-byte MAX_ARG_STRLEN would refuse.
+# A chunk holds whole events: one that does not fit the room left opens the
+# next chunk, and events past the chunk stay buffered. Only an event too large
+# for a chunk of its own is cut, at a UTF-8 boundary with an omitted-bytes
+# marker, and that chunk names a full-text file under ESCALATE_FULL_DIR that
+# keeps its events verbatim.
+ESCALATE_TYPED_BYTES=768
 ESCALATE_DIGEST_BYTES=8192
 ESCALATE_ITEM_BYTES=2048
 ESCALATE_ITEM_MIN_BYTES=128
 ESCALATE_FULL_DIR=.subsuper-digests
 
-# escalate_digest_body: join <buf>'s items with " | " inside the byte budget.
-# Sets ESCALATE_BODY, ESCALATE_EVENTS (every buffered item), and
-# ESCALATE_BOUNDED (1 when any item was cut or omitted).
-escalate_digest_body() {  # <buf>
-  local LC_ALL=C buf=$1 item='' sep cut remaining=$ESCALATE_DIGEST_BYTES room cap shown=0 total=0
+# escalate_wrap: the single-line digest text around one chunk's events.
+escalate_wrap() {  # <events> <pending> <body> <out-var>
+  local _more=''
+  [ "$2" -eq 0 ] || _more=", $2 more queued"
+  printf -v "$4" 'Supervisor escalate (%s event(s)%s): %s (pre-read; re-arm not needed — watcher daemon-managed)' "$1" "$_more" "$3"
+}
+
+# escalate_full_note: the pointer a chunk with a cut event carries.
+escalate_full_note() {  # <full-text-path> <out-var>
+  printf -v "$2" ' (digest bounded; full text of every event: %s)' "$1"
+}
+
+# escalate_chunk_budget: bytes of joined events one submission may carry, with
+# room reserved for the full-text pointer when <cut> is 1.
+escalate_chunk_budget() {  # <state> <cut: 0|1> <out-var>
+  local LC_ALL=C _room _probe _note=''
+  if fm_operational_harness_needs_record "$(fm_daemon_primary_harness)"; then
+    _room=$ESCALATE_DIGEST_BYTES
+  else
+    escalate_wrap 9999 9999 '' _probe
+    fm_operational_input_encode away-supervisor "$_probe" _probe
+    [ "$2" -eq 0 ] \
+      || escalate_full_note "$1/$ESCALATE_FULL_DIR/digest-00000000T000000.XXXXXX" _note
+    _room=$((ESCALATE_TYPED_BYTES - ${#_probe} - ${#_note}))
+    [ "$_room" -ge "$ESCALATE_ITEM_MIN_BYTES" ] || _room=$ESCALATE_ITEM_MIN_BYTES
+  fi
+  printf -v "$3" '%s' "$_room"
+}
+
+# escalate_chunk_body: join <buf>'s leading items with " | " inside <budget>.
+# Sets ESCALATE_BODY, ESCALATE_EVENTS (items in this chunk), ESCALATE_PENDING
+# (items left buffered behind it), and ESCALATE_BOUNDED (1 when an item was cut).
+escalate_chunk_body() {  # <buf> <budget>
+  local LC_ALL=C buf=$1 remaining=$2 item='' sep cut cap shown=0 total=0 marker
   ESCALATE_BODY=
   ESCALATE_BOUNDED=0
   while IFS= read -r item || [ -n "$item" ]; do
     total=$((total + 1))
+    [ "$shown" -eq "$((total - 1))" ] || continue
     sep=
-    [ "$shown" -eq 0 ] || sep=' | '
-    room=$((remaining - ${#sep}))
-    [ "$room" -ge "$ESCALATE_ITEM_MIN_BYTES" ] || { ESCALATE_BOUNDED=1; continue; }
     cap=$ESCALATE_ITEM_BYTES
-    [ "$room" -ge "$cap" ] || cap=$room
+    if [ "$shown" -eq 0 ]; then
+      [ "$remaining" -ge "$cap" ] || cap=$remaining
+    else
+      sep=' | '
+      [ "$(( ${#sep} + ${#item} ))" -le "$remaining" ] || [ "${#item}" -gt "$cap" ] || continue
+    fi
     if [ "${#item}" -gt "$cap" ]; then
-      _utf8_prefix "$item" "$cap" cut
-      item="$cut [+$(( ${#item} - ${#cut} )) bytes]"
+      marker=" [+${#item} bytes]"
+      _utf8_prefix "$item" "$((cap - ${#marker}))" cut
+      cut="$cut [+$(( ${#item} - ${#cut} )) bytes]"
+      [ "$shown" -eq 0 ] || [ "$(( ${#sep} + ${#cut} ))" -le "$remaining" ] || continue
+      item=$cut
       ESCALATE_BOUNDED=1
     fi
     ESCALATE_BODY+="$sep$item"
     remaining=$((remaining - ${#sep} - ${#item}))
     shown=$((shown + 1))
   done < "$buf"
-  ESCALATE_EVENTS=$total
-  [ "$shown" -ge "$total" ] || ESCALATE_BODY+=" | +$((total - shown)) more event(s)"
+  ESCALATE_EVENTS=$shown
+  ESCALATE_PENDING=$((total - shown))
 }
 
-# escalate_full_text_save: copy <buf> verbatim into a new full-text file and
+# escalate_full_text_save: copy <chunk> verbatim into a new full-text file and
 # print its path.
-escalate_full_text_save() {  # <state> <buf>
-  local state=$1 buf=$2 dir file
+escalate_full_text_save() {  # <state> <chunk>
+  local state=$1 chunk=$2 dir file
   dir="$state/$ESCALATE_FULL_DIR"
   mkdir -p "$dir" 2>/dev/null || return 1
   file=$(mktemp "$dir/digest-$(date '+%Y%m%dT%H%M%S').XXXXXX" 2>/dev/null) || return 1
-  if ! cp "$buf" "$file" 2>/dev/null; then
+  if ! cp "$chunk" "$file" 2>/dev/null; then
     rm -f "$file"
     return 1
   fi
   printf '%s' "$file"
 }
 
-# Flush the escalation buffer as ONE batched, single-line, bounded digest to
-# the supervisor pane. Returns 0 on successful inject (or empty buffer),
-# non-zero on inject failure (buffer preserved for retry / catch-up). A bounded
-# digest's full-text file is kept once the submit ran, because the digest naming
-# it may have been typed; ESCALATE_KEPT_FULL remembers it so a retry of the same
-# buffer reuses it instead of writing another copy.
+# Flush the next chunk of the escalation buffer as ONE single-line, bounded,
+# independently encoded digest to the supervisor pane. Returns 0 when that
+# chunk was delivered (or the buffer is empty), non-zero on inject failure
+# (buffer preserved for retry / catch-up). Progress is durable per chunk: a
+# delivered chunk's events leave the buffer at once, so a later failure neither
+# drops nor repeats them, and the events behind it are due on the next pass -
+# their sidecar is rewritten one batch window back, which also restarts the
+# max-defer clock from this delivery. A cut chunk's full-text file is kept once
+# the submit ran, because the digest naming it may have been typed;
+# ESCALATE_KEPT_FULL remembers it so a retry of the same chunk reuses it
+# instead of writing another copy.
 ESCALATE_KEPT_FULL=
 escalate_flush() {  # <state>
-  local state=$1 buf msg full='' fresh=0
+  local state=$1 buf msg chunk budget note full='' fresh=0 rc=1
   buf="$state/.subsuper-escalations"
   [ -s "$buf" ] || return 0
   if [ ! -f "$buf" ] || [ ! -r "$buf" ]; then
@@ -849,36 +911,57 @@ escalate_flush() {  # <state>
     log "inject skipped: $INJECT_LAST_FAILURE"
     return 1
   fi
-  escalate_digest_body "$buf"
+  escalate_chunk_budget "$state" 0 budget
+  escalate_chunk_body "$buf" "$budget"
+  if [ "$ESCALATE_BOUNDED" -eq 1 ]; then
+    escalate_chunk_budget "$state" 1 budget
+    escalate_chunk_body "$buf" "$budget"
+  fi
+  chunk=$(mktemp "${buf}.chunk.XXXXXX" 2>/dev/null) || chunk=
+  if [ -z "$chunk" ] || ! head -n "$ESCALATE_EVENTS" "$buf" > "$chunk"; then
+    [ -z "$chunk" ] || rm -f "$chunk"
+    INJECT_LAST_FAILURE="escalation chunk could not be staged beside $buf"
+    log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
+    return 1
+  fi
   msg=$ESCALATE_BODY
   if [ "$ESCALATE_BOUNDED" -eq 1 ]; then
-    if [ -n "$ESCALATE_KEPT_FULL" ] && cmp -s "$ESCALATE_KEPT_FULL" "$buf"; then
+    if [ -n "$ESCALATE_KEPT_FULL" ] && cmp -s "$ESCALATE_KEPT_FULL" "$chunk"; then
       full=$ESCALATE_KEPT_FULL
-    elif full=$(escalate_full_text_save "$state" "$buf"); then
+    elif full=$(escalate_full_text_save "$state" "$chunk"); then
       fresh=1
     else
+      rm -f "$chunk"
       INJECT_LAST_FAILURE="digest full text could not be saved under $state/$ESCALATE_FULL_DIR"
       log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
       return 1
     fi
-    msg="$msg (digest bounded; full text of every event: $full)"
+    escalate_full_note "$full" note
+    msg="$msg$note"
   fi
   # Single-line wrapper: no embedded newlines (inject_msg also collapses as a
   # safety net, but keeping the source single-line makes the intent explicit).
-  msg=$(printf 'Supervisor escalate (%s event(s)): %s (pre-read; re-arm not needed — watcher daemon-managed)' "$ESCALATE_EVENTS" "$msg")
+  escalate_wrap "$ESCALATE_EVENTS" "$ESCALATE_PENDING" "$msg" msg
   if inject_msg "$msg" "$state"; then
-    unknown_wake_acknowledge_flushed "$state" "$buf" \
+    unknown_wake_acknowledge_flushed "$state" "$chunk" \
       || log "unknown-wake acknowledgement write failed; a delivered unknown wake may escalate again"
-    : > "$buf"; rm -f "${buf}.since" "$state/.subsuper-inject-wedged"
+    rm -f "$state/.subsuper-inject-wedged"
+    if [ "$ESCALATE_PENDING" -eq 0 ]; then
+      : > "$buf"; rm -f "${buf}.since"
+    elif tail -n +"$((ESCALATE_EVENTS + 1))" "$buf" > "$chunk" && mv -f "$chunk" "$buf"; then
+      echo $(( $(_now) - ${FM_ESCALATE_BATCH_SECS:-$ESCALATE_BATCH_SECS_DEFAULT} )) > "${buf}.since"
+    else
+      log "delivered $ESCALATE_EVENTS event(s) could not be removed from $buf; they may be delivered again"
+    fi
     ESCALATE_KEPT_FULL=
-    return 0
-  fi
-  if [ "$INJECT_SUBMIT_ATTEMPTED" = 1 ]; then
+    rc=0
+  elif [ "$INJECT_SUBMIT_ATTEMPTED" = 1 ]; then
     [ -z "$full" ] || ESCALATE_KEPT_FULL=$full
   elif [ "$fresh" = 1 ]; then
     rm -f "$full"
   fi
-  return 1
+  rm -f "$chunk"
+  return "$rc"
 }
 
 # --- backend-independent active wedge alert ---------------------------------
@@ -1410,7 +1493,7 @@ window_for_task() {  # <task-key> [state]
 #     line, or a previous injection's unsent text), defer entirely - injecting
 #     would merge with the human's text.
 inject_msg() {  # <message> [state]
-  local msg=$1 state target backend retries sleep_s verdict composer encoded bytes errf err='' body
+  local msg=$1 state target backend retries sleep_s verdict composer encoded bytes errf err='' body sum carrier=typed
   state="${2:-$(_state_root)}"
   # (1) Presence-gate: inject ONLY when afk is active. When afk is off, the
   # daemon self-handles and stays quiet; firstmate drives the normal always-on
@@ -1467,6 +1550,7 @@ inject_msg() {  # <message> [state]
       log "inject failed: $INJECT_LAST_FAILURE"
       return 1
     fi
+    carrier=record
   fi
   # (4) Type the digest ONCE, then submit with Enter (retry Enter only, never
   # retype) via the shared submit primitive. Success = the backend confirms
@@ -1481,7 +1565,12 @@ inject_msg() {  # <message> [state]
   # verdict is an Enter-confirmation failure.
   retries=${FM_INJECT_CONFIRM_RETRIES:-$INJECT_CONFIRM_RETRIES_DEFAULT}
   sleep_s=${FM_INJECT_CONFIRM_SLEEP:-$INJECT_CONFIRM_SLEEP_DEFAULT}
+  # The exact typed value's byte length and SHA-256 are logged before the send
+  # and again on its outcome, never the body, so a prompt the primary records
+  # differently can be localized to the sender or to the transport.
   bytes=$(LC_ALL=C; printf '%s' "${#msg}")
+  sum=$(_sha256 "$msg")
+  log "inject send: carrier=$carrier bytes=$bytes sha256=$sum"
   errf=$(mktemp "$state/.subsuper-inject-err.XXXXXX" 2>/dev/null) || errf=
   INJECT_SUBMIT_ATTEMPTED=1
   verdict=$(fm_backend_send_text_submit "$backend" "$target" "$msg" "$retries" "$sleep_s" "$sleep_s" 2>"${errf:-/dev/null}")
@@ -1490,14 +1579,15 @@ inject_msg() {  # <message> [state]
     rm -f "$errf"
   fi
   if [ "$verdict" = empty ]; then
+    log "inject delivered: carrier=$carrier bytes=$bytes sha256=$sum"
     return 0  # Backend confirmed the submit.
   fi
   err=$(_collapse_newlines "$err")
   _utf8_prefix "$err" 512 err
   if [ "$verdict" = send-failed ]; then
-    INJECT_LAST_FAILURE="initial send or Enter delivery (verdict=send-failed, bytes=$bytes; text may be in composer on backends that typed before Enter failed): ${err:-no transport error output}"
+    INJECT_LAST_FAILURE="initial send or Enter delivery (verdict=send-failed, bytes=$bytes, sha256=$sum; text may be in composer on backends that typed before Enter failed): ${err:-no transport error output}"
   else
-    INJECT_LAST_FAILURE="Enter confirmation: submit unconfirmed after $retries retries (verdict=${verdict:-none}, bytes=$bytes, text may be in composer)${err:+: $err}"
+    INJECT_LAST_FAILURE="Enter confirmation: submit unconfirmed after $retries retries (verdict=${verdict:-none}, bytes=$bytes, sha256=$sum, text may be in composer)${err:+: $err}"
   fi
   log "inject failed at $INJECT_LAST_FAILURE"
   return 1

@@ -164,7 +164,8 @@ The daemon still clears its buffer only on the backend's `empty` success verdict
 The daemon wraps `fm-watch.sh`, runs the watcher as a child, presents every durable wake after each actionable watcher close, classifies each presented record in bash, and acknowledges the presented generation only after routing completes.
 It self-handles the routine majority without consuming a firstmate turn.
 Captain-relevant events, plus a bounded recheck of a declared external wait that is still declared, escalate to firstmate's context as one pre-read, single-line, batched digest.
-The digest is byte-bounded so every transport can carry it; when it cuts an event or omits events past its budget, it names a `state/.subsuper-digests/` file that holds every buffered event verbatim, so read that file before acting on a cut event.
+A batch too large for one bounded submission arrives as several digests, one per flush, each holding whole events and independently carrying the operational carrier; a digest that says more are queued is followed by the rest once this turn ends.
+When a digest cuts an event too large for a submission of its own, it names a `state/.subsuper-digests/` file that holds that digest's events verbatim, so read that file before acting on a cut event.
 The captain-relevant verb set, declared-wait vocabulary, status-span classifier, and presentation-marker contract live in shared `bin/fm-classify-lib.sh`, while each supervisor owns its routing and fleet scan as a consumer of that policy.
 While `state/.afk` exists the daemon owns the watcher, so the watcher reverts to one-shot and lets the daemon do the triage - the two never run their triage at the same time.
 
@@ -192,7 +193,7 @@ Classify each wake this way:
   An identity that was not delivered still escalates.
   Status-read uncertainty follows the shared one-report-without-position-advance contract referenced under Dedupe below.
 
-Escalations are buffered up to `FM_ESCALATE_BATCH_SECS` (default 90s; 0 = immediate) and flushed as one single-line digest carrying pre-read status summaries and a recommended action.
+Escalations are buffered up to `FM_ESCALATE_BATCH_SECS` (default 90s; 0 = immediate) and flushed as single-line digests carrying pre-read status summaries and a recommended action.
 The single-line format makes submission unambiguous across harnesses; the carrier described above distinguishes it from an ordinary captain message.
 
 ### Injection hardening

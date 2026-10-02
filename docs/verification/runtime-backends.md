@@ -1200,6 +1200,31 @@ FM_HERDR_SUBMIT_CONFIRM_LIVE=1 tests/fm-herdr-submit-confirm-live-e2e.test.sh
 ok - live Herdr submit confirm: Claude Code (2.1.283 (Claude Code)) on herdr 0.9.0 proves and submits a typed /exit behind its command popup
 ```
 
+### Away digest chunk fidelity
+
+Measured 2026-10-02 against Herdr 0.9.1 and Claude Code 2.1.284 in an isolated `fm-lab-` session, reading the prompts Claude wrote to its own session JSONL.
+
+Herdr hands `pane send-text` to the pane in 1,024-byte writes.
+For a single-line `away-supervisor` envelope typed with no payload proof and then submitted with Enter, Claude recorded the envelope whole at 379, 679, and 779 encoded bytes.
+At 1,080, 2,180, and 3,080 encoded bytes it recorded only the text after the last full write, as an ordinary typed prompt of 58, 136, and 14 characters with no operational prefix.
+`bin/fm-supervise-daemon.sh` therefore submits a batch as event-aligned chunks, each encoded on its own and typed within `ESCALATE_TYPED_BYTES` (768), and logs the byte length and SHA-256 of every typed value before the send and on its outcome.
+A record-backed primary is typed only the constant doorbell, so its chunk is bounded by the record budget instead.
+
+The portable regressions in `tests/fm-daemon.test.sh` pin the chunk boundaries, the per-chunk prefix, durable per-chunk progress, the oversized-event summary, and the log lines.
+Refresh the live Claude proof with:
+
+```sh
+FM_AFK_DIGEST_CHUNKS_LIVE=1 tests/fm-afk-digest-chunks-live-e2e.test.sh
+```
+
+Observed 2026-10-02:
+
+```text
+ok - live away digest chunks: Claude Code (2.1.284 (Claude Code)) on herdr 0.9.1 recorded 6 typed chunks, each starting with the operational prefix and byte-identical to the sender's logged SHA-256, every event once and in order
+ok - live away digest chunks: Claude Code (2.1.284 (Claude Code)) on herdr 0.9.1 recorded the real daemon's first catch-all batch as 2 doorbells, each naming a current away-supervisor record and byte-identical to the sender's logged SHA-256, every event exactly once
+# canary: Claude Code (2.1.284 (Claude Code)) on herdr 0.9.1 still records an unchunked 3112-byte typed envelope as a bare 46-byte tail with no operational prefix
+```
+
 ### Prune and respawn
 
 The real label-collision reproduction is owned by:
