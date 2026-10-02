@@ -806,12 +806,11 @@ _utf8_prefix() {  # <text> <max-bytes> <out-var>
 # `send-keys -l` or Linux's 131,071-byte MAX_ARG_STRLEN would refuse.
 # A chunk holds whole events: one that does not fit the room left opens the
 # next chunk, and events past the chunk stay buffered. Only an event too large
-# for a chunk of its own is summarized by kind, byte length, and SHA-256,
+# for a chunk of its own is summarized with metadata that fits the room left,
 # and that chunk names a full-text file under ESCALATE_FULL_DIR that
 # keeps its events verbatim.
 ESCALATE_TYPED_BYTES=768
 ESCALATE_DIGEST_BYTES=8192
-ESCALATE_ITEM_MIN_BYTES=128
 ESCALATE_FULL_DIR=.subsuper-digests
 
 # escalate_wrap: the single-line digest text around one chunk's events.
@@ -826,25 +825,22 @@ escalate_full_note() {  # <full-text-path> <out-var>
   printf -v "$2" ' (digest bounded; full text of every event: %s)' "$1"
 }
 
-# escalate_chunk_budget: bytes of joined events one submission may carry, with
-# room reserved for the full-text pointer when <bounded> is 1.
-escalate_chunk_budget() {  # <state> <bounded: 0|1> <out-var>
-  local LC_ALL=C _room _probe _note=''
+# escalate_chunk_budget: bytes available for events after the wrapper and note.
+escalate_chunk_budget() {  # <events> <pending> <note> <out-var>
+  local LC_ALL=C _room _probe
   if fm_operational_harness_needs_record "$(fm_daemon_primary_harness)"; then
-    _room=$ESCALATE_DIGEST_BYTES
+    _room=$((ESCALATE_DIGEST_BYTES - ${#3}))
   else
-    escalate_wrap 9999 9999 '' _probe
+    escalate_wrap "$1" "$2" "$3" _probe
     fm_operational_input_encode away-supervisor "$_probe" _probe
-    [ "$2" -eq 0 ] \
-      || escalate_full_note "$1/$ESCALATE_FULL_DIR/digest-00000000T000000.XXXXXX" _note
-    _room=$((ESCALATE_TYPED_BYTES - ${#_probe} - ${#_note}))
-    [ "$_room" -ge "$ESCALATE_ITEM_MIN_BYTES" ] || _room=$ESCALATE_ITEM_MIN_BYTES
+    _room=$((ESCALATE_TYPED_BYTES - ${#_probe}))
   fi
-  printf -v "$3" '%s' "$_room"
+  printf -v "$4" '%s' "$_room"
 }
 
 escalate_event_summary() {  # <event> <budget> <out-var>
-  local LC_ALL=C detail=$1 source='' kind sum _summary _candidate
+  local LC_ALL=C detail=$1 source='' kind sum _candidate
+  local candidates=()
   case "$detail" in
     *.status:\ *) source=${detail%%: *}; detail=${detail#*: } ;;
     'stale + actionable status: '*) detail=${detail#stale + actionable status: } ;;
@@ -855,12 +851,20 @@ escalate_event_summary() {  # <event> <budget> <out-var>
     *) kind=event ;;
   esac
   sum=$(_sha256 "$1")
-  _summary="oversized event [kind=$kind, bytes=${#1}, sha256=$sum]"
-  if [ -n "$source" ]; then
-    _candidate="oversized event [source=$source, kind=$kind, bytes=${#1}, sha256=$sum]"
-    [ "${#_candidate}" -gt "$2" ] || _summary=$_candidate
-  fi
-  printf -v "$3" '%s' "$_summary"
+  [ -z "$source" ] || candidates+=("oversized event [source=$source, kind=$kind, bytes=${#1}, sha256=$sum]")
+  candidates+=(
+    "oversized event [kind=$kind, bytes=${#1}, sha256=$sum]"
+    "oversized event [kind=$kind, bytes=${#1}]"
+    "oversized event [kind=$kind]"
+    "oversized event"
+  )
+  for _candidate in "${candidates[@]}"; do
+    if [ "${#_candidate}" -le "$2" ]; then
+      printf -v "$3" '%s' "$_candidate"
+      return 0
+    fi
+  done
+  return 1
 }
 
 # escalate_chunk_body: join <buf>'s leading items with " | " inside <budget>.
@@ -878,7 +882,7 @@ escalate_chunk_body() {  # <buf> <budget>
     bounded=0
     if [ "${#item}" -gt "$budget" ]; then
       [ "$shown" -eq 0 ] || continue
-      escalate_event_summary "$item" "$remaining" item
+      escalate_event_summary "$item" "$remaining" item || continue
       bounded=1
     fi
     [ "$(( ${#sep} + ${#item} ))" -le "$remaining" ] || continue
@@ -917,7 +921,8 @@ escalate_full_text_save() {  # <state> <chunk>
 # instead of writing another copy.
 ESCALATE_KEPT_FULL=
 escalate_flush() {  # <state>
-  local state=$1 buf msg chunk budget note full='' fresh=0 rc=1
+  local state=$1 buf msg chunk budget note item full='' fresh=0 rc=1
+  INJECT_SUBMIT_ATTEMPTED=0
   buf="$state/.subsuper-escalations"
   [ -s "$buf" ] || return 0
   if [ ! -f "$buf" ] || [ ! -r "$buf" ]; then
@@ -925,11 +930,12 @@ escalate_flush() {  # <state>
     log "inject skipped: $INJECT_LAST_FAILURE"
     return 1
   fi
-  escalate_chunk_budget "$state" 0 budget
+  escalate_chunk_budget 9999 9999 '' budget
   escalate_chunk_body "$buf" "$budget"
-  if [ "$ESCALATE_BOUNDED" -eq 1 ]; then
-    escalate_chunk_budget "$state" 1 budget
-    escalate_chunk_body "$buf" "$budget"
+  if [ "$ESCALATE_EVENTS" -le 0 ]; then
+    INJECT_LAST_FAILURE="no escalation event fits the submission budget"
+    log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
+    return 1
   fi
   chunk=$(mktemp "${buf}.chunk.XXXXXX" 2>/dev/null) || chunk=
   if [ -z "$chunk" ] || ! head -n "$ESCALATE_EVENTS" "$buf" > "$chunk"; then
@@ -951,6 +957,15 @@ escalate_flush() {  # <state>
       return 1
     fi
     escalate_full_note "$full" note
+    escalate_chunk_budget "$ESCALATE_EVENTS" "$ESCALATE_PENDING" "$note" budget
+    IFS= read -r item < "$chunk" || true
+    if ! escalate_event_summary "$item" "$budget" msg; then
+      rm -f "$chunk"
+      [ "$fresh" -eq 0 ] || rm -f "$full"
+      INJECT_LAST_FAILURE="oversized event's full-text pointer leaves no room for a summary"
+      log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
+      return 1
+    fi
     msg="$msg$note"
   fi
   # Single-line wrapper: no embedded newlines (inject_msg also collapses as a
@@ -1584,6 +1599,11 @@ inject_msg() {  # <message> [state]
   # and again on its outcome, never the body, so a prompt the primary records
   # differently can be localized to the sender or to the transport.
   bytes=$(LC_ALL=C; printf '%s' "${#msg}")
+  if [ "$bytes" -gt "$ESCALATE_TYPED_BYTES" ]; then
+    INJECT_LAST_FAILURE="encoded $carrier submission is $bytes bytes, exceeds the $ESCALATE_TYPED_BYTES-byte cap"
+    log "inject skipped: $INJECT_LAST_FAILURE"
+    return 1
+  fi
   sum=$(_sha256 "$msg")
   log "inject send: carrier=$carrier bytes=$bytes sha256=$sum"
   errf=$(mktemp "$state/.subsuper-inject-err.XXXXXX" 2>/dev/null) || errf=
