@@ -18,9 +18,6 @@
 #     fresh state directory: every prompt is exactly a doorbell whose record in
 #     that home holds a current away-supervisor envelope, again matching the
 #     sender's logged SHA-256, with every event identity present exactly once.
-# It ends with an informational canary that types one unchunked envelope the
-# way a sender without the bound would, and reports whether this Claude and
-# Herdr pair still records only its tail.
 #
 # Run explicitly with FM_AFK_DIGEST_CHUNKS_LIVE=1 after a Herdr or Claude
 # upgrade, and before trusting a refreshed docs/verification/runtime-backends.md
@@ -221,10 +218,7 @@ drain_typed
 
 TYPED_SENT=$(delivered_sums "$LOG" typed | wc -l | tr -d ' ')
 [ "$TYPED_SENT" -ge 4 ] || fail "$WHO: a batch far above the typed bound was sent as only $TYPED_SENT submission(s)"
-while IFS= read -r bytes; do
-  [ "$bytes" -le "$ESCALATE_TYPED_BYTES" ] \
-    || fail "$WHO: a typed submission was $bytes bytes, past the $ESCALATE_TYPED_BYTES-byte bound"
-done < <(sed -n 's/.*inject send: carrier=typed bytes=\([0-9]*\) .*/\1/p' "$LOG")
+
 
 TYPED_ROWS=$(prompt_count "$TMP_ROOT/rows-typed")
 [ "$TYPED_ROWS" -eq "$TYPED_SENT" ] \
@@ -239,9 +233,12 @@ while IFS= read -r sum; do
     'FIRSTMATE_OP: v1 away-supervisor: Supervisor escalate ('*) ;;
     *) fail "$WHO recorded typed chunk $n without the operational prefix at its start: ${row:0:80}" ;;
   esac
+  escalate_fits "$FM_OPERATIONAL_MARK$row" "$ESCALATE_TYPED_BYTES" || fail "$WHO recorded an over-cap typed chunk"
   [ "$(sha256_of "$FM_OPERATIONAL_MARK$row")" = "$sum" ] \
     || fail "$WHO recorded typed chunk $n differently from the bytes the sender logged (sha256 $sum): ${row:0:80}"
   seen+=$(printf '%s' "$row" | grep -oE 'lab-[0-9]*\.status|fixture event number [0-9]*' | tr '\n' ';')
+  full=$(printf '%s' "$row" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
+  [ -z "$full" ] || seen+=$(grep -o 'lab-[0-9]*\.status' "$full" | tr '\n' ';')
 done < <(delivered_sums "$LOG" typed)
 want=
 i=1
@@ -254,9 +251,8 @@ while IFS= read -r line; do
   [ "$(grep -F -l "$line" "$TMP_ROOT"/rows-typed/* | wc -l | tr -d ' ')" -eq 1 ] \
     || fail "$WHO: a short event from one status span did not arrive whole exactly once: $line"
 done < "$TYPED_EXPECTED"
-summary="oversized event [source=lab-12.status, kind=blocked, bytes=$(printf '%s' "$big" | LC_ALL=C wc -c | tr -d ' '), sha256=$(sha256_of "$big")]"
-grep -F -l "$summary" "$TMP_ROOT"/rows-typed/* >/dev/null \
-  || fail "$WHO: the event larger than a chunk was not delivered as a structured summary"
+grep -F -l 'oversized event (digest bounded; full text of every event:' "$TMP_ROOT"/rows-typed/* >/dev/null \
+  || fail "$WHO: the event larger than a chunk was not delivered as a minimal summary with a pointer"
 full=$(sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p' "$TMP_ROOT"/rows-typed/*)
 [ -n "$full" ] && [ -f "$full" ] && [ "$(cat "$full")" = "$big" ] \
   || fail "$WHO: the structured summary lacks its verbatim durable event"
@@ -317,6 +313,7 @@ while IFS= read -r sum; do
   kind=
   fm_operational_doorbell_kind "$row" "$REC_STATE" kind && [ "$kind" = away-supervisor ] \
     || fail "$WHO recorded a prompt that is not a doorbell for this home's away-supervisor record: ${row:0:120}"
+  escalate_fits "$row" "$ESCALATE_TYPED_BYTES" || fail "$WHO recorded an over-cap doorbell"
   [ "$(sha256_of "$row")" = "$sum" ] \
     || fail "$WHO recorded a doorbell differently from the bytes the sender logged (sha256 $sum): ${row:0:120}"
   fm_operational_doorbell_path "$row" record
@@ -330,24 +327,3 @@ while IFS= read -r line; do
 done < "$REC_EXPECTED"
 pass "live away digest chunks: $WHO recorded the real daemon's first catch-all batch as $REC_SENT doorbells, each naming a current away-supervisor record and byte-identical to the sender's logged SHA-256, every event exactly once"
 
-# --- informational canary: the fault the typed bound exists for --------------
-canary="Supervisor escalate (canary):"
-while [ "${#canary}" -lt 3000 ]; do canary+=" lab-canary.status: done: unchunked fixture filler |"; done
-fm_operational_input_encode away-supervisor "$canary CANARY-END reply with just OK" canary
-lab pane send-text "$PANE" "$canary" >/dev/null || fail "could not type the canary envelope"
-i=0
-while [ "$i" -lt 3 ]; do
-  sleep 1.5
-  lab pane send-keys "$PANE" enter >/dev/null || true
-  i=$((i + 1))
-done
-wait_idle 120 || true
-prompts "$TMP_ROOT/rows-canary"
-last=$(find "$TMP_ROOT/rows-canary" -type f | sort | tail -1)
-if [ "$(find "$TMP_ROOT/rows-canary" -type f | wc -l | tr -d ' ')" -gt "$ALL_ROWS" ] \
-  && ! grep -q 'FIRSTMATE_OP: v1 away-supervisor: ' "$last"; then
-  printf '# canary: %s still records an unchunked %s-byte typed envelope as a bare %s-byte tail with no operational prefix\n' \
-    "$WHO" "$(printf '%s' "$canary" | LC_ALL=C wc -c | tr -d ' ')" "$(LC_ALL=C wc -c < "$last" | tr -d ' ')"
-else
-  printf '# canary: %s did not record an unchunked typed envelope as a bare tail on this run\n' "$WHO"
-fi

@@ -1211,8 +1211,8 @@ At 1,080, 2,180, and 3,080 encoded bytes it recorded only the text after the las
 A record-backed primary is typed only the constant doorbell, so its chunk is bounded by the record budget instead.
 
 The portable regressions in `tests/fm-daemon.test.sh` exercise signal, needs-decision, stale, enriched stale, and catch-all routing of multiple events from one status span through both carriers, asserting whole events in order without interpreting prose separators as event boundaries.
-They also check per-chunk progress with the original buffer age, events larger than the former per-item cap that still fit a record chunk, structured oversized-event metadata with a verbatim durable pointer, long state paths that reduce optional metadata or refuse explicitly, the final encoded byte cap for both carriers, zero-event refusal, and sender log lines.
-The live guard now checks whole short events from a shared status span and the oversized event's structured metadata and durable file; the earlier observation below predates those stronger assertions.
+They also check per-chunk progress with the original buffer age, whole events at real encoded boundaries, the 630-byte event under a 550-byte state path, minimal summaries with durable sources, fixed notices when summary pointers cannot fit, the encoded byte cap for both carriers, and sender log lines.
+The live guard checks whole short events from a shared status span and reassembles the oversized event from its durable file; the earlier observation below predates those stronger assertions.
 Refresh the live Claude proof with:
 
 ```sh
@@ -1224,7 +1224,6 @@ Observed 2026-10-02:
 ```text
 ok - live away digest chunks: Claude Code (2.1.284 (Claude Code)) on herdr 0.9.1 recorded 6 typed chunks, each starting with the operational prefix and byte-identical to the sender's logged SHA-256, every event once and in order
 ok - live away digest chunks: Claude Code (2.1.284 (Claude Code)) on herdr 0.9.1 recorded the real daemon's first catch-all batch as 2 doorbells, each naming a current away-supervisor record and byte-identical to the sender's logged SHA-256, every event exactly once
-# canary: Claude Code (2.1.284 (Claude Code)) on herdr 0.9.1 still records an unchunked 3112-byte typed envelope as a bare 46-byte tail with no operational prefix
 ```
 
 ### Prune and respawn

@@ -164,9 +164,10 @@ The daemon still clears its buffer only on the backend's `empty` success verdict
 The daemon wraps `fm-watch.sh`, runs the watcher as a child, presents every durable wake after each actionable watcher close, classifies each presented record in bash, and acknowledges the presented generation only after routing completes.
 It self-handles the routine majority without consuming a firstmate turn.
 Captain-relevant events, plus a bounded recheck of a declared external wait that is still declared, escalate to firstmate's context as one pre-read, single-line, batched digest.
-A batch too large for one bounded submission arrives as several digests, one per flush, each independently carrying the operational carrier; status events stay separate before enqueue, and events that fit their carrier's whole-chunk budget arrive whole in source order.
-An event larger than that budget arrives in its own digest as a structured summary, dropping optional source, SHA-256, byte length, and kind fields as space requires; it names a `state/.subsuper-digests/` file holding the event verbatim, so read that file before acting.
-A flush refuses without typing when no event or even the minimal summary and its pointer can fit, and the final typed envelope or record doorbell is checked against the byte cap.
+A batch too large for one bounded submission arrives as several digests, one per flush, each independently carrying the operational carrier; status events stay separate before enqueue, and whole events are greedily selected by measuring their real encoded chunk in source order.
+An event that cannot fit alone in its real encoded chunk arrives as a minimal summary naming a `state/.subsuper-digests/` file holding it verbatim, so read that file before acting.
+If the summary's pointer cannot fit, a fixed notice directs the primary to the newest digest in that directory and successful delivery consumes the event.
+The final typed envelope or record doorbell is checked against the byte cap.
 Queued events keep the buffer's original age until it drains.
 The captain-relevant verb set, declared-wait vocabulary, status-span classifier, and presentation-marker contract live in shared `bin/fm-classify-lib.sh`, while each supervisor owns its routing and fleet scan as a consumer of that policy.
 While `state/.afk` exists the daemon owns the watcher, so the watcher reverts to one-shot and lets the daemon do the triage - the two never run their triage at the same time.

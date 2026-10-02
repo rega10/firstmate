@@ -806,9 +806,9 @@ _utf8_prefix() {  # <text> <max-bytes> <out-var>
 # `send-keys -l` or Linux's 131,071-byte MAX_ARG_STRLEN would refuse.
 # A chunk holds whole events: one that does not fit the room left opens the
 # next chunk, and events past the chunk stay buffered. Only an event too large
-# for a chunk of its own is summarized with metadata that fits the room left,
-# and that chunk names a full-text file under ESCALATE_FULL_DIR that
-# keeps its events verbatim.
+# for a chunk of its own is summarized with a pointer to its durable source;
+# when that pointer cannot fit, a fixed notice directs the primary to
+# ESCALATE_FULL_DIR, which keeps the event verbatim.
 ESCALATE_TYPED_BYTES=768
 ESCALATE_DIGEST_BYTES=8192
 ESCALATE_FULL_DIR=.subsuper-digests
@@ -825,74 +825,39 @@ escalate_full_note() {  # <full-text-path> <out-var>
   printf -v "$2" ' (digest bounded; full text of every event: %s)' "$1"
 }
 
-# escalate_chunk_budget: bytes available for events after the wrapper and note.
-escalate_chunk_budget() {  # <events> <pending> <note> <out-var>
-  local LC_ALL=C _room _probe
-  if fm_operational_harness_needs_record "$(fm_daemon_primary_harness)"; then
-    _room=$((ESCALATE_DIGEST_BYTES - ${#3}))
-  else
-    escalate_wrap "$1" "$2" "$3" _probe
-    fm_operational_input_encode away-supervisor "$_probe" _probe
-    _room=$((ESCALATE_TYPED_BYTES - ${#_probe}))
-  fi
-  printf -v "$4" '%s' "$_room"
+escalate_fits() {  # <encoded-value> <cap>
+  local LC_ALL=C
+  ESCALATE_BYTES=${#1}
+  [ "$ESCALATE_BYTES" -le "$2" ]
 }
 
-escalate_event_summary() {  # <event> <budget> <out-var>
-  local LC_ALL=C detail=$1 source='' kind sum _candidate
-  local candidates=()
-  case "$detail" in
-    *.status:\ *) source=${detail%%: *}; detail=${detail#*: } ;;
-    'stale + actionable status: '*) detail=${detail#stale + actionable status: } ;;
-  esac
-  kind=$(status_line_verb "$detail")
-  case "$kind" in
-    done|failed|blocked|needs-decision|reconciliation-required|check) ;;
-    *) kind=event ;;
-  esac
-  sum=$(_sha256 "$1")
-  [ -z "$source" ] || candidates+=("oversized event [source=$source, kind=$kind, bytes=${#1}, sha256=$sum]")
-  candidates+=(
-    "oversized event [kind=$kind, bytes=${#1}, sha256=$sum]"
-    "oversized event [kind=$kind, bytes=${#1}]"
-    "oversized event [kind=$kind]"
-    "oversized event"
-  )
-  for _candidate in "${candidates[@]}"; do
-    if [ "${#_candidate}" -le "$2" ]; then
-      printf -v "$3" '%s' "$_candidate"
-      return 0
-    fi
-  done
-  return 1
-}
-
-# escalate_chunk_body: join <buf>'s leading items with " | " inside <budget>.
-# Sets ESCALATE_BODY, ESCALATE_EVENTS (items in this chunk), ESCALATE_PENDING
-# (items left buffered behind it), and ESCALATE_BOUNDED (1 when an item was summarized).
-escalate_chunk_body() {  # <buf> <budget>
-  local LC_ALL=C buf=$1 budget=$2 remaining=$2 item='' sep shown=0 total=0 bounded
+# escalate_chunk_body: greedily join whole events whose real envelope fits.
+# Sets ESCALATE_BODY, ESCALATE_EVENTS, ESCALATE_PENDING, and ESCALATE_BOUNDED.
+escalate_chunk_body() {  # <buf>
+  local item candidate encoded cap=$ESCALATE_TYPED_BYTES
+  local items=()
+  while IFS= read -r item || [ -n "$item" ]; do items+=("$item"); done < "$1"
+  fm_operational_harness_needs_record "$(fm_daemon_primary_harness)" && cap=$ESCALATE_DIGEST_BYTES
   ESCALATE_BODY=
+  ESCALATE_EVENTS=0
   ESCALATE_BOUNDED=0
-  while IFS= read -r item || [ -n "$item" ]; do
-    total=$((total + 1))
-    [ "$shown" -eq "$((total - 1))" ] && [ "$ESCALATE_BOUNDED" -eq 0 ] || continue
-    sep=
-    [ "$shown" -eq 0 ] || sep=' | '
-    bounded=0
-    if [ "${#item}" -gt "$budget" ]; then
-      [ "$shown" -eq 0 ] || continue
-      escalate_event_summary "$item" "$remaining" item || continue
-      bounded=1
+  for item in "${items[@]}"; do
+    candidate=$item
+    [ "$ESCALATE_EVENTS" -eq 0 ] || candidate="$ESCALATE_BODY | $item"
+    escalate_wrap "$((ESCALATE_EVENTS + 1))" "$(( ${#items[@]} - ESCALATE_EVENTS - 1 ))" "$candidate" encoded
+    fm_operational_input_encode away-supervisor "$encoded" encoded
+    if ! escalate_fits "$encoded" "$cap"; then
+      if [ "$ESCALATE_EVENTS" -eq 0 ]; then
+        ESCALATE_EVENTS=1
+        ESCALATE_BOUNDED=1
+        ESCALATE_BODY='oversized event'
+      fi
+      break
     fi
-    [ "$(( ${#sep} + ${#item} ))" -le "$remaining" ] || continue
-    ESCALATE_BODY+="$sep$item"
-    remaining=$((remaining - ${#sep} - ${#item}))
-    shown=$((shown + 1))
-    [ "$bounded" -eq 0 ] || ESCALATE_BOUNDED=1
-  done < "$buf"
-  ESCALATE_EVENTS=$shown
-  ESCALATE_PENDING=$((total - shown))
+    ESCALATE_BODY=$candidate
+    ESCALATE_EVENTS=$((ESCALATE_EVENTS + 1))
+  done
+  ESCALATE_PENDING=$(( ${#items[@]} - ESCALATE_EVENTS ))
 }
 
 # escalate_full_text_save: copy <chunk> verbatim into a new full-text file and
@@ -921,7 +886,7 @@ escalate_full_text_save() {  # <state> <chunk>
 # instead of writing another copy.
 ESCALATE_KEPT_FULL=
 escalate_flush() {  # <state>
-  local state=$1 buf msg chunk budget note item full='' fresh=0 rc=1
+  local state=$1 buf msg chunk note encoded cap=$ESCALATE_TYPED_BYTES full='' fresh=0 rc=1
   INJECT_SUBMIT_ATTEMPTED=0
   buf="$state/.subsuper-escalations"
   [ -s "$buf" ] || return 0
@@ -930,10 +895,9 @@ escalate_flush() {  # <state>
     log "inject skipped: $INJECT_LAST_FAILURE"
     return 1
   fi
-  escalate_chunk_budget 9999 9999 '' budget
-  escalate_chunk_body "$buf" "$budget"
+  escalate_chunk_body "$buf"
   if [ "$ESCALATE_EVENTS" -le 0 ]; then
-    INJECT_LAST_FAILURE="no escalation event fits the submission budget"
+    INJECT_LAST_FAILURE="escalation buffer contained no readable events"
     log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
     return 1
   fi
@@ -957,16 +921,13 @@ escalate_flush() {  # <state>
       return 1
     fi
     escalate_full_note "$full" note
-    escalate_chunk_budget "$ESCALATE_EVENTS" "$ESCALATE_PENDING" "$note" budget
-    IFS= read -r item < "$chunk" || true
-    if ! escalate_event_summary "$item" "$budget" msg; then
-      rm -f "$chunk"
-      [ "$fresh" -eq 0 ] || rm -f "$full"
-      INJECT_LAST_FAILURE="oversized event's full-text pointer leaves no room for a summary"
-      log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
-      return 1
+    msg="oversized event$note"
+    escalate_wrap "$ESCALATE_EVENTS" "$ESCALATE_PENDING" "$msg" encoded
+    fm_operational_input_encode away-supervisor "$encoded" encoded
+    fm_operational_harness_needs_record "$(fm_daemon_primary_harness)" && cap=$ESCALATE_DIGEST_BYTES
+    if ! escalate_fits "$encoded" "$cap"; then
+      msg='oversized event saved in .subsuper-digests; read the newest digest'
     fi
-    msg="$msg$note"
   fi
   # Single-line wrapper: no embedded newlines (inject_msg also collapses as a
   # safety net, but keeping the source single-line makes the intent explicit).
@@ -1598,12 +1559,12 @@ inject_msg() {  # <message> [state]
   # The exact typed value's byte length and SHA-256 are logged before the send
   # and again on its outcome, never the body, so a prompt the primary records
   # differently can be localized to the sender or to the transport.
-  bytes=$(LC_ALL=C; printf '%s' "${#msg}")
-  if [ "$bytes" -gt "$ESCALATE_TYPED_BYTES" ]; then
-    INJECT_LAST_FAILURE="encoded $carrier submission is $bytes bytes, exceeds the $ESCALATE_TYPED_BYTES-byte cap"
+  if ! escalate_fits "$msg" "$ESCALATE_TYPED_BYTES"; then
+    INJECT_LAST_FAILURE="encoded $carrier submission is $ESCALATE_BYTES bytes, exceeds the $ESCALATE_TYPED_BYTES-byte cap"
     log "inject skipped: $INJECT_LAST_FAILURE"
     return 1
   fi
+  bytes=$ESCALATE_BYTES
   sum=$(_sha256 "$msg")
   log "inject send: carrier=$carrier bytes=$bytes sha256=$sum"
   errf=$(mktemp "$state/.subsuper-inject-err.XXXXXX" 2>/dev/null) || errf=

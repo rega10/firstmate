@@ -2371,12 +2371,8 @@ test_oversized_digest_is_bounded_and_kept_durable() {
   [ "$(printf '%s\n' "$digest" | wc -l | tr -d ' ')" -eq 4 ] || fail "expected three summary chunks and one whole event"
   [ "$(printf '%s' "$digest" | LC_ALL=C wc -c | tr -d ' ')" -le 16384 ] \
     || fail "delivered digest is not bounded well below the transport ceilings"
-  assert_contains "$digest" 'Supervisor escalate (1 event(s), 3 more queued): oversized event [source=secondmate-a.status, kind=done,' "digest lost its structured summary"
+  assert_contains "$digest" 'Supervisor escalate (1 event(s), 3 more queued): oversized event (digest bounded; full text of every event:' "digest lost its structured summary"
   assert_contains "$digest" 'secondmate-a.status: needs-decision [key=pick]: pick A or B' "a short event did not survive whole"
-  for i in a b c; do
-    item=$(sed -n "/^secondmate-$i.status: done:/p" "$dir/buffer.orig")
-    assert_contains "$digest" "oversized event [source=secondmate-$i.status, kind=done, bytes=$(printf '%s' "$item" | LC_ALL=C wc -c | tr -d ' '), sha256=$(sha256_of "$item")]" "oversized event $i lacks structured metadata"
-  done
   assert_not_contains "$digest" 'café fix shipped' "oversized prose was sliced into the digest"
   if command -v iconv >/dev/null 2>&1; then
     printf '%s' "$digest" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1 || fail "the summary is not valid UTF-8"
@@ -2434,7 +2430,7 @@ test_digest_past_budget_is_delivered_as_whole_event_chunks() {
       "${FM_OPERATIONAL_PREFIX}v1 away-supervisor: Supervisor escalate ("*) ;;
       *) fail "a chunk record does not start with the operational prefix: ${line:0:80}" ;;
     esac
-    [ "$(printf '%s' "$line" | LC_ALL=C wc -c | tr -d ' ')" -le 8400 ] || fail "a chunk exceeds its record budget"
+    escalate_fits "$line" "$ESCALATE_DIGEST_BYTES" || fail "a chunk exceeds its encoded record cap"
   done <<EOF_DIGESTS
 $digests
 EOF_DIGESTS
@@ -2527,8 +2523,8 @@ test_typed_digest_chunks_are_bounded_and_independently_prefixed() {
       "${FM_OPERATIONAL_PREFIX}v1 away-supervisor: Supervisor escalate ("*) ;;
       *) fail "typed chunk $n does not start with the operational prefix at byte zero: ${line:0:80}" ;;
     esac
-    bytes=$(printf '%s' "$line" | LC_ALL=C wc -c | tr -d ' ')
-    [ "$bytes" -le 768 ] || fail "typed chunk $n is $bytes bytes, past the 768-byte typed bound"
+    escalate_fits "$line" "$ESCALATE_TYPED_BYTES" || fail "typed chunk $n exceeds the real encoded cap"
+    bytes=$ESCALATE_BYTES
     grep -F "inject send: carrier=typed bytes=$bytes sha256=$(sha256_of "$line")" "$dir/daemon.log" >/dev/null \
       || fail "typed chunk $n has no sender-side length and digest log line: $(cat "$dir/daemon.log")"
     grep -F "inject delivered: carrier=typed bytes=$bytes sha256=$(sha256_of "$line")" "$dir/daemon.log" >/dev/null \
@@ -2590,31 +2586,40 @@ test_chunk_progress_survives_a_failed_later_chunk() {
 }
 
 test_typed_whole_event_before_summary_stays_whole() {
-  local dir state sent budget item big digest
+  local dir state sent item big digest encoded
   dir=$(make_bordered_case digest-whole-before-summary)
   state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
-  FM_DAEMON_PRIMARY_HARNESS=codex escalate_chunk_budget 9999 9999 '' budget
   item='before.status: done: '
-  while [ "${#item}" -lt "$budget" ]; do item+=x; done
+  while :; do
+    escalate_wrap 1 1 "${item}x" encoded
+    fm_operational_input_encode away-supervisor "$encoded" encoded
+    escalate_fits "$encoded" "$ESCALATE_TYPED_BYTES" || break
+    item+=x
+  done
   big='big.status: failed: '
-  while [ "${#big}" -le "$budget" ]; do big+=y; done
+  while :; do
+    escalate_wrap 1 0 "$big" encoded
+    fm_operational_input_encode away-supervisor "$encoded" encoded
+    escalate_fits "$encoded" "$ESCALATE_TYPED_BYTES" || break
+    big+=y
+  done
   escalate_add "$state" "$item"
   escalate_add "$state" "$big"
   afk_enter "$state"
   flush_until_empty "$dir" codex
   [ "$(grep -c '\[ENTER\]' "$sent")" -eq 2 ] || fail "a whole event and one oversized event must arrive in separate chunks"
   digest=$(grep -v '^\[ENTER\]$' "$sent" | head -1)
-  assert_contains "$digest" "$item" "an event that fits the whole typed budget was summarized"
+  assert_contains "$digest" "$item" "an event that fits the real typed chunk was summarized"
   assert_not_contains "$digest" 'digest bounded' "a whole event wrote a full-text pointer"
   digest=$(grep -v '^\[ENTER\]$' "$sent" | tail -1)
-  assert_contains "$digest" 'oversized event [source=big.status, kind=failed,' "the genuinely oversized event lacks its summary"
-  pass "a whole event preceding an oversized event retains the full typed budget"
+  assert_contains "$digest" 'oversized event (digest bounded; full text of every event:' "the genuinely oversized event lacks its summary"
+  pass "real encoded boundaries preserve a whole event before an oversized event"
 }
 
 # One event larger than a typed chunk cannot be split at an event boundary:
 # it goes out as a bounded summary naming the file that keeps it verbatim.
 test_typed_oversized_event_is_summarized_with_durable_pointer() {
-  local dir state sent item line full bytes
+  local dir state sent item line full
   dir=$(make_bordered_case digest-typed-oversized)
   state="$dir/state"
   sent="$dir/sent.log"; : > "$sent"
@@ -2626,9 +2631,8 @@ test_typed_oversized_event_is_summarized_with_durable_pointer() {
   afk_enter "$state"
   flush_until_empty "$dir" codex
   line=$(grep -v '^\[ENTER\]$' "$sent" | head -1)
-  bytes=$(printf '%s' "$line" | LC_ALL=C wc -c | tr -d ' ')
-  [ "$bytes" -le "$ESCALATE_TYPED_BYTES" ] || fail "the summarized oversized event exceeded the $ESCALATE_TYPED_BYTES-byte cap: $bytes"
-  assert_contains "$line" "oversized event [source=secondmate-z.status, kind=blocked, bytes=$(printf '%s' "$item" | LC_ALL=C wc -c | tr -d ' '), sha256=$(sha256_of "$item")]" "the oversized event lacks structured summary metadata"
+  escalate_fits "$line" "$ESCALATE_TYPED_BYTES" || fail "the summarized event exceeded the actual typed cap"
+  assert_contains "$line" 'oversized event (digest bounded; full text of every event:' "the oversized event lacks its minimal summary and pointer"
   assert_not_contains "$line" 'café review pending' "the oversized event was sliced as prose"
   if command -v iconv >/dev/null 2>&1; then
     printf '%s' "$line" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1 || fail "the summary is not valid UTF-8"
@@ -2641,10 +2645,10 @@ test_typed_oversized_event_is_summarized_with_durable_pointer() {
   pass "an event larger than a typed chunk is summarized within the bound with a durable full-text pointer"
 }
 
-test_long_state_paths_make_progress_or_refuse_without_typing() {
-  local dir state harness length remaining size item sent line bytes full rc
+test_long_state_paths_preserve_deliverable_events_and_summary_progress() {
+  local dir state harness length remaining size item sent line full rc encoded
   for harness in codex claude; do
-    for length in 400 450 500 520 800; do
+    for length in 400 500 550 800; do
       dir=$(make_bordered_case "digest-long-$harness-$length")
       state=$dir
       while [ "${#state}" -lt "$length" ]; do
@@ -2653,8 +2657,22 @@ test_long_state_paths_make_progress_or_refuse_without_typing() {
         state="$state/$(printf '%*s' "$remaining" '' | tr ' ' p)"
       done
       mkdir -p "$state"
-      [ "${#state}" -eq "$length" ] || fail "long-state fixture is not $length bytes"
       sent="$dir/sent.log"; : > "$sent"
+      afk_enter "$state"
+      if [ "$length" -eq 550 ]; then
+        item=$(printf '%630s' '' | tr ' ' x)
+        escalate_wrap 1 0 "$item" encoded
+        fm_operational_input_encode away-supervisor "$encoded" encoded
+        escalate_fits "$encoded" "$ESCALATE_TYPED_BYTES" || fail "the 630-byte event does not fit its real chunk"
+        [ "$ESCALATE_BYTES" -eq 756 ] || fail "the real boundary fixture is $ESCALATE_BYTES bytes"
+        escalate_add "$state" "$item"
+        LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+          FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
+          escalate_flush "$state" || fail "the deliverable 630-byte event stuck under the 550-byte state path"
+        assert_contains "$(delivered_digest "$sent")" "$item" "the 630-byte event was summarized"
+        [ ! -s "$state/.subsuper-escalations" ] && [ ! -e "$state/.subsuper-digests" ] || fail "the deliverable event was buffered or summarized"
+        : > "$sent"
+      fi
       item='reconciliation-required: '
       size=2000
       [ "$harness" != claude ] || size=10000
@@ -2662,75 +2680,58 @@ test_long_state_paths_make_progress_or_refuse_without_typing() {
       escalate_add "$state" "$item"
       escalate_add "$state" 'after.status: done: short event intact'
       cp "$state/.subsuper-escalations" "$dir/original"
-      afk_enter "$state"
       rc=0
       LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
         FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
         escalate_flush "$state" || rc=$?
-      if [ "$length" -eq 800 ] || { [ "$harness" = codex ] && [ "$length" -eq 520 ]; }; then
-        [ "$rc" -ne 0 ] || fail "$harness $length-byte path delivered despite insufficient typed room"
-        [ ! -s "$sent" ] || fail "$harness $length-byte path typed an oversized or zero-event prompt"
-        cmp -s "$dir/original" "$state/.subsuper-escalations" || fail "refused long-path delivery changed the buffer"
-        assert_contains "$(cat "$dir/daemon.log")" 'inject skipped:' "long-path refusal was not logged"
-        [ "$INJECT_SUBMIT_ATTEMPTED" = 0 ] || fail "long-path refusal attempted a submit"
+      if [ "$harness" = claude ] && [ "$length" -eq 800 ]; then
+        [ "$rc" -ne 0 ] && [ ! -s "$sent" ] || fail "an over-cap record doorbell was typed"
+        cmp -s "$dir/original" "$state/.subsuper-escalations" || fail "refused record delivery changed the buffer"
         continue
       fi
       [ "$rc" -eq 0 ] || fail "$harness $length-byte path did not deliver: $(cat "$dir/daemon.log")"
-      [ "$(cat "$state/.subsuper-escalations")" = 'after.status: done: short event intact' ] || fail "long-path delivery did not consume exactly the first event"
+      [ "$(cat "$state/.subsuper-escalations")" = 'after.status: done: short event intact' ] || fail "summary delivery did not consume exactly one event"
       line=$(delivered_digest "$sent")
-      assert_contains "$line" 'Supervisor escalate (1 event(s), 1 more queued): oversized event' "long-path digest lost its event summary"
-      full=$(printf '%s' "$line" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
-      [ -n "$full" ] && [ -f "$full" ] || fail "long-path digest lacks a readable durable pointer"
-      head -1 "$dir/original" | cmp -s - "$full" || fail "long-path durable source differs from the original event"
-      if [ "$harness" = codex ] && [ "$length" -eq 500 ]; then
-        assert_not_contains "$line" 'kind=' "the narrowest path did not reduce the summary to its fixed minimum"
+      assert_contains "$line" 'Supervisor escalate (1 event(s), 1 more queued): oversized event' "long-path digest lost its minimal summary"
+      if [ "$harness" = codex ] && [ "$length" -ge 550 ]; then
+        assert_contains "$line" 'saved in .subsuper-digests; read the newest digest' "the pathological pointer did not produce its fixed notice"
+        for full in "$state/.subsuper-digests"/digest-*; do break; done
+      else
+        full=$(printf '%s' "$line" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
       fi
+      [ -n "$full" ] && [ -f "$full" ] || fail "the oversized event has no durable source"
+      head -1 "$dir/original" | cmp -s - "$full" || fail "the durable source differs from the original event"
       LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
         FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
-        escalate_flush "$state" || fail "the event after a long-path summary could not be delivered"
+        escalate_flush "$state" || fail "the event behind the long-path summary stuck"
       [ ! -s "$state/.subsuper-escalations" ] || fail "the long-path buffer did not drain"
       [ "$(grep -c '\[ENTER\]' "$sent")" -eq 2 ] || fail "long-path events were not submitted exactly once"
       while IFS= read -r line; do
         [ "$line" = '[ENTER]' ] && continue
-        bytes=$(printf '%s' "$line" | LC_ALL=C wc -c | tr -d ' ')
-        [ "$bytes" -le "$ESCALATE_TYPED_BYTES" ] || fail "$harness $length-byte path typed $bytes bytes"
+        escalate_fits "$line" "$ESCALATE_TYPED_BYTES" || fail "a long-path submission exceeds its encoded cap"
       done < "$sent"
     done
   done
-  pass "long state paths consume one event per summary or refuse before typing, within the real cap"
-}
-
-test_empty_chunk_is_refused_before_submission() {
-  local dir state sent ESCALATE_TYPED_BYTES=100
-  dir=$(make_bordered_case digest-no-event-room)
-  state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
-  escalate_add "$state" 'done: event must remain queued'
-  cp "$state/.subsuper-escalations" "$dir/original"
-  afk_enter "$state"
-  if LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
-    FM_FAKE_SENT="$sent" FM_DAEMON_PRIMARY_HARNESS=codex escalate_flush "$state"; then
-    fail "a zero-event chunk was reported delivered"
-  fi
-  [ "$ESCALATE_EVENTS" -eq 0 ] || fail "the fixture did not exercise an empty chunk"
-  [ ! -s "$sent" ] || fail "a zero-event chunk was typed"
-  cmp -s "$dir/original" "$state/.subsuper-escalations" || fail "empty-chunk refusal changed queued events"
-  assert_contains "$(cat "$dir/daemon.log")" 'no escalation event fits' "empty-chunk refusal lacks its reason"
-  pass "a chunk with no room for an event refuses without typing or changing the buffer"
+  pass "real encoded chunks preserve the 630-byte event and make progress across long summary pointers"
 }
 
 test_final_encoded_cap_is_enforced_at_typing() {
-  local dir state sent encoded item bytes
+  local dir state sent encoded item
   dir=$(make_bordered_case digest-final-cap)
   state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
   afk_enter "$state"
-  fm_operational_input_encode away-supervisor x encoded
-  bytes=$(printf '%s' "$encoded" | LC_ALL=C wc -c | tr -d ' ')
-  item=$(printf '%*s' "$((ESCALATE_TYPED_BYTES - bytes + 1))" '' | tr ' ' x)
+  item=x
+  while :; do
+    fm_operational_input_encode away-supervisor "${item}x" encoded
+    escalate_fits "$encoded" "$ESCALATE_TYPED_BYTES" || break
+    item+=x
+  done
   LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
     FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex \
     inject_msg "$item" "$state" || fail "a value exactly at the encoded cap was refused"
-  bytes=$(grep -v '^\[ENTER\]$' "$sent" | tr -d '\n' | LC_ALL=C wc -c | tr -d ' ')
-  [ "$bytes" -eq "$ESCALATE_TYPED_BYTES" ] || fail "the cap-boundary fixture typed $bytes bytes"
+  encoded=$(grep -v '^\[ENTER\]$' "$sent")
+  escalate_fits "$encoded" "$ESCALATE_TYPED_BYTES" || fail "the cap-boundary value exceeded the cap"
+  [ "$ESCALATE_BYTES" -eq "$ESCALATE_TYPED_BYTES" ] || fail "the cap-boundary fixture typed $ESCALATE_BYTES bytes"
   if LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
     FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex \
     inject_msg "${item}x" "$state"; then
@@ -3579,8 +3580,7 @@ test_typed_digest_chunks_are_bounded_and_independently_prefixed
 test_chunk_progress_survives_a_failed_later_chunk
 test_typed_whole_event_before_summary_stays_whole
 test_typed_oversized_event_is_summarized_with_durable_pointer
-test_long_state_paths_make_progress_or_refuse_without_typing
-test_empty_chunk_is_refused_before_submission
+test_long_state_paths_preserve_deliverable_events_and_summary_progress
 test_final_encoded_cap_is_enforced_at_typing
 test_inject_send_failure_logs_stage_stderr_and_bytes
 test_inject_enter_failure_logs_confirmation_stage
