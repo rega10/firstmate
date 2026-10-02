@@ -4101,6 +4101,12 @@ export default function (pi: ExtensionAPI): void {
     },
   });
 
+  pi.registerCommand("calm-expansion-e2e", {
+    description: "Report native tool expansion without changing it.",
+    handler: async (args, ctx) => {
+      ctx.ui.notify(`CALM_EXPANSION_E2E_${args.trim()}=${ctx.ui.getToolsExpanded()}`, "info");
+    },
+  });
   pi.registerCommand("calm-diagnostic-e2e", {
     description: "Add the Calm transient diagnostic fixture.",
     handler: async (_args, ctx) => {
@@ -4189,10 +4195,12 @@ JSON
   assert_not_contains "$(cat "$default_snapshot")" 'Run `bin/fm-session-start.sh` now' \
     "native session-start context unexpectedly rendered while Calm was off"
   tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" C-o
-  wait_for_text "$expanded_snapshot" "escape to interrupt" \
+  tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" -l "/calm-expansion-e2e initial"
+  tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" M-s
+  wait_for_text "$expanded_snapshot" "CALM_EXPANSION_E2E_initial=true" \
     || fail "Ctrl+O did not retain Pi's ordinary startup and tool expansion behavior"
-  # The expansion redraw lands a frame or two after the footer hint, so wait for the
-  # tool output this block actually asserts instead of assuming one implies the other.
+  # Check the rendered output as well as native expansion state, without relying
+  # on Pi's transient startup hints or older tool-expansion status rows.
   wait_for_text "$expanded_snapshot" "CALM_E2E_OUTPUT" \
     || fail "ordinary Ctrl+O expansion hid tool activity while calm mode was off"
   assert_contains "$(cat "$expanded_snapshot")" "CALM_E2E_OUTPUT" "ordinary Ctrl+O expansion hid tool activity while calm mode was off"
@@ -4516,7 +4524,10 @@ JS
   assert_not_contains "$(cat "$restored_snapshot")" "Navigated to selected point" "second /calm added a navigation status row"
   assert_contains "$(cat "$restored_snapshot")" "Thinking..." "second /calm did not restore Pi's collapsed thinking labels"
   assert_contains "$(cat "$restored_snapshot")" "I will run one command." "second /calm did not restore the mid-turn assistant working note"
-  assert_contains "$(cat "$restored_snapshot")" "escape to interrupt" "/calm changed the active Ctrl+O expansion state"
+  tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" -l "/calm-expansion-e2e restored"
+  tmux -L "$TMUX_SOCKET" send-keys -t "$TMUX_SESSION" M-s
+  wait_for_text "$restored_snapshot" "CALM_EXPANSION_E2E_restored=true" \
+    || fail "/calm changed the active Ctrl+O expansion state"
 
   hash_after=$(shasum -a 256 "$session_file" | awk '{print $1}')
   [ "$hash_before" = "$hash_after" ] || fail "/calm changed the persisted session or context data"
