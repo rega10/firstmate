@@ -77,6 +77,14 @@
 #                different, self-proving thing: real claude 2.x draws exactly
 #                that (`─` rule, `❯`+NBSP, `─` rule), so the glyph inside the
 #                pair carries the shape and no identity is needed.
+#                Claude writes a session's TITLE into that pair's top rule
+#                once the session has one (a resumed or backgrounded
+#                conversation: `──────── Firstmate operational input ─`,
+#                captured live through Herdr on claude 2.1.284). A titled rule
+#                opens a pair only for this self-proving form: the rows down to
+#                the next solid rule must hold an agent-glyph row, so a titled
+#                rule over anything else stays the ordinary text it was and can
+#                never promote a blank region into a composer.
 #
 # THE COMPOSER FOOTER ZONE (task firstmate-doorbell-vals-pending-p1): a
 # harness draws its own furniture BELOW the composer - a user statusLine, a
@@ -762,6 +770,25 @@ _fm_composer_pi_separator_row() {  # <trimmed-row>
   return 1
 }
 
+# _fm_composer_titled_rule_row: a `─` rule carrying a title - at least 8
+# leading `─` columns, one space-padded title holding no `─`, then a closing
+# `─` run (see the separated shape in this file's header). Byte-exact literal
+# tests only, so the answer is the same in every locale.
+_fm_composer_titled_rule_row() {  # <trimmed-row>
+  local row=$1 title
+  case "$row" in
+    ────────*─) ;;
+    *) return 1 ;;
+  esac
+  title="${row#"${row%%[!─]*}"}"
+  title="${title%"${title##*[!─]}"}"
+  case "$title" in
+    *─*) return 1 ;;
+    ' '*[!\ ]*' ') return 0 ;;
+  esac
+  return 1
+}
+
 # Row-scan results are returned through FM_COMPOSER_SCAN_* globals (bash 3.2
 # has no nameref); they are internal to this owner.
 _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
@@ -799,6 +826,7 @@ _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
   FM_COMPOSER_SCAN_LEFTBAR_GLYPH_ROW=-1
   FM_COMPOSER_SCAN_LEFTBAR_GLYPH=
   local leftbar_start=-1 pi_open=-1 pi_lines=0 pi_max
+  local titled_open=-1 titled_lines=0 titled_glyph_row=-1 titled_glyph=''
   local probe row_glyph row_glyph_row
   local box_glyph_row=-1 box_glyph='' pi_glyph_row=-1 pi_glyph=''
   pi_max=$FM_COMPOSER_PI_MAX_LINES
@@ -844,9 +872,23 @@ _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
     # Pi separator rows: a solid `─` rule at least 8 columns wide. A separator
     # closes the preceding candidate and immediately opens the next, so an
     # earlier transcript rule can never outrank the live bottom composer pair.
+    # A titled rule (claude's top rule once the session has a title) opens a
+    # pair only when an agent-glyph row proves the composer before the next
+    # solid rule closes it; unproven, it is ordinary text to the rules below.
     if _fm_composer_pi_separator_row "$trimmed"; then
       FM_COMPOSER_SCAN_PI_LAST_SEPARATOR=$row
-      if [ "$pi_open" -ge 0 ]; then
+      if [ "$titled_open" -ge 0 ] && [ "$titled_glyph_row" -ge 0 ]; then
+        FM_COMPOSER_SCAN_PI_PAIR_FOUND=1
+        FM_COMPOSER_SCAN_PI_OPEN=$titled_open
+        FM_COMPOSER_SCAN_PI_CLOSE=$row
+        if [ "$titled_lines" -le "$pi_max" ]; then
+          FM_COMPOSER_SCAN_PI_PAIR_VALID=1
+        else
+          FM_COMPOSER_SCAN_PI_PAIR_VALID=0
+        fi
+        FM_COMPOSER_SCAN_PI_GLYPH_ROW=$titled_glyph_row
+        FM_COMPOSER_SCAN_PI_GLYPH=$titled_glyph
+      elif [ "$pi_open" -ge 0 ]; then
         FM_COMPOSER_SCAN_PI_PAIR_FOUND=1
         FM_COMPOSER_SCAN_PI_OPEN=$pi_open
         FM_COMPOSER_SCAN_PI_CLOSE=$row
@@ -862,7 +904,20 @@ _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
       pi_lines=0
       pi_glyph_row=-1
       pi_glyph=''
+      titled_open=-1
     else
+      if _fm_composer_titled_rule_row "$trimmed"; then
+        titled_open=$row
+        titled_lines=0
+        titled_glyph_row=-1
+        titled_glyph=''
+      elif [ "$titled_open" -ge 0 ]; then
+        titled_lines=$((titled_lines + 1))
+        if [ "$titled_glyph_row" -lt 0 ] && [ "$row_glyph_row" -ge 0 ]; then
+          titled_glyph_row=$row_glyph_row
+          titled_glyph=$row_glyph
+        fi
+      fi
       if [ "$pi_open" -ge 0 ]; then
         pi_lines=$((pi_lines + 1))
         if [ "$pi_glyph_row" -lt 0 ] && [ "$row_glyph_row" -ge 0 ]; then
