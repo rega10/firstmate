@@ -740,6 +740,7 @@ The classifier now lets a titled rule open a pair only when an agent-glyph row s
 On the same live pane the unmodified library answered `unknown` and the fixed library answered `empty`, one escalation was then typed and submitted, a typed draft in the titled composer answered `pending`, and Claude's agents view (`❯ describe a task for a new session`) answered `pending` under this home's `dark-ansi` theme.
 
 `test_matrix_claude_titled_top_rule` in `tests/fm-composer-lib.test.sh` carries the captured rows and pins the three refusals the fix must keep: a typed draft, a dead shell prompt under or below a titled rule, and an unreadable or blank region.
+For a shell that displays an agent glyph, `test_inject_msg_defers_on_shell_with_agent_glyph` and `test_inject_msg_herdr_requires_positive_process_proof` in `tests/fm-daemon.test.sh` pin the separate [injection safety boundary](../herdr-backend.md#away-mode-injection).
 
 ### 2026-09-20 claude 2.1.236 statusLine footer through Herdr
 

@@ -630,6 +630,7 @@ It hands the visible pane's ANSI viewport plus Herdr's capability facts to the f
 
 - Bordered boxes.
 - Bare agent-glyph rows, including muse's `⟩`, which the adapter's retired local pattern silently omitted.
+- Claude's titled composer, including resumed or backgrounded conversations.
 - opencode's left bar.
 - The Pi separator region this adapter pioneered, admitted only when native `agent get` identity is exactly Pi and state is idle or done.
 
@@ -651,8 +652,13 @@ That safely defers injection and eventually raises the wedge alarm.
 
 ### Away-mode injection
 
-A bare shell prompt is never an empty agent composer.
-Away-mode injection proceeds only on an affirmative `empty` result, never on unknown.
+Before typing, `inject_msg` in `bin/fm-supervise-daemon.sh` requires the supervisor pane to exist and pass the primary-pane busy guard.
+That guard trusts Herdr native `busy` when available, otherwise matches rendered output against only the detected primary harness's signature; it never classifies a recorded worker task.
+The composer guard requires the exact `empty` verdict from `fm_backend_composer_state`; every other or future verdict defers.
+A shell can display Claude's `❯` glyph, so even an empty-looking composer does not prove an agent is alive.
+Herdr additionally requires the exact `agent` verdict from `fm_backend_herdr_pane_process_state`, whose process proof is described under [Restart and liveness behavior](#restart-and-liveness-behavior).
+A lingering native registration or a non-shell foreground process alone is insufficient; `shell`, `other`, `unreadable`, and every unrecognized process verdict defer before typing or publishing an operational-input record.
+Deferred escalations remain buffered for retry.
 This prevents a dead agent pane from receiving and possibly executing an escalation as shell input.
 
 ### Operational input markers
