@@ -1,0 +1,35 @@
+env -u NO_MISTAKES_GATE -u FM_GATE_REFUSE_BYPASS -u FM_ROOT_OVERRIDE -u FM_STATE_OVERRIDE -u
+FM_DATA_OVERRIDE -u FM_CONFIG_OVERRIDE -u FM_PROJECTS_OVERRIDE -u CLAUDE_CODE_CHILD_SESSION -
+u CLAUDE_CODE_SESSION_ID FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y5S
+F2JZ46B611HN6SRDQFX/.live-validation/home' CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_
+CODE_SEND_FEEDBACK=0 CLAUDE_SECURESTORAGE_CONFIG_DIR='' CLAUDE_CONFIG_DIR='/Users/rega1011/.n
+o-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX/.live-validation/home/claude-con
+fig' claude --safe-mode --name 'Firstmate operational input' --permission-mode auto --setting
+s '{"disableAllHooks":true,"feedbackDrafts":"off","theme":"dark-ansi"}' --tools '' --system-p
+rompt 'You are an isolated delivery validation session. Reply briefly to each message with DE
+LIVERED. Do not run tools or change files.'
+01M3Y5SF2JZ46B611HN6SRDQFX on  HEAD [?]
+❯ env -u NO_MISTAKES_GATE -u FM_GATE_REFUSE_BYPASS -u FM_ROOT_OVERRIDE -u FM_STATE_OVERRIDE -
+u FM_DATA_OVERRIDE -u FM_CONFIG_OVERRIDE -u FM_PROJECTS_OVERRIDE -u CLAUDE_CODE_CHILD_SESSION
+ -u CLAUDE_CODE_SESSION_ID FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y
+5SF2JZ46B611HN6SRDQFX/.live-validation/home' CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUD
+E_CODE_SEND_FEEDBACK=0 CLAUDE_SECURESTORAGE_CONFIG_DIR='' CLAUDE_CONFIG_DIR='/Users/rega1011/
+.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX/.live-validation/home/claude-c
+onfig' claude --safe-mode --name 'Firstmate operational input' --permission-mode auto --setti
+ngs '{"disableAllHooks":true,"feedbackDrafts":"off","theme":"dark-ansi"}' --tools '' --system
+-prompt 'You are an isolated delivery validation session. Reply briefly to each message with
+DELIVERED. Do not run tools or change files.'
+ ▐▛███▛█   Claude Code v2.1.284
+▝▜██████▀  Opus 5.5 · API Usage Billing
+ ▝▝   ▝▝   ~/.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX
+
+⚠ Safe mode: all customizations are disabled (CLAUDE.md, skills, plugins, hooks, MCP, agents,
+  and more)
+  Restart without --safe-mode to re-enable
+
+─────────────────────────────────────────────────────────────── Firstmate operational input ─
+❯
+─────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← for agents
+                                                                 Not logged in · Run /login
+                                     Update available! Run: brew upgrade claude-code@latest

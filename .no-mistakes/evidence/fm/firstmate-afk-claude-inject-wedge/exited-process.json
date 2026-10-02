@@ -1,0 +1,1 @@
+{"id":"cli:pane:process_info","result":{"process_info":{"foreground_process_group_id":50586,"foreground_processes":[{"argv0":"claude","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX","name":"claude","pid":50586}],"pane_id":"w6:p1","shell_pid":49604},"type":"pane_process_info"}}

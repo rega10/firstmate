@@ -1,0 +1,4 @@
+fixed classifier on real exited Claude shell: empty
+base classifier on same shell: empty
+injection returned success
+transport attempted: 1

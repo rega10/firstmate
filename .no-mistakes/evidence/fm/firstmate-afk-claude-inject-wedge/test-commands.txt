@@ -1,0 +1,16 @@
+bash tests/fm-composer-lib.test.sh
+herdr --version; claude --version; claude auth status
+bin/fm-lab-home.sh create <worktree>/.live-validation/home
+bin/fm-herdr-lab.sh provision fm-lab-afk-gate-3607
+bin/fm-herdr-lab.sh viewer start fm-lab-afk-gate-3607 (40x120 pty, drained)
+bin/fm-herdr-lab.sh run fm-lab-afk-gate-3607 workspace create / pane run claude (isolated config, tools and hooks disabled, no credential changes)
+bash .live-validation/check-live.sh (old/fixed live comparison, draft check; initial agents attempt remained in conversation, corrected using two spaced Left presses)
+bash .live-validation/guards-rest.sh (real agents-view refusal)
+bash .live-validation/run-daemon.sh (real watcher and away daemon, generated status -> Claude doorbell)
+bash .live-validation/exit-guards.sh (exit opened agents view; shell assertion corrected with process-confirmed exited pane w2:p1; closed-pane refusal passed)
+bash .live-validation/dead-shell.sh (zsh-only process, old/fixed both empty, injection succeeds)
+ANSI viewport captures rendered to live-terminal-evidence.html.
+chrome-devtools-axi open/resize/eval/screenshot: rendered captured ANSI frames to titled-idle-render.png, daemon-delivery-render.png, dead-shell-render.png; browser stopped.
+claude stop 72d87db9 with lab-local CLAUDE_CONFIG_DIR
+bin/fm-herdr-lab.sh teardown fm-lab-afk-gate-3607: exit 0, default tripwire unchanged
+Python shutil.rmtree of worktree-local .live-validation removed disposable local config, plugin downloads, browser profile, drivers, and lab state.

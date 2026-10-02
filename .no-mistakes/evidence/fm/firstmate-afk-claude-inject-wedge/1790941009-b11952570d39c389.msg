@@ -1,0 +1,1 @@
+⁣FIRSTMATE_OP: v1 away-supervisor: Supervisor escalate (1 event(s)): lab-event.status: needs-decision: LIVE_AFK_DELIVERY_1790941000 choose proceed or wait (pre-read; re-arm not needed — watcher daemon-managed)

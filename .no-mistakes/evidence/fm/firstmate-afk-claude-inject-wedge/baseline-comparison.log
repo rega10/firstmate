@@ -1,0 +1,3 @@
+base classifier on live titled idle: unknown
+base injection: deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+fixed classifier on same live titled idle: empty

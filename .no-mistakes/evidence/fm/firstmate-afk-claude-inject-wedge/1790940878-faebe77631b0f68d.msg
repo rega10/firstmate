@@ -1,0 +1,1 @@
+⁣FIRSTMATE_OP: v1 away-supervisor: Supervisor escalate (1 event(s)): needs-decision: live draft-protection event (pre-read; re-arm not needed — watcher daemon-managed)

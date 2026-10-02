@@ -1,0 +1,39 @@
+u CLAUDE_CODE_SESSION_ID FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y5S
+F2JZ46B611HN6SRDQFX/.live-validation/home' CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_
+CODE_SEND_FEEDBACK=0 claude --name 'Firstmate operational input' --permission-mode auto --set
+tings '{"disableAllHooks":true,"feedbackDrafts":"off","theme":"dark-ansi"}' --tools '' --syst
+em-prompt 'You are an isolated delivery validation session. Reply briefly to each message wit
+h DELIVERED. Do not run tools or change files.'
+[0m[1m[38;5;6m01M3Y5SF2JZ46B611HN6SRDQFX[0m on [0m[1m[38;5;5m HEAD[0m [0m[1m[38;5;1m[?][0m 
+[0m[38;5;5m❯[0m [0m[4m[38;5;2menv[0m -u NO_MISTAKES_GATE -u FM_GATE_REFUSE_BYPASS -u FM_ROOT_OVERRIDE -u FM_STATE_OVERRIDE -
+u FM_DATA_OVERRIDE -u FM_CONFIG_OVERRIDE -u FM_PROJECTS_OVERRIDE -u CLAUDE_CODE_CHILD_SESSION
+ -u CLAUDE_CODE_SESSION_ID FM_HOME=[0m[38;5;3m'/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y[0m
+[0m[38;5;3m5SF2JZ46B611HN6SRDQFX/.live-validation/home'[0m CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUD
+E_CODE_SEND_FEEDBACK=0 [0m[38;5;2mclaude[0m --name [0m[38;5;3m'Firstmate operational input'[0m --permission-mode auto --s
+ettings [0m[38;5;3m'{"disableAllHooks":true,"feedbackDrafts":"off","theme":"dark-ansi"}'[0m --tools [0m[38;5;3m''[0m --sy
+stem-prompt [0m[38;5;3m'You are an isolated delivery validation session. Reply briefly to each message w[0m
+[0m[38;5;3mith DELIVERED. Do not run tools or change files.'[0m
+
+─────────────────────────────────────────────────────────────────────────────────────────────
+ Accessing workspace:
+
+ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX
+
+ Quick safety check: Is this a project you created or one you trust? (Like your own code, a
+ well-known open source project, or work from your team). If not, take a moment to review
+ what's in this folder first.
+
+ Claude Code'll be able to read, edit, and execute files here.
+
+ Security guide
+
+ ❯ No, exit
+   Yes, I trust this folder
+
+ Enter to confirm · Esc to cancel
+[0m[1m[38;5;6m01M3Y5SF2JZ46B611HN6SRDQFX[0m on [0m[1m[38;5;5m HEAD[0m [0m[1m[38;5;1m[?][0m [0m[1m[38;5;3m55s[0m 
+[0m[38;5;5m❯[0m [0m[38;5;2m:[0m Firstmate operational input waiting: read [0m[38;5;3m'/Users/rega1011/.no-mistakes/worktrees/4227183[0m
+[0m[38;5;3m88d14/01M3Y5SF2JZ46B611HN6SRDQFX/.live-validation/home/state/operational-inbox/1790941137-575[0m
+[0m[38;5;3mf8f000e0dc496.msg'[0m and handle its contents as Firstmate operational input.
+[0m[1m[38;5;6m01M3Y5SF2JZ46B611HN6SRDQFX[0m on [0m[1m[38;5;5m HEAD[0m [0m[1m[38;5;1m[?][0m 
+[0m[38;5;5m❯[0m 

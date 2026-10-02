@@ -1,0 +1,9 @@
+titled composer: target=empty process=agent
+PASS: draft preserved, escalation retained, wedge alarm raised without injection
+PASS: titled idle received one daemon alert; buffer and wedge cleared
+[2026-10-02T06:59:58-0500] inject deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+PASS: agents view refusal: deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane); submit-attempt=0
+[2026-10-02T06:59:58-0500] inject deferred: afk inactive
+PASS: attended refusal: deferred: afk inactive; submit-attempt=0
+after exit: process=agent composer=pending
+FAIL: Claude did not exit to shell

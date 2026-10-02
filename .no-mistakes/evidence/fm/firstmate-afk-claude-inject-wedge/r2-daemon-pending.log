@@ -1,0 +1,12 @@
+[2026-10-02T06:59:27-0500] daemon starting (pid 30334); target=fm-lab-afk-r2-25623-803:w2:p1; target_source=FM_SUPERVISOR_TARGET; backend=herdr; backend_source=FM_SUPERVISOR_BACKEND; afk=on; inject_skip='heartbeat'; stale_escalate=999999s; batch=0s
+[2026-10-02T06:59:33-0500] wake: signal: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX/.live-validation-r2/home.9oE9OK/state/lab-event.status
+[2026-10-02T06:59:34-0500] escalate: needs-decision: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX/.live-validation-r2/home.9oE9OK/state/lab-event.status -> lab-event.status: needs-decision: R2_LIVE_AFK_DELIVERY choose proceed or wait
+[2026-10-02T06:59:34-0500] inject deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+[2026-10-02T06:59:35-0500] inject deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+[2026-10-02T06:59:37-0500] inject deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+[2026-10-02T06:59:37-0500] inject deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+[2026-10-02T06:59:37-0500] ERROR: away-mode escalation undelivered 3s; last delivery failure: deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane). Buffer + wake-queue preserved; alarm marker written.
+[2026-10-02T06:59:38-0500] inject deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+[2026-10-02T06:59:40-0500] inject deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+[2026-10-02T06:59:40-0500] inject deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+[2026-10-02T06:59:40-0500] ERROR: away-mode escalation undelivered 6s; last delivery failure: deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane). Buffer + wake-queue preserved; alarm marker written.

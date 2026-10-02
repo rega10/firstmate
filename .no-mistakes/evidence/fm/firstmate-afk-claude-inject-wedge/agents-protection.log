@@ -1,0 +1,3 @@
+agents-view classifier: pending
+agents injection refused: deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+buffer retained: needs-decision: live agents-protection event

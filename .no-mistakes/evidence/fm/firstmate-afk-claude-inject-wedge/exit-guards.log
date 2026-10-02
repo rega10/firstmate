@@ -1,0 +1,4 @@
+exited-shell classifier: pending
+exited injection refused: deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+closed-pane classifier: unknown
+closed-pane injection refused: supervisor target fm-lab-afk-gate-3607:w6:p1 not found on herdr

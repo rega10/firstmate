@@ -1,0 +1,26 @@
+bash '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX/.live-va
+lidation-r2/start-claude.sh'
+[0m[1m[38;5;6m01M3Y5SF2JZ46B611HN6SRDQFX[0m on [0m[1m[38;5;5m HEAD[0m [0m[1m[38;5;1m[?][0m 
+[0m[38;5;5m❯[0m [0m[38;5;2mbash[0m [0m[38;5;3m'/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX/.live-[0m
+[0m[38;5;3mvalidation-r2/start-claude.sh'[0m
+ ▐▛███▛█   Claude Code v2.1.284
+▝▜██████▀  Opus 5.5 · API Usage Billing
+ ▝▝   ▝▝   ~/.no-mistakes/worktrees/422718388d14/01M3Y5SF2JZ46B611HN6SRDQFX
+
+⚠ Safe mode: all customizations are disabled (CLAUDE.md, skills, plugins, hooks, MCP, agents,
+  and more)
+  Restart without --safe-mode to re-enable
+
+⏺ Auto mode lets Claude handle permission prompts automatically — Claude checks each
+  tool call for risky actions and prompt injection before executing. Actions Claude
+  identifies as safe are executed, while actions Claude identifies as risky are
+  blocked and Claude may try a different approach. Ideal for long-running tasks.
+  Sessions are slightly more expensive. Claude can make mistakes that allow harmful
+  commands to run, it's recommended to only use in isolated environments. Shift+Tab
+  to change mode.
+
+─────────────────────────────────────────────────────────────── Firstmate operational input ─
+❯ CAPTAIN_DRAFT_DO_NOT_SUBMIT[0m[7m [0m
+─────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ auto mode on (shift+tab to cycle)                           Not logged in · Run /login
+                                                                         ◐ medium · /effort
