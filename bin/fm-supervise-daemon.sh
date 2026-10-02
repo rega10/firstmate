@@ -1410,7 +1410,7 @@ window_for_task() {  # <task-key> [state]
 #     line, or a previous injection's unsent text), defer entirely - injecting
 #     would merge with the human's text.
 inject_msg() {  # <message> [state]
-  local msg=$1 state target backend retries sleep_s verdict composer encoded bytes errf err='' body
+  local msg=$1 state target backend retries sleep_s verdict composer process_state encoded bytes errf err='' body
   state="${2:-$(_state_root)}"
   # (1) Presence-gate: inject ONLY when afk is active. When afk is off, the
   # daemon self-handles and stays quiet; firstmate drives the normal always-on
@@ -1446,16 +1446,30 @@ inject_msg() {  # <message> [state]
   #      composer. The shared classifier (fm_backend_composer_state ->
   #      fm_composer_classify_content, bin/fm-composer-lib.sh) reports 'pending'
   #      for real unsubmitted text (a human's half-typed line, or a swallowed
-  #      prior injection) and 'unknown' for a bare dead-shell prompt (the agent
-  #      exited to its login shell) or an unreadable pane. Neither is a safe
-  #      target - typing the escalation into a shell could execute it - so defer
-  #      on anything that is not affirmatively 'empty'. A deferred escalation
+  #      prior injection) and 'unknown' for an unidentified prompt or an
+  #      unreadable pane. Defer on anything that is not affirmatively 'empty'.
+  #      A shell can share an agent's prompt glyph, so Herdr also needs the
+  #      process proof below. A deferred escalation
   #      stays buffered for the next cycle or the catch-up flush.
   composer=$(fm_backend_composer_state "$backend" "$target" 2>/dev/null)
   if [ "$composer" != empty ]; then
     INJECT_LAST_FAILURE="deferred: supervisor composer not confirmed-empty (state=${composer:-unknown}: pending input, dead-shell prompt, or unreadable pane)"
     log "inject $INJECT_LAST_FAILURE"
     return 1
+  fi
+  # A rendered Claude glyph can survive over a shell after Claude exits.
+  # Require the shared process classifier's positive harness verdict, never a
+  # lingering Herdr registration or merely a non-shell foreground process.
+  if [ "$backend" = herdr ]; then
+    process_state=unreadable
+    if fm_backend_herdr_parse_target "$target"; then
+      process_state=$(fm_backend_herdr_pane_process_state "$FM_BACKEND_HERDR_SESSION" "$FM_BACKEND_HERDR_PANE" 2>/dev/null)
+    fi
+    if [ "$process_state" != agent ]; then
+      INJECT_LAST_FAILURE="deferred: supervisor harness not confirmed-live (process=${process_state:-unreadable})"
+      log "inject $INJECT_LAST_FAILURE"
+      return 1
+    fi
   fi
   #   c) A primary that strips invisible characters from submitted prompts gets
   #      the owner's record-backed doorbell instead of the typed envelope, so
