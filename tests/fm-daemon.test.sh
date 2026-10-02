@@ -3156,6 +3156,7 @@ test_inject_msg_defers_on_shell_with_agent_glyph() {
     kill "$fixture_shell_pid" 2>/dev/null || true
     wait "$fixture_shell_pid" 2>/dev/null || true
     cp "$(command -v bash)" "$dir/claude"
+    # shellcheck disable=SC2016  # $1 must expand in the child shell, not here
     "$dir/claude" -c 'printf "❯"; read -r line < "$1"' _ "$dir/input" > "$dir/prompt" &
     fixture_shell_pid=$!
     out=$(fm_backend_herdr_pane_process_state default w1:p2)
