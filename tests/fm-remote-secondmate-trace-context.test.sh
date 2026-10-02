@@ -96,7 +96,8 @@ git -C "$REMOTE_ROOT" init -q -b main
 git -C "$REMOTE_ROOT" config user.email test@example.com
 git -C "$REMOTE_ROOT" config user.name Test
 git -C "$REMOTE_ROOT" add .
-git -C "$REMOTE_ROOT" commit -qm 'remote fixture root'
+# Both seeds clone this object store; detached repacking must not race them.
+git -C "$REMOTE_ROOT" -c maintenance.auto=false commit -qm 'remote fixture root'
 
 cat > "$FAKEBIN/fake-ssh" <<'SH'
 #!/usr/bin/env bash
