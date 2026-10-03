@@ -763,6 +763,7 @@ escalate_add() {  # <state> <distilled-item>
     unknown_wake_acknowledged "$state" "$line" && return 0
   fi
   buf="$state/.subsuper-escalations"
+  escalate_commit_pending "$state" || return 1
   [ -s "$buf" ] || _now > "${buf}.since"
   printf '%s\n' "$item" >> "$buf"
 }
@@ -904,10 +905,36 @@ escalate_full_text_save() {  # <state> <chunk>
 # ESCALATE_KEPT_FULL remembers it so a retry of the same chunk reuses it
 # instead of writing another copy.
 ESCALATE_KEPT_FULL=
+ESCALATE_PENDING_COMMIT=
+escalate_commit_pending() {
+  local buf="$1/.subsuper-escalations" staged
+  if [ -z "$ESCALATE_PENDING_COMMIT" ]; then
+    for staged in "$buf".remaining.*; do
+      [ -e "$staged" ] || continue
+      INJECT_LAST_FAILURE="uncommitted escalation checkpoint $staged requires reconciliation before delivery"
+      log "inject checkpoint failed: $INJECT_LAST_FAILURE"
+      return 1
+    done
+    return 0
+  fi
+  case "$ESCALATE_PENDING_COMMIT" in
+    "$buf".remaining.*)
+      if mv -f "$ESCALATE_PENDING_COMMIT" "$buf"; then
+        ESCALATE_PENDING_COMMIT=
+        [ -s "$buf" ] || rm -f "${buf}.since"
+        return 0
+      fi
+      ;;
+  esac
+  INJECT_LAST_FAILURE="delivered escalation checkpoint $ESCALATE_PENDING_COMMIT could not replace $buf; delivery will not be repeated"
+  log "inject checkpoint failed: $INJECT_LAST_FAILURE"
+  return 1
+}
 escalate_flush() {  # <state>
-  local state=$1 buf msg chunk note encoded cap=$ESCALATE_TYPED_BYTES full='' fresh=0 rc=1
+  local state=$1 buf msg chunk remaining note encoded cap=$ESCALATE_TYPED_BYTES full='' fresh=0 rc=1
   INJECT_SUBMIT_ATTEMPTED=0
   buf="$state/.subsuper-escalations"
+  escalate_commit_pending "$state" || return 1
   [ -s "$buf" ] || return 0
   if [ ! -f "$buf" ] || [ ! -r "$buf" ]; then
     INJECT_LAST_FAILURE="escalation buffer $buf is not a readable file"
@@ -927,6 +954,14 @@ escalate_flush() {  # <state>
     log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
     return 1
   fi
+  remaining=$(mktemp "${buf}.remaining.XXXXXX" 2>/dev/null) || remaining=
+  if [ -z "$remaining" ] || ! tail -n +"$((ESCALATE_EVENTS + 1))" "$buf" > "$remaining"; then
+    rm -f "$chunk"
+    [ -z "$remaining" ] || rm -f "$remaining"
+    INJECT_LAST_FAILURE="remaining escalations could not be staged beside $buf"
+    log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
+    return 1
+  fi
   msg=$ESCALATE_BODY
   if [ "$ESCALATE_BOUNDED" -eq 1 ]; then
     if [ -n "$ESCALATE_KEPT_FULL" ] && cmp -s "$ESCALATE_KEPT_FULL" "$chunk"; then
@@ -934,7 +969,7 @@ escalate_flush() {  # <state>
     elif full=$(escalate_full_text_save "$state" "$chunk"); then
       fresh=1
     else
-      rm -f "$chunk"
+      rm -f "$chunk" "$remaining"
       INJECT_LAST_FAILURE="digest full text could not be saved under $state/$ESCALATE_FULL_DIR"
       log "inject skipped: $INJECT_LAST_FAILURE; buffer preserved"
       return 1
@@ -955,19 +990,16 @@ escalate_flush() {  # <state>
     unknown_wake_acknowledge_flushed "$state" "$chunk" \
       || log "unknown-wake acknowledgement write failed; a delivered unknown wake may escalate again"
     rm -f "$state/.subsuper-inject-wedged"
-    if [ "$ESCALATE_PENDING" -eq 0 ]; then
-      : > "$buf"; rm -f "${buf}.since"
-    elif ! { tail -n +"$((ESCALATE_EVENTS + 1))" "$buf" > "$chunk" && mv -f "$chunk" "$buf"; }; then
-      log "delivered $ESCALATE_EVENTS event(s) could not be removed from $buf; they may be delivered again"
-    fi
     ESCALATE_KEPT_FULL=
-    rc=0
+    ESCALATE_PENDING_COMMIT=$remaining
+    escalate_commit_pending "$state" && rc=0
   elif [ "$INJECT_SUBMIT_ATTEMPTED" = 1 ]; then
     [ -z "$full" ] || ESCALATE_KEPT_FULL=$full
   elif [ "$fresh" = 1 ]; then
     rm -f "$full"
   fi
   rm -f "$chunk"
+  [ "$remaining" = "$ESCALATE_PENDING_COMMIT" ] || rm -f "$remaining"
   return "$rc"
 }
 

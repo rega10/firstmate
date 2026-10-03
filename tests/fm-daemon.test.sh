@@ -2581,6 +2581,120 @@ test_chunk_progress_survives_a_failed_later_chunk() {
   pass "a deferred later chunk keeps exactly the undelivered events and resumes without loss or repeat"
 }
 
+test_remainder_staging_failure_prevents_delivery() {
+  local dir state sent harness fault item
+  for harness in codex claude; do
+    for fault in write create; do
+      dir=$(make_bordered_case "digest-stage-$harness-$fault")
+      state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
+      escalate_add "$state" 'first.status: done: intact'
+      item="second.status: done: $(printf '%19000s' '' | tr ' ' x)"
+      escalate_add "$state" "$item"
+      cp "$state/.subsuper-escalations" "$dir/original"
+      cp "$state/.subsuper-escalations.since" "$dir/original.since"
+      afk_enter "$state"
+      tail() {
+        case "$*" in
+          *'.subsuper-escalations')
+            if [ "$fault" = write ]; then
+              printf 'partial remainder'
+              printf 'tail: No space left on device\n' >&2
+              return 1
+            fi ;;
+        esac
+        command tail "$@"
+      }
+      mktemp() {
+        case "$*" in *'.remaining.'*) [ "$fault" != create ] || return 1 ;; esac
+        command mktemp "$@"
+      }
+      if LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+        FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
+        escalate_flush "$state"; then
+        fail "a failed remainder stage was reported successful"
+      fi
+      unset -f tail mktemp
+      [ ! -s "$sent" ] && [ "$INJECT_SUBMIT_ATTEMPTED" = 0 ] || fail "delivery preceded a complete remainder stage"
+      cmp -s "$dir/original" "$state/.subsuper-escalations" || fail "failed staging changed the buffered events"
+      cmp -s "$dir/original.since" "$state/.subsuper-escalations.since" || fail "failed staging changed the buffer age"
+      assert_contains "$INJECT_LAST_FAILURE" 'remaining escalations could not be staged' "staging failure lacks its cause"
+      for item in "$state"/.subsuper-escalations.chunk.* "$state"/.subsuper-escalations.remaining.*; do
+        [ ! -e "$item" ] || fail "failed staging left a temporary checkpoint"
+      done
+      flush_until_empty "$dir" "$harness"
+      [ "$(delivered_digest "$sent" | grep -o 'first.status' | wc -l | tr -d ' ')" -eq 1 ] || fail "recovered staging repeated the first event"
+    done
+  done
+  pass "remainder allocation and partial-write failures preserve the buffer without typing on both carriers"
+}
+
+test_checkpoint_rename_failure_never_retypes_delivered_events() {
+  local dir state sent harness mode checkpoint_blocked since
+  for harness in codex claude; do
+    for mode in partial final; do
+      dir=$(make_bordered_case "digest-rename-$harness-$mode")
+      state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
+      escalate_add "$state" 'first.status: done: intact'
+      if [ "$mode" = partial ]; then
+        escalate_add "$state" "second.status: done: $(printf '%9000s' '' | tr ' ' x)"
+      fi
+      cp "$state/.subsuper-escalations" "$dir/original"
+      since=$(( $(date +%s) - 100 ))
+      printf '%s\n' "$since" > "$state/.subsuper-escalations.since"
+      afk_enter "$state"
+      checkpoint_blocked=1
+      mv() {
+        case "$*" in
+          *'.subsuper-escalations') [ "$checkpoint_blocked" = 0 ] || return 1 ;;
+        esac
+        command mv "$@"
+      }
+      if LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+        FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
+        escalate_flush "$state"; then
+        fail "a failed delivery checkpoint was reported successful"
+      fi
+      [ "$(grep -c '\[ENTER\]' "$sent")" -eq 1 ] || fail "the initial checkpoint fixture did not deliver once"
+      [ -f "$ESCALATE_PENDING_COMMIT" ] || fail "a failed checkpoint discarded its staged remainder"
+      tail -n +2 "$dir/original" | cmp -s - "$ESCALATE_PENDING_COMMIT" || fail "the retained checkpoint is not the undelivered remainder"
+      cmp -s "$dir/original" "$state/.subsuper-escalations" || fail "a failed rename changed the original buffer"
+      if LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+        FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
+        bash -c '. "$1"; escalate_flush "$2"' _ "$DAEMON" "$state"; then
+        fail "a fresh process bypassed an uncommitted checkpoint"
+      fi
+      [ "$(grep -c '\[ENTER\]' "$sent")" -eq 1 ] || fail "a fresh process resubmitted a delivered event"
+      assert_contains "$(cat "$dir/daemon.log")" 'requires reconciliation before delivery' "a fresh process did not surface its ambiguous checkpoint"
+      if LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+        FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
+        escalate_flush "$state"; then
+        fail "a blocked checkpoint retry was reported successful"
+      fi
+      if LOG="$dir/daemon.log" escalate_add "$state" 'late.status: done: intact'; then
+        fail "an enqueue bypassed the pending checkpoint"
+      fi
+      [ "$(grep -c '\[ENTER\]' "$sent")" -eq 1 ] || fail "a checkpoint failure resubmitted a delivered event"
+      assert_contains "$INJECT_LAST_FAILURE" 'delivery will not be repeated' "checkpoint failure lacks its cause"
+      checkpoint_blocked=0
+      LOG="$dir/daemon.log" escalate_add "$state" 'late.status: done: intact' || fail "the pending checkpoint did not recover before enqueue"
+      unset -f mv
+      [ -z "$ESCALATE_PENDING_COMMIT" ] || fail "a committed checkpoint remained pending"
+      tail -n +2 "$dir/original" > "$dir/expected"
+      printf 'late.status: done: intact\n' >> "$dir/expected"
+      cmp -s "$dir/expected" "$state/.subsuper-escalations" || fail "checkpoint recovery lost or repeated an event"
+      if [ "$mode" = partial ]; then
+        [ "$(cat "$state/.subsuper-escalations.since")" = "$since" ] || fail "a partial checkpoint reset the remaining age"
+      else
+        [ "$(cat "$state/.subsuper-escalations.since")" -gt "$since" ] || fail "a final checkpoint kept the drained buffer age for a new event"
+      fi
+      flush_until_empty "$dir" "$harness"
+      [ "$(delivered_digest "$sent" | grep -o 'first.status' | wc -l | tr -d ' ')" -eq 1 ] || fail "checkpoint recovery repeated the delivered event"
+      [ "$(delivered_digest "$sent" | grep -o 'late.status' | wc -l | tr -d ' ')" -eq 1 ] || fail "checkpoint recovery lost or repeated the new event"
+    done
+  done
+  pass "partial and final checkpoint failures prevent replay across retries, enqueues, and fresh processes on both carriers"
+}
+
 test_typed_whole_event_before_summary_stays_whole() {
   local dir state sent item big digest encoded
   dir=$(make_bordered_case digest-whole-before-summary)
@@ -3631,6 +3745,8 @@ test_digest_past_budget_is_delivered_as_whole_event_chunks
 test_status_events_reach_every_digest_path_whole
 test_typed_digest_chunks_are_bounded_and_independently_prefixed
 test_chunk_progress_survives_a_failed_later_chunk
+test_remainder_staging_failure_prevents_delivery
+test_checkpoint_rename_failure_never_retypes_delivered_events
 test_typed_whole_event_before_summary_stays_whole
 test_typed_oversized_event_is_summarized_with_durable_pointer
 test_long_state_paths_preserve_deliverable_events_and_summary_progress
