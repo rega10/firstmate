@@ -1,0 +1,66 @@
+schema: fm-bearings.v1
+home: .test-summary-live/parent
+generated: "2026-08-01T18:00:00Z"
+prs: "not_requested (run: /bearings include PRs)"
+projects: []
+contributions: 
+  scope: owned contributions per home
+  known: 0
+  checked: 0
+  counts: 
+    captain: 0
+    fleet: 0
+    maintainer: 0
+    nobody: 0
+  complete: true
+  proven_clear: true
+  unmeasured_homes: 0
+  unreadable_records: 0
+  unmeasured: 0
+  stale_verdicts: 0
+  missing_verdicts: 0
+  captain_omitted: 0
+  lifecycle_suppressed: 
+    archived: 0
+    parked: 0
+  captain: []
+in_flight: []
+secondmates[1]{id,state,doing,provenance,freshness,age_seconds,contradiction,reason}:
+  bytes-mate,no_active_work,No active child work,structured-home,fresh,0,false,"-"
+secondmate_reconcile[1]{id,spawn_gen,host,kind,ids}:
+  bytes-mate,null,null,null,"[]"
+decisions_open: []
+landed: []
+gates[20]{id,title,blocked_by,reason,owner,filed}:
+  parked-0000,Deferred task 0,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0001,Deferred task 1,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0002,Deferred task 2,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0003,Deferred task 3,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0004,Deferred task 4,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0005,Deferred task 5,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0006,Deferred task 6,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0007,Deferred task 7,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0008,Deferred task 8,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0009,Deferred task 9,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0010,Deferred task 10,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0011,Deferred task 11,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0012,Deferred task 12,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0013,Deferred task 13,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0014,Deferred task 14,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0015,Deferred task 15,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0016,Deferred task 16,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0017,Deferred task 17,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0018,Deferred task 18,"-",project parked until 2026-09-01,bytes-mate,null
+  parked-0019,Deferred task 19,"-",project parked until 2026-09-01,bytes-mate,null
+reports: []
+recorded_prs: []
+omitted[9]{surface,reveal}:
+  backlog item bodies,"--fields bodies"
+  "parked project work omitted by secondmate summary bound: parked-app",raise FM_SNAPSHOT_SECONDMATE_QUEUED or FM_SNAPSHOT_SECONDMATE_CHILDREN
+  task paths,"--fields paths"
+  watch/steer actions,"--fields actions"
+  healthy endpoint detail,"--fields endpoints"
+  full scout-report inventory,"--all-reports"
+  "secondmate bytes-mate queued work omitted by snapshot bound: 1480",raise FM_SNAPSHOT_SECONDMATE_QUEUED
+  "secondmate bytes-mate parked lifecycle facts omitted by summary bound: 867",refresh after parked work decreases; omitted tasks may not resurface at expiry until then
+  live PR discovery + checks,"--include-prs"

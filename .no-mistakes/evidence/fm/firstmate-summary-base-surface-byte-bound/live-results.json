@@ -1,0 +1,34 @@
+[
+  {
+    "scenario": "small unchanged summary",
+    "result": "pass"
+  },
+  {
+    "scenario": "exact limit and one-byte overflow",
+    "result": "pass"
+  },
+  {
+    "scenario": "large registry stays readable and retains lifecycle priority",
+    "result": "pass"
+  },
+  {
+    "scenario": "archived nested disclosure or diagnostic remains readable",
+    "result": "pass"
+  },
+  {
+    "scenario": "parked nested disclosure or diagnostic remains readable",
+    "result": "pass"
+  },
+  {
+    "scenario": "invalid nested disclosure or diagnostic remains readable",
+    "result": "pass"
+  },
+  {
+    "scenario": "hold-accounting-0 preserves captain decision and distinct omission accounting",
+    "result": "pass"
+  },
+  {
+    "scenario": "hold-accounting-3 preserves captain decision and distinct omission accounting",
+    "result": "pass"
+  }
+]

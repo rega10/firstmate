@@ -1,0 +1,71 @@
+schema: fm-bearings.v1
+home: .test-summary-live/parent
+generated: "2026-08-01T18:00:00Z"
+prs: "not_requested (run: /bearings include PRs)"
+projects: []
+contributions: 
+  scope: owned contributions per home
+  known: 0
+  checked: 0
+  counts: 
+    captain: 0
+    fleet: 0
+    maintainer: 0
+    nobody: 0
+  complete: true
+  proven_clear: true
+  unmeasured_homes: 0
+  unreadable_records: 0
+  unmeasured: 0
+  stale_verdicts: 0
+  missing_verdicts: 0
+  captain_omitted: 0
+  lifecycle_suppressed: 
+    archived: 0
+    parked: 0
+  captain: []
+in_flight: []
+secondmates[1]{id,state,doing,provenance,freshness,age_seconds,contradiction,reason}:
+  bytes-mate,captain_decision,Captain decision 1; Captain decision 2; Captain decision 3; Captain decision 4; Captain decision 5; Captain decision 6; …,structured-home,fresh,0,false,"-"
+secondmate_reconcile[1]{id,spawn_gen,host,kind,ids}:
+  bytes-mate,null,null,null,"[]"
+decisions_open[20]{id,key,verb,summary,owner}:
+  bytes-mate/hold-0001,hold-0001,captain-hold,"Captain decision 1: choose an option",bytes-mate
+  bytes-mate/hold-0002,hold-0002,captain-hold,"Captain decision 2: choose an option",bytes-mate
+  bytes-mate/hold-0003,hold-0003,captain-hold,"Captain decision 3: choose an option",bytes-mate
+  bytes-mate/hold-0004,hold-0004,captain-hold,"Captain decision 4: choose an option",bytes-mate
+  bytes-mate/hold-0005,hold-0005,captain-hold,"Captain decision 5: choose an option",bytes-mate
+  bytes-mate/hold-0006,hold-0006,captain-hold,"Captain decision 6: choose an option",bytes-mate
+  bytes-mate/hold-0007,hold-0007,captain-hold,"Captain decision 7: choose an option",bytes-mate
+  bytes-mate/hold-0008,hold-0008,captain-hold,"Captain decision 8: choose an option",bytes-mate
+  bytes-mate/hold-0009,hold-0009,captain-hold,"Captain decision 9: choose an option",bytes-mate
+  bytes-mate/hold-0010,hold-0010,captain-hold,"Captain decision 10: choose an option",bytes-mate
+  bytes-mate/hold-0011,hold-0011,captain-hold,"Captain decision 11: choose an option",bytes-mate
+  bytes-mate/hold-0012,hold-0012,captain-hold,"Captain decision 12: choose an option",bytes-mate
+  bytes-mate/hold-0013,hold-0013,captain-hold,"Captain decision 13: choose an option",bytes-mate
+  bytes-mate/hold-0014,hold-0014,captain-hold,"Captain decision 14: choose an option",bytes-mate
+  bytes-mate/hold-0015,hold-0015,captain-hold,"Captain decision 15: choose an option",bytes-mate
+  bytes-mate/hold-0016,hold-0016,captain-hold,"Captain decision 16: choose an option",bytes-mate
+  bytes-mate/hold-0017,hold-0017,captain-hold,"Captain decision 17: choose an option",bytes-mate
+  bytes-mate/hold-0018,hold-0018,captain-hold,"Captain decision 18: choose an option",bytes-mate
+  bytes-mate/hold-0019,hold-0019,captain-hold,"Captain decision 19: choose an option",bytes-mate
+  bytes-mate/hold-0020,hold-0020,captain-hold,"Captain decision 20: choose an option",bytes-mate
+landed: []
+gates: []
+reports: []
+recorded_prs: []
+omitted[14]{surface,reveal}:
+  backlog item bodies,"--fields bodies"
+  task paths,"--fields paths"
+  watch/steer actions,"--fields actions"
+  healthy endpoint detail,"--fields endpoints"
+  full scout-report inventory,"--all-reports"
+  "secondmate bytes-mate holds omitted by snapshot bound: 3",raise FM_SNAPSHOT_SECONDMATE_QUEUED
+  "secondmate bytes-mate decisions omitted by snapshot bound: 3",raise FM_SNAPSHOT_SECONDMATE_DECISIONS
+  "secondmate bytes-mate queued work omitted by snapshot bound: 3",raise FM_SNAPSHOT_SECONDMATE_QUEUED
+  "secondmate bytes-mate projects omitted by summary byte limit: 1 (kept 0)","shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"
+  "secondmate bytes-mate queued omitted by summary byte limit: 1001 (kept 0)","shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"
+  "secondmate bytes-mate holds omitted by summary byte limit: 1001 (kept 0)","shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"
+  "secondmate bytes-mate decisions_open omitted by summary byte limit: 787 (kept 214)","shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"
+  decisions_open showing 20 of 214,"--all-decisions"
+  live PR discovery + checks,"--include-prs"

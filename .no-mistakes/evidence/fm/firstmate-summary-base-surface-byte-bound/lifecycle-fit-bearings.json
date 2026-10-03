@@ -1,0 +1,257 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": ".test-summary-live/parent",
+  "generated": "2026-08-01T18:00:00Z",
+  "prs": "not_requested (run: /bearings include PRs)",
+  "projects": [],
+  "contributions": {
+    "scope": "owned contributions per home",
+    "known": 0,
+    "checked": 0,
+    "counts": {
+      "captain": 0,
+      "fleet": 0,
+      "maintainer": 0,
+      "nobody": 0
+    },
+    "complete": true,
+    "proven_clear": true,
+    "unmeasured_homes": 0,
+    "unreadable_records": 0,
+    "unmeasured": 0,
+    "stale_verdicts": 0,
+    "missing_verdicts": 0,
+    "captain_omitted": 0,
+    "lifecycle_suppressed": {
+      "archived": 0,
+      "parked": 0
+    },
+    "captain": []
+  },
+  "in_flight": [],
+  "secondmates": [
+    {
+      "id": "bytes-mate",
+      "state": "no_active_work",
+      "doing": "No active child work",
+      "provenance": "structured-home",
+      "freshness": "fresh",
+      "age_seconds": 0,
+      "contradiction": false,
+      "reason": "-"
+    }
+  ],
+  "secondmate_reconcile": [
+    {
+      "id": "bytes-mate",
+      "spawn_gen": null,
+      "host": null,
+      "kind": null,
+      "ids": []
+    }
+  ],
+  "decisions_open": [],
+  "landed": [],
+  "gates": [
+    {
+      "id": "parked-0000",
+      "title": "Deferred task 0",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0001",
+      "title": "Deferred task 1",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0002",
+      "title": "Deferred task 2",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0003",
+      "title": "Deferred task 3",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0004",
+      "title": "Deferred task 4",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0005",
+      "title": "Deferred task 5",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0006",
+      "title": "Deferred task 6",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0007",
+      "title": "Deferred task 7",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0008",
+      "title": "Deferred task 8",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0009",
+      "title": "Deferred task 9",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0010",
+      "title": "Deferred task 10",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0011",
+      "title": "Deferred task 11",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0012",
+      "title": "Deferred task 12",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0013",
+      "title": "Deferred task 13",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0014",
+      "title": "Deferred task 14",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0015",
+      "title": "Deferred task 15",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0016",
+      "title": "Deferred task 16",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0017",
+      "title": "Deferred task 17",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0018",
+      "title": "Deferred task 18",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    },
+    {
+      "id": "parked-0019",
+      "title": "Deferred task 19",
+      "blocked_by": "-",
+      "reason": "project parked until 2026-09-01",
+      "owner": "bytes-mate",
+      "filed": null
+    }
+  ],
+  "reports": [],
+  "recorded_prs": [],
+  "omitted": [
+    {
+      "surface": "backlog item bodies",
+      "reveal": "--fields bodies"
+    },
+    {
+      "surface": "parked project work omitted by secondmate summary bound: parked-app",
+      "reveal": "raise FM_SNAPSHOT_SECONDMATE_QUEUED or FM_SNAPSHOT_SECONDMATE_CHILDREN"
+    },
+    {
+      "surface": "task paths",
+      "reveal": "--fields paths"
+    },
+    {
+      "surface": "watch/steer actions",
+      "reveal": "--fields actions"
+    },
+    {
+      "surface": "healthy endpoint detail",
+      "reveal": "--fields endpoints"
+    },
+    {
+      "surface": "full scout-report inventory",
+      "reveal": "--all-reports"
+    },
+    {
+      "surface": "secondmate bytes-mate queued work omitted by snapshot bound: 1480",
+      "reveal": "raise FM_SNAPSHOT_SECONDMATE_QUEUED"
+    },
+    {
+      "surface": "secondmate bytes-mate parked lifecycle facts omitted by summary bound: 867",
+      "reveal": "refresh after parked work decreases; omitted tasks may not resurface at expiry until then"
+    },
+    {
+      "surface": "live PR discovery + checks",
+      "reveal": "--include-prs"
+    }
+  ]
+}

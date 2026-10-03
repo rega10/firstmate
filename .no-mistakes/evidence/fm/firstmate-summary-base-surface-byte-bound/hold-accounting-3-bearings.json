@@ -1,0 +1,257 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": ".test-summary-live/parent",
+  "generated": "2026-08-01T18:00:00Z",
+  "prs": "not_requested (run: /bearings include PRs)",
+  "projects": [],
+  "contributions": {
+    "scope": "owned contributions per home",
+    "known": 0,
+    "checked": 0,
+    "counts": {
+      "captain": 0,
+      "fleet": 0,
+      "maintainer": 0,
+      "nobody": 0
+    },
+    "complete": true,
+    "proven_clear": true,
+    "unmeasured_homes": 0,
+    "unreadable_records": 0,
+    "unmeasured": 0,
+    "stale_verdicts": 0,
+    "missing_verdicts": 0,
+    "captain_omitted": 0,
+    "lifecycle_suppressed": {
+      "archived": 0,
+      "parked": 0
+    },
+    "captain": []
+  },
+  "in_flight": [],
+  "secondmates": [
+    {
+      "id": "bytes-mate",
+      "state": "captain_decision",
+      "doing": "Captain decision 1; Captain decision 2; Captain decision 3; Captain decision 4; Captain decision 5; Captain decision 6; …",
+      "provenance": "structured-home",
+      "freshness": "fresh",
+      "age_seconds": 0,
+      "contradiction": false,
+      "reason": "-"
+    }
+  ],
+  "secondmate_reconcile": [
+    {
+      "id": "bytes-mate",
+      "spawn_gen": null,
+      "host": null,
+      "kind": null,
+      "ids": []
+    }
+  ],
+  "decisions_open": [
+    {
+      "id": "bytes-mate/hold-0001",
+      "key": "hold-0001",
+      "verb": "captain-hold",
+      "summary": "Captain decision 1: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0002",
+      "key": "hold-0002",
+      "verb": "captain-hold",
+      "summary": "Captain decision 2: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0003",
+      "key": "hold-0003",
+      "verb": "captain-hold",
+      "summary": "Captain decision 3: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0004",
+      "key": "hold-0004",
+      "verb": "captain-hold",
+      "summary": "Captain decision 4: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0005",
+      "key": "hold-0005",
+      "verb": "captain-hold",
+      "summary": "Captain decision 5: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0006",
+      "key": "hold-0006",
+      "verb": "captain-hold",
+      "summary": "Captain decision 6: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0007",
+      "key": "hold-0007",
+      "verb": "captain-hold",
+      "summary": "Captain decision 7: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0008",
+      "key": "hold-0008",
+      "verb": "captain-hold",
+      "summary": "Captain decision 8: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0009",
+      "key": "hold-0009",
+      "verb": "captain-hold",
+      "summary": "Captain decision 9: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0010",
+      "key": "hold-0010",
+      "verb": "captain-hold",
+      "summary": "Captain decision 10: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0011",
+      "key": "hold-0011",
+      "verb": "captain-hold",
+      "summary": "Captain decision 11: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0012",
+      "key": "hold-0012",
+      "verb": "captain-hold",
+      "summary": "Captain decision 12: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0013",
+      "key": "hold-0013",
+      "verb": "captain-hold",
+      "summary": "Captain decision 13: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0014",
+      "key": "hold-0014",
+      "verb": "captain-hold",
+      "summary": "Captain decision 14: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0015",
+      "key": "hold-0015",
+      "verb": "captain-hold",
+      "summary": "Captain decision 15: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0016",
+      "key": "hold-0016",
+      "verb": "captain-hold",
+      "summary": "Captain decision 16: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0017",
+      "key": "hold-0017",
+      "verb": "captain-hold",
+      "summary": "Captain decision 17: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0018",
+      "key": "hold-0018",
+      "verb": "captain-hold",
+      "summary": "Captain decision 18: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0019",
+      "key": "hold-0019",
+      "verb": "captain-hold",
+      "summary": "Captain decision 19: choose an option",
+      "owner": "bytes-mate"
+    },
+    {
+      "id": "bytes-mate/hold-0020",
+      "key": "hold-0020",
+      "verb": "captain-hold",
+      "summary": "Captain decision 20: choose an option",
+      "owner": "bytes-mate"
+    }
+  ],
+  "landed": [],
+  "gates": [],
+  "reports": [],
+  "recorded_prs": [],
+  "omitted": [
+    {
+      "surface": "backlog item bodies",
+      "reveal": "--fields bodies"
+    },
+    {
+      "surface": "task paths",
+      "reveal": "--fields paths"
+    },
+    {
+      "surface": "watch/steer actions",
+      "reveal": "--fields actions"
+    },
+    {
+      "surface": "healthy endpoint detail",
+      "reveal": "--fields endpoints"
+    },
+    {
+      "surface": "full scout-report inventory",
+      "reveal": "--all-reports"
+    },
+    {
+      "surface": "secondmate bytes-mate holds omitted by snapshot bound: 3",
+      "reveal": "raise FM_SNAPSHOT_SECONDMATE_QUEUED"
+    },
+    {
+      "surface": "secondmate bytes-mate decisions omitted by snapshot bound: 3",
+      "reveal": "raise FM_SNAPSHOT_SECONDMATE_DECISIONS"
+    },
+    {
+      "surface": "secondmate bytes-mate queued work omitted by snapshot bound: 3",
+      "reveal": "raise FM_SNAPSHOT_SECONDMATE_QUEUED"
+    },
+    {
+      "surface": "secondmate bytes-mate projects omitted by summary byte limit: 1 (kept 0)",
+      "reveal": "shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"
+    },
+    {
+      "surface": "secondmate bytes-mate queued omitted by summary byte limit: 1001 (kept 0)",
+      "reveal": "shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"
+    },
+    {
+      "surface": "secondmate bytes-mate holds omitted by summary byte limit: 1001 (kept 0)",
+      "reveal": "shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"
+    },
+    {
+      "surface": "secondmate bytes-mate decisions_open omitted by summary byte limit: 787 (kept 214)",
+      "reveal": "shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"
+    },
+    {
+      "surface": "decisions_open showing 20 of 214",
+      "reveal": "--all-decisions"
+    },
+    {
+      "surface": "live PR discovery + checks",
+      "reveal": "--include-prs"
+    }
+  ]
+}

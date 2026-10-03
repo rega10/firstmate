@@ -1,0 +1,228 @@
+{
+  "schema": "fm-fleet-snapshot.v1",
+  "generated": "2026-08-01T18:00:00Z",
+  "fm_home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/parent",
+  "roots": {
+    "fm_root": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/fixture-root",
+    "state": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/parent/state",
+    "data": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/parent/data",
+    "config": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/parent/config",
+    "projects": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/parent/projects"
+  },
+  "projects": [],
+  "backlog": {
+    "path": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/parent/data/backlog.md",
+    "present": true,
+    "records": []
+  },
+  "tasks": [],
+  "main_inventory": {
+    "valid": true,
+    "reason": null,
+    "orphan_in_flight": [],
+    "unstructured_current_count": 0
+  },
+  "contributions": {
+    "known": 0,
+    "checked": 0,
+    "counts": {
+      "captain": 0,
+      "fleet": 0,
+      "maintainer": 0,
+      "nobody": 0
+    },
+    "unmeasured": 0,
+    "complete": true,
+    "proven_clear": true,
+    "stale_verdicts": 0,
+    "missing_verdicts": 0,
+    "unreadable_records": 0,
+    "valid_until": 900,
+    "captain": [],
+    "captain_omitted": 0
+  },
+  "scout_reports": [],
+  "secondmate_current": {
+    "registry": {
+      "present": true,
+      "available": true,
+      "reason": null,
+      "provenance": "registered-table",
+      "path": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/parent/data/secondmates.md",
+      "freshness": {
+        "status": "fresh",
+        "observed_at": "2026-08-01T18:00:00Z"
+      },
+      "records": [
+        {
+          "id": "bytes-mate",
+          "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/mate",
+          "host": null,
+          "root": null,
+          "remote": false,
+          "registered": true,
+          "registry_error": null
+        }
+      ],
+      "input_truncated": false,
+      "records_truncated": false,
+      "complete": true,
+      "reasons": [],
+      "lines_in_window": 1,
+      "records_in_window": 1
+    },
+    "records": [
+      {
+        "id": "bytes-mate",
+        "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/mate",
+        "host": null,
+        "remote": false,
+        "registered": true,
+        "spawn_gen": null,
+        "current": {
+          "state": "no_active_work",
+          "reason": null
+        },
+        "invalidity": {
+          "kind": null,
+          "ids": []
+        },
+        "reconcile_inventory": {
+          "kind": null,
+          "ids": []
+        },
+        "provenance": {
+          "selected": "structured-home",
+          "structured_home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M409S7KC2Z9YRNGJQGFPK26V/.test-summary-live/mate",
+          "summary_source": "local-ledger",
+          "summary_valid": true,
+          "trust": "complete",
+          "parent_event_role": "historical-only"
+        },
+        "freshness": {
+          "status": "fresh",
+          "observed_at": "2026-08-01T18:00:00Z",
+          "age_seconds": 0
+        },
+        "active_children": [],
+        "decisions_open": [],
+        "holds": [],
+        "queued": [],
+        "contributions": {
+          "known": 0,
+          "checked": 0,
+          "counts": {
+            "captain": 0,
+            "fleet": 0,
+            "maintainer": 0,
+            "nobody": 0
+          },
+          "unmeasured": 0,
+          "complete": true,
+          "proven_clear": true,
+          "stale_verdicts": 0,
+          "missing_verdicts": 0,
+          "unreadable_records": 0,
+          "valid_until": 900,
+          "captain": [],
+          "captain_omitted": 0
+        },
+        "landed": [],
+        "endpoints": [],
+        "counts": {
+          "active_children": 0,
+          "decisions_open": 0,
+          "holds": 0,
+          "queued": 300,
+          "landed": 0,
+          "endpoints": 0
+        },
+        "omitted": [
+          {
+            "surface": "lifecycle_inventory",
+            "count": 300
+          },
+          {
+            "surface": "summary_bytes",
+            "name": "projects",
+            "kept": 0,
+            "omitted": 300
+          },
+          {
+            "surface": "summary_bytes",
+            "name": "queued",
+            "kept": 0,
+            "omitted": 20
+          },
+          {
+            "surface": "summary_bytes",
+            "name": "omitted.0.parked_projects",
+            "kept": 256,
+            "omitted": 24
+          },
+          {
+            "surface": "project_lifecycle",
+            "archived_projects": [],
+            "parked_projects": []
+          },
+          {
+            "surface": "queued",
+            "count": 280
+          }
+        ],
+        "projects": [],
+        "projects_published": true,
+        "parent_event": {
+          "raw": "",
+          "note": "",
+          "age_seconds": null,
+          "open_activities": [],
+          "open_decisions": [],
+          "activity_scan": {
+            "records": [],
+            "available": true,
+            "input_truncated": false,
+            "retained_truncated": false,
+            "reasons": [],
+            "lines_in_window": 0,
+            "records_in_window": 0
+          },
+          "reconciliation": {
+            "provenance": "parent-status-keyed-fold",
+            "trust": "untrusted-supplement",
+            "activities": [],
+            "decisions": [],
+            "contradiction": false,
+            "inconclusive": false
+          }
+        },
+        "terminal_evidence": {
+          "provenance": "parent-direct-report-terminal",
+          "trust": "untrusted-supplement",
+          "captured": false,
+          "observed_at": "2026-08-01T18:00:00Z",
+          "freshness": "not-collected",
+          "reason": "no useful contradiction check",
+          "lines": 0,
+          "bytes": 0,
+          "event_note_seen": false,
+          "contradiction": false
+        },
+        "contradiction": false
+      }
+    ],
+    "total_registered": 1,
+    "total": 1,
+    "shown": 1,
+    "truncated": 0
+  },
+  "secondmate_landed": {
+    "records": [],
+    "truncated": [],
+    "unreadable": [],
+    "partial": []
+  },
+  "secondmate_guidance": {
+    "note": "For kind=secondmate, bearings selects validated structured state from that registered home; parent events and bounded terminal evidence are fallback-only supplements and never current-state authority."
+  }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "scenario": "captain-cut-to-zero retains producer classification with zero retained evidence rows",
+    "result": "pass"
+  },
+  {
+    "scenario": "hold-cut-to-zero retains producer classification with zero retained evidence rows",
+    "result": "pass"
+  },
+  {
+    "scenario": "landed-cap-0 distinguishes landed byte omissions from genuine row cap",
+    "result": "pass"
+  },
+  {
+    "scenario": "landed-cap-303 distinguishes landed byte omissions from genuine row cap",
+    "result": "pass"
+  },
+  {
+    "scenario": "UTF-8 project names remain within byte limit with correct row marker",
+    "result": "pass"
+  }
+]

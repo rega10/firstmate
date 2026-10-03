@@ -1,0 +1,406 @@
+[
+  {
+    "case": "small",
+    "summary_bytes": 1878,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": []
+  },
+  {
+    "case": "exact-limit",
+    "summary_bytes": 262144,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "one-byte-over",
+    "summary_bytes": 262106,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 2413,
+        "omitted": 1
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "large-registry",
+    "summary_bytes": 262122,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 2414,
+        "omitted": 1588
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "archived",
+    "summary_bytes": 261523,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "project_lifecycle",
+        "archived_project_count": 256,
+        "parked_project_count": 0
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 0,
+        "omitted": 300
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "omitted.0.archived_projects",
+        "kept": 256,
+        "omitted": 44
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "parked",
+    "summary_bytes": 261156,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "project_lifecycle",
+        "archived_project_count": 0,
+        "parked_project_count": 256
+      },
+      {
+        "surface": "lifecycle_inventory",
+        "count": 300
+      },
+      {
+        "surface": "queued",
+        "count": 280
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 0,
+        "omitted": 300
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "queued",
+        "kept": 0,
+        "omitted": 20
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "omitted.0.parked_projects",
+        "kept": 256,
+        "omitted": 24
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "invalid",
+    "summary_bytes": 261192,
+    "state": "no_active_work",
+    "valid": false,
+    "invalidity_kind": "orphan_in_flight",
+    "omitted": [
+      {
+        "surface": "summary_bytes",
+        "name": "reason",
+        "kept": 0,
+        "omitted": 304544
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "invalidity.ids",
+        "kept": 256,
+        "omitted": 44
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": false,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "hold-accounting-0",
+    "summary_bytes": 261349,
+    "state": "captain_decision",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "queued",
+        "kept": 0,
+        "omitted": 1001
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "holds",
+        "kept": 0,
+        "omitted": 1001
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "decisions_open",
+        "kept": 214,
+        "omitted": 787
+      }
+    ],
+    "parent_state": "captain_decision",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "hold-accounting-3",
+    "summary_bytes": 261419,
+    "state": "captain_decision",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "decisions_open",
+        "count": 3
+      },
+      {
+        "surface": "queued",
+        "count": 3
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "queued",
+        "kept": 0,
+        "omitted": 1001
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "holds",
+        "kept": 0,
+        "omitted": 1001
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "decisions_open",
+        "kept": 214,
+        "omitted": 787
+      }
+    ],
+    "parent_state": "captain_decision",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "captain-cut-to-zero",
+    "summary_bytes": 261140,
+    "state": "captain_decision",
+    "valid": false,
+    "invalidity_kind": "orphan_in_flight",
+    "omitted": [
+      {
+        "surface": "summary_bytes",
+        "name": "queued",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "holds",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "decisions_open",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "reason",
+        "kept": 0,
+        "omitted": 304244
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "invalidity.ids",
+        "kept": 256,
+        "omitted": 44
+      }
+    ],
+    "parent_state": "captain_decision",
+    "parent_summary_valid": false,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "hold-cut-to-zero",
+    "summary_bytes": 262081,
+    "state": "externally_held",
+    "valid": false,
+    "invalidity_kind": "orphan_in_flight",
+    "omitted": [
+      {
+        "surface": "summary_bytes",
+        "name": "queued",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "holds",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "reason",
+        "kept": 0,
+        "omitted": 304244
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "invalidity.ids",
+        "kept": 257,
+        "omitted": 43
+      }
+    ],
+    "parent_state": "externally_held",
+    "parent_summary_valid": false,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "landed-cap-0",
+    "summary_bytes": 261571,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "landed",
+        "kept": 216,
+        "omitted": 104
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "landed-cap-303",
+    "summary_bytes": 261602,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "landed",
+        "count": 17
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 0,
+        "omitted": 1
+      },
+      {
+        "surface": "summary_bytes",
+        "name": "landed",
+        "kept": 216,
+        "omitted": 87
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "unicode-projects",
+    "summary_bytes": 261504,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "summary_bytes",
+        "name": "projects",
+        "kept": 243,
+        "omitted": 157
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  },
+  {
+    "case": "lifecycle-fit",
+    "summary_bytes": 261885,
+    "state": "no_active_work",
+    "valid": true,
+    "invalidity_kind": null,
+    "omitted": [
+      {
+        "surface": "project_lifecycle",
+        "archived_project_count": 0,
+        "parked_project_count": 1
+      },
+      {
+        "surface": "lifecycle_inventory",
+        "count": 867
+      },
+      {
+        "surface": "queued",
+        "count": 1480
+      }
+    ],
+    "parent_state": "no_active_work",
+    "parent_summary_valid": true,
+    "parent_source": "structured-home"
+  }
+]
