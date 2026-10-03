@@ -1,0 +1,40 @@
+
+ ▐▛███▛█   Claude Code v2.1.284
+▝▜██████▀  Haiku 4.5 · API Usage Billing
+ ▝▝   ▝▝   ~/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN
+
+⚠ Safe mode: all customizations are disabled (CLAUDE.md, skills, plugins, hooks, MCP, agents, and more)
+  Restart without --safe-mode to re-enable
+
+❯ FIRSTMATE_OP: v1 away-supervisor: Supervisor escalate (2 event(s)): lab-1.status: done: regression fixture event,
+  reply with just OK (catch-all scan) | lab-2.status: done: regression fixture event, reply with just OK (catch-all
+  scan) (pre-read; re-arm not needed - watcher daemon-managed)
+
+⏺ Login expired · Please run /login
+
+✻ Baked for 0s · done 1:49 AM
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                                         Ctrl+Y to paste deleted text
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ bypass permissions on (shift+tab to cycle) · ← for agents

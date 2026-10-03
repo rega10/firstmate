@@ -1,0 +1,2 @@
+ok - real encoded chunks preserve the 630-byte event and make progress across long summary pointers
+ok - all status digest paths preserve event boundaries and literal prose for both carriers

@@ -1,0 +1,3 @@
+lab-batch.status: done: PR https://example.invalid/fixture/pull/3 checks green, regression fixture event number 3 ; literal prose, nothing to do, reply with just OK (catch-all scan)
+lab-batch.status: done: PR https://example.invalid/fixture/pull/4 checks green, regression fixture event number 4 ; literal prose, nothing to do, reply with just OK (catch-all scan)
+lab-batch.status: done: PR https://example.invalid/fixture/pull/5 checks green, regression fixture event number 5 ; literal prose, nothing to do, reply with just OK (catch-all scan)

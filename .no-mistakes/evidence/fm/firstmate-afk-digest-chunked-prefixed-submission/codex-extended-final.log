@@ -1,0 +1,12 @@
+Real Codex: above-cap batch drained in 3 bounded submissions
+Real Codex: 630-byte event sent whole with a following event still queued
+Real Codex: pending draft deferred B, preserved B, and published no newer source; deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+Real Codex: both oversized events delivered as bounded notices with distinct stable relative pointers
+Real Codex: first catch-all scan delivered 2 doorbells, with every whole event in exactly one durable record
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/bin/fm-operational-input.sh: line 226: FM_OPERATIONAL_RECORD_HARNESSES: unbound variable
+rm: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.xKqfbt/typed/.subsuper-escalations.since: Permission denied
+rm: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.xKqfbt/typed/.subsuper-escalations: Permission denied
+rm: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.xKqfbt/typed/.afk: Permission denied
+rm: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.xKqfbt/typed/daemon.log: Permission denied
+rm: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.xKqfbt/typed: Directory not empty
+rm: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.xKqfbt: Directory not empty

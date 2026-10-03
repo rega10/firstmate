@@ -1,0 +1,3 @@
+Claude recorded one below-cap fixture prompt with the operational prefix and the sender hash: 291 bytes, SHA-256 f6155cecad3dae25b58f1af383959c518cde9c374c9863b0e86a71d989e3d27f. The session then displayed Login expired. Above-cap and record-carrier JSONL validation could not complete.
+
+Codex delivered 10 chunks through real Herdr: 8 typed envelopes and 2 record doorbells. Every send/delivery byte-length and SHA-256 pair matched. Maximum encoded input: 756 bytes within the 768-byte cap. Eight batch events appeared whole exactly once and in order in the latest rendered prompt captures. Twelve record events appeared whole in exactly one of two durable records.

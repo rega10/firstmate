@@ -1,0 +1,39 @@
+  Worked for 2s • 2:03 AM
+
+
+› FIRSTMATE_OP: v1 away-supervisor: Supervisor escalate (1 event(s)): whole-630.status: done:
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  xxxxxxxxxxxxxxxxxxxxxxxxxx (pre-read; re-arm not needed - watcher daemon-managed)
+
+
+• OK
+
+  Worked for 2s • 2:03 AM
+
+
+› FIRSTMATE_OP: v1 away-supervisor: Supervisor escalate (1 event(s)): following.status: done: fixture (pre-read; re-
+  arm not needed - watcher daemon-managed)
+
+
+• OK
+
+  Worked for 2s • 2:03 AM
+
+
+› FIRSTMATE_OP: v1 away-supervisor: Supervisor escalate (1 event(s)): oversized event (digest bounded; full text of
+  every event: .subsuper-digests/digest-20261003T020319.RCQUSq) (relative to the daemon state directory) (pre-read;
+  re-arm not needed - watcher daemon-managed)
+
+
+• OK
+
+  Worked for 2s • 2:03 AM
+
+
+› fixture-unsent-draft
+
+  GPT-6.1-Sol default · ~/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN · Review supervisor escalation

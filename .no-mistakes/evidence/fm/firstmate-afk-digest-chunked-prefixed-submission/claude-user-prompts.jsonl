@@ -1,0 +1,1 @@
+{"type": "user", "content": "FIRSTMATE_OP: v1 away-supervisor: Supervisor escalate (2 event(s)): lab-1.status: done: regression fixture event, reply with just OK (catch-all scan) | lab-2.status: done: regression fixture event, reply with just OK (catch-all scan) (pre-read; re-arm not needed - watcher daemon-managed)"}

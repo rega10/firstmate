@@ -1,0 +1,6 @@
+[2026-10-03T02:08:34-0500] inject send: carrier=typed bytes=164 sha256=bd98abb44ec57bcef895927fdf437491805d93b489cb20ffd3f24ff5d2ac89ee
+[2026-10-03T02:08:35-0500] inject delivered: carrier=typed bytes=164 sha256=bd98abb44ec57bcef895927fdf437491805d93b489cb20ffd3f24ff5d2ac89ee
+[2026-10-03T02:08:35-0500] inject checkpoint failed: delivered escalation checkpoint /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.UiGFpF/typed/.subsuper-escalations.remaining.VHNgWp could not replace /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.UiGFpF/typed/.subsuper-escalations; delivery will not be repeated
+[2026-10-03T02:08:35-0500] inject checkpoint failed: uncommitted escalation checkpoint /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.UiGFpF/typed/.subsuper-escalations.remaining.VHNgWp requires reconciliation before delivery
+[2026-10-03T02:08:41-0500] inject send: carrier=typed bytes=355 sha256=ca2c5b3601166cbdc3aa98e95ccacbfecb71384d5b3c1912cc72f93dcf3848db
+[2026-10-03T02:08:42-0500] inject delivered: carrier=typed bytes=355 sha256=ca2c5b3601166cbdc3aa98e95ccacbfecb71384d5b3c1912cc72f93dcf3848db

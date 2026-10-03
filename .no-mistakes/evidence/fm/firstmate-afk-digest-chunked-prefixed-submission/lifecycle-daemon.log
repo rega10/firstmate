@@ -1,0 +1,6 @@
+[2026-10-03T01:52:28-0500] daemon starting (pid 24188); target=fm-lab-phase-lifecycle-24057-19585:w1:p1; target_source=FM_SUPERVISOR_TARGET; backend=herdr; backend_source=FM_SUPERVISOR_BACKEND; afk=on; inject_skip='heartbeat'; stale_escalate=240s; batch=9999s
+[2026-10-03T01:52:30-0500] inject checkpoint failed: uncommitted escalation checkpoint /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/lifecycle-home/state/.subsuper-escalations.remaining.interrupted requires reconciliation before delivery
+[2026-10-03T01:52:30-0500] daemon shutting down
+[2026-10-03T01:52:31-0500] daemon starting (pid 25921); target=fm-lab-phase-lifecycle-24057-19585:w1:p1; target_source=FM_SUPERVISOR_TARGET; backend=herdr; backend_source=FM_SUPERVISOR_BACKEND; afk=on; inject_skip='heartbeat'; stale_escalate=240s; batch=9999s
+[2026-10-03T01:52:33-0500] inject deferred: afk inactive
+[2026-10-03T01:52:33-0500] daemon shutting down

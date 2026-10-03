@@ -1,0 +1,35 @@
+Before return: daemon PID=24188, both interrupted checkpoints exist
+fm-afk-launch: away mode stopped; no daemon terminal was running, .afk cleared, and the posture record archived
+=== Return brief (away 2026-10-03T06:52:28Z -> 2026-10-03T06:52:30Z, 2s) ===
+Supervisor health:
+  - GAP: the watcher beat was 999999s old at return (grace 300s)
+Your instructions:
+  (no away-posture record for this window; legacy away flag only)
+Waiting on you:
+  (nothing)
+Tried and failed, or could not be fixed:
+  (nothing)
+Landed, cleanup due:
+  (nothing)
+Handled while away:
+  0 outcome(s) handled by the away session (0 routine, 0 escalated above)
+  (no routine outcomes recorded in the store for this window)
+Cost: 0 supervision outcome(s) recorded (0 routine, 0 captain); 0 task(s) live at return.
+catch-up health: GAP: the watcher beat was 999999s old at return (grace 300s)
+catch-up escalation: old.status: done: captured before interruption
+WAKE_ACK_REQUIRED: after handling completes run bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 24282.1791010350.6PZuM7
+fm-afk-return: catch-up clear; ordinary captain work may proceed
+After return: checkpoint files removed; durable source retained
+new.status: done: fresh-entry-event (catch-all scan)
+Fresh entry: real daemon re-derived and buffered the new status event
+Record startup with physical state path 616 bytes
+Accepted: daemon acquired supervision ownership at the boundary
+Record startup with physical state path 617 bytes
+error: record-backed delivery requires a state path of at most 616 bytes; '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/long-617/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/ppppppppppppppppppppppppp/state' is 617 bytes (doorbell 769 bytes, cap 768)
+Refused once before ownership; exit=1
+Record startup with physical state path 800 bytes
+error: record-backed delivery requires a state path of at most 616 bytes; '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/long-800/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/pppppppppppppppppppppppppppppppppppppppppppppp/state' is 800 bytes (doorbell 952 bytes, cap 768)
+Refused once before ownership; exit=1
+fm-herdr-lab: session delete failed for 'fm-lab-phase-lifecycle-24057-19585' and the lab session remains
+
+The guarded teardown was retried with the original PATH and completed successfully; its default-session tripwire matched. All test lab sessions were retired.

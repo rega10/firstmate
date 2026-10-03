@@ -1,0 +1,3 @@
+[2026-10-03T02:05:14-0500] inject skipped: escalation chunk could not be staged beside /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M3Y4Q2SWE72H5FAK6A4D2HPN/.test-phase/tmp/fm-afk-chunks.Y6OOTD/typed/.subsuper-escalations; buffer preserved
+[2026-10-03T02:05:15-0500] inject send: carrier=typed bytes=164 sha256=066784b77f0e62f4843d1343856d9f95e382eaa94743d949d572906094ab9785
+[2026-10-03T02:05:16-0500] inject delivered: carrier=typed bytes=164 sha256=066784b77f0e62f4843d1343856d9f95e382eaa94743d949d572906094ab9785

@@ -1,0 +1,11 @@
+ok - a typed digest is submitted as bounded chunks, each prefixed at byte zero and logged by length and digest
+ok - a deferred later chunk keeps exactly the undelivered events and resumes without loss or repeat
+tail: No space left on device
+tail: No space left on device
+ok - remainder allocation and partial-write failures preserve the buffer without typing on both carriers
+ok - partial and final checkpoint failures prevent replay across retries, enqueues, and fresh processes on both carriers
+ok - real encoded boundaries preserve a whole event before an oversized event
+ok - an event larger than a typed chunk is summarized within the bound with a durable full-text pointer
+ok - relative pointers identify their own oversized events and busy deferral publishes no newer source
+ok - record-backed startup accepts the path boundary and refuses longer paths once before supervision on both backends
+ok - completed return retires interrupted delivery checkpoints so fresh entry can enqueue, retaining durable sources
