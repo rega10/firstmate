@@ -2235,7 +2235,10 @@ secondmate_landed_from_current_json() {  # <secondmate-current-json-file> <outpu
       | $mate.landed[]
       | . + {home:$mate.home,home_id:$mate.id}],
      truncated:[ $current.records[]
-       | select(.provenance.selected == "structured-home" and (.counts.landed > (.landed | length)))
+       | select(.provenance.selected == "structured-home")
+       | ([.omitted[]? | select(.surface == "summary_bytes" and .name == "landed") | .omitted]
+           | add // 0) as $byte_omitted
+       | select((.counts.landed - (.landed | length)) > $byte_omitted)
        | .home],
      unreadable:[ $current.records[]
        | select(.current.state == "unknown" and .provenance.selected != "structured-home")

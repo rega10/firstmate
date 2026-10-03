@@ -4671,7 +4671,7 @@ EOF
 }
 
 test_summary_base_surfaces_are_byte_bounded_with_one_marker() {
-  local home mate fakebin ledger summary json bytes row_bytes gap count pad title kept mode name i long_name
+  local home mate fakebin ledger summary json bytes row_bytes gap count pad title kept mode name i long_name row_omitted
   home=$(make_home summary-byte-bound)
   mate="$TMP_ROOT/summary-byte-bound-mate"
   : > "$home/data/secondmates.md"
@@ -4819,6 +4819,41 @@ test_summary_base_surfaces_are_byte_bounded_with_one_marker() {
           | fm_secondmate_summary_at("2026-08-01")
           | {state,valid,reason,invalidity} == $classification)))
   ' "$ledger" >/dev/null || fail "byte omissions changed a producer classification at read time"
+  for row_omitted in 0 3; do
+    jq --argjson row_omitted "$row_omitted" '
+      ["active_children","decisions_open","holds","queued"] as $surfaces
+      | . + {projects:[],lifecycle_inventory:[],active_children:[],decisions_open:[],holds:[],queued:[],
+          landed:[],endpoints:[],state:"captain_decision",valid:true,reason:null,invalidity:{kind:null,ids:[]}}
+      | .bounds = ($surfaces | map({key:.,value:1001}) | from_entries)
+      | .counts = ((.bounds | map_values(. + $row_omitted)) + {landed:(1001 + $row_omitted),endpoints:0})
+      | .omitted = ((($surfaces + ["landed"]) | map({surface:"summary_bytes",name:.,kept:0,omitted:1001}))
+          + (if $row_omitted > 0 then ($surfaces | map({surface:.,count:$row_omitted})) else [] end))
+    ' "$ledger" > "$mate/state/byte-omission-fixture.json" || fail "omission fixture creation failed"
+    mv "$mate/state/byte-omission-fixture.json" "$ledger"
+    jq -e -L "$ROOT/bin" --argjson row_omitted "$row_omitted" '
+      include "fm-project-lifecycle";
+      [.omitted[] | select(.surface == "summary_bytes")] as $markers
+      | fm_secondmate_summary_at("2026-08-01")
+      | fm_secondmate_summary_at("2026-08-01")
+      | ([.omitted[] | select(.surface == "summary_bytes")] == $markers)
+        and ([.omitted[] | select(.surface != "summary_bytes")]
+          == (if $row_omitted > 0 then
+              ["queued","active_children","holds","decisions_open"] | map({surface:.,count:$row_omitted})
+              else [] end))
+    ' "$ledger" >/dev/null || fail "normalization counted byte omissions as row omissions"
+    json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+      FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+      NET_LOG="$home/net.log" "$BEARINGS" --json)
+    printf '%s' "$json" | jq -e --argjson row_omitted "$row_omitted" '
+      [.omitted[] | select(.surface | startswith("secondmate bytes-mate "))] as $rows
+      | ([$rows[] | select(.surface | contains("summary byte limit: 1001 (kept 0)"))] | length) == 5
+        and ([$rows[] | select(.surface | contains("omitted by snapshot bound:"))] as $bounded
+          | ($bounded | length) == (if $row_omitted > 0 then 4 else 0 end)
+            and all($bounded[]; .surface | endswith("snapshot bound: " + ($row_omitted | tostring))))
+        and ((.omitted | any(.surface == "secondmate home Done capped at the snapshot layer for 1 home(s)"))
+          == ($row_omitted > 0))
+    ' >/dev/null || fail "Bearings duplicated byte omissions or lost genuine row-bound omissions"
+  done
   pass "oversized base surfaces are byte-bounded with one disclosed omission marker"
 }
 

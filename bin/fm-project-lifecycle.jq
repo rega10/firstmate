@@ -28,8 +28,11 @@ def fm_merge_by_id($base; $extra):
     if any(.[]; .id == $row.id) then . else . + [$row] end);
 
 def fm_set_surface_omission($surface; $count):
-  .omitted = ([.omitted[]? | select(.surface != $surface)]
-    + [if $count > 0 then {surface:$surface,count:$count} else empty end]);
+  ([.omitted[]? | select(.surface == "summary_bytes" and .name == $surface) | .omitted]
+    | add // 0) as $byte_omitted
+  | ($count - $byte_omitted) as $row_omitted
+  | .omitted = ([.omitted[]? | select(.surface != $surface)]
+    + [if $row_omitted > 0 then {surface:$surface,count:$row_omitted} else empty end]);
 
 def fm_invalidity_reason($kind; $ids):
   if $kind == "child_current_unavailable" then
