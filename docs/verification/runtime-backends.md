@@ -1207,11 +1207,11 @@ Measured 2026-10-02 against Herdr 0.9.1 and Claude Code 2.1.284 in an isolated `
 Herdr hands `pane send-text` to the pane in 1,024-byte writes.
 For a single-line `away-supervisor` envelope typed with no payload proof and then submitted with Enter, Claude recorded the envelope whole at 379, 679, and 779 encoded bytes.
 At 1,080, 2,180, and 3,080 encoded bytes it recorded only the text after the last full write, as an ordinary typed prompt of 58, 136, and 14 characters with no operational prefix.
-`bin/fm-supervise-daemon.sh` therefore submits a batch as event-aligned chunks, each encoded on its own and typed within `ESCALATE_TYPED_BYTES` (768), and logs the byte length and SHA-256 of every typed value before the send and on its outcome.
-A record-backed primary is typed only the constant doorbell, so its chunk is bounded by the record budget instead.
+These measurements support the typed cap in [`bin/fm-supervise-daemon.sh`](../../bin/fm-supervise-daemon.sh); the [AFK classification policy](../../.agents/skills/afk/SKILL.md#classification-policy) owns chunk handling and [operational input markers](../herdr-backend.md#operational-input-markers) owns the record-backed path limit.
 
 The portable regressions in `tests/fm-daemon.test.sh` exercise signal, needs-decision, stale, enriched stale, and catch-all routing of multiple events from one status span through both carriers, asserting whole events in order without interpreting prose separators as event boundaries.
-They also check per-chunk progress with the original buffer age, whole events at real encoded boundaries, the 630-byte event with a queued successor under a 550-byte state path, minimal summaries with durable sources, stable relative source pointers when absolute paths cannot fit, record-backed startup refusal above the measured state-path boundary on tmux and Herdr, the encoded byte cap for both carriers, and sender log lines.
+They also check per-chunk progress with the original buffer age, staging and checkpoint failures without replay, whole events at real encoded boundaries, the 630-byte event with a queued successor under a 550-byte state path, minimal summaries with durable sources, stable relative source pointers with no new source published during busy deferral, record-backed startup refusal above the measured state-path boundary on tmux and Herdr, the encoded byte cap for both carriers, and sender log lines.
+`tests/fm-afk-return.test.sh` and `tests/fm-afk-launch.test.sh` cover checkpoint retirement at successful return and fresh entry, while preserving current-session artifacts on refresh.
 The live guard checks whole short events from a shared status span and reassembles the oversized event from its durable file; the earlier observation below predates those stronger assertions.
 Refresh the live Claude proof with:
 

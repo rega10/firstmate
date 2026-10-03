@@ -9,8 +9,8 @@
 # token-efficient replacement for the prior always-inject daemon: routine
 # signal/stale/heartbeat wakes cost zero firstmate context; only done/
 # needs-decision/blocked/failed/persistent-wedge/check-output events and a
-# declared-wait recheck reach the LLM, and even then as one pre-read digest per
-# batch window. A batch too large for one bounded submission goes out as
+# declared-wait recheck reach the LLM, and even then batched into pre-read
+# digests. A batch too large for one bounded submission goes out as
 # event-aligned chunks, one per flush, each encoded on its own (see
 # escalate_flush); a chunk that summarizes an oversized event names a
 # state/.subsuper-digests/ file holding that chunk's events verbatim.
@@ -22,7 +22,7 @@
 # When afk is off, normal fm-watch.sh always-on triage is the active mechanism.
 # Any buffered daemon escalations that remain while afk is off survive in
 # state/.subsuper-escalations and are flushed on the next "while you were out"
-# catch-up or when afk is re-entered.
+# catch-up; a fresh away entry retires prior-session delivery artifacts.
 #
 # IN-BAND OPERATIONAL INPUT. bin/fm-operational-input.sh constructs every
 # current daemon injection as the typed away-supervisor kind after the stable
@@ -797,13 +797,12 @@ _utf8_prefix() {  # <text> <max-bytes> <out-var>
 # One flush submits one bounded, event-aligned chunk of the buffer, and every
 # chunk is encoded on its own, so each submission starts with the operational
 # prefix (or is its own record-backed doorbell). The bound is on what is TYPED:
-# herdr hands `pane send-text` to the pane in 1,024-byte writes, and Claude Code
-# 2.1.284 on herdr 0.9.1 turned each full write of a longer typed envelope into
-# a paste placeholder and submitted only the unmarked tail (measured intact at
-# 379, 679, and 779 encoded bytes; cut at 1,080, 2,180, and 3,080). A typed
-# envelope therefore stays within ESCALATE_TYPED_BYTES, wrapper included. A
-# record-backed primary is typed only the constant doorbell, so its record
-# carries up to ESCALATE_DIGEST_BYTES of events, far below what tmux's
+# longer Herdr writes can become paste placeholders, leaving only an unmarked
+# tail in the submitted prompt. docs/verification/runtime-backends.md's
+# "Away digest chunk fidelity" owns the live measurements selecting this cap.
+# A typed envelope stays within ESCALATE_TYPED_BYTES, wrapper included. A
+# record-backed primary's doorbell must also fit that typed cap, while its
+# encoded record stays within ESCALATE_DIGEST_BYTES, far below what tmux's
 # `send-keys -l` or Linux's 131,071-byte MAX_ARG_STRLEN would refuse.
 # A chunk holds whole events: one that does not fit the room left opens the
 # next chunk, and events past the chunk stay buffered. Only an event too large
@@ -898,8 +897,10 @@ escalate_full_text_save() {  # <state> <chunk>
 # independently encoded digest to the supervisor pane. Returns 0 when that
 # chunk was delivered (or the buffer is empty), non-zero on inject failure
 # (buffer preserved for retry / catch-up). Progress is durable per chunk: a
-# delivered chunk's events leave the buffer at once, so a later failure neither
-# drops nor repeats them, and the events behind it retain their original age.
+# remainder is staged before submission and replaces the buffer after confirmed
+# delivery. A failed replacement blocks further delivery until it commits;
+# after restart an orphan checkpoint requires session-lifecycle reconciliation
+# rather than risking replay. The events behind it retain their original age.
 # A summarized chunk's full-text file is kept once
 # the submit ran, because the digest naming it may have been typed;
 # ESCALATE_KEPT_FULL remembers it so a retry of the same chunk reuses it
@@ -1335,7 +1336,7 @@ housekeeping() {  # <state>
   if afk_active "$state" && [ "$max_defer" -gt 0 ] && [ -s "$state/.subsuper-escalations" ]; then
     oldest=$(_oldest_line_age "$state/.subsuper-escalations")
     # Throttle the alarm to once per max-defer window (the wedge marker doubles
-    # as the throttle). A successful flush clears the buffer; a failed one alarms
+    # as the throttle). A successful flush retires one chunk; a failed one alarms
     # and waits.
     if [ "$oldest" -ge "$max_defer" ] \
        && [ "$(_file_age "$state/.subsuper-inject-wedged")" -ge "$max_defer" ]; then

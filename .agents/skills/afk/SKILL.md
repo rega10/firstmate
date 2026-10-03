@@ -157,13 +157,13 @@ A bordered-empty or ghost-only composer is recognized as empty where that backen
 `fm-send.sh` uses the same primitive only on its typed plane and exits non-zero when that plane's Enter is positively swallowed; ordinary local text steers use the durable inbox and do not treat doorbell submission as delivery proof.
 
 **Busy-queued Enter exception (opencode 1.18.4).** OpenCode keeps queued text visible while it is mid-turn, so tmux and herdr delegate the final delivery decision to `fm_composer_queued_enter_verdict` in `bin/fm-composer-lib.sh` rather than treating visible text alone as a swallowed Enter.
-The daemon still clears its buffer only on the backend's `empty` success verdict; [`docs/tmux-backend.md`](../../../docs/tmux-backend.md) and [`docs/herdr-backend.md`](../../../docs/herdr-backend.md) own the backend-specific confirmation signals.
+The daemon retires only the delivered chunk after the backend's `empty` success verdict; [`docs/tmux-backend.md`](../../../docs/tmux-backend.md) and [`docs/herdr-backend.md`](../../../docs/herdr-backend.md) own the backend-specific confirmation signals.
 
 ### Classification policy
 
 The daemon wraps `fm-watch.sh`, runs the watcher as a child, presents every durable wake after each actionable watcher close, classifies each presented record in bash, and acknowledges the presented generation only after routing completes.
 It self-handles the routine majority without consuming a firstmate turn.
-Captain-relevant events, plus a bounded recheck of a declared external wait that is still declared, escalate to firstmate's context as one pre-read, single-line, batched digest.
+Captain-relevant events, plus a bounded recheck of a declared external wait that is still declared, escalate to firstmate's context as pre-read, single-line, batched digests.
 A batch too large for one bounded submission arrives as several digests, one per flush, each independently carrying the operational carrier; status events stay separate before enqueue, and whole events are greedily selected by measuring their real encoded chunk in source order.
 An event that cannot fit alone in its real encoded chunk arrives as a minimal summary naming a `state/.subsuper-digests/` file holding it verbatim, so read that file before acting.
 If the absolute pointer cannot fit, the summary identifies the saved file by `.subsuper-digests/<basename>` relative to the daemon state directory; read that exact file before acting.
@@ -253,7 +253,7 @@ The single-line format makes submission unambiguous across harnesses; the carrie
 
 ### Stale-artifact lifecycle
 
-Treat `state/.subsuper-escalations`, its `.since` sidecar, `state/.subsuper-inject-wedged`, and `state/.subsuper-unknown-acked` as session-scoped delivery artifacts, not as the durable work record.
+Follow the [delivery-artifact lifecycle](../../../docs/herdr-backend.md#stopping-the-daemon) for session-scoped buffers and checkpoints; durable queue and task records remain authoritative.
 Always enter through `bin/fm-afk-launch.sh`, which clears prior-session artifacts only for a fresh entry and preserves the current session's buffer on refresh.
 Always exit through `bin/fm-afk-launch.sh stop`, which keeps `state/.afk` present through the daemon's shutdown flush, clears it, and archives the posture record last.
 `docs/herdr-backend.md` "Away-mode supervisor support" owns the current mechanism, and `docs/verification/runtime-backends.md` "Away-mode transport" owns active evidence.

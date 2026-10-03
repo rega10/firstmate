@@ -814,7 +814,10 @@ On stop:
 2. The recorded terminal is closed.
 3. The AFK flag is removed last.
 
-A fresh entry clears stale transient escalation caches, while durable queue and task records remain authoritative.
+Delivery artifacts are session-scoped: `state/.subsuper-escalations`, its `.since` sidecar and `.remaining.*` and `.chunk.*` staging files, `state/.subsuper-inject-wedged`, and `state/.subsuper-unknown-acked`.
+A fresh entry clears those prior-session artifacts; a refresh preserves them, and successful return catch-up retires them through `bin/fm-afk-return.sh`.
+An interrupted submission can leave a `.remaining.*` checkpoint whose delivery outcome a restarted daemon cannot determine, so it refuses further enqueue and delivery until the session lifecycle retires that checkpoint.
+Durable queue and task records remain authoritative; saved oversized-event sources in `state/.subsuper-digests/` survive this cleanup.
 
 ## Destructive lab safety
 
