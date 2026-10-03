@@ -364,7 +364,7 @@ That aging is a projection safety net only.
 The durable deferral remains re-holding with `--until`.
 
 The fleet snapshot's secondmate-home summary classifies an actionable captain hold as `captain_decision`.
-It preserves every captain hold in the bounded queued inventory of the owning home.
+It retains exported captain holds in the queued inventory of the owning home, subject to the summary bounds below.
 
 ### Bearings placement
 
@@ -385,8 +385,8 @@ Three accepted limits remain deliberate:
 
 - A remote or secondmate hold retains the producer home's age and aging decision from the summary's capture time and threshold rather than being recomputed by the parent.
 - A rare concurrent answer-close and re-hold race can leave the newly re-held task without its age basis.
-- Cross-home summaries remain bounded by `FM_SNAPSHOT_SECONDMATE_DECISIONS` and `FM_SNAPSHOT_SECONDMATE_QUEUED`.
-  A remote deferred hold beyond those bounds is not exported, so it can be neither gated nor revealed.
+- Cross-home summaries apply row and byte bounds owned by `bin/fm-fleet-snapshot.sh --help`.
+  A remote deferred hold omitted by those bounds is not exported, so it can be neither gated nor revealed.
 
 Re-holding through the wrapper with `--until` remains the durable fix rather than relying on the projection safety net.
 

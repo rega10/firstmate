@@ -28,8 +28,11 @@ def fm_merge_by_id($base; $extra):
     if any(.[]; .id == $row.id) then . else . + [$row] end);
 
 def fm_set_surface_omission($surface; $count):
-  .omitted = ([.omitted[]? | select(.surface != $surface)]
-    + [if $count > 0 then {surface:$surface,count:$count} else empty end]);
+  ([.omitted[]? | select(.surface == "summary_bytes" and .name == $surface) | .omitted]
+    | add // 0) as $byte_omitted
+  | ($count - $byte_omitted) as $row_omitted
+  | .omitted = ([.omitted[]? | select(.surface != $surface)]
+    + [if $row_omitted > 0 then {surface:$surface,count:$row_omitted} else empty end]);
 
 def fm_invalidity_reason($kind; $ids):
   if $kind == "child_current_unavailable" then
@@ -46,7 +49,8 @@ def fm_invalidity_reason($kind; $ids):
 def fm_secondmate_summary_at($today):
   if (has("projects") and has("lifecycle_inventory")) | not then .
   else
-  (.projects // []) as $projects
+  {state,valid,reason,invalidity} as $producer_classification
+  | (.projects // []) as $projects
   | .bounds as $bounds
   | {active_children:(.active_children | length),holds:(.holds | length),
      decisions_open:(.decisions_open | length),queued:(.queued | length),
@@ -210,7 +214,10 @@ def fm_secondmate_summary_at($today):
                    and $retained_invalid_ids == $current_unknown then .reason
                 else fm_invalidity_reason("child_current_unavailable"; $current_unknown) end)}
      else null end) as $current_invalidity
-  | if $current_invalidity == null then
+  | if any(.omitted[]?; .surface == "summary_bytes" and .omitted > 0) then
+      . + $producer_classification
+    else
+    if $current_invalidity == null then
       .valid = true
       | .invalidity = {kind:null,ids:[]}
       | .reason = null
@@ -227,5 +234,6 @@ def fm_secondmate_summary_at($today):
                 elif (.active_children | length) > 0 then "active_child_work"
                 elif (.holds | length) > 0 then "externally_held"
                 else "no_active_work" end)
+    end
     end
   end;

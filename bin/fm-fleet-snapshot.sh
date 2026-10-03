@@ -97,8 +97,9 @@
 #     freshness is "cached" only for the cache source, and observed_at/age_seconds
 #     come from the selected summary's generation. Every successfully sampled home also carries
 #     reconcile_inventory independently of projection trust.
-#     Actionable captain holds appear in decisions_open; every captain hold remains
-#     in the bounded queued inventory with its structured classification metadata.
+#     Exported actionable captain holds appear in decisions_open; exported captain
+#     holds retain their structured classification metadata in queued, subject to
+#     the row and byte bounds described by --help.
 #     Before that queued bound is applied, non-captain-actionable rows are selected
 #     ahead of captain-actionable rows so separately projected live decisions cannot
 #     crowd Charted-Next-eligible work out of the summary. Each group is ordered by
@@ -271,7 +272,15 @@ hold_bucket, hold_age_days, and plural blocker fields for downstream
 projections. Each summary budgets lifecycle_inventory toward the fixed
 262144-byte reader limit while retaining current parked task facts in deterministic
 order. omitted[] discloses additional parked facts; those tasks may not resurface at
-expiry until the budget clears. Other base summary surfaces remain unbounded.
+expiry until the budget clears. When the base surfaces alone exceed that limit,
+projects, landed, endpoints, queued, holds, active_children, decisions_open,
+omitted[].archived_projects, omitted[].parked_projects, reason, invalidity.ids,
+and contributions.captain are cut to a prefix in that order until the summary
+fits. omitted[] carries one {surface:"summary_bytes",name,kept,omitted} marker
+per cut surface, with a dotted path as name and row or string-character counts.
+Readers preserve the producer state and validity when byte omissions exist. Parked
+and archived project rows are kept ahead of active ones because an omitted
+project reads as active. A summary that fits carries no marker and is unchanged.
 A captain hold is actionable only when every blocker is Done, any
 hold-until date has arrived, and an undated hold remains below the aging threshold.
 Cross-home collection uses FM_SNAPSHOT_SECONDMATES (default 20, 0 lifts the
@@ -1321,7 +1330,32 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
          | if (.bytes + $row_bytes) <= $lifecycle_budget then
              .rows += [$row] | .bytes += $row_bytes
            else . end)) as $selected
-    | summary($selected.rows; ($lifecycle_total - ($selected.rows | length)))'
+    | summary($selected.rows; ($lifecycle_total - ($selected.rows | length)))
+    | def summary_bytes: tojson | utf8bytelength + 1;
+      def byte_marker($name; $kept; $omitted):
+        {surface:"summary_bytes",name:$name,kept:$kept,omitted:$omitted};
+      def byte_bound($path):
+        if summary_bytes <= $summary_max_bytes or (getpath($path) | length) == 0 then .
+        else ($path | map(tostring) | join(".")) as $name
+        | (getpath($path) | if $path == ["projects"] then sort_by(.posture == "active") else . end) as $rows
+        | ($rows | length) as $total
+        | . as $summary
+        | def candidate($kept):
+            $summary | setpath($path; $rows[:$kept])
+            | .omitted += [byte_marker($name; $kept; ($total - $kept))];
+          ({low:0,high:$total}
+           | until(.high - .low <= 1;
+               ((.low + .high) / 2 | floor) as $mid
+               | if (candidate($mid) | summary_bytes) <= $summary_max_bytes
+                 then .low = $mid else .high = $mid end)
+           | .low) as $kept
+        | candidate($kept)
+        end;
+      ([(["projects", "landed", "endpoints", "queued", "holds", "active_children", "decisions_open"][] | [.])]
+       + [(.omitted | to_entries[] | select(.value.surface == "project_lifecycle")
+            | ["omitted", .key, "archived_projects"], ["omitted", .key, "parked_projects"])]
+       + [["reason"], ["invalidity", "ids"], ["contributions", "captain"]]) as $paths
+      | reduce $paths[] as $path (.; byte_bound($path))'
 }
 
 # Current registered-secondmate aggregation.
@@ -2202,7 +2236,10 @@ secondmate_landed_from_current_json() {  # <secondmate-current-json-file> <outpu
       | $mate.landed[]
       | . + {home:$mate.home,home_id:$mate.id}],
      truncated:[ $current.records[]
-       | select(.provenance.selected == "structured-home" and (.counts.landed > (.landed | length)))
+       | select(.provenance.selected == "structured-home")
+       | ([.omitted[]? | select(.surface == "summary_bytes" and .name == "landed") | .omitted]
+           | add // 0) as $byte_omitted
+       | select((.counts.landed - (.landed | length)) > $byte_omitted)
        | .home],
      unreadable:[ $current.records[]
        | select(.current.state == "unknown" and .provenance.selected != "structured-home")
