@@ -4646,6 +4646,103 @@ EOF
   pass "lifecycle inventory is bounded with explicit omission disclosure"
 }
 
+refresh_byte_bound_mate() {  # <mate-home> <fakebin> <active-project-count> <tuning-title>
+  local mate=$1 fakebin=$2 count=$3 title=$4 i=1
+  {
+    while [ "$i" -le "$count" ]; do
+      printf -- '- active-%04d [no-mistakes] - Active app (added 2026-07-01)\n' "$i"
+      i=$((i + 1))
+    done
+    printf -- '- parked-app [direct-PR parked:2026-09-01] - Parked app (added 2026-07-01)\n'
+    printf -- '- archived-app [local-only archived] - Archived app (added 2026-07-01)\n'
+  } > "$mate/data/projects.md"
+  cat > "$mate/data/backlog.md" <<EOF
+## In flight
+
+## Queued
+- [ ] q-active - $title (repo: active-0001) (kind: ship)
+
+## Done
+EOF
+  PATH="$fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$mate" \
+    FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785607200 \
+    "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null \
+    || fail "byte-bound fixture summary refresh failed"
+}
+
+test_summary_base_surfaces_are_byte_bounded_with_one_marker() {
+  local home mate fakebin ledger summary json bytes row_bytes gap count pad title kept
+  home=$(make_home summary-byte-bound)
+  mate="$TMP_ROOT/summary-byte-bound-mate"
+  : > "$home/data/secondmates.md"
+  make_valid_secondmate_home bytes-mate "$mate"
+  append_secondmate_registry "$home" bytes-mate "$mate"
+  fakebin=$(make_fakebin "$home")
+  ledger="$mate/state/home-summary.json"
+
+  # A small registry is published whole, in registry order, with no marker.
+  refresh_byte_bound_mate "$mate" "$fakebin" 3 T
+  jq -e '
+    ([.projects[].name] == ["active-0001","active-0002","active-0003","parked-app","archived-app"])
+      and (.omitted | any(.surface == "summary_bytes") | not)
+  ' "$ledger" >/dev/null || fail "small summary changed or carried a byte marker: $(<"$ledger")"
+
+  # Tune the summary to exactly the reader limit: it still needs no marker.
+  count=2000
+  refresh_byte_bound_mate "$mate" "$fakebin" "$count" T
+  bytes=$(wc -c < "$ledger" | tr -d ' ')
+  row_bytes=$(jq '(.projects[0] | tojson | utf8bytelength) + 1' "$ledger")
+  gap=$((262144 - bytes))
+  [ "$gap" -gt 0 ] || fail "boundary fixture started over the limit: $bytes"
+  count=$((count + gap / row_bytes))
+  pad=$((gap % row_bytes))
+  title=T
+  [ "$pad" -eq 0 ] || title=$(printf "T%0${pad}d" 0)
+  refresh_byte_bound_mate "$mate" "$fakebin" "$count" "$title"
+  bytes=$(wc -c < "$ledger" | tr -d ' ')
+  [ "$bytes" -eq 262144 ] || fail "boundary fixture is not exactly at the limit: $bytes"
+  jq -e --argjson total "$((count + 2))" '
+    (.projects | length) == $total and (.omitted | any(.surface == "summary_bytes") | not)
+  ' "$ledger" >/dev/null || fail "summary exactly at the limit was cut: $(jq -c .omitted "$ledger")"
+
+  # One byte more crosses the limit: projects are cut and one marker says so.
+  refresh_byte_bound_mate "$mate" "$fakebin" "$count" "${title}0"
+  bytes=$(wc -c < "$ledger" | tr -d ' ')
+  [ "$bytes" -le 262144 ] || fail "summary one byte over the limit was not bounded: $bytes"
+  jq -e --argjson total "$((count + 2))" '
+    (.projects | length) as $kept
+    | $kept < $total
+      and ([.omitted[] | select(.surface == "summary_bytes")]
+           == [{surface:"summary_bytes",name:"projects",kept:$kept,omitted:($total - $kept)}])
+  ' "$ledger" >/dev/null || fail "boundary overflow marker is missing or miscounted: $(jq -c .omitted "$ledger")"
+
+  # A registry far over the limit stays readable, keeps posture rows, and the
+  # parent discloses the omission instead of marking the secondmate unavailable.
+  refresh_byte_bound_mate "$mate" "$fakebin" 4000 T
+  summary=$(<"$ledger")
+  bytes=$(wc -c < "$ledger" | tr -d ' ')
+  [ "$bytes" -le 262144 ] || fail "large registry summary exceeded the reader limit: $bytes"
+  kept=$(printf '%s' "$summary" | jq '.projects | length')
+  printf '%s' "$summary" | jq -e --argjson kept "$kept" '
+    $kept > 2 and $kept < 4002
+      and ([.omitted[] | select(.surface == "summary_bytes")]
+           == [{surface:"summary_bytes",name:"projects",kept:$kept,omitted:(4002 - $kept)}])
+      and (.projects | any(.name == "parked-app" and .posture == "parked"))
+      and (.projects | any(.name == "archived-app" and .posture == "archived"))
+      and (.queued | any(.id == "q-active"))
+  ' >/dev/null || fail "large registry was not cut with a correct marker: $(printf '%s' "$summary" | jq -c .omitted)"
+  json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+    FM_SNAPSHOT_NOW_EPOCH=1785607200 FM_BEARINGS_NOW=2026-08-01T18:00:00Z \
+    NET_LOG="$home/net.log" "$BEARINGS" --json --all-queued)
+  printf '%s' "$json" | jq -e --argjson kept "$kept" '
+    (.secondmates | any(.id == "bytes-mate" and .state != "unknown"))
+      and (.gates | any(.id == "q-active" and .owner == "bytes-mate"))
+      and (.omitted | any(.surface == ("secondmate bytes-mate projects omitted by summary byte limit: "
+            + ((4002 - $kept) | tostring) + " (kept " + ($kept | tostring) + ")")))
+  ' >/dev/null || fail "byte-bounded summary was unavailable or undisclosed: $json"
+  pass "oversized base surfaces are byte-bounded with one disclosed omission marker"
+}
+
 test_expired_secondmate_park_survives_summary_bounds_and_cache() {
   local home mate fakebin sshbin summary json i
   home=$(make_home expired-secondmate-park-cache)
@@ -4861,5 +4958,6 @@ test_archive_filter_updates_summary_counts
 test_archived_main_orphan_does_not_emit_inventory_gate
 test_long_secondmate_project_identity_is_preserved
 test_lifecycle_inventory_is_bounded_and_disclosed
+test_summary_base_surfaces_are_byte_bounded_with_one_marker
 test_expired_secondmate_park_survives_summary_bounds_and_cache
 test_expired_project_park_resurfaces_with_one_wake
