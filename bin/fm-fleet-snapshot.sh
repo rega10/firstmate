@@ -97,8 +97,9 @@
 #     freshness is "cached" only for the cache source, and observed_at/age_seconds
 #     come from the selected summary's generation. Every successfully sampled home also carries
 #     reconcile_inventory independently of projection trust.
-#     Actionable captain holds appear in decisions_open; every captain hold remains
-#     in the bounded queued inventory with its structured classification metadata.
+#     Exported actionable captain holds appear in decisions_open; exported captain
+#     holds retain their structured classification metadata in queued, subject to
+#     the row and byte bounds described by --help.
 #     Before that queued bound is applied, non-captain-actionable rows are selected
 #     ahead of captain-actionable rows so separately projected live decisions cannot
 #     crowd Charted-Next-eligible work out of the summary. Each group is ordered by

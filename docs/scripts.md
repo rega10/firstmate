@@ -191,9 +191,8 @@ Renaming or removing a field or surface, or removing or renaming an enum value, 
 Project lifecycle posture is a projection rule on that same contract, not a second vocabulary.
 `projects[]` is the registry surface and `bin/fm-project-posture.sh` is the write owner.
 Bearings applies parked and archived placement to Charted Next, omission, and `omitted[]` after one identity-normalization pass.
-Each secondmate summary budgets current parked task facts in deterministic order against the fixed 262144-byte reader limit and discloses every excluded lifecycle row in `omitted[]`; an omitted parked task may not auto-resurface at expiry until earlier parked work clears the byte budget.
-A base surface that would push the summary past that limit, starting with `projects[]`, is cut to fit and reported as one `secondmate <id> <surface> omitted by summary byte limit: <omitted> (kept <kept>)` row, so the secondmate stays readable; `bin/fm-fleet-snapshot.sh --help` owns the cut order and marker shape.
-When byte omissions exist, read-time lifecycle normalization preserves the producer's state and validity classification rather than inferring absence from incomplete evidence.
+`bin/fm-fleet-snapshot.sh --help` owns the secondmate summary's byte budget, cut order, marker shape, classification preservation, and parked-task expiry limitation.
+Bearings reports each byte cut as one `secondmate <id> <surface> omitted by summary byte limit: <omitted> (kept <kept>)` row, separately from snapshot row-bound omissions.
 Live PR suppression covers main-home lifecycle facts, recorded PR URLs, and repository-scoped branch matches only, so a parked or archived secondmate PR may briefly appear in Captain's Call.
 
 Consumer example: an external tool reads `.schema` first and refuses a major version it does not understand, then treats `omitted` as a disclosure to surface, never to hide.
