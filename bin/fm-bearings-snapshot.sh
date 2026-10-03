@@ -937,7 +937,7 @@ MODEL=$(printf '%s' "$SNAP" | jq -L "$SCRIPT_DIR" \
          | if $n > 0 then {surface:("secondmate " + $m.id + " parked lifecycle facts omitted by summary bound: \($n)"), reveal:"refresh after parked work decreases; omitted tasks may not resurface at expiry until then"} else empty end),
         (($snap.secondmate_current.records // [])[] as $m
          | ($m.omitted // [])[] | select(.surface == "summary_bytes")
-         | {surface:("secondmate " + $m.id + " \(.name) omitted by summary byte limit: \(.omitted) (kept \(.kept))"), reveal:"shrink that surface in the secondmate home; omitted rows are unread, and an omitted project reads as active"}),
+         | {surface:("secondmate " + $m.id + " \(.name) omitted by summary byte limit: \(.omitted) (kept \(.kept))"), reveal:"shrink that surface in the secondmate home; omitted content is unread, and an omitted project reads as active"}),
         (if $all_secondmates == 0 and ($secondmates_all | length) > $secondmates_n then {surface:("secondmates showing \($secondmates_n) of \($secondmates_all | length)"), reveal:"--all-secondmates"} else empty end),
         (if (($snap.secondmate_current.truncated // 0) > 0) then {surface:("registered secondmates omitted by snapshot bound: \($snap.secondmate_current.truncated)"), reveal:"raise FM_SNAPSHOT_SECONDMATES"} else empty end),
         (if $snap.secondmate_current.registry.input_truncated == true then {surface:"secondmate registry input truncated by bounded read", reveal:"raise FM_SNAPSHOT_REGISTRY_LINES or FM_SNAPSHOT_REGISTRY_BYTES"} else empty end),

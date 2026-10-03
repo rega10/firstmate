@@ -272,9 +272,12 @@ projections. Each summary budgets lifecycle_inventory toward the fixed
 262144-byte reader limit while retaining current parked task facts in deterministic
 order. omitted[] discloses additional parked facts; those tasks may not resurface at
 expiry until the budget clears. When the base surfaces alone exceed that limit,
-projects, landed, endpoints, queued, holds, active_children, and decisions_open
-are cut to a prefix in that order until the summary fits, and omitted[] carries
-one {surface:"summary_bytes",name,kept,omitted} marker per cut surface. Parked
+projects, landed, endpoints, queued, holds, active_children, decisions_open,
+omitted[].archived_projects, omitted[].parked_projects, reason, invalidity.ids,
+and contributions.captain are cut to a prefix in that order until the summary
+fits. omitted[] carries one {surface:"summary_bytes",name,kept,omitted} marker
+per cut surface, with a dotted path as name and row or string-character counts.
+Readers preserve the producer state and validity when byte omissions exist. Parked
 and archived project rows are kept ahead of active ones because an omitted
 project reads as active. A summary that fits carries no marker and is unchanged.
 A captain hold is actionable only when every blocker is Done, any
@@ -1327,30 +1330,31 @@ secondmate_home_summary_json() {  # <backlog-json-file> <tasks-json-file> <proje
              .rows += [$row] | .bytes += $row_bytes
            else . end)) as $selected
     | summary($selected.rows; ($lifecycle_total - ($selected.rows | length)))
-    # Base surfaces share the same reader limit. A summary that already fits is
-    # emitted untouched; otherwise each row surface is cut to a prefix, in this
-    # order, until the document fits, and one summary_bytes marker per cut surface
-    # records what was kept and omitted. An omitted project reads as active, so
-    # parked and archived rows are retained ahead of active ones.
     | def summary_bytes: tojson | utf8bytelength + 1;
       def byte_marker($name; $kept; $omitted):
         {surface:"summary_bytes",name:$name,kept:$kept,omitted:$omitted};
-      def byte_bound($name):
-        if summary_bytes <= $summary_max_bytes or (.[$name] | length) == 0 then .
-        else (.[$name] | if $name == "projects" then sort_by(.posture == "active") else . end) as $rows
+      def byte_bound($path):
+        if summary_bytes <= $summary_max_bytes or (getpath($path) | length) == 0 then .
+        else ($path | map(tostring) | join(".")) as $name
+        | (getpath($path) | if $path == ["projects"] then sort_by(.posture == "active") else . end) as $rows
         | ($rows | length) as $total
-        | (.[$name] = [] | .omitted += [byte_marker($name; $total; $total)] | summary_bytes) as $floor
-        | (reduce $rows[] as $row ({kept:0,bytes:$floor,full:false};
-             if .full then .
-             else (($row | tojson | utf8bytelength) + (if .kept > 0 then 1 else 0 end)) as $row_bytes
-             | if (.bytes + $row_bytes) <= $summary_max_bytes then .kept += 1 | .bytes += $row_bytes
-               else .full = true end
-             end) | .kept) as $kept
-        | .[$name] = $rows[:$kept]
-        | .omitted += [byte_marker($name; $kept; ($total - $kept))]
+        | . as $summary
+        | def candidate($kept):
+            $summary | setpath($path; $rows[:$kept])
+            | .omitted += [byte_marker($name; $kept; ($total - $kept))];
+          ({low:0,high:$total}
+           | until(.high - .low <= 1;
+               ((.low + .high) / 2 | floor) as $mid
+               | if (candidate($mid) | summary_bytes) <= $summary_max_bytes
+                 then .low = $mid else .high = $mid end)
+           | .low) as $kept
+        | candidate($kept)
         end;
-      reduce ("projects", "landed", "endpoints", "queued", "holds", "active_children", "decisions_open") as $name
-        (.; byte_bound($name))'
+      ([(["projects", "landed", "endpoints", "queued", "holds", "active_children", "decisions_open"][] | [.])]
+       + [(.omitted | to_entries[] | select(.value.surface == "project_lifecycle")
+            | ["omitted", .key, "archived_projects"], ["omitted", .key, "parked_projects"])]
+       + [["reason"], ["invalidity", "ids"], ["contributions", "captain"]]) as $paths
+      | reduce $paths[] as $path (.; byte_bound($path))'
 }
 
 # Current registered-secondmate aggregation.

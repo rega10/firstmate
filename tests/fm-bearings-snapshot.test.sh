@@ -4671,7 +4671,7 @@ EOF
 }
 
 test_summary_base_surfaces_are_byte_bounded_with_one_marker() {
-  local home mate fakebin ledger summary json bytes row_bytes gap count pad title kept
+  local home mate fakebin ledger summary json bytes row_bytes gap count pad title kept mode name i long_name
   home=$(make_home summary-byte-bound)
   mate="$TMP_ROOT/summary-byte-bound-mate"
   : > "$home/data/secondmates.md"
@@ -4740,6 +4740,85 @@ test_summary_base_surfaces_are_byte_bounded_with_one_marker() {
       and (.omitted | any(.surface == ("secondmate bytes-mate projects omitted by summary byte limit: "
             + ((4002 - $kept) | tostring) + " (kept " + ($kept | tostring) + ")")))
   ' >/dev/null || fail "byte-bounded summary was unavailable or undisclosed: $json"
+  long_name=$(printf '%01000d' 0)
+  for mode in archived parked invalid; do
+    : > "$mate/data/projects.md"
+    printf '## In flight\n' > "$mate/data/backlog.md"
+    if [ "$mode" != invalid ]; then
+      printf '\n## Queued\n' >> "$mate/data/backlog.md"
+      [ "$mode" != archived ] || printf '\n## Done\n' >> "$mate/data/backlog.md"
+    fi
+    i=1
+    while [ "$i" -le 300 ]; do
+      name=$(printf '%s-%04d-%s' "$mode" "$i" "$long_name")
+      case "$mode" in
+        archived)
+          printf -- '- %s [local-only archived] - App (added 2026-07-01)\n' "$name" >> "$mate/data/projects.md"
+          printf -- '- [x] done-%04d - Done (repo: %s) (kind: ship) (done 2026-07-01)\n' "$i" "$name" >> "$mate/data/backlog.md"
+          ;;
+        parked)
+          printf -- '- %s [direct-PR parked:2026-09-01] - App (added 2026-07-01)\n' "$name" >> "$mate/data/projects.md"
+          printf -- '- [ ] queued-%04d - Next (repo: %s) (kind: ship)\n' "$i" "$name" >> "$mate/data/backlog.md"
+          ;;
+        invalid)
+          printf -- '- [ ] %s - Orphan (repo: sample) (kind: ship)\n' "$name" >> "$mate/data/backlog.md"
+          ;;
+      esac
+      i=$((i + 1))
+    done
+    [ "$mode" != invalid ] || printf '\n## Queued\n' >> "$mate/data/backlog.md"
+    [ "$mode" = archived ] || printf '\n## Done\n' >> "$mate/data/backlog.md"
+    PATH="$fakebin:$PATH" FM_ROOT_OVERRIDE="$ROOT" FM_HOME="$mate" \
+      FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z FM_SNAPSHOT_NOW_EPOCH=1785607200 \
+      "$ROOT/bin/fm-home-summary-refresh.sh" >/dev/null || fail "$mode disclosure refresh failed"
+    bytes=$(wc -c < "$ledger" | tr -d ' ')
+    [ "$bytes" -le 262144 ] || fail "$mode disclosure exceeded the reader byte limit: $bytes"
+    jq -e --arg mode "$mode" '
+      all(.omitted[] | select(.surface == "summary_bytes");
+        (keys == ["kept","name","omitted","surface"]) and .omitted > 0)
+      and (if $mode == "invalid" then
+        (.invalidity.ids | length) as $kept
+        | .valid == false and .invalidity.kind == "orphan_in_flight"
+        and (.omitted | any(.surface == "summary_bytes" and .name == "reason"))
+        and (.omitted | any(.surface == "summary_bytes" and .name == "invalidity.ids"
+            and .kept == $kept and .omitted == (300 - $kept)))
+      else
+        (if $mode == "archived" then "archived_projects" else "parked_projects" end) as $field
+        | (.omitted[] | select(.surface == "project_lifecycle") | .[$field] | length) as $kept
+        | .valid == true
+        and (.omitted | any(.surface == "summary_bytes" and .name == ("omitted.0." + $field)
+            and .kept == $kept and .omitted == ((if $mode == "archived" then 300 else 280 end) - $kept)))
+      end)
+    ' "$ledger" >/dev/null || fail "$mode byte marker or classification was incorrect"
+    json=$(PATH="$fakebin:$PATH" FM_HOME="$home" FM_SNAPSHOT_NOW=2026-08-01T18:00:00Z \
+      FM_SNAPSHOT_NOW_EPOCH=1785607200 "$ROOT/bin/fm-fleet-snapshot.sh" --json)
+    printf '%s' "$json" | jq -e --slurpfile produced "$ledger" '
+      .secondmate_current.records[] | select(.id == "bytes-mate")
+      | .current.state == $produced[0].state
+        and .provenance.summary_valid == $produced[0].valid
+        and .invalidity == $produced[0].invalidity
+        and .provenance.selected == "structured-home"
+    ' >/dev/null || fail "$mode byte-bounded summary lost its producer classification"
+  done
+
+  jq -e -L "$ROOT/bin" '
+    include "fm-project-lifecycle";
+    . as $base
+    | all(["projects","landed","endpoints","queued","holds","active_children","decisions_open",
+           "omitted.0.archived_projects","omitted.0.parked_projects","reason","invalidity.ids",
+           "contributions.captain"][]; . as $surface
+      | all(["captain_decision","active_child_work","externally_held","no_active_work","unknown"][]; . as $state
+        | all([null,"orphan_in_flight","unowned_current","terminal_in_flight","child_current_unavailable","missing_backlog"][]; . as $kind
+          | $base + {state:$state,valid:($kind == null),reason:(if $kind == null then null else "partial diagnostic" end),
+              invalidity:{kind:$kind,ids:[]},projects:[],lifecycle_inventory:[],
+              active_children:[],holds:[],decisions_open:[{id:"child",key:"blocked",verb:"blocked",repo:null}],
+              queued:[],landed:[],endpoints:[],
+              counts:{active_children:0,holds:0,decisions_open:2,queued:0,landed:0,endpoints:0},
+              omitted:[{surface:"summary_bytes",name:$surface,kept:0,omitted:1}]}
+          | {state,valid,reason,invalidity} as $classification
+          | fm_secondmate_summary_at("2026-08-01")
+          | {state,valid,reason,invalidity} == $classification)))
+  ' "$ledger" >/dev/null || fail "byte omissions changed a producer classification at read time"
   pass "oversized base surfaces are byte-bounded with one disclosed omission marker"
 }
 

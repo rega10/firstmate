@@ -46,7 +46,8 @@ def fm_invalidity_reason($kind; $ids):
 def fm_secondmate_summary_at($today):
   if (has("projects") and has("lifecycle_inventory")) | not then .
   else
-  (.projects // []) as $projects
+  {state,valid,reason,invalidity} as $producer_classification
+  | (.projects // []) as $projects
   | .bounds as $bounds
   | {active_children:(.active_children | length),holds:(.holds | length),
      decisions_open:(.decisions_open | length),queued:(.queued | length),
@@ -210,7 +211,10 @@ def fm_secondmate_summary_at($today):
                    and $retained_invalid_ids == $current_unknown then .reason
                 else fm_invalidity_reason("child_current_unavailable"; $current_unknown) end)}
      else null end) as $current_invalidity
-  | if $current_invalidity == null then
+  | if any(.omitted[]?; .surface == "summary_bytes" and .omitted > 0) then
+      . + $producer_classification
+    else
+    if $current_invalidity == null then
       .valid = true
       | .invalidity = {kind:null,ids:[]}
       | .reason = null
@@ -227,5 +231,6 @@ def fm_secondmate_summary_at($today):
                 elif (.active_children | length) > 0 then "active_child_work"
                 elif (.holds | length) > 0 then "externally_held"
                 else "no_active_work" end)
+    end
     end
   end;
