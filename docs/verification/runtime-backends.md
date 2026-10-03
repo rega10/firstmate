@@ -1211,7 +1211,7 @@ At 1,080, 2,180, and 3,080 encoded bytes it recorded only the text after the las
 A record-backed primary is typed only the constant doorbell, so its chunk is bounded by the record budget instead.
 
 The portable regressions in `tests/fm-daemon.test.sh` exercise signal, needs-decision, stale, enriched stale, and catch-all routing of multiple events from one status span through both carriers, asserting whole events in order without interpreting prose separators as event boundaries.
-They also check per-chunk progress with the original buffer age, whole events at real encoded boundaries, the 630-byte event under a 550-byte state path, minimal summaries with durable sources, fixed notices when summary pointers cannot fit, the encoded byte cap for both carriers, and sender log lines.
+They also check per-chunk progress with the original buffer age, whole events at real encoded boundaries, the 630-byte event with a queued successor under a 550-byte state path, minimal summaries with durable sources, fixed notices when summary pointers cannot fit, record-backed startup refusal above the measured state-path boundary on tmux and Herdr, the encoded byte cap for both carriers, and sender log lines.
 The live guard checks whole short events from a shared status span and reassembles the oversized event from its durable file; the earlier observation below predates those stronger assertions.
 Refresh the live Claude proof with:
 

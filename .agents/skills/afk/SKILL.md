@@ -167,7 +167,7 @@ Captain-relevant events, plus a bounded recheck of a declared external wait that
 A batch too large for one bounded submission arrives as several digests, one per flush, each independently carrying the operational carrier; status events stay separate before enqueue, and whole events are greedily selected by measuring their real encoded chunk in source order.
 An event that cannot fit alone in its real encoded chunk arrives as a minimal summary naming a `state/.subsuper-digests/` file holding it verbatim, so read that file before acting.
 If the summary's pointer cannot fit, a fixed notice directs the primary to the newest digest in that directory and successful delivery consumes the event.
-The final typed envelope or record doorbell is checked against the byte cap.
+The final typed envelope or record doorbell is checked against the byte cap; record-backed startup also enforces the [documented physical state-path limit](../../../docs/herdr-backend.md#operational-input-markers).
 Queued events keep the buffer's original age until it drains.
 The captain-relevant verb set, declared-wait vocabulary, status-span classifier, and presentation-marker contract live in shared `bin/fm-classify-lib.sh`, while each supervisor owns its routing and fleet scan as a consumer of that policy.
 While `state/.afk` exists the daemon owns the watcher, so the watcher reverts to one-shot and lets the daemon do the triage - the two never run their triage at the same time.

@@ -814,10 +814,8 @@ ESCALATE_DIGEST_BYTES=8192
 ESCALATE_FULL_DIR=.subsuper-digests
 
 # escalate_wrap: the single-line digest text around one chunk's events.
-escalate_wrap() {  # <events> <pending> <body> <out-var>
-  local _more=''
-  [ "$2" -eq 0 ] || _more=", $2 more queued"
-  printf -v "$4" 'Supervisor escalate (%s event(s)%s): %s (pre-read; re-arm not needed - watcher daemon-managed)' "$1" "$_more" "$3"
+escalate_wrap() {  # <events> <body> <out-var>
+  printf -v "$3" 'Supervisor escalate (%s event(s)): %s (pre-read; re-arm not needed - watcher daemon-managed)' "$1" "$2"
 }
 
 # escalate_full_note: the pointer a chunk with a summarized event carries.
@@ -829,6 +827,27 @@ escalate_fits() {  # <encoded-value> <cap>
   local LC_ALL=C
   ESCALATE_BYTES=${#1}
   [ "$ESCALATE_BYTES" -le "$2" ]
+}
+
+escalate_startup_record_fits() {
+  local LC_ALL=C doorbell record physical_state path_bytes limit failure
+  fm_operational_harness_needs_record "$(fm_daemon_primary_harness)" || return 0
+  if ! fm_operational_record_write "$1" away-supervisor 'startup size check' doorbell; then
+    failure="cannot construct the record-backed doorbell for state path '$1'"
+  else
+    fm_operational_doorbell_path "$doorbell" record
+    rm -f "$record"
+    if escalate_fits "$doorbell" "$ESCALATE_TYPED_BYTES"; then
+      return 0
+    fi
+    physical_state=$(cd -P "$1" && pwd -P)
+    path_bytes=${#physical_state}
+    limit=$((ESCALATE_TYPED_BYTES - ESCALATE_BYTES + path_bytes))
+    failure="record-backed delivery requires a state path of at most $limit bytes; '$physical_state' is $path_bytes bytes (doorbell $ESCALATE_BYTES bytes, cap $ESCALATE_TYPED_BYTES)"
+  fi
+  echo "error: $failure" >&2
+  log "startup failed: $failure"
+  return 1
 }
 
 # escalate_chunk_body: greedily join whole events whose real envelope fits.
@@ -844,7 +863,7 @@ escalate_chunk_body() {  # <buf>
   for item in "${items[@]}"; do
     candidate=$item
     [ "$ESCALATE_EVENTS" -eq 0 ] || candidate="$ESCALATE_BODY | $item"
-    escalate_wrap "$((ESCALATE_EVENTS + 1))" "$(( ${#items[@]} - ESCALATE_EVENTS - 1 ))" "$candidate" encoded
+    escalate_wrap "$((ESCALATE_EVENTS + 1))" "$candidate" encoded
     fm_operational_input_encode away-supervisor "$encoded" encoded
     if ! escalate_fits "$encoded" "$cap"; then
       if [ "$ESCALATE_EVENTS" -eq 0 ]; then
@@ -922,7 +941,7 @@ escalate_flush() {  # <state>
     fi
     escalate_full_note "$full" note
     msg="oversized event$note"
-    escalate_wrap "$ESCALATE_EVENTS" "$ESCALATE_PENDING" "$msg" encoded
+    escalate_wrap "$ESCALATE_EVENTS" "$msg" encoded
     fm_operational_input_encode away-supervisor "$encoded" encoded
     fm_operational_harness_needs_record "$(fm_daemon_primary_harness)" && cap=$ESCALATE_DIGEST_BYTES
     if ! escalate_fits "$encoded" "$cap"; then
@@ -931,7 +950,7 @@ escalate_flush() {  # <state>
   fi
   # Single-line wrapper: no embedded newlines (inject_msg also collapses as a
   # safety net, but keeping the source single-line makes the intent explicit).
-  escalate_wrap "$ESCALATE_EVENTS" "$ESCALATE_PENDING" "$msg" msg
+  escalate_wrap "$ESCALATE_EVENTS" "$msg" msg
   if inject_msg "$msg" "$state"; then
     unknown_wake_acknowledge_flushed "$state" "$chunk" \
       || log "unknown-wake acknowledgement write failed; a delivered unknown wake may escalate again"
@@ -1849,6 +1868,7 @@ fm_super_main() {
   local CRASH_NORMAL_SLEEP=${FM_CRASH_NORMAL_SLEEP:-$CRASH_NORMAL_SLEEP_DEFAULT}
 
   [ -x "$WATCH" ] || { echo "error: watcher not found or not executable: $WATCH" >&2; exit 1; }
+  escalate_startup_record_fits "$STATE" || exit 1
 
   # --- single instance (portable lock, no flock dependency) ------------------
   if ! fm_lock_try_acquire "$LOCK"; then

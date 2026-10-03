@@ -661,6 +661,11 @@ The current operational envelope starts with U+2063 and `FIRSTMATE_OP: `.
 The separate routed-request carrier uses `[fm-from-firstmate]` plus U+2063.
 U+2063 survives Herdr terminal input as text, unlike the legacy ASCII control separator that could erase the visible routing label.
 Claude Code itself then removes it from the submitted prompt, so a Claude Code primary receives away-mode escalations as the owner's record-backed doorbell instead.
+For record-backed away delivery on either tmux or Herdr, the absolute physical state path must leave room for that doorbell within the 768-byte typed cap.
+With the current doorbell format, a direct `operational-inbox` directory, and a ten-digit epoch in record filenames, the state path limit is 616 bytes (610 bytes for the home when using its `/state` directory).
+Daemon startup constructs and measures an actual doorbell, resolving symlinks, and exits once before acquiring supervision ownership if it cannot fit; the error names the applicable path limit, the physical state path, and its byte length.
+Use a shorter physical home or `FM_STATE_OVERRIDE` path before starting the daemon again.
+Typed-envelope primaries do not have this path-length limit.
 `bin/fm-operational-input.sh` owns current operational construction and parsing, and the AFK skill owns legacy away-input compatibility.
 No Herdr-specific copy of that protocol exists.
 

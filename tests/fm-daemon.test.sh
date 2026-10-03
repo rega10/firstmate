@@ -2371,7 +2371,7 @@ test_oversized_digest_is_bounded_and_kept_durable() {
   [ "$(printf '%s\n' "$digest" | wc -l | tr -d ' ')" -eq 4 ] || fail "expected three summary chunks and one whole event"
   [ "$(printf '%s' "$digest" | LC_ALL=C wc -c | tr -d ' ')" -le 16384 ] \
     || fail "delivered digest is not bounded well below the transport ceilings"
-  assert_contains "$digest" 'Supervisor escalate (1 event(s), 3 more queued): oversized event (digest bounded; full text of every event:' "digest lost its structured summary"
+  assert_contains "$digest" 'Supervisor escalate (1 event(s)): oversized event (digest bounded; full text of every event:' "digest lost its structured summary"
   assert_contains "$digest" 'secondmate-a.status: needs-decision [key=pick]: pick A or B' "a short event did not survive whole"
   assert_not_contains "$digest" 'café fix shipped' "oversized prose was sliced into the digest"
   if command -v iconv >/dev/null 2>&1; then
@@ -2409,7 +2409,7 @@ flush_until_empty() {  # <dir> [harness]
 }
 
 test_digest_past_budget_is_delivered_as_whole_event_chunks() {
-  local dir state sent digests i n line seen more
+  local dir state sent digests i n line seen
   dir=$(make_bordered_case digest-many)
   state="$dir/state"
   sent="$dir/sent.log"; : > "$sent"
@@ -2434,10 +2434,6 @@ test_digest_past_budget_is_delivered_as_whole_event_chunks() {
   done <<EOF_DIGESTS
 $digests
 EOF_DIGESTS
-  more=$(printf '%s\n' "$digests" | head -1 | sed -n 's/.*event(s), \([0-9][0-9]*\) more queued).*/\1/p')
-  [ -n "$more" ] && [ "$more" -gt 0 ] || fail "the first chunk does not say more events are queued"
-  printf '%s\n' "$digests" | tail -1 | grep -F 'more queued' >/dev/null \
-    && fail "the last chunk still claims queued events"
   printf '%s\n' "$digests" | grep -E '\[\+[0-9]+ bytes\]|digest bounded' >/dev/null \
     && fail "events that fit a chunk whole were cut"
   [ ! -e "$state/.subsuper-digests" ] || fail "an uncut batch wrote a full-text file"
@@ -2591,14 +2587,14 @@ test_typed_whole_event_before_summary_stays_whole() {
   state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
   item='before.status: done: '
   while :; do
-    escalate_wrap 1 1 "${item}x" encoded
+    escalate_wrap 1 "${item}x" encoded
     fm_operational_input_encode away-supervisor "$encoded" encoded
     escalate_fits "$encoded" "$ESCALATE_TYPED_BYTES" || break
     item+=x
   done
   big='big.status: failed: '
   while :; do
-    escalate_wrap 1 0 "$big" encoded
+    escalate_wrap 1 "$big" encoded
     fm_operational_input_encode away-supervisor "$encoded" encoded
     escalate_fits "$encoded" "$ESCALATE_TYPED_BYTES" || break
     big+=y
@@ -2649,6 +2645,7 @@ test_long_state_paths_preserve_deliverable_events_and_summary_progress() {
   local dir state harness length remaining size item sent line full rc encoded
   for harness in codex claude; do
     for length in 400 500 550 800; do
+      [ "$harness" != claude ] || [ "$length" -lt 800 ] || continue
       dir=$(make_bordered_case "digest-long-$harness-$length")
       state=$dir
       while [ "${#state}" -lt "$length" ]; do
@@ -2661,16 +2658,26 @@ test_long_state_paths_preserve_deliverable_events_and_summary_progress() {
       afk_enter "$state"
       if [ "$length" -eq 550 ]; then
         item=$(printf '%630s' '' | tr ' ' x)
-        escalate_wrap 1 0 "$item" encoded
+        escalate_wrap 1 "$item" encoded
         fm_operational_input_encode away-supervisor "$encoded" encoded
         escalate_fits "$encoded" "$ESCALATE_TYPED_BYTES" || fail "the 630-byte event does not fit its real chunk"
         [ "$ESCALATE_BYTES" -eq 756 ] || fail "the real boundary fixture is $ESCALATE_BYTES bytes"
         escalate_add "$state" "$item"
+        escalate_add "$state" 'successor.status: done: intact'
         LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
           FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
           escalate_flush "$state" || fail "the deliverable 630-byte event stuck under the 550-byte state path"
         assert_contains "$(delivered_digest "$sent")" "$item" "the 630-byte event was summarized"
-        [ ! -s "$state/.subsuper-escalations" ] && [ ! -e "$state/.subsuper-digests" ] || fail "the deliverable event was buffered or summarized"
+        if [ "$harness" = codex ]; then
+          [ "$(cat "$state/.subsuper-escalations")" = 'successor.status: done: intact' ] || fail "delivery lost its internal pending-event tracking"
+        else
+          [ ! -s "$state/.subsuper-escalations" ] || fail "the record chunk did not include both whole events"
+        fi
+        [ ! -e "$state/.subsuper-digests" ] || fail "the deliverable event was summarized"
+        LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+          FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
+          escalate_flush "$state" || fail "the successor did not arrive"
+        [ ! -s "$state/.subsuper-escalations" ] || fail "the two-event buffer did not drain"
         : > "$sent"
       fi
       item='reconciliation-required: '
@@ -2684,15 +2691,10 @@ test_long_state_paths_preserve_deliverable_events_and_summary_progress() {
       LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
         FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS="$harness" \
         escalate_flush "$state" || rc=$?
-      if [ "$harness" = claude ] && [ "$length" -eq 800 ]; then
-        [ "$rc" -ne 0 ] && [ ! -s "$sent" ] || fail "an over-cap record doorbell was typed"
-        cmp -s "$dir/original" "$state/.subsuper-escalations" || fail "refused record delivery changed the buffer"
-        continue
-      fi
       [ "$rc" -eq 0 ] || fail "$harness $length-byte path did not deliver: $(cat "$dir/daemon.log")"
       [ "$(cat "$state/.subsuper-escalations")" = 'after.status: done: short event intact' ] || fail "summary delivery did not consume exactly one event"
       line=$(delivered_digest "$sent")
-      assert_contains "$line" 'Supervisor escalate (1 event(s), 1 more queued): oversized event' "long-path digest lost its minimal summary"
+      assert_contains "$line" 'Supervisor escalate (1 event(s)): oversized event' "long-path digest lost its minimal summary"
       if [ "$harness" = codex ] && [ "$length" -ge 550 ]; then
         assert_contains "$line" 'saved in .subsuper-digests; read the newest digest' "the pathological pointer did not produce its fixed notice"
         for full in "$state/.subsuper-digests"/digest-*; do break; done
@@ -2713,6 +2715,57 @@ test_long_state_paths_preserve_deliverable_events_and_summary_progress() {
     done
   done
   pass "real encoded chunks preserve the 630-byte event and make progress across long summary pointers"
+}
+
+test_record_backed_startup_checks_state_path_limit() {
+  local LC_ALL=C dir state doorbell record limit length remaining out rc harness backend
+  dir=$(make_bordered_case digest-startup-boundary)
+  state="$dir/state"
+  fm_operational_record_write "$state" away-supervisor probe doorbell || fail "cannot create the boundary probe"
+  fm_operational_doorbell_path "$doorbell" record
+  rm -f "$record"
+  limit=$((ESCALATE_TYPED_BYTES - ${#doorbell} + ${#state}))
+  for harness in claude codex; do
+    for backend in tmux herdr; do
+      for length in "$limit" "$((limit + 1))" 800; do
+        dir=$(make_bordered_case "digest-startup-$harness-$backend-$length")
+        state=$dir
+        while [ "${#state}" -lt "$length" ]; do
+          remaining=$((length - ${#state} - 1))
+          [ "$remaining" -le 100 ] || remaining=100
+          state="$state/$(printf '%*s' "$remaining" '' | tr ' ' p)"
+        done
+        mkdir -p "$state"
+        escalate_add "$state" 'queued.status: done: retained'
+        cp "$state/.subsuper-escalations" "$dir/original"
+        printf '#!/usr/bin/env bash\nexit 1\n' > "$dir/fakebin/tmux"
+        cp "$dir/fakebin/tmux" "$dir/fakebin/herdr"
+        chmod +x "$dir/fakebin/tmux" "$dir/fakebin/herdr"
+        rc=0
+        out=$(FM_STATE_OVERRIDE="$state" FM_DAEMON_PRIMARY_HARNESS="$harness" \
+          FM_SUPERVISOR_BACKEND="$backend" FM_SUPERVISOR_TARGET=lab:missing \
+          FM_BACKEND_HERDR_CLIENT_SESSION=lab FM_BACKEND_HERDR_BIN="$dir/fakebin/herdr" \
+          PATH="$dir/fakebin:$PATH" "$DAEMON" 2>&1) || rc=$?
+        [ "$rc" -ne 0 ] || fail "the startup fixture did not terminate"
+        if [ "$harness" = claude ] && [ "$length" -gt "$limit" ]; then
+          assert_contains "$out" "state path of at most $limit bytes" "startup did not name the record-backed limit"
+          assert_contains "$out" "'$state' is $length bytes" "startup did not name the physical path and its byte length"
+          [ "$(printf '%s\n' "$out" | grep -c '^error:')" -eq 1 ] || fail "startup refused more than once"
+          assert_not_contains "$out" 'does not resolve' "over-cap startup reached backend target validation"
+        else
+          assert_contains "$out" 'does not resolve' "a supported state path did not pass the startup size check"
+          assert_not_contains "$out" 'state path of at most' "startup constrained a valid or typed-carrier state path"
+        fi
+        [ ! -e "$state/.supervise-daemon.pid" ] && [ ! -e "$state/.supervise-daemon.lock" ] || fail "startup left supervision ownership behind"
+        assert_not_contains "$(cat "$state/.supervise-daemon.log")" 'daemon starting' "rejected startup entered supervision"
+        cmp -s "$dir/original" "$state/.subsuper-escalations" || fail "startup changed buffered events"
+        for record in "$state/operational-inbox"/*.msg; do
+          [ ! -f "$record" ] || fail "startup left its size-check record behind"
+        done
+      done
+    done
+  done
+  pass "record-backed startup accepts the path boundary and refuses longer paths once before supervision on both backends"
 }
 
 test_final_encoded_cap_is_enforced_at_typing() {
@@ -3581,6 +3634,7 @@ test_chunk_progress_survives_a_failed_later_chunk
 test_typed_whole_event_before_summary_stays_whole
 test_typed_oversized_event_is_summarized_with_durable_pointer
 test_long_state_paths_preserve_deliverable_events_and_summary_progress
+test_record_backed_startup_checks_state_path_limit
 test_final_encoded_cap_is_enforced_at_typing
 test_inject_send_failure_logs_stage_stderr_and_bytes
 test_inject_enter_failure_logs_confirmation_stage
