@@ -317,6 +317,7 @@ while IFS= read -r sum; do
   [ "$(sha256_of "$row")" = "$sum" ] \
     || fail "$WHO recorded a doorbell differently from the bytes the sender logged (sha256 $sum): ${row:0:120}"
   fm_operational_doorbell_path "$row" record
+  # shellcheck disable=SC2154 # Assigned through fm_operational_doorbell_path's result variable.
   seen+=$(grep -o 'labrec-[0-9]*\.status' "$record" | tr '\n' ';')
 done < <(delivered_sums "$REC_LOG" record)
 [ "$(printf '%s' "$seen" | tr ';' '\n' | sort)" = "$(i=1; while [ "$i" -le 12 ]; do printf 'labrec-%s.status\n' "$i"; i=$((i + 1)); done | sort)" ] \

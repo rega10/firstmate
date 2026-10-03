@@ -2448,8 +2448,8 @@ test_status_events_reach_every_digest_path_whole() {
       state="$dir/state"; sent="$dir/sent.log"; : > "$sent"
       : > "$dir/expected"
       for i in $(seq 1 12); do
-        task=task-one
-        case "$route" in signal|needs-decision) [ "$i" -le 6 ] || task=task-two ;; esac
+        task='task-one'
+        case "$route" in signal|needs-decision) [ "$i" -le 6 ] || task='task-two' ;; esac
         event="done: event-$i café shipped ; literal prose | still event-$i end-$i"
         case "$i" in
           3) event="needs-decision [key=choice-3]: event-$i café choice ; literal prose | end-$i" ;;
