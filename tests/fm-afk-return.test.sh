@@ -100,6 +100,38 @@ EOF
   printf 'blocked [key=%s]: firstmate can refresh the synthetic token\n' "$key" > "$dir/home/state/repair-task.status"
 }
 
+test_return_then_fresh_entry_retires_interrupted_delivery_checkpoints() {
+  local dir state out checkpoint
+  dir="$TMP_ROOT/interrupted-delivery"
+  install_runner "$dir"
+  state="$dir/home/state"
+  date +%s > "$state/.afk"
+  printf 'old.status: done: old session\n' > "$state/.subsuper-escalations"
+  printf 'undelivered remainder\n' > "$state/.subsuper-escalations.remaining.interrupted"
+  printf 'in-flight head\n' > "$state/.subsuper-escalations.chunk.interrupted"
+  mkdir -p "$state/.subsuper-digests"
+  printf 'durable full source\n' > "$state/.subsuper-digests/digest-kept"
+  out=$(run_return "$dir" begin) || fail "return did not complete after an interrupted delivery: $out"
+  assert_contains "$out" 'old.status: done: old session' "return omitted the original buffer evidence"
+  for checkpoint in "$state"/.subsuper-escalations.remaining.* "$state"/.subsuper-escalations.chunk.*; do
+    [ ! -e "$checkpoint" ] || fail "completed return left a session checkpoint behind"
+  done
+  [ "$(cat "$state/.subsuper-digests/digest-kept")" = 'durable full source' ] || fail "return removed a delivered event's durable source"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$dir/bin/fixture-daemon"
+  chmod +x "$dir/bin/fixture-daemon"
+  FM_HOME="$dir/home" FM_STATE_OVERRIDE="$state" bash -c '
+    . "$1"
+    FM_AFK_DAEMON=$2
+    fm_afk_start_main
+  ' _ "$ROOT/bin/fm-afk-start.sh" "$dir/bin/fixture-daemon" >/dev/null || fail "fresh entry after return failed"
+  FM_HOME="$dir/home" FM_STATE_OVERRIDE="$state" FM_DAEMON_PRIMARY_HARNESS=codex bash -c '
+    . "$1"
+    escalate_add "$2" "new.status: done: new away session"
+  ' _ "$ROOT/bin/fm-supervise-daemon.sh" "$state" || fail "old checkpoints blocked the new away session"
+  [ "$(cat "$state/.subsuper-escalations")" = 'new.status: done: new away session' ] || fail "fresh entry retained old escalation data"
+  pass "completed return retires interrupted delivery checkpoints so fresh entry can enqueue, retaining durable sources"
+}
+
 test_return_gate_owns_remediation_and_reports_catchup_to_bearings() {
   local dir out rc gate wake_count i toon gate_header
   dir="$TMP_ROOT/ordering"
@@ -117,6 +149,7 @@ test_return_gate_owns_remediation_and_reports_catchup_to_bearings() {
   } > "$dir/home/data/backlog.md"
   date +%s > "$dir/home/state/.afk"
   printf 'repair-task.status: blocked synthetic dependency\n' > "$dir/home/state/.subsuper-escalations"
+  printf 'pending checkpoint\n' > "$dir/home/state/.subsuper-escalations.remaining.blocked"
   printf 'fm away-mode inject WEDGED: 4555s undelivered\n' > "$dir/home/state/.subsuper-inject-wedged"
   printf 'unknown wake: frobnicate: handled\n' > "$dir/home/state/.subsuper-unknown-acked"
   {
@@ -131,6 +164,7 @@ test_return_gate_owns_remediation_and_reports_catchup_to_bearings() {
   [ "$rc" -eq 3 ] || fail "return begin should gate on a live blocker (rc=$rc): $out"
   gate="$dir/home/state/.afk-return-catchup"
   [ -s "$gate" ] || fail "return begin did not persist its fail-closed catch-up gate"
+  [ -e "$dir/home/state/.subsuper-escalations.remaining.blocked" ] || fail "blocked catch-up retired the checkpoint too early"
   assert_contains "$out" 'firstmate-actionable blocker: repair-task [key=synthetic-dependency]' "return output did not assign blocker remediation to Firstmate"
   grep -F $'evidence\twake\t1784074271' "$gate" >/dev/null || fail "drained wake evidence was not retained in the durable gate"
   grep -F $'evidence\twake\twake annotation: latest wake-EVENT observed at drain, not current state: repair-task.status: blocked synthetic dependency' "$gate" >/dev/null \
@@ -197,6 +231,7 @@ test_return_gate_owns_remediation_and_reports_catchup_to_bearings() {
   assert_contains "$out" 'catch-up clear' "successful check did not announce that ordinary work may proceed"
   [ ! -e "$gate" ] || fail "successful check left the return gate behind"
   [ ! -e "$dir/home/state/.subsuper-escalations" ] || fail "successful check left delivered escalation state behind"
+  [ ! -e "$dir/home/state/.subsuper-escalations.remaining.blocked" ] || fail "successful catch-up retained the checkpoint"
   [ ! -e "$dir/home/state/.subsuper-inject-wedged" ] || fail "successful check left the wedge marker behind"
   [ ! -e "$dir/home/state/.subsuper-unknown-acked" ] || fail "successful check left the away session's unknown-wake acknowledgements behind"
   [ -s "$dir/home/state/.fake-drain" ] || fail "successful return consumed its wake before handling completed"
@@ -1352,6 +1387,7 @@ test_missing_final_archive_keeps_retained_contract_gated() {
   pass "the retained contract epoch requires its final archive on every check"
 }
 
+test_return_then_fresh_entry_retires_interrupted_delivery_checkpoints
 test_return_gate_owns_remediation_and_reports_catchup_to_bearings
 test_explicit_reclassification_requires_durable_reason
 test_captain_decision_does_not_masquerade_as_firstmate_blocker

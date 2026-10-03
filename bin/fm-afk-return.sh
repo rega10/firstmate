@@ -259,6 +259,8 @@ clear_delivery_artifacts() {
   rm -f \
     "$STATE/.subsuper-escalations" \
     "$STATE/.subsuper-escalations.since" \
+    "$STATE/.subsuper-escalations.remaining."* \
+    "$STATE/.subsuper-escalations.chunk."* \
     "$STATE/.subsuper-inject-wedged" \
     "$STATE/.subsuper-unknown-acked"
 }

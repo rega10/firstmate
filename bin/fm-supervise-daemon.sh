@@ -808,8 +808,8 @@ _utf8_prefix() {  # <text> <max-bytes> <out-var>
 # A chunk holds whole events: one that does not fit the room left opens the
 # next chunk, and events past the chunk stay buffered. Only an event too large
 # for a chunk of its own is summarized with a pointer to its durable source;
-# when that pointer cannot fit, a fixed notice directs the primary to
-# ESCALATE_FULL_DIR, which keeps the event verbatim.
+# when that pointer cannot fit, its basename identifies the source relative
+# to the daemon state directory.
 ESCALATE_TYPED_BYTES=768
 ESCALATE_DIGEST_BYTES=8192
 ESCALATE_FULL_DIR=.subsuper-digests
@@ -964,6 +964,10 @@ escalate_flush() {  # <state>
   fi
   msg=$ESCALATE_BODY
   if [ "$ESCALATE_BOUNDED" -eq 1 ]; then
+    if ! inject_target_ready "${FM_SUPERVISOR_BACKEND:-tmux}" "${FM_SUPERVISOR_TARGET:-$FM_SUPERVISOR_TARGET_DEFAULT}"; then
+      rm -f "$chunk" "$remaining"
+      return 1
+    fi
     if [ -n "$ESCALATE_KEPT_FULL" ] && cmp -s "$ESCALATE_KEPT_FULL" "$chunk"; then
       full=$ESCALATE_KEPT_FULL
     elif full=$(escalate_full_text_save "$state" "$chunk"); then
@@ -980,7 +984,8 @@ escalate_flush() {  # <state>
     fm_operational_input_encode away-supervisor "$encoded" encoded
     fm_operational_harness_needs_record "$(fm_daemon_primary_harness)" && cap=$ESCALATE_DIGEST_BYTES
     if ! escalate_fits "$encoded" "$cap"; then
-      msg='oversized event saved in .subsuper-digests; read the newest digest'
+      escalate_full_note "$ESCALATE_FULL_DIR/${full##*/}" note
+      msg="oversized event$note (relative to the daemon state directory)"
     fi
   fi
   # Single-line wrapper: no embedded newlines (inject_msg also collapses as a
@@ -1515,50 +1520,8 @@ window_for_task() {  # <task-key> [state]
 }
 
 # --- injection --------------------------------------------------------------
-# inject_msg: send one escalation digest to the supervisor pane.
-# Returns 0 on successful inject (or empty buffer), non-zero if the pane is
-# gone, the supervisor is busy, afk is inactive, or the verified submit cannot
-# be confirmed after bounded retries. On non-zero the caller preserves
-# the buffer so the escalation survives for the next cycle or the catch-up flush.
-#
-# Submit model:
-#   - TYPE ONCE, then submit with Enter. Never retype the digest: a swallowed
-#     Enter leaves our text in the composer, and retyping would concatenate two
-#     sentinel-prefixed digests into one corrupted turn.
-#   - SUBMIT ACK = the backend submit primitive reports `empty` after Enter.
-#     For tmux that means a cleared composer; for herdr's normal idle-baseline
-#     path it means native agent-state observed a real turn start.
-#     Pending means Enter was swallowed; unknown is treated as undelivered by
-#     this strict daemon path.
-#   - COMPOSER GUARD before typing: if the cursor line already has real content
-#     after dim/faint ghost text and borders are ignored (a human's half-typed
-#     line, or a previous injection's unsent text), defer entirely - injecting
-#     would merge with the human's text.
-inject_msg() {  # <message> [state]
-  local msg=$1 state target backend retries sleep_s verdict composer encoded bytes errf err='' body sum carrier=typed
-  state="${2:-$(_state_root)}"
-  # (1) Presence-gate: inject ONLY when afk is active. When afk is off, the
-  # daemon self-handles and stays quiet; firstmate drives the normal always-on
-  # watcher triage. Escalations buffer and survive for the next catch-up flush.
-  INJECT_LAST_FAILURE=
-  INJECT_SUBMIT_ATTEMPTED=0
-  afk_active "$state" || { INJECT_LAST_FAILURE="deferred: afk inactive"; log "inject $INJECT_LAST_FAILURE"; return 1; }
-  # (2) Single-line digest: collapse any embedded newlines so submission via
-  # send-keys + Enter is unambiguous regardless of how the TUI composer treats
-  # them. Then use the canonical typed envelope so downstream consumers retain
-  # the exact away-supervisor kind without interpreting this payload's prose.
-  msg=$(_collapse_newlines "$msg")
-  fm_operational_input_encode away-supervisor "$msg" encoded \
-    || { INJECT_LAST_FAILURE="the digest could not be encoded"; log "inject failed: $INJECT_LAST_FAILURE"; return 1; }
-  body=$msg
-  msg=$encoded
-  target="${FM_SUPERVISOR_TARGET:-$FM_SUPERVISOR_TARGET_DEFAULT}"
-  # BACKEND-AWARE (previously a raw `tmux display-message` pane-exists probe):
-  # dispatches through bin/fm-backend.sh so a herdr supervisor pane is checked
-  # via the herdr adapter instead of always assuming tmux. Falls back to tmux
-  # when unset (sourced/test contexts that never ran fm_super_main's startup
-  # discovery), matching this function's pre-existing default assumption.
-  backend="${FM_SUPERVISOR_BACKEND:-tmux}"
+inject_target_ready() {
+  local backend=$1 target=$2 composer
   fm_backend_target_exists "$backend" "$target" \
     || { INJECT_LAST_FAILURE="supervisor target $target not found on $backend"; return 1; }
   # (3) Busy-guard: never inject into an in-use supervisor pane.
@@ -1582,6 +1545,54 @@ inject_msg() {  # <message> [state]
     log "inject $INJECT_LAST_FAILURE"
     return 1
   fi
+  return 0
+}
+
+# inject_msg: send one escalation digest to the supervisor pane.
+# Returns 0 on successful inject (or empty buffer), non-zero if the pane is
+# gone, the supervisor is busy, afk is inactive, or the verified submit cannot
+# be confirmed after bounded retries. On non-zero the caller preserves
+# the buffer so the escalation survives for the next cycle or the catch-up flush.
+#
+# Submit model:
+#   - TYPE ONCE, then submit with Enter. Never retype the digest: a swallowed
+#     Enter leaves our text in the composer, and retyping would concatenate two
+#     sentinel-prefixed digests into one corrupted turn.
+#   - SUBMIT ACK = the backend submit primitive reports `empty` after Enter.
+#     For tmux that means a cleared composer; for herdr's normal idle-baseline
+#     path it means native agent-state observed a real turn start.
+#     Pending means Enter was swallowed; unknown is treated as undelivered by
+#     this strict daemon path.
+#   - COMPOSER GUARD before typing: if the cursor line already has real content
+#     after dim/faint ghost text and borders are ignored (a human's half-typed
+#     line, or a previous injection's unsent text), defer entirely - injecting
+#     would merge with the human's text.
+inject_msg() {  # <message> [state]
+  local msg=$1 state target backend retries sleep_s verdict encoded bytes errf err='' body sum carrier=typed
+  state="${2:-$(_state_root)}"
+  # (1) Presence-gate: inject ONLY when afk is active. When afk is off, the
+  # daemon self-handles and stays quiet; firstmate drives the normal always-on
+  # watcher triage. Escalations buffer and survive for the next catch-up flush.
+  INJECT_LAST_FAILURE=
+  INJECT_SUBMIT_ATTEMPTED=0
+  afk_active "$state" || { INJECT_LAST_FAILURE="deferred: afk inactive"; log "inject $INJECT_LAST_FAILURE"; return 1; }
+  # (2) Single-line digest: collapse any embedded newlines so submission via
+  # send-keys + Enter is unambiguous regardless of how the TUI composer treats
+  # them. Then use the canonical typed envelope so downstream consumers retain
+  # the exact away-supervisor kind without interpreting this payload's prose.
+  msg=$(_collapse_newlines "$msg")
+  fm_operational_input_encode away-supervisor "$msg" encoded \
+    || { INJECT_LAST_FAILURE="the digest could not be encoded"; log "inject failed: $INJECT_LAST_FAILURE"; return 1; }
+  body=$msg
+  msg=$encoded
+  target="${FM_SUPERVISOR_TARGET:-$FM_SUPERVISOR_TARGET_DEFAULT}"
+  # BACKEND-AWARE (previously a raw `tmux display-message` pane-exists probe):
+  # dispatches through bin/fm-backend.sh so a herdr supervisor pane is checked
+  # via the herdr adapter instead of always assuming tmux. Falls back to tmux
+  # when unset (sourced/test contexts that never ran fm_super_main's startup
+  # discovery), matching this function's pre-existing default assumption.
+  backend="${FM_SUPERVISOR_BACKEND:-tmux}"
+  inject_target_ready "$backend" "$target" || return 1
   #   c) A primary that strips invisible characters from submitted prompts gets
   #      the owner's record-backed doorbell instead of the typed envelope, so
   #      the away-mode return check can still tell this escalation from the

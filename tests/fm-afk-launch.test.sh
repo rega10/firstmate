@@ -247,7 +247,7 @@ unit_stop_archives_the_record_last() {
 }
 
 # ---------------------------------------------------------------------------
-# UNIT 1: fm_afk_clear_stale_artifacts removes exactly the four stale artifacts.
+# UNIT 1: fm_afk_clear_stale_artifacts retires session delivery artifacts.
 # ---------------------------------------------------------------------------
 unit_clear_stale() {
   local st
@@ -255,6 +255,8 @@ unit_clear_stale() {
   mkdir -p "$st/state"
   : > "$st/state/.subsuper-escalations"
   : > "$st/state/.subsuper-escalations.since"
+  : > "$st/state/.subsuper-escalations.remaining.interrupted"
+  : > "$st/state/.subsuper-escalations.chunk.interrupted"
   : > "$st/state/.subsuper-inject-wedged"
   : > "$st/state/.subsuper-unknown-acked"
   : > "$st/state/.wake-queue"          # durable queue must be untouched
@@ -264,9 +266,11 @@ unit_clear_stale() {
     bash -c '. "$1"; fm_afk_clear_stale_artifacts "$2"' _ "$START" "$st/state"
   if [ ! -e "$st/state/.subsuper-escalations" ] \
      && [ ! -e "$st/state/.subsuper-escalations.since" ] \
+     && [ ! -e "$st/state/.subsuper-escalations.remaining.interrupted" ] \
+     && [ ! -e "$st/state/.subsuper-escalations.chunk.interrupted" ] \
      && [ ! -e "$st/state/.subsuper-inject-wedged" ] \
      && [ ! -e "$st/state/.subsuper-unknown-acked" ]; then
-    pass "clear-stale: removes escalations buffer, sidecar, wedge marker, and unknown-wake acknowledgements"
+    pass "clear-stale: removes the buffer, staging checkpoints, sidecar, wedge marker, and unknown-wake acknowledgements"
   else
     fail "clear-stale: stale artifacts survived"
   fi
@@ -335,6 +339,7 @@ unit_fresh_vs_refresh() {
   st=$(mktemp -d "${TMPDIR:-/tmp}/fm-afk-refresh.XXXXXX")
   mkdir -p "$st/state"
   : > "$st/state/.subsuper-escalations"
+  : > "$st/state/.subsuper-escalations.remaining.current"
   : > "$st/state/.subsuper-inject-wedged"
   : > "$st/state/.subsuper-unknown-acked"
   # A live "daemon": a real process whose identity the lock records, so
@@ -348,7 +353,7 @@ unit_fresh_vs_refresh() {
   ( . "$ROOT/bin/fm-wake-lib.sh"; fm_pid_identity "$sleep_pid" > "$lock/pid-identity" 2>/dev/null ) || true
   FM_HOME="$st" FM_STATE_OVERRIDE="$st/state" "$START" >/dev/null 2>&1
   if [ -e "$st/state/.subsuper-escalations" ] && [ -e "$st/state/.subsuper-inject-wedged" ] \
-     && [ -e "$st/state/.subsuper-unknown-acked" ]; then
+     && [ -e "$st/state/.subsuper-unknown-acked" ] && [ -e "$st/state/.subsuper-escalations.remaining.current" ]; then
     pass "refresh: daemon already alive - stale artifacts preserved (current session's buffer kept)"
   else
     fail "refresh: incorrectly cleared the current session's buffered escalations"

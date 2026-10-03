@@ -63,6 +63,8 @@ fm_afk_clear_stale_artifacts() {  # <state-dir>
   local state=$1
   rm -f "$state/.subsuper-escalations" \
         "$state/.subsuper-escalations.since" \
+        "$state/.subsuper-escalations.remaining."* \
+        "$state/.subsuper-escalations.chunk."* \
         "$state/.subsuper-inject-wedged" \
         "$state/.subsuper-unknown-acked" 2>/dev/null
 }

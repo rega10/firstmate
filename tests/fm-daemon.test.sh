@@ -2810,8 +2810,9 @@ test_long_state_paths_preserve_deliverable_events_and_summary_progress() {
       line=$(delivered_digest "$sent")
       assert_contains "$line" 'Supervisor escalate (1 event(s)): oversized event' "long-path digest lost its minimal summary"
       if [ "$harness" = codex ] && [ "$length" -ge 550 ]; then
-        assert_contains "$line" 'saved in .subsuper-digests; read the newest digest' "the pathological pointer did not produce its fixed notice"
-        for full in "$state/.subsuper-digests"/digest-*; do break; done
+        assert_contains "$line" 'relative to the daemon state directory' "the pathological path did not produce its relative pointer"
+        full=$(printf '%s' "$line" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
+        full="$state/$full"
       else
         full=$(printf '%s' "$line" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
       fi
@@ -2829,6 +2830,56 @@ test_long_state_paths_preserve_deliverable_events_and_summary_progress() {
     done
   done
   pass "real encoded chunks preserve the 630-byte event and make progress across long summary pointers"
+}
+
+test_oversized_sources_keep_stable_relative_pointers_while_busy() {
+  local dir state remaining event_a event_b sent line source_a source_b
+  dir=$(make_bordered_case digest-stable-source)
+  state=$dir
+  while [ "${#state}" -lt 800 ]; do
+    remaining=$((800 - ${#state} - 1))
+    [ "$remaining" -le 100 ] || remaining=100
+    state="$state/$(printf '%*s' "$remaining" '' | tr ' ' p)"
+  done
+  mkdir -p "$state"
+  sent="$dir/sent.log"; : > "$sent"
+  event_a="A.status: done: $(printf '%2000s' '' | tr ' ' a)"
+  event_b="B.status: blocked: $(printf '%2000s' '' | tr ' ' b)"
+  escalate_add "$state" "$event_a"
+  escalate_add "$state" "$event_b"
+  afk_enter "$state"
+  LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+    FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex \
+    escalate_flush "$state" || fail "event A did not arrive"
+  line=$(head -1 "$sent")
+  source_a=$(printf '%s' "$line" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
+  case "$source_a" in .subsuper-digests/digest-*) ;; *) fail "event A lacks its bounded relative source pointer" ;; esac
+  [ "$(cat "$state/$source_a")" = "$event_a" ] || fail "A's pointer does not identify A"
+  (
+    pane_is_busy() { return 0; }
+    escalate_full_text_save() { : > "$dir/published-while-busy"; return 1; }
+    if LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+      FM_FAKE_SENT="$sent" FM_DAEMON_PRIMARY_HARNESS=codex escalate_flush "$state"; then
+      fail "event B was delivered to a busy primary"
+    fi
+    assert_contains "$INJECT_LAST_FAILURE" 'supervisor pane busy' "B's source was touched before the busy check"
+  ) || fail "busy-source deferral failed"
+  [ ! -e "$dir/published-while-busy" ] || fail "B's source was published before the primary became available"
+  [ "$(cat "$state/$source_a")" = "$event_a" ] || fail "A's source changed while B waited"
+  [ "$(cat "$state/.subsuper-escalations")" = "$event_b" ] || fail "deferring B changed its pending event"
+  LOG="$dir/daemon.log" PATH="$dir/fakebin:$PATH" FM_FAKE_COMPOSER="$dir/composer" \
+    FM_FAKE_SENT="$sent" FM_INJECT_CONFIRM_SLEEP=0.05 FM_DAEMON_PRIMARY_HARNESS=codex \
+    escalate_flush "$state" || fail "event B did not arrive after the primary became available"
+  line=$(grep -v '^\[ENTER\]$' "$sent" | tail -1)
+  source_b=$(printf '%s' "$line" | sed -n 's/.*full text of every event: \([^ )]*\).*/\1/p')
+  case "$source_b" in .subsuper-digests/digest-*) ;; *) fail "event B lacks its relative source pointer" ;; esac
+  [ "$source_a" != "$source_b" ] || fail "two events share one source reference"
+  [ "$(cat "$state/$source_a")" = "$event_a" ] && [ "$(cat "$state/$source_b")" = "$event_b" ] || fail "a delivered reference resolves to another event"
+  [ ! -s "$state/.subsuper-escalations" ] && [ "$(grep -c '\[ENTER\]' "$sent")" -eq 2 ] || fail "the source-pointer sequence did not consume both events exactly once"
+  while IFS= read -r line; do
+    [ "$line" = '[ENTER]' ] || escalate_fits "$line" "$ESCALATE_TYPED_BYTES" || fail "a relative source pointer exceeded the cap"
+  done < "$sent"
+  pass "relative pointers identify their own oversized events and busy deferral publishes no newer source"
 }
 
 test_record_backed_startup_checks_state_path_limit() {
@@ -3750,6 +3801,7 @@ test_checkpoint_rename_failure_never_retypes_delivered_events
 test_typed_whole_event_before_summary_stays_whole
 test_typed_oversized_event_is_summarized_with_durable_pointer
 test_long_state_paths_preserve_deliverable_events_and_summary_progress
+test_oversized_sources_keep_stable_relative_pointers_while_busy
 test_record_backed_startup_checks_state_path_limit
 test_final_encoded_cap_is_enforced_at_typing
 test_inject_send_failure_logs_stage_stderr_and_bytes
