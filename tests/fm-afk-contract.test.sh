@@ -152,6 +152,43 @@ test_enter_writes_a_v2_record_in_one_step_and_announces_hold_for_return() {
   pass "one enter call writes a version 2 record, announces hold-for-return only, reads it back without asking for a go, and every read subcommand reflects it"
 }
 
+# Simulate the clock crossing a second between separate wall-clock reads.
+# Public record fields must still describe one sampled instant in both formats.
+test_record_times_agree_across_clock_ticks() {
+  local home real_date mode action field iso epoch
+  real_date=$(command -v date)
+  for mode in away quiet; do
+    home=$(make_home "clock-tick-$mode")
+    mkdir -p "$home/fakebin"
+    {
+      cat <<'SH'
+#!/usr/bin/env bash
+case "$*" in
+  '-u +%Y-%m-%dT%H:%M:%SZ') printf '2026-10-11T05:04:38Z\n'; exit 0 ;;
+  '+%s') printf '1791695079\n'; exit 0 ;;
+esac
+SH
+      printf 'exec %q "$@"\n' "$real_date"
+    } > "$home/fakebin/date"
+    chmod +x "$home/fakebin/date"
+    for action in entry replacement away; do
+      if [ "$action" = away ]; then
+        mode=away
+      fi
+      PATH="$home/fakebin:$PATH" FM_AFK_MODE="$mode" \
+        contract "$home" enter --words "$action words" >/dev/null 2>&1 \
+        || fail "$mode $action failed across a clock tick"
+      for field in entered confirmed; do
+        iso=$(contract "$home" field "$field")
+        epoch=$(contract "$home" field "${field}_epoch")
+        [ "$iso" = '2026-10-11T05:04:38Z' ] && [ "$epoch" = 1791695078 ] \
+          || fail "$mode $action $field time disagrees: $iso vs $epoch"
+      done
+    done
+  done
+  pass "entry, replacement, and quiet-to-away record times agree across clock ticks"
+}
+
 # The wait-for-go gate is gone: the retired two-step subcommands and the
 # proposal read flag are refused by name and write nothing, so no caller can
 # stage a mandate that waits on a further human response before it binds.
@@ -625,6 +662,7 @@ test_away_entry_over_quiet_mode_becomes_away_and_quiet_never_masks_away() {
 test_readback_renders_words_verbatim_with_the_record_scalars
 test_words_preserve_final_newline_shape
 test_enter_writes_a_v2_record_in_one_step_and_announces_hold_for_return
+test_record_times_agree_across_clock_ticks
 test_retired_two_step_entry_is_refused_by_name
 test_enter_removes_a_legacy_proposal_without_promoting_it
 test_same_turn_entry_pre_authorizes_nothing_on_the_never_set

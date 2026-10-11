@@ -524,7 +524,7 @@ fm_afk_contract_cmd_enter() {
     return
   fi
   now=$(fm_afk_contract_now_iso)
-  now_epoch=$(date +%s)
+  now_epoch=$(fm_utc_iso_to_epoch "$now") || return 1
   session_entered=$now
   session_entered_epoch=$now_epoch
   # A replacement carries the session entry forward; quiet mode becoming the
