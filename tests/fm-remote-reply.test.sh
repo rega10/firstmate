@@ -100,15 +100,18 @@ stop_reply_listener() {
   return 1
 }
 
-# Block until this generation's capture has been applied. A live listener keeps
-# its claim across polls, so start is only launched when nothing owns the source.
+# Stop after application before the next case mutates the registration or log.
+# Listener continuity is exercised separately without manual re-arming.
 await_reply_result() { # <result-path>
   local result=$1 handled=${1%.result}.handled _
   if [ "$(reply_owner)" != live ]; then
     remote_env "$ROOT/bin/fm-procevent.sh" start "$SID" >/dev/null 2>&1 &
   fi
   for _ in $(seq 1 800); do
-    [ -s "$result" ] && [ -f "$handled" ] && return 0
+    if [ -s "$result" ] && [ -f "$handled" ]; then
+      stop_reply_listener
+      return $?
+    fi
     sleep 0.05
   done
   return 1
@@ -171,6 +174,7 @@ assert_present "$PARENT/state/procevent-inbox/$SID.1.handled" \
 assert_present "$PARENT/state/procevent/$SID.source" \
   "applying the capture left the relay unarmed for the next delta"
 pass "a captured delta is applied, acknowledged, and re-armed without a handler"
+stop_reply_listener || fail "the reply listener did not stop before manual re-arming"
 
 # Now the handler's own retry path, from the state a crash between applying and
 # acknowledging leaves behind: the acknowledgement is gone and re-arming fails.
