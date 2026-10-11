@@ -68,8 +68,12 @@ SH
 
 out=$(lab workspace create --cwd "$SCRATCH/home" --label session-loss --no-focus)
 pane=$(printf '%s' "$out" | jq -er '.result.root_pane.pane_id')
-pane_command=$(printf 'env ROOT=%q SCRATCH=%q REAL_PATH=%q HERDR_LAB_SESSION=%q HERDR_LAB_HELPER=%q bash %q' \
-  "$ROOT" "$SCRATCH" "$REAL_PATH" "$HERDR_LAB_SESSION" "$HERDR_LAB_HELPER" "$SCRATCH/probe.sh")
+# Keep the terminal input short even when the worktree and inherited PATH are
+# long: a large inline environment can exceed the pane's input capacity.
+printf 'export ROOT=%q SCRATCH=%q REAL_PATH=%q HERDR_LAB_SESSION=%q HERDR_LAB_HELPER=%q\nexec bash %q\n' \
+  "$ROOT" "$SCRATCH" "$REAL_PATH" "$HERDR_LAB_SESSION" "$HERDR_LAB_HELPER" "$SCRATCH/probe.sh" \
+  > "$SCRATCH/launch.sh"
+pane_command=$(printf 'bash %q' "$SCRATCH/launch.sh")
 lab pane run "$pane" "$pane_command" >/dev/null
 for ((i=0; i<300; i++)); do
   [ ! -f "$SCRATCH/finished" ] || break
