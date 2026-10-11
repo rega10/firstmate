@@ -107,6 +107,29 @@ A single-process harness has no descendant that adds a distinct verdict, which i
 The portable regression pins every half without any harness installed: `tests/fm-harness-precedence.test.sh` asserts that this two-process topology decides at comm strength, that the descent probe reaches a strength the top-of-session probe cannot, that a sibling branch answering a foreign harness contributes no verdict, that a foreign args-only verdict at the deepest vantage leaves the comm-strength identity intact, and that equal-depth ties choose the comm-strength leaf regardless of process ordering.
 The run did not reach `opencode`, `pi`, `pi-signed`, `grok`, `kimi`, or `muse`, which were not installed, and stopped at the same pre-existing liveness failure for `cursor` 3.18.9, whose resolved binary on that machine is the editor rather than `cursor-agent`; those adapters are unverified by this run.
 
+## Claude session-lock identity
+
+Verified on 2026-10-11 with Claude Code 2.1.284 on macOS using two isolated print-mode sessions.
+Their real hooks supplied matching payload and trusted environment session ids.
+The guard refused the competing session's acquisition and prompt, and an attempted different-id claim from the exact owning process.
+The hook blocked both test prompts before model execution.
+The shared desktop-app ancestry and helper recycling are covered by the portable process-tree regression; this live check does not drive the desktop app.
+Other harnesses retain their existing lock behavior; no runtime backend lifecycle changes are involved.
+
+Refresh the focused live check with:
+
+```sh
+FM_CLAUDE_SESSION_LOCK_LIVE_E2E=1 bash tests/fm-claude-stop-autoarm-live-e2e.test.sh
+```
+
+Observed output:
+
+```text
+ok - Claude 2.1.284 (Claude Code): trusted hook identities preserve one owner and refuse competing prompts and shared-pid claims
+```
+
+The portable entry point is `bin/fm-test-run.sh tests/fm-session-lock-ancestry.test.sh tests/fm-lock.test.sh tests/fm-sessionstart-nudge.test.sh tests/fm-session-start.test.sh`.
+
 ## tmux
 
 Foreground-process behavior was verified on 2026-07-07 with tmux 3.6a on macOS.

@@ -59,6 +59,8 @@ def make(name):
         "FM_HOME_SUMMARY_INTERVAL": "999999",
         "FM_CHECK_INTERVAL": "999999",
         "FM_CLAUDE_AUTOARM_SYNC_WAIT_MS": "0",
+        # The same test-only exemption tests/lib.sh gives shell fixtures.
+        "FM_GATE_REFUSE_BYPASS": "1",
     }
     return root, env
 
@@ -147,8 +149,8 @@ def require(condition, message):
 try:
     root, env = make("nonowner")
     owner = start(
-        env,
-        '"$FM_ROOT_OVERRIDE/bin/fm-lock.sh" && touch "$FM_HOME/state/owner-ready" && while :; do sleep 1; done',
+        env | {"CLAUDE_CODE_SESSION_ID": "synthetic-owner"},
+        'export CLAUDE_PID=$$; "$FM_ROOT_OVERRIDE/bin/fm-lock.sh" && touch "$FM_HOME/state/owner-ready" && while :; do sleep 1; done',
         "owner-idle.txt",
     )
     lock_path = root / "state/.lock"
@@ -170,8 +172,8 @@ try:
     print("SETUP live synthetic owner=", owner.pid, "lock=", lock_owner, flush=True)
 
     acquisition = run(
-        env,
-        '"$FM_ROOT_OVERRIDE/bin/fm-lock.sh"; rc=$?; printf "lock_rc=%s\\n" "$rc"; true',
+        env | {"CLAUDE_CODE_SESSION_ID": "synthetic-second"},
+        'export CLAUDE_PID=$$; "$FM_ROOT_OVERRIDE/bin/fm-lock.sh"; rc=$?; printf "lock_rc=%s\\n" "$rc"; true',
     )
     print("second-session acquisition", "rc=" + str(acquisition.returncode), "stdout=" + repr(acquisition.stdout), "stderr=" + repr(acquisition.stderr), flush=True)
     require("lock_rc=1" in acquisition.stdout, "foreign session unexpectedly acquired the session lock")
@@ -194,9 +196,10 @@ try:
     require(fresh.returncode == 0, "a fresh leftover beat must not restore foreign-owner blocking")
 
     stop(owner)
+    replacement_env = env | {"CLAUDE_CODE_SESSION_ID": "replacement"}
     replacement = start(
-        env,
-        'printf \'%s\\n\' \'{"session_id":"replacement","stop_hook_active":true}\' | "$FM_ROOT_OVERRIDE/bin/fm-claude-stop-autoarm.sh"; printf "replacement_rc=%s\\n" "$?"; sleep 1',
+        replacement_env,
+        'export CLAUDE_PID=$$; printf \'%s\\n\' \'{"session_id":"replacement","stop_hook_active":true}\' | "$FM_ROOT_OVERRIDE/bin/fm-claude-stop-autoarm.sh"; printf "replacement_rc=%s\\n" "$?"; sleep 1',
         "replacement.txt",
     )
     until(
@@ -205,7 +208,7 @@ try:
     )
     watcher_pid = (root / "state/.watch.lock/pid").read_text().strip()
     print("COUNTERFACTUAL dead original owner: watcher=", watcher_pid, flush=True)
-    healthy = guard(env, "replacement-owned healthy watcher")
+    healthy = guard(replacement_env, "replacement-owned healthy watcher", "export CLAUDE_PID=$$; ")
     require(healthy.returncode == 0, "a replacement owning session must still recover supervision")
     stop(replacement)
 
@@ -265,17 +268,19 @@ try:
     stop(same_owner)
 
     single, single_env = make("single-idle")
+    single_env["CLAUDE_CODE_SESSION_ID"] = "synthetic-second"
     stale = single / "state/.last-watcher-beat"
     stale.touch()
     os.utime(stale, (old_time, old_time))
     sole_owner = run(
         single_env,
-        '"$FM_ROOT_OVERRIDE/bin/fm-lock.sh"; . "$FM_ROOT_OVERRIDE/bin/fm-session-lock-lib.sh"; '
+        'export CLAUDE_PID=$$; "$FM_ROOT_OVERRIDE/bin/fm-lock.sh"; . "$FM_ROOT_OVERRIDE/bin/fm-session-lock-lib.sh"; '
         'if fm_session_lock_owned_by_self "$FM_HOME/state"; then printf "single_owner_verified=1\\n"; fi; '
         'printf \'%s\\n\' \'{"session_id":"synthetic-second","stop_hook_active":true}\' | '
         '"$FM_ROOT_OVERRIDE/bin/fm-turnend-guard.sh" --claude; rc=$?; printf "single_owner_guard_rc=%s\\n" "$rc"; true',
     )
     print("single owner, no autoarm firing", "rc=" + str(sole_owner.returncode), "stdout=" + repr(sole_owner.stdout), "stderr=" + repr(sole_owner.stderr), flush=True)
+    require("single_owner_verified=1" in sole_owner.stdout, "the sole owner did not prove its session identity")
     require("single_owner_guard_rc=2" in sole_owner.stdout, "a sole owner without supervision must retain the guard")
     print("COMPLETE", flush=True)
 finally:

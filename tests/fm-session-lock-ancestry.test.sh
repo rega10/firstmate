@@ -81,6 +81,7 @@ esac
 SH
   chmod +x "$fakebin/ps"
   printf '700\n' > "$dir/state/.lock"
+  printf 'S1\n' > "$dir/state/.lock-session"
 
   for shape in linux macos; do
     got=$(FM_TEST_CLAUDE_SHAPE="$shape" lib_eval "$fakebin" 'fm_harness_ancestry_pid') \
@@ -88,7 +89,7 @@ SH
     [ "$got" = 700 ] || fail "$shape: ancestry resolved '$got', expected the version-named session pid 700"
     FM_TEST_CLAUDE_SHAPE="$shape" lib_eval "$fakebin" 'fm_harness_pid_alive 700' \
       || fail "$shape: a live version-named session was not recognized as a harness"
-    FM_TEST_CLAUDE_SHAPE="$shape" lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
+    FM_TEST_CLAUDE_SHAPE="$shape" FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=700 lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
       || fail "$shape: the session holding the lock did not recognize itself as the owner"
   done
   pass "session-lock: a version-named Claude Code session is identified from its install path and argv[0]"
@@ -125,6 +126,7 @@ esac
 SH
   chmod +x "$fakebin/ps"
   printf '1\n' > "$dir/state/.lock"
+  printf 'S1\n' > "$dir/state/.lock-session"
 
   # Non-vacuity: with a host-shaped pid 1 the same table must find nothing, so
   # this case cannot pass by the walk matching everything it reaches.
@@ -135,9 +137,38 @@ SH
   got=$(lib_eval "$fakebin" 'fm_harness_ancestry_pid') \
     || fail "the harness at namespace pid 1 was not found in the ancestry at all"
   [ "$got" = 1 ] || fail "ancestry resolved '$got', expected the namespace harness pid 1"
-  lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
+  FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=1 lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
     || fail "the session holding the lock at namespace pid 1 did not recognize itself as the owner"
   pass "session-lock: a harness that is pid 1 of its own namespace is examined, not skipped"
+}
+
+test_non_claude_legacy_ancestry_is_unchanged() {
+  local dir fakebin harness
+  dir="$TMP_ROOT/non-claude-legacy"
+  fakebin=$(fm_fakebin "$dir")
+  mkdir -p "$dir/state"
+  cat > "$fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+case "$*" in
+  '-o comm= -p 700'|'-o args= -p 700') printf '%s\n' "$FM_TEST_OWNER_HARNESS" ;;
+  '-o ppid= -p 700') printf '1\n' ;;
+  '-o comm= -p '*|'-o args= -p '*) printf 'bash\n' ;;
+  '-o ppid= -p '*) printf '700\n' ;;
+  *) exit 1 ;;
+esac
+SH
+  chmod +x "$fakebin/ps"
+  printf '700\n' > "$dir/state/.lock"
+  for harness in codex opencode grok kimi pi pi-signed omp cursor-agent; do
+    FM_TEST_OWNER_HARNESS="$harness" owned "$fakebin" "$dir/state" \
+      || fail "$harness: legacy ancestry ownership changed"
+    [ "$(FM_TEST_OWNER_HARNESS="$harness" lib_eval "$fakebin" 'fm_session_lock_anchor_pid')" = 700 ] \
+      || fail "$harness: anchor selection changed"
+    if FM_TEST_OWNER_HARNESS="$harness" foreign_owner "$fakebin" "$dir/state" >/dev/null; then
+      fail "$harness: its own legacy lock was classified as foreign"
+    fi
+  done
+  pass "session-lock: non-Claude harnesses preserve legacy ancestry ownership"
 }
 
 test_ordinary_paths_are_never_harness_processes() {
@@ -223,11 +254,12 @@ SH
   got=$(lib_eval "$fakebin" 'fm_harness_ancestry_pid') || fail "the contiguous harness run was not resolved"
   [ "$got" = 900 ] || fail "ancestry crossed a non-harness gap, resolved '$got' instead of 900"
   printf '920\n' > "$dir/state/.lock"
-  if lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'"; then
+  printf 'S1\n' > "$dir/state/.lock-session"
+  if FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=920 lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'"; then
     fail "an unrelated harness beyond a non-harness gap was accepted as this session's lock owner"
   fi
   printf '900\n' > "$dir/state/.lock"
-  lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
+  FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=900 lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
     || fail "the contiguous harness run did not recognize its own lock"
   pass "session-lock: ownership stops at the first non-harness gap above the contiguous run"
 }
@@ -371,29 +403,40 @@ test_same_session_id_owns_a_recycled_background_chain() {
   FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null \
     || fail "a carriage-return sidecar suppressed the foreign-owner verdict"
   printf 'S1\n' > "$state/.lock-session"
-  # 4. No id at all: the legacy ancestry verdict, unchanged.
+  # 4. No id at all.
   if owned "$fakebin" "$state"; then
     fail "with no session id the recycled chain claimed the lock"
   fi
   foreign_owner "$fakebin" "$state" >/dev/null \
     || fail "with no session id the live owner was not reported as foreign"
-  # 5. The healthy chain owns by ancestry whatever the environment says.
-  FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state" \
-    || fail "ancestry membership lost to a different session id"
-  FM_TEST_DAEMON_PRESENT=1 owned "$fakebin" "$state" \
-    || fail "ancestry membership lost with no session id"
-  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null; then
-    fail "an ancestor was reported as a foreign owner"
+  # 5. A shared ancestor cannot override the recorded conversation identity.
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+    fail "a different session owned the lock through a shared ancestor"
   fi
-  # 6. Never fail open: no sidecar, a symlinked sidecar, and a dead recorded pid
-  # are all ancestry-only, so the dead one is left for the ordinary reclaim.
+  if FM_TEST_DAEMON_PRESENT=1 owned "$fakebin" "$state"; then
+    fail "a missing session id owned the lock through a shared ancestor"
+  fi
+  FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null \
+    || fail "the shared ancestor was not reported as a foreign session owner"
+  # 6. Never fail open: no sidecar, a symlinked sidecar, and a dead recorded pid.
   rm -f "$state/.lock-session"
-  if FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
     fail "a lock with no recorded session id was owned through the environment id"
   fi
+  FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null \
+    || fail "a missing recorded identity suppressed the foreign-owner verdict through shared ancestry"
+  : > "$state/.lock-session"
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+    fail "an empty recorded identity allowed ownership through shared ancestry"
+  fi
+  printf 'S1\r' > "$state/.lock-session"
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+    fail "an invalid recorded identity allowed ownership through shared ancestry"
+  fi
+  rm -f "$state/.lock-session"
   printf 'S1\n' > "$dir/elsewhere"
   ln -s "$dir/elsewhere" "$state/.lock-session"
-  if FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
     fail "a symlinked sidecar was trusted"
   fi
   rm -f "$state/.lock-session"
@@ -413,18 +456,19 @@ test_anchor_pid_is_the_model_loop_process_only_for_a_trusted_id() {
   got=$(FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 lib_eval "$fakebin" 'fm_session_lock_anchor_pid') \
     || fail "no anchor pid was resolved for a trusted id"
   [ "$got" = 710 ] || fail "a trusted id anchored '$got', expected the model-loop process 710"
-  got=$(lib_eval "$fakebin" 'fm_session_lock_anchor_pid') || fail "no anchor pid was resolved without an id"
-  [ "$got" = 720 ] || fail "without an id the anchor was '$got', expected the outermost pid 720"
-  got=$(FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=700 lib_eval "$fakebin" 'fm_session_lock_anchor_pid') \
-    || fail "no anchor pid was resolved for an untrusted id"
-  [ "$got" = 720 ] || fail "an untrusted id anchored '$got', expected the outermost pid 720"
-  got=$(FM_TEST_DAEMON_PRESENT=1 lib_eval "$fakebin" 'fm_session_lock_anchor_pid') \
-    || fail "no anchor pid was resolved for the healthy chain"
-  [ "$got" = 700 ] || fail "the healthy chain without an id anchored '$got', expected the outermost pid 700"
+  if lib_eval "$fakebin" 'fm_session_lock_anchor_pid' >/dev/null; then
+    fail "a Claude anchor was resolved without a trusted id"
+  fi
+  if FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=700 lib_eval "$fakebin" 'fm_session_lock_anchor_pid' >/dev/null; then
+    fail "a Claude anchor was resolved for an untrusted id"
+  fi
+  if FM_TEST_DAEMON_PRESENT=1 lib_eval "$fakebin" 'fm_session_lock_anchor_pid' >/dev/null; then
+    fail "a healthy Claude ancestry resolved an anchor without a trusted id"
+  fi
   got=$(FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 lib_eval "$fakebin" 'fm_session_lock_anchor_pid') \
     || fail "no anchor pid was resolved for the healthy chain with a trusted id"
   [ "$got" = 710 ] || fail "the healthy chain with a trusted id anchored '$got', expected 710 rather than the front-end"
-  pass "session-lock: a trusted id anchors the lock on the model-loop process, anything else on the outermost pid"
+  pass "session-lock: Claude anchor selection requires a trusted session id"
 }
 
 # --- end-to-end layer: the real Stop auto-arm in real process trees ----------
@@ -476,7 +520,8 @@ if [ "${FM_FIXTURE_ORPHAN_HERE:-0}" = 1 ]; then
   done
 fi
 printf '%s\n' "$$" > "$FM_HOME/state/session-pid"
-printf '%s\n' "$$" > "$FM_HOME/state/.lock"
+export CLAUDE_CODE_SESSION_ID=fixture-session CLAUDE_PID=$$
+"$FM_HOME/bin/fm-lock.sh" > "$FM_HOME/state/acquire.out" 2>&1
 "$FM_HOME/bin/fm-claude-stop-autoarm.sh" </dev/null > "$FM_HOME/state/hook.out" 2>&1
 printf '%s\n' "$?" > "$FM_HOME/state/hook.rc"
 SH
@@ -642,9 +687,16 @@ while [ ! -e "$FM_HOME/state/stop-spare" ]; do
   if [ -f "$req" ]; then
     out="$FM_HOME/state/phase-$n"
     mkdir -p "$out"
-    unset CLAUDE_CODE_SESSION_ID CLAUDE_PID
+    unset CLAUDE_CODE_SESSION_ID CLAUDE_PID FM_TEST_CLEAR FM_TEST_STARTUP
     # shellcheck disable=SC1090
     . "$req"
+    if [ "${FM_TEST_STARTUP:-0}" = 1 ]; then
+      PATH="${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" \
+        "$FM_HOME/bin/fm-sessionstart-run.sh" --source startup </dev/null > "$out/startup.out" 2>&1
+      printf '%s\n' "$?" > "$out/startup.rc"
+      cp "$FM_HOME/state/.lock" "$out/startup-lock-after"
+      cp "$FM_HOME/state/.session-start-complete" "$out/startup-completion-after"
+    fi
     ( . "$FM_HOME/bin/fm-session-lock-lib.sh" && fm_harness_ancestry_pids ) > "$out/ancestry" 2>/dev/null
     printf '%s\n' '{"session_id":"fixture","stop_hook_active":true}' \
       | "$FM_HOME/bin/fm-claude-stop-autoarm.sh" > "$out/hook.out" 2>&1
@@ -656,6 +708,25 @@ while [ ! -e "$FM_HOME/state/stop-spare" ]; do
     printf '%s\n' "$?" > "$out/lock.rc"
     cp "$FM_HOME/state/.lock" "$out/lock-after"
     [ ! -e "$FM_HOME/state/.lock-session" ] || cp "$FM_HOME/state/.lock-session" "$out/session-after"
+    if [ "${FM_TEST_PROMPT_GUARD:-0}" = 1 ]; then
+      printf '%s\n' '{"session_id":"fixture","prompt":"I am back"}' \
+        | "$FM_HOME/bin/fm-sessionstart-run.sh" --check-claude-lock > "$out/prompt.out" 2>&1
+      printf '%s\n' "$?" > "$out/prompt.rc"
+      "$FM_HOME/bin/fm-sessionstart-nudge.sh" > "$out/nudge.out" 2>&1
+      if [ "$n" = 1 ]; then
+        "$FM_HOME/bin/fm-sessionstart-run.sh" --source resume > "$out/resume.out" 2>&1
+        printf '%s\n' "$?" > "$out/resume.rc"
+      fi
+    fi
+    if [ "${FM_TEST_CLEAR:-0}" = 1 ]; then
+      printf '%s\n' '{"source":"clear"}' \
+        | PATH="${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" \
+          "$FM_HOME/bin/fm-sessionstart-run.sh" > "$out/clear.out" 2>&1
+      printf '%s\n' "$?" > "$out/clear.rc"
+      cp "$FM_HOME/state/.lock" "$out/clear-lock-after"
+      cp "$FM_HOME/state/.lock-session" "$out/clear-session-after"
+      cp "$FM_HOME/state/.session-start-complete" "$out/clear-completion-after"
+    fi
     : > "$out/done"
     n=$((n + 1))
   fi
@@ -721,16 +792,177 @@ expect_phase_owned() {  # <dir> <n> <expected-arms> <expected-lock-pid> <label>
 # Not the owner: no arm, the guard's foreign-owner diagnostic naming the live
 # owner, and the lock refusal naming both the owner pid and its recorded id.
 expect_phase_foreign() {  # <dir> <n> <expected-arms> <owner-pid> <label>
-  local dir=$1 n=$2 arms=$3 owner=$4 label=$5
+  local dir=$1 n=$2 arms=$3 owner=$4 label=$5 refusal
+  refusal=${6:-"another live firstmate session holds the lock (pid $owner, session S1)"}
   expect_code 0 "$(phase_value "$dir" "$n" hook.rc)" "$label: the Stop auto-arm did not stand down"
   [ "$(arm_count "$dir")" = "$arms" ] || fail "$label: a non-owner armed: $(arm_count "$dir") arm(s), expected $arms"
   expect_code 0 "$(phase_value "$dir" "$n" guard.rc)" "$label: a non-owner Stop did not end safely"
   grep -q "OWNED BY ANOTHER LIVE SESSION.*lock owner pid $owner" "$dir/state/phase-$n/guard.out" \
     || fail "$label: the guard did not report the live owner $owner: $(cat "$dir/state/phase-$n/guard.out")"
   expect_code 1 "$(phase_value "$dir" "$n" lock.rc)" "$label: fm-lock.sh accepted a lock this session does not own"
-  grep -q "another live firstmate session holds the lock (pid $owner, session S1)" "$dir/state/phase-$n/lock.out" \
-    || fail "$label: the refusal did not name the owner pid and recorded session: $(cat "$dir/state/phase-$n/lock.out")"
+  grep -qF "$refusal" "$dir/state/phase-$n/lock.out" \
+    || fail "$label: the lock omitted its refusal: $(cat "$dir/state/phase-$n/lock.out")"
   [ "$(phase_value "$dir" "$n" lock-after)" = "$owner" ] || fail "$label: a non-owner rewrote the lock"
+}
+
+# The app/front-end stays in every background session's ancestry. Different
+# conversations must not inherit its fleet authority from that shared process.
+test_e2e_shared_frontend_refuses_other_sessions() {
+  local dir frontend daemon ptyhost spare phase
+  dir="$TMP_ROOT/e2e-shared-frontend"
+  make_background_session_home "$dir"
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+    FM_HOME="$dir" FM_FIXTURE_CLAUDE="$NAMED_CLAUDE" FM_POLL=1 FM_HEARTBEAT=999999 \
+    FM_CLAUDE_AUTOARM_SYNC_WAIT_MS=0 \
+    bash -c '"$0" "$1" &' "$NAMED_CLAUDE" "$dir/frontend.sh"
+  wait_for_file "$dir/state/frontend-lock.rc" "the front-end's lock result"
+  wait_for_file "$dir/state/spare-pid" "the bg-spare"
+  frontend=$(cat "$dir/state/frontend-pid")
+  daemon=$(cat "$dir/state/daemon-pid")
+  ptyhost=$(cat "$dir/state/ptyhost-pid")
+  spare=$(cat "$dir/state/spare-pid")
+  BG_FIXTURE_PIDS+=("$frontend" "$daemon" "$ptyhost" "$spare")
+  expect_code 0 "$(cat "$dir/state/frontend-lock.rc")" "the front-end could not acquire the lock"
+  cp "$dir/state/.lock-session" "$dir/sidecar-initial"
+
+  # Cached startup completion must not authorize the first return prompt.
+  cp "$dir/state/.lock" "$dir/state/.session-start-complete"
+  printf '%s\n' 'away mandate remains active' > "$dir/state/.afk-contract"
+  printf '%s\n' 'pending wake' > "$dir/state/.wake-queue"
+  cp "$dir/state/.afk-contract" "$dir/away-before"
+  cp "$dir/state/.wake-queue" "$dir/wakes-before"
+  fire_phase "$dir" 1 'export FM_TEST_PROMPT_GUARD=1; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$$'
+  grep -qx "$frontend" "$dir/state/phase-1/ancestry" \
+    || fail "the competing session did not share the front-end ancestor"
+  expect_phase_foreign "$dir" 1 0 "$frontend" "shared front-end, different session"
+  cmp -s "$dir/sidecar-initial" "$dir/state/.lock-session" \
+    || fail "the competing session changed the owner's session id"
+
+  expect_code 2 "$(phase_value "$dir" 1 prompt.rc)" "a pre-warmed non-owner prompt was not blocked"
+  assert_grep 'READ-ONLY SESSION' "$dir/state/phase-1/prompt.out" "prompt refusal omitted the read-only diagnostic"
+  assert_grep 'fm-session-start.sh' "$dir/state/phase-1/nudge.out" "a shared ancestor suppressed the resume nudge"
+  expect_code 0 "$(phase_value "$dir" 1 resume.rc)" "the resumed session did not receive its digest"
+  assert_grep 'READ-ONLY SESSION' "$dir/state/phase-1/resume.out" "the resumed session reused stale owning context"
+  cmp -s "$dir/away-before" "$dir/state/.afk-contract" || fail "the refused prompt changed away mode"
+  cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "the refused prompt drained wakes"
+
+  # Even equality with CLAUDE_PID cannot re-key an ordinary acquisition.
+  fire_phase "$dir" 2 "export FM_TEST_CLEAR=1; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$frontend"
+  expect_phase_foreign "$dir" 2 0 "$frontend" "same anchor pid, different session"
+  fire_phase "$dir" 3 ''
+  expect_phase_foreign "$dir" 3 0 "$frontend" "shared front-end, missing session id" \
+    "cannot verify harness ancestry or trusted Claude session identity; operate read-only until resolved"
+
+  fire_phase "$dir" 4 'export FM_TEST_CLEAR=1; export CLAUDE_CODE_SESSION_ID=S1-cleared; export CLAUDE_PID=$$'
+  expect_phase_foreign "$dir" 4 0 "$frontend" "owning clear with changed id and helper"
+  [ "$spare" != "$frontend" ] || fail "the clear fixture did not change helper processes"
+  grep -qx "$spare" "$dir/state/phase-4/ancestry" || fail "the changed helper was not in the clear ancestry"
+  for phase in 2 4; do
+    expect_code 0 "$(phase_value "$dir" "$phase" clear.rc)" "the clear hook did not deliver its refusal"
+    assert_grep "error: another live firstmate session holds the lock (pid $frontend, session S1); operate read-only until resolved" \
+      "$dir/state/phase-$phase/clear.out" "clear omitted the exact live-owner refusal"
+    assert_grep 'READ-ONLY SESSION' "$dir/state/phase-$phase/clear.out" "unproven clear did not enter read-only mode"
+    if grep -q 'SESSION START (CONTEXT RE-EMIT)' "$dir/state/phase-$phase/clear.out"; then
+      fail "unproven clear reused the owner's startup completion"
+    fi
+    [ "$(phase_value "$dir" "$phase" clear-lock-after)" = "$frontend" ] || fail "unproven clear changed the live anchor"
+    cmp -s "$dir/sidecar-initial" "$dir/state/phase-$phase/clear-session-after" || fail "unproven clear changed the owner id"
+    cmp -s "$dir/state/phase-$phase/clear-lock-after" "$dir/state/phase-$phase/clear-completion-after" \
+      || fail "unproven clear changed startup completion"
+  done
+  cmp -s "$dir/away-before" "$dir/state/.afk-contract" || fail "unproven clear changed away mode"
+  cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "unproven clear drained wakes"
+
+  # Counterfactual: identical process tree, only the conversation id changes.
+  fire_phase "$dir" 5 'export FM_TEST_CLEAR=1; export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$$'
+  expect_phase_owned "$dir" 5 2 "$frontend" "shared front-end, same session"
+  expect_code 0 "$(phase_value "$dir" 5 prompt.rc)" "the owning session's prompt was blocked"
+  expect_code 0 "$(phase_value "$dir" 5 clear.rc)" "the proven owner's clear hook failed"
+  assert_grep 'SESSION START (CONTEXT RE-EMIT)' "$dir/state/phase-5/clear.out" "proven continuity did not reuse completed startup"
+  assert_grep 'are NOT repeated' "$dir/state/phase-5/clear.out" "proven continuity repeated startup sweeps"
+  if grep -q 'READ-ONLY SESSION' "$dir/state/phase-5/clear.out"; then
+    fail "the proven owner's clear hook refused its changed helper"
+  fi
+  cmp -s "$dir/sidecar-initial" "$dir/state/phase-5/clear-session-after" || fail "the proven clear changed the owner id"
+  [ "$(phase_value "$dir" 5 clear-lock-after)" = "$frontend" ] || fail "the proven clear changed the live anchor"
+  cmp -s "$dir/state/phase-5/clear-lock-after" "$dir/state/phase-5/clear-completion-after" \
+    || fail "the proven clear changed startup completion"
+  : > "$dir/state/stop-spare"
+  : > "$dir/state/stop-frontend"
+  pass "session-lock e2e: a shared Claude front-end grants authority only to the owning session"
+}
+
+test_e2e_legacy_lock_upgrade_refuses_until_owner_restarts() {
+  local dir frontend daemon ptyhost spare phase i
+  dir="$TMP_ROOT/e2e-legacy-upgrade"
+  make_background_session_home "$dir"
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+    FM_HOME="$dir" FM_FIXTURE_CLAUDE="$NAMED_CLAUDE" FM_POLL=1 FM_HEARTBEAT=999999 \
+    FM_CLAUDE_AUTOARM_SYNC_WAIT_MS=0 \
+    bash -c '"$0" "$1" &' "$NAMED_CLAUDE" "$dir/frontend.sh"
+  wait_for_file "$dir/state/frontend-lock.rc" "the legacy front-end's lock result"
+  wait_for_file "$dir/state/spare-pid" "the legacy background helper"
+  frontend=$(cat "$dir/state/frontend-pid")
+  daemon=$(cat "$dir/state/daemon-pid")
+  ptyhost=$(cat "$dir/state/ptyhost-pid")
+  spare=$(cat "$dir/state/spare-pid")
+  BG_FIXTURE_PIDS+=("$frontend" "$daemon" "$ptyhost" "$spare")
+  expect_code 0 "$(cat "$dir/state/frontend-lock.rc")" "the legacy owner did not start"
+  rm -f "$dir/state/.lock-session"
+  cp "$dir/state/.lock" "$dir/legacy-lock"
+  cp "$dir/state/.lock" "$dir/state/.session-start-complete"
+  printf '%s\n' 'away mandate remains active' > "$dir/state/.afk-contract"
+  printf '%s\n' 'pending wake' > "$dir/state/.wake-queue"
+  cp "$dir/state/.afk-contract" "$dir/away-before"
+  cp "$dir/state/.wake-queue" "$dir/wakes-before"
+
+  fire_phase "$dir" 1 "export FM_TEST_PROMPT_GUARD=1; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$frontend"
+  expect_code 2 "$(phase_value "$dir" 1 prompt.rc)" "a competing prompt adopted the legacy lock"
+  expect_code 0 "$(phase_value "$dir" 1 resume.rc)" "resume did not deliver the legacy refusal"
+  assert_grep 'READ-ONLY SESSION' "$dir/state/phase-1/resume.out" "resume reused legacy owning context"
+  assert_grep 'fm-session-start.sh' "$dir/state/phase-1/nudge.out" "legacy ancestry suppressed the nudge"
+  grep -qx "$frontend" "$dir/state/phase-1/ancestry" || fail "the legacy fixture did not share the live owner"
+
+  fire_phase "$dir" 2 'export FM_TEST_STARTUP=1; export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$$'
+  expect_code 0 "$(phase_value "$dir" 2 startup.rc)" "the owning upgrade session did not receive its digest"
+  assert_grep 'READ-ONLY SESSION' "$dir/state/phase-2/startup.out" "startup claimed unproven legacy ownership"
+  assert_grep "restart the owning Claude process (pid $frontend) so that pid $frontend exits, then re-run bin/fm-session-start.sh" \
+    "$dir/state/phase-2/startup.out" "startup omitted the exact legacy recovery"
+  for phase in 1 2; do
+    expect_code 0 "$(phase_value "$dir" "$phase" hook.rc)" "a legacy hook attempted to arm supervision"
+    expect_code 0 "$(phase_value "$dir" "$phase" guard.rc)" "a legacy hook did not end safely"
+    expect_code 1 "$(phase_value "$dir" "$phase" lock.rc)" "a live legacy lock admitted an unproven owner"
+    assert_grep 'OWNED BY ANOTHER LIVE SESSION' "$dir/state/phase-$phase/guard.out" "legacy ownership bypassed the turn-end guard"
+    assert_grep 'the live legacy lock has no valid Claude session identity' "$dir/state/phase-$phase/lock.out" "legacy refusal omitted its cause"
+    cmp -s "$dir/legacy-lock" "$dir/state/phase-$phase/lock-after" || fail "the legacy refusal changed the lock"
+  done
+  expect_code 2 "$(phase_value "$dir" 2 prompt.rc)" "the unproven owning prompt was allowed"
+  [ "$(arm_count "$dir")" = 0 ] || fail "an unproven legacy session armed supervision"
+  assert_absent "$dir/state/.lock-session" "an unproven legacy session published its identity"
+  cmp -s "$dir/legacy-lock" "$dir/state/.session-start-complete" || fail "legacy refusal changed startup completion"
+  cmp -s "$dir/away-before" "$dir/state/.afk-contract" || fail "legacy refusal changed away mode"
+  cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "legacy refusal drained wakes"
+
+  : > "$dir/state/stop-frontend"
+  i=0
+  while [ "$i" -lt 200 ] && kill -0 "$frontend" 2>/dev/null; do
+    sleep 0.05
+    i=$((i + 1))
+  done
+  kill -0 "$frontend" 2>/dev/null && fail "the recorded legacy owner did not exit"
+  fire_phase "$dir" 3 'export FM_TEST_STARTUP=1; export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$$'
+  expect_code 0 "$(phase_value "$dir" 3 startup.rc)" "startup failed after the legacy owner exited"
+  assert_grep "lock acquired: harness pid $spare" "$dir/state/phase-3/startup.out" "startup did not reacquire the stale legacy lock"
+  if grep -q 'READ-ONLY SESSION' "$dir/state/phase-3/startup.out"; then
+    fail "the restarted owner remained read-only after the legacy anchor exited"
+  fi
+  [ "$(phase_value "$dir" 3 session-after)" = S1 ] || fail "the upgrade did not record the trusted identity"
+  [ "$(phase_value "$dir" 3 startup-lock-after)" = "$spare" ] || fail "the upgrade did not record the current helper"
+  cmp -s "$dir/state/phase-3/startup-lock-after" "$dir/state/phase-3/startup-completion-after" \
+    || fail "the upgrade did not complete startup under its new lock"
+  expect_code 0 "$(phase_value "$dir" 3 prompt.rc)" "the recovered owner's prompt was refused"
+  : > "$dir/state/stop-spare"
+  pass "session-lock e2e: a legacy upgrade refuses shared ancestry and recovers through startup after the recorded owner exits"
 }
 
 test_e2e_background_session_keeps_its_lock_across_a_recycled_chain() {
@@ -784,9 +1016,11 @@ test_e2e_background_session_keeps_its_lock_across_a_recycled_chain() {
   fire_phase "$dir" 3 'export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$$'
   expect_phase_foreign "$dir" 3 4 "$frontend" "recycled chain, different session"
   fire_phase "$dir" 4 "export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$frontend"
-  expect_phase_foreign "$dir" 4 4 "$frontend" "recycled chain, untrusted id"
+  expect_phase_foreign "$dir" 4 4 "$frontend" "recycled chain, untrusted id" \
+    "cannot verify harness ancestry or trusted Claude session identity; operate read-only until resolved"
   fire_phase "$dir" 5 ''
-  expect_phase_foreign "$dir" 5 4 "$frontend" "recycled chain, no id"
+  expect_phase_foreign "$dir" 5 4 "$frontend" "recycled chain, no id" \
+    "cannot verify harness ancestry or trusted Claude session identity; operate read-only until resolved"
 
   # Phase 6: the front-end exits; the same session reclaims its dead anchor
   # onto the spare - the model-loop process - not onto the outermost pty-host.
@@ -805,11 +1039,182 @@ test_e2e_background_session_keeps_its_lock_across_a_recycled_chain() {
   pass "session-lock e2e: a background session keeps its lock and its supervision across a recycled helper chain"
 }
 
-# A same-session confirmation must refresh a /clear re-key even while another
-# process holds .lock.acquire. The prior-session-sweep-is-finishing refusal is
-# a takeover rule and does not apply here; the confirmation waits, then writes
-# the new id.
-test_same_session_confirmation_refreshes_rekeyed_id_under_claim_lock() {
+test_identity_less_claude_acquisition_refuses_without_publication() {
+  local dir previous identity
+  for previous in fresh stale; do
+    for identity in missing untrusted; do
+      dir="$TMP_ROOT/identity-$previous-$identity"
+      mkdir -p "$dir/bin" "$dir/state" "$dir/data" "$dir/config"
+      git init -q -b main "$dir"
+      : > "$dir/AGENTS.md"
+      if [ "$previous" = stale ]; then
+        printf '9999999\n' > "$dir/state/.lock"
+        printf 'previous-session\n' > "$dir/state/.lock-session"
+        cp "$dir/state/.lock" "$dir/lock-before"
+        cp "$dir/state/.lock-session" "$dir/session-before"
+      fi
+      printf 'uncompleted-startup\n' > "$dir/state/.session-start-complete"
+      printf 'away mandate remains active\n' > "$dir/state/.afk-contract"
+      printf 'pending wake\n' > "$dir/state/.wake-queue"
+      cp "$dir/state/.session-start-complete" "$dir/completion-before"
+      cp "$dir/state/.afk-contract" "$dir/away-before"
+      cp "$dir/state/.wake-queue" "$dir/wakes-before"
+      env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+        FM_HOME="$dir" FM_ROOT_OVERRIDE="$dir" FM_TEST_BIN="$ROOT/bin" FM_TEST_IDENTITY="$identity" \
+        PATH="${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" \
+        "$NAMED_CLAUDE" -c '
+          if [ "$FM_TEST_IDENTITY" = untrusted ]; then
+            export CLAUDE_CODE_SESSION_ID=S1 CLAUDE_PID=9999999
+          fi
+          "$FM_TEST_BIN/fm-lock.sh" > "$FM_HOME/acquire.out" 2>&1
+          printf "%s\n" "$?" > "$FM_HOME/acquire.rc"
+          "$FM_TEST_BIN/fm-sessionstart-run.sh" --check-claude-lock </dev/null > "$FM_HOME/prompt.out" 2>&1
+          printf "%s\n" "$?" > "$FM_HOME/prompt.rc"
+          "$FM_TEST_BIN/fm-sessionstart-run.sh" --source startup </dev/null > "$FM_HOME/startup.out" 2>&1
+          printf "%s\n" "$?" > "$FM_HOME/startup.rc"
+          exit 0
+        '
+      expect_code 1 "$(cat "$dir/acquire.rc")" "$previous $identity: untrusted Claude acquisition was allowed"
+      expect_code 2 "$(cat "$dir/prompt.rc")" "$previous $identity: an untrusted Claude prompt was allowed"
+      expect_code 0 "$(cat "$dir/startup.rc")" "$previous $identity: startup did not deliver its refusal"
+      assert_grep 'trusted Claude session identity' "$dir/acquire.out" "acquisition omitted the identity refusal"
+      assert_grep 'READ-ONLY SESSION' "$dir/startup.out" "startup authorized an untrusted session"
+      if [ "$previous" = stale ]; then
+        cmp -s "$dir/lock-before" "$dir/state/.lock" || fail "identity refusal changed the stale lock"
+        cmp -s "$dir/session-before" "$dir/state/.lock-session" || fail "identity refusal changed the stale sidecar"
+      else
+        assert_absent "$dir/state/.lock" "identity refusal published a fresh lock"
+        assert_absent "$dir/state/.lock-session" "identity refusal published a fresh sidecar"
+      fi
+      cmp -s "$dir/completion-before" "$dir/state/.session-start-complete" || fail "identity refusal changed completion"
+      cmp -s "$dir/away-before" "$dir/state/.afk-contract" || fail "identity refusal changed away mode"
+      cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "identity refusal drained wakes"
+      env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+        FM_HOME="$dir" FM_TEST_BIN="$ROOT/bin" "$NAMED_CLAUDE" -c '
+          export CLAUDE_CODE_SESSION_ID=S1 CLAUDE_PID=$$
+          printf "%s\n" "$$" > "$FM_HOME/expected-owner"
+          "$FM_TEST_BIN/fm-lock.sh" > "$FM_HOME/trusted.out" 2>&1
+          printf "%s\n" "$?" > "$FM_HOME/trusted.rc"
+          exit 0
+        '
+      expect_code 0 "$(cat "$dir/trusted.rc")" "$previous: a trusted Claude session could not acquire"
+      cmp -s "$dir/expected-owner" "$dir/state/.lock" || fail "trusted acquisition recorded the wrong anchor"
+      [ "$(cat "$dir/state/.lock-session")" = S1 ] || fail "trusted acquisition did not publish its identity"
+    done
+  done
+  pass "session-lock e2e: fresh and stale Claude acquisition require trusted identity before publication, prompts, or startup mutations"
+}
+
+test_e2e_unknown_helper_identity_never_inherits_the_owner() {
+  local dir frontend daemon ptyhost spare field phase real_ps action
+  dir="$TMP_ROOT/e2e-unknown-helper"
+  make_background_session_home "$dir"
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+    FM_HOME="$dir" FM_FIXTURE_CLAUDE="$NAMED_CLAUDE" FM_POLL=1 FM_HEARTBEAT=999999 \
+    FM_CLAUDE_AUTOARM_SYNC_WAIT_MS=0 \
+    bash -c '"$0" "$1" &' "$NAMED_CLAUDE" "$dir/frontend.sh"
+  wait_for_file "$dir/state/frontend-lock.rc" "the recycling owner's lock result"
+  wait_for_file "$dir/state/spare-pid" "the recycling helper"
+  frontend=$(cat "$dir/state/frontend-pid")
+  daemon=$(cat "$dir/state/daemon-pid")
+  ptyhost=$(cat "$dir/state/ptyhost-pid")
+  spare=$(cat "$dir/state/spare-pid")
+  BG_FIXTURE_PIDS+=("$frontend" "$daemon" "$ptyhost" "$spare")
+  expect_code 0 "$(cat "$dir/state/frontend-lock.rc")" "the recycling owner could not acquire"
+  cp "$dir/state/.lock" "$dir/lock-before"
+  cp "$dir/state/.lock-session" "$dir/session-before"
+  cp "$dir/state/.lock" "$dir/state/.session-start-complete"
+  printf 'away mandate remains active\n' > "$dir/state/.afk-contract"
+  printf 'pending wake\n' > "$dir/state/.wake-queue"
+  cp "$dir/state/.afk-contract" "$dir/away-before"
+  cp "$dir/state/.wake-queue" "$dir/wakes-before"
+  mkdir -p "$dir/fakebin"
+  real_ps=$(command -v ps)
+  cat > "$dir/fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+if [ "$*" = "-o $FM_TEST_INSPECTION_FIELD= -p $FM_TEST_HELPER_PID" ]; then
+  count=$(cat "$FM_HOME/state/inspect-count" 2>/dev/null || printf '0')
+  count=$((count + 1))
+  printf '%s\n' "$count" > "$FM_HOME/state/inspect-count"
+  [ "$count" -lt 2 ] || exit 1
+fi
+exec "$FM_TEST_REAL_PS" "$@"
+SH
+  chmod +x "$dir/fakebin/ps"
+  cat > "$dir/race-request.sh" <<'SH'
+export CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$
+export PATH="$FM_HOME/fakebin:$FM_TEST_ORIGINAL_PATH"
+printf '0\n' > "$FM_HOME/state/inspect-count"
+( . "$FM_HOME/bin/fm-session-lock-lib.sh" && fm_harness_ancestry_pids ) > "$out/race-ancestry"
+for action in stop guard acquire prompt resume nudge startup; do
+  printf '0\n' > "$FM_HOME/state/inspect-count"
+  case "$action" in
+    stop) printf '%s\n' '{"session_id":"S2","stop_hook_active":true}' | "$FM_HOME/bin/fm-claude-stop-autoarm.sh" > "$out/race-$action.out" 2>&1 ;;
+    guard) printf '%s\n' '{"session_id":"S2","stop_hook_active":true}' | "$FM_HOME/bin/fm-turnend-guard.sh" --claude > "$out/race-$action.out" 2>&1 ;;
+    acquire) "$FM_HOME/bin/fm-lock.sh" > "$out/race-$action.out" 2>&1 ;;
+    prompt) "$FM_HOME/bin/fm-sessionstart-run.sh" --check-claude-lock </dev/null > "$out/race-$action.out" 2>&1 ;;
+    resume) "$FM_HOME/bin/fm-sessionstart-run.sh" --source resume </dev/null > "$out/race-$action.out" 2>&1 ;;
+    nudge) "$FM_HOME/bin/fm-sessionstart-nudge.sh" > "$out/race-$action.out" 2>&1 ;;
+    startup) PATH="$FM_HOME/fakebin:${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" "$FM_HOME/bin/fm-sessionstart-run.sh" --source startup </dev/null > "$out/race-$action.out" 2>&1 ;;
+  esac
+  printf '%s\n' "$?" > "$out/race-$action.rc"
+  cp "$FM_HOME/state/inspect-count" "$out/race-$action-inspections"
+done
+export PATH="$FM_TEST_ORIGINAL_PATH"
+SH
+  phase=1
+  for field in comm args; do
+    fire_phase "$dir" "$phase" "export FM_TEST_HELPER_PID=$spare FM_TEST_REAL_PS='$real_ps' FM_TEST_INSPECTION_FIELD=$field FM_TEST_ORIGINAL_PATH='$PATH'; . \"\$FM_HOME/race-request.sh\""
+    grep -qx "$spare" "$dir/state/phase-$phase/race-ancestry" || fail "the snapshot did not contain the disappearing helper"
+    grep -qx "$frontend" "$dir/state/phase-$phase/race-ancestry" || fail "the snapshot did not contain the shared owner"
+    for action in stop guard acquire prompt resume nudge startup; do
+      [ "$(phase_value "$dir" "$phase" "race-$action-inspections")" -ge 2 ] \
+        || fail "$field $action: helper inspection never became unavailable"
+    done
+    expect_code 0 "$(phase_value "$dir" "$phase" race-stop.rc)" "unknown helper Stop did not stand down"
+    expect_code 1 "$(phase_value "$dir" "$phase" race-acquire.rc)" "unknown helper acquired a lock"
+    expect_code 2 "$(phase_value "$dir" "$phase" race-prompt.rc)" "unknown helper prompt was allowed"
+    assert_grep 'READ-ONLY SESSION' "$dir/state/phase-$phase/race-resume.out" "unknown resume inherited owning context"
+    assert_grep 'READ-ONLY SESSION' "$dir/state/phase-$phase/race-startup.out" "unknown startup authorized mutations"
+    assert_grep 'fm-session-start.sh' "$dir/state/phase-$phase/race-nudge.out" "unknown helper suppressed the startup nudge"
+    [ "$(arm_count "$dir")" = 0 ] || fail "an unknown helper armed supervision"
+    assert_absent "$dir/state/.claude-autoarm-epoch" "an unknown helper claimed an auto-arm generation"
+    cmp -s "$dir/lock-before" "$dir/state/.lock" || fail "an unknown helper changed the live lock"
+    cmp -s "$dir/session-before" "$dir/state/.lock-session" || fail "an unknown helper changed the owner id"
+    cmp -s "$dir/lock-before" "$dir/state/.session-start-complete" || fail "an unknown helper changed completion"
+    cmp -s "$dir/away-before" "$dir/state/.afk-contract" || fail "an unknown helper changed away mode"
+    cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "an unknown helper drained wakes"
+    kill -0 "$frontend" 2>/dev/null || fail "the shared owner was not live during helper recycling"
+    phase=$((phase + 1))
+  done
+  : > "$dir/state/stop-spare"
+  : > "$dir/state/stop-frontend"
+  pass "session-lock e2e: unavailable helper inspection refuses ownership, Stop, prompt, resume, and startup mutations"
+}
+
+test_concurrent_sessions_sharing_one_pid_have_one_winner() {
+  local dir
+  dir="$TMP_ROOT/shared-pid-race"
+  mkdir -p "$dir/state"
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+    FM_HOME="$dir" FM_LOCK="$ROOT/bin/fm-lock.sh" \
+    "$NAMED_CLAUDE" -c '
+      export CLAUDE_PID=$$
+      for id in S1 S2 S3; do
+        (
+          CLAUDE_CODE_SESSION_ID="$id" "$FM_LOCK" > "$FM_HOME/$id.out" 2>&1
+          printf "%s\n" "$?" > "$FM_HOME/$id.rc"
+        ) &
+      done
+      wait
+      exit 0
+    '
+  [ "$(cat "$dir/"*.rc | grep -c '^0$')" = 1 ] \
+    || fail "concurrent conversations sharing one Claude pid did not produce exactly one winner"
+  pass "session-lock: concurrent conversations sharing one Claude pid have exactly one winner"
+}
+
+test_same_session_confirmation_preserves_id_under_claim_lock() {
   local dir session_pid holder_pid confirm_pid
   dir="$TMP_ROOT/confirm-under-claim"
   mkdir -p "$dir/state"
@@ -849,7 +1254,7 @@ if [ ! -e "$FM_HOME/state/holder-ready" ]; then
   exit 2
 fi
 
-CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$ "$FM_LOCK" > "$FM_HOME/state/confirm.out" 2>&1 &
+CLAUDE_CODE_SESSION_ID=S1 CLAUDE_PID=$$ "$FM_LOCK" > "$FM_HOME/state/confirm.out" 2>&1 &
 printf '%s\n' "$!" > "$FM_HOME/state/confirm-pid"
 
 i=0
@@ -885,13 +1290,13 @@ SH
   wait "$session_pid" || true
   expect_code 0 "$(tr -d '[:space:]' < "$dir/state/confirm.rc")" \
     "the same-session confirmation failed while the claim lock was held: $(cat "$dir/state/confirm.out")"
-  [ "$(tr -d '[:space:]' < "$dir/state/.lock-session")" = S2 ] \
-    || fail "the sidecar still names $(cat "$dir/state/.lock-session"), expected the re-keyed id S2"
+  cmp -s "$dir/state/sidecar-after-acquire" "$dir/state/.lock-session" \
+    || fail "the same-session confirmation changed the sidecar"
   [ "$(tr -d '[:space:]' < "$dir/state/.lock")" = "$(tr -d '[:space:]' < "$dir/state/session-pid")" ] \
     || fail "the confirmation rewrote lock line 1"
   grep -q 'lock acquired: harness pid' "$dir/state/confirm.out" \
     || fail "the confirmation did not report acquisition: $(cat "$dir/state/confirm.out")"
-  pass "session-lock: a same-session confirmation waits for the claim lock and refreshes a re-keyed id"
+  pass "session-lock: a same-session confirmation waits for the claim lock and preserves its id"
 }
 
 # If another live session publishes while a confirmation is waiting on the claim
@@ -953,7 +1358,7 @@ if [ ! -e "$FM_HOME/state/holder-ready" ]; then
   exit 2
 fi
 
-CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$ "$FM_LOCK" > "$FM_HOME/state/confirm.out" 2>&1 &
+CLAUDE_CODE_SESSION_ID=S1 CLAUDE_PID=$$ "$FM_LOCK" > "$FM_HOME/state/confirm.out" 2>&1 &
 printf '%s\n' "$!" > "$FM_HOME/state/confirm-pid"
 
 i=0
@@ -1094,8 +1499,13 @@ test_verified_reclaim_keeps_new_sidecar() {
   pass "session-lock: a verified reclaim keeps the new sidecar beside the new pid"
 }
 
+test_e2e_shared_frontend_refuses_other_sessions
+test_identity_less_claude_acquisition_refuses_without_publication
+test_e2e_unknown_helper_identity_never_inherits_the_owner
+test_e2e_legacy_lock_upgrade_refuses_until_owner_restarts
 test_version_named_session_is_identified_on_both_platforms
 test_harness_at_namespace_pid1_is_examined
+test_non_claude_legacy_ancestry_is_unchanged
 test_ordinary_paths_are_never_harness_processes
 test_harness_beyond_a_gap_never_owns_the_lock
 test_competing_version_named_session_is_seen_as_live
@@ -1105,7 +1515,8 @@ test_e2e_version_named_session_claims_the_home
 test_e2e_daemon_parented_session_claims_the_home
 test_e2e_daemon_parented_version_named_session_keeps_its_lock
 test_e2e_background_session_keeps_its_lock_across_a_recycled_chain
-test_same_session_confirmation_refreshes_rekeyed_id_under_claim_lock
+test_concurrent_sessions_sharing_one_pid_have_one_winner
+test_same_session_confirmation_preserves_id_under_claim_lock
 test_same_session_confirmation_does_not_steal_after_wait
 test_failed_lock_write_restores_previous_sidecar
 test_failed_lock_write_removes_new_sidecar_when_none_existed

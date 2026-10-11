@@ -69,7 +69,7 @@ A re-emit (`--reemit`) reprints the digest for a process that already has the he
 | --- | --- | --- |
 | `startup`, `new` | Full digest | This is a true session start that has not taken the helm; Pi CLI continuations are refined to `resume` by the adapter before reaching this boundary. |
 | `clear`, `compact` | `--reemit` after a proven complete startup, otherwise full digest | This process normally has the helm and lost only its context, but an earlier hook may have been truncated after acquiring the lock. |
-| `resume`, `reload`, `fork` | Delegate to the nudge wrapper | Prior context is restored, so re-running is redundant when the lock is still ours and an instruction is enough when a new process resumed an old session. |
+| `resume`, `reload`, `fork` | Delegate to the nudge wrapper, or emit a read-only digest for a Claude session facing another live owner | Restored context cannot confer ownership on a different Claude conversation sharing the app process. |
 | unreadable or unrecognized | Full digest | Taking the helm redundantly is cheap and idempotent; not taking it is the bug this tier exists to fix. |
 
 ### Change from the previous nudge matcher
@@ -77,7 +77,7 @@ A re-emit (`--reemit`) reprints the digest for a process that already has the he
 This routing deliberately inverts the previous nudge matcher, which fired on `startup|resume|clear` and excluded `compact`.
 
 - Compaction is covered where a tracked adapter delivers that source, because a compacted session has lost exactly the digest it needs.
-- Resume is excluded from the run because it restores that digest instead of losing it.
+- Resume normally restores the digest; the source-routing table defines the Claude refusal paths.
 
 ### Lock and completion interlock
 
@@ -94,10 +94,12 @@ The full digest updates the completion record in this order:
 
 So `clear` or `compact` cannot skip startup sweeps after a truncated run.
 
-`bin/fm-lock.sh` treats a lock as this session's own when it is owned through either of these:
-
-- The shared ancestry verdict.
-- A trusted same-session Claude id.
+`bin/fm-session-lock-lib.sh` owns lock identity; Claude acquisition requires a trusted conversation id, and ownership requires that id to match the recorded id, including for legacy locks.
+An unknown numeric harness classification refuses ownership and acquisition until the harness identity can be verified.
+`bin/fm-lock.sh` preserves the live anchor during a proven owning session's confirmation.
+Upgrading a running Claude primary with a legacy lock requires restarting its recorded owner process before session start can reacquire ownership.
+A Claude `/clear` with a changed conversation id cannot prove owning continuity from the supplied harness identity and receives the ordinary read-only refusal.
+For Claude, only a matching trusted conversation id may reuse completed startup while its anchor remains live.
 
 So a proven `clear` or `compact` re-emit re-verifies ownership and proceeds.
 A lock another live session took meanwhile still produces the ordinary read-only digest.
@@ -105,10 +107,8 @@ A lock another live session took meanwhile still produces the ordinary read-only
 ### Nudge wrapper on a run-tier harness
 
 On a run-tier harness, only `resume`, `reload`, and `fork` are routed to the nudge wrapper.
-The nudge wrapper has its own separate ancestry-only check, which normally stays silent when this process already holds the lock.
-A background Claude helper-chain recycle can break that ancestry.
-The wrapper may then emit a redundant nudge even though the shared same-session verdict still owns the lock.
-The requested session start remains idempotent.
+Claude uses the shared session-identity verdict, so a recycled helper can still recognize its owning conversation and a different conversation cannot inherit the app's authority.
+Other harnesses retain the nudge wrapper's ancestry check.
 
 ### Re-emit mechanics
 
@@ -198,17 +198,12 @@ The Ahoy skill's own step 0 helm check is the fallback that protects a nudge-tie
 
 ### Nudge wrapper lock check
 
-Before printing, the nudge wrapper reads `state/.lock` and walks at most eight parents from its own pid.
-It does this in its own separate, hard-coded loop, independent of two other ownership checks:
-
-- The shared sixteen-hop ancestry walk in `bin/fm-session-lock-lib.sh` that `bin/fm-lock.sh` uses for anchor selection and ownership.
-- Pi's `lockOwnership()`.
-
-If the lock names a live pid in that ancestry, session start already ran in this harness session and the wrapper stays silent.
+Claude delegates to `bin/fm-session-lock-lib.sh` for the same ownership decision used by the lock and Stop hooks.
+Other harnesses retain the separate eight-parent check, which suppresses the nudge when a live lock holder appears in that ancestry.
 
 ### Exit codes
 
-Every ordinary transport path in both wrappers exits 0, including malformed state and adapter errors.
+Session-open transport paths in both wrappers exit 0, including malformed state and adapter errors.
 The reason is that a Claude SessionStart exit 2 blocks session initialization.
 
 The run wrapper's internal `--pi-prerequisite` mode uses silent exit 3 only for an intentional gate or scope stand-down.
@@ -222,6 +217,11 @@ These conditions therefore surface as follows:
 - Broken GitHub auth surfaces through the deferred network result, inline or as a wake.
 
 None of these becomes a refusal to open the session.
+
+Claude also verifies the lock through `UserPromptSubmit`, immediately before each prompt.
+This check refuses a competing prompt with exit 2 before it can change away mode or supervise, even when its pre-warmed startup digest is old.
+It verifies or acquires the lock; it does not refresh the rest of the digest.
+`bin/fm-sessionstart-run.sh` owns that guard's mechanics.
 
 ## Harness transports
 

@@ -45,7 +45,16 @@ lock_is_in_ancestry() {
   return 1
 }
 
-lock_is_in_ancestry && exit 0
+# Claude background conversations can share the lock pid in their ancestry.
+# Keep the older nudge behavior for every other harness.
+# shellcheck source=bin/fm-session-lock-lib.sh
+. "$SCRIPT_DIR/fm-session-lock-lib.sh"
+pids=$(fm_harness_ancestry_pids || true)
+if fm_session_lock_claude_ancestry "$pids"; then
+  fm_session_lock_owned_by_self "$STATE" && exit 0
+elif [ "$?" -eq 1 ]; then
+  lock_is_in_ancestry && exit 0
+fi
 nudge=
 fm_operational_input_encode session-start \
   "Run \`bin/fm-session-start.sh\` now, exactly once, before executing any other instructions." \
