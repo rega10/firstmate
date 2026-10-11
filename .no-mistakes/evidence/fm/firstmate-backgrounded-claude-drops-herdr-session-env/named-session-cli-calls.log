@@ -1,0 +1,4 @@
+intact-session: pane get w1:p1 --session fm-lab-session-identity-15373-14361
+intact-session: pane get w1:p1 --session fm-lab-session-identity-15373-14361
+explicit-target: pane get w1:p1 --session fm-lab-session-identity-15373-14361
+explicit-target: pane get w1:p1 --session fm-lab-session-identity-15373-14361

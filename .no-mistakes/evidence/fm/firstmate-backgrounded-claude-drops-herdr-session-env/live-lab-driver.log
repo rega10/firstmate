@@ -1,0 +1,19 @@
+Herdr client 0.9.1; server 0.9.1
+real pane identity: HERDR_ENV=1 HERDR_SESSION=fm-lab-session-identity-15373-14361 HERDR_PANE_ID=w1:p1
+base revision resolves missing session to: default:w1:p1
+missing-session exit=1
+error: cannot resolve Herdr supervisor pane 'w1:p1' without HERDR_SESSION; set HERDR_SESSION or an explicit FM_SUPERVISOR_TARGET
+missing-session: no Herdr calls; no daemon ownership remains
+empty-session exit=1
+error: cannot resolve Herdr supervisor pane 'w1:p1' without HERDR_SESSION; set HERDR_SESSION or an explicit FM_SUPERVISOR_TARGET
+empty-session: no Herdr calls; no daemon ownership remains
+[2026-10-11T01:18:29-0500] daemon starting (pid 16453); target=fm-lab-session-identity-15373-14361:w1:p1; target_source=HERDR_ENV(HERDR_PANE_ID); backend=herdr; backend_source=HERDR_ENV; afk=off; inject_skip='heartbeat'; stale_escalate=240s; batch=90s
+intact-session: real daemon started at the named lab pane and stopped cleanly
+[2026-10-11T01:18:29-0500] daemon starting (pid 16558); target=fm-lab-session-identity-15373-14361:w1:p1; target_source=FM_SUPERVISOR_TARGET; backend=herdr; backend_source=HERDR_ENV; afk=off; inject_skip='heartbeat'; stale_escalate=240s; batch=90s
+explicit-target: real daemon started at the named lab pane and stopped cleanly
+Claude Bash environment before controlled loss: HERDR_ENV=1 HERDR_SESSION=fm-lab-session-identity-15373-14361 HERDR_PANE_ID=w1:p1
+error: cannot resolve Herdr supervisor pane 'w1:p1' without HERDR_SESSION; set HERDR_SESSION or an explicit FM_SUPERVISOR_TARGET
+daemon exit=1
+real Claude background Bash: refused before Herdr calls; ownership released
+Claude live background proof completed
+cleanup: named lab removed; default-session tripwire unchanged

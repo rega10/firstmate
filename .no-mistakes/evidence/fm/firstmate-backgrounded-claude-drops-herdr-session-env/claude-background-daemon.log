@@ -1,0 +1,4 @@
+Claude Bash environment before controlled loss: HERDR_ENV=1 HERDR_SESSION=fm-lab-session-identity-15373-14361 HERDR_PANE_ID=w1:p1
+error: cannot resolve Herdr supervisor pane 'w1:p1' without HERDR_SESSION; set HERDR_SESSION or an explicit FM_SUPERVISOR_TARGET
+daemon exit=1
+real Claude background Bash: refused before Herdr calls; ownership released
