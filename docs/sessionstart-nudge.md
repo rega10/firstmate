@@ -94,7 +94,8 @@ The full digest updates the completion record in this order:
 
 So `clear` or `compact` cannot skip startup sweeps after a truncated run.
 
-`bin/fm-session-lock-lib.sh` owns lock identity; Claude ownership requires a matching trusted and recorded conversation id, including for legacy locks.
+`bin/fm-session-lock-lib.sh` owns lock identity; Claude acquisition requires a trusted conversation id, and ownership requires that id to match the recorded id, including for legacy locks.
+Unavailable harness inspection refuses ownership and acquisition until the harness identity can be verified.
 `bin/fm-lock.sh` preserves the live anchor during a proven owning session's confirmation.
 Upgrading a running Claude primary with a legacy lock requires restarting its recorded owner process before session start can reacquire ownership.
 A Claude `/clear` with a changed conversation id cannot prove owning continuity from the supplied harness identity and receives the ordinary read-only refusal.

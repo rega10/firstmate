@@ -15,7 +15,7 @@
 # The trusted id itself is recorded beside the lock in state/.lock-session, a
 # sidecar written only here and only under the claim lock: refreshed on every
 # confirmed-own acquisition, including the early already-mine exit that waits
-# for the claim lock, removed when the acquiring session proves no trusted id,
+# for the claim lock, removed for a verified non-Claude harness,
 # and left byte-identical when it already names that id. A same-session
 # confirmation never rewrites line 1 while the recorded pid is alive, because
 # bin/fm-startup-network.sh compares that pid across its deferred sweeps; a dead
@@ -85,7 +85,7 @@ if [ "${1:-}" = "status" ]; then
   exit 0
 fi
 
-me=$(fm_session_lock_anchor_pid) || { echo "error: cannot locate harness process in ancestry" >&2; exit 1; }
+me=$(fm_session_lock_anchor_pid) || { echo "error: cannot verify harness ancestry or trusted Claude session identity; operate read-only until resolved" >&2; exit 1; }
 probe=$(mktemp "$STATE/.lock-write.XXXXXX" 2>/dev/null) || {
   echo "error: cannot write session lock; operate read-only until resolved" >&2
   exit 1
@@ -149,13 +149,24 @@ remember_lock_session() {
   LOCK_SESSION_PHASE=1
 }
 
-# Record the trusted session id beside the lock, or remove a sidecar that no
-# trusted id backs. Called only while the claim lock is held. A sidecar already
+# Record the trusted Claude session id, or remove the sidecar for a verified
+# non-Claude harness. Called only while the claim lock is held. A sidecar already
 # naming this id is left untouched, so a same-session confirmation keeps it
 # byte-identical.
 publish_lock_session() {
-  local trusted recorded tmp
-  if trusted=$(fm_session_lock_trusted_session_id); then
+  local trusted= recorded tmp pids
+  case "$me" in
+    codex:*) ;;
+    *)
+      pids=$(fm_harness_ancestry_pids) || return 1
+      if fm_session_lock_claude_ancestry "$pids"; then
+        trusted=$(fm_session_lock_trusted_session_id "$pids") || return 1
+      elif [ "$?" -ne 1 ]; then
+        return 1
+      fi
+      ;;
+  esac
+  if [ -n "$trusted" ]; then
     if recorded=$(fm_session_lock_recorded_session_id "$STATE") && [ "$recorded" = "$trusted" ]; then
       return 0
     fi
@@ -199,6 +210,10 @@ confirm_own_lock() {  # <recorded-pid>
   recorded=$(fm_session_lock_owner_read "$STATE" || true)
   if fm_session_lock_owned_by_self "$STATE"; then
     publish_lock_session_or_die
+    if ! fm_session_lock_owned_by_self "$STATE"; then
+      echo "error: session lock ownership verification failed; operate read-only until resolved" >&2
+      exit 1
+    fi
     commit_lock_session
     release_claim_lock
     lock_acquired_line "$recorded"
@@ -304,7 +319,7 @@ written=$(fm_session_lock_owner_read "$STATE") || {
   echo "error: cannot verify session lock ownership; operate read-only until resolved" >&2
   exit 1
 }
-if [ ! -f "$LOCK" ] || [ -L "$LOCK" ] || [ "$written" != "$me" ]; then
+if [ ! -f "$LOCK" ] || [ -L "$LOCK" ] || [ "$written" != "$me" ] || ! fm_session_lock_owned_by_self "$STATE"; then
   echo "error: session lock ownership verification failed; operate read-only until resolved" >&2
   exit 1
 fi

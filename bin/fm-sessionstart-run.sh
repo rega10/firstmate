@@ -139,9 +139,14 @@ fi
 
 if [ "$CHECK_CLAUDE_LOCK" -eq 1 ]; then
   pids=$(fm_harness_ancestry_pids || true)
-  # A proven non-Claude caller stands down; unresolvable ancestry must let the
-  # lock command refuse, rather than letting an unverified Claude prompt act.
-  if [ -n "$pids" ] && ! fm_session_lock_claude_ancestry "$pids"; then exit 0; fi
+  if fm_session_lock_claude_ancestry "$pids"; then
+    :
+  elif [ "$?" -eq 1 ]; then
+    exit 0
+  else
+    printf 'READ-ONLY SESSION: cannot verify harness identity; this prompt was refused before fleet or away-mode actions.\n' >&2
+    exit 2
+  fi
   if lock_result=$("$SCRIPT_DIR/fm-lock.sh" 2>&1); then
     exit 0
   fi
@@ -154,10 +159,16 @@ case "$SOURCE" in
     # Restored context may belong to an earlier owner. A Claude fork sharing
     # its app ancestor must receive the refusal now, before any return action.
     pids=$(fm_harness_ancestry_pids || true)
-    if fm_session_lock_claude_ancestry "$pids" && fm_session_lock_foreign_owner_live "$STATE"; then
-      "$SCRIPT_DIR/fm-session-start.sh" --source "$SOURCE" || true
-    else
+    if fm_session_lock_claude_ancestry "$pids"; then
+      if fm_session_lock_foreign_owner_live "$STATE"; then
+        "$SCRIPT_DIR/fm-session-start.sh" --source "$SOURCE" || true
+      else
+        exec "$SCRIPT_DIR/fm-sessionstart-nudge.sh"
+      fi
+    elif [ "$?" -eq 1 ]; then
       exec "$SCRIPT_DIR/fm-sessionstart-nudge.sh"
+    else
+      printf 'READ-ONLY SESSION: cannot verify harness identity; re-run bin/fm-session-start.sh when identity can be verified.\n'
     fi
     ;;
   clear|compact)

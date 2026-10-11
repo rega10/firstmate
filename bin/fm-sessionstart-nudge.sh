@@ -52,7 +52,7 @@ lock_is_in_ancestry() {
 pids=$(fm_harness_ancestry_pids || true)
 if fm_session_lock_claude_ancestry "$pids"; then
   fm_session_lock_owned_by_self "$STATE" && exit 0
-else
+elif [ "$?" -eq 1 ]; then
   lock_is_in_ancestry && exit 0
 fi
 nudge=
