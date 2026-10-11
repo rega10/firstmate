@@ -2965,8 +2965,12 @@ test_discover_supervisor_target_herdr() {
   out=$(FM_SUPERVISOR_TARGET='' TMUX_PANE='%3' HERDR_ENV=1 HERDR_PANE_ID=w1:p9 discover_supervisor_target)
   [ "$out" = '%3' ] || fail "TMUX_PANE should win over herdr markers: $out"
 
-  out=$(FM_SUPERVISOR_TARGET='' TMUX_PANE='' HERDR_ENV=1 HERDR_PANE_ID=w1:p9 HERDR_SESSION='' discover_supervisor_target)
-  [ "$out" = "default:w1:p9" ] || fail "herdr target should default HERDR_SESSION to 'default': $out"
+  local status=0
+  out=$(FM_SUPERVISOR_TARGET='' TMUX_PANE='' HERDR_ENV=1 HERDR_PANE_ID=w1:p9 HERDR_SESSION='' discover_supervisor_target 2>/dev/null) || status=$?
+  [ "$status" -eq 2 ] && [ -z "$out" ] || fail "empty Herdr session must refuse without a target: $status $out"
+
+  out=$(FM_SUPERVISOR_TARGET='' TMUX_PANE='' HERDR_ENV=1 HERDR_PANE_ID=w1:p9 HERDR_SESSION=default discover_supervisor_target)
+  [ "$out" = "default:w1:p9" ] || fail "explicit default session should still resolve: $out"
 
   out=$(FM_SUPERVISOR_TARGET='' TMUX_PANE='' HERDR_ENV=1 HERDR_PANE_ID=w1:p9 HERDR_SESSION=iso1 discover_supervisor_target)
   [ "$out" = "iso1:w1:p9" ] || fail "herdr target should use an explicit HERDR_SESSION: $out"
@@ -2977,6 +2981,29 @@ test_discover_supervisor_target_herdr() {
   [ "$out" = "firstmate:0" ] || fail "bare fallback should still print firstmate:0: $out"
 
   pass "discover_supervisor_target: override > TMUX_PANE > herdr '<session>:<pane-id>' composition > firstmate:0 fallback"
+}
+
+test_daemon_refuses_lost_herdr_session() {
+  local dir out status=0
+  dir=$(make_supercase lost-herdr-session)
+  mkdir -p "$dir/guard"
+  cat > "$dir/guard/herdr" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_HOME/herdr-calls"
+exit 98
+SH
+  chmod +x "$dir/guard/herdr"
+  # Run the real executable with the degraded tool environment, guarding even
+  # read-only backend calls so this regression cannot reach a live session.
+  out=$(env -u HERDR_SESSION -u TMUX_PANE -u FM_SUPERVISOR_TARGET -u FM_SUPERVISOR_BACKEND \
+    FM_HOME="$dir" FM_STATE_OVERRIDE="$dir/state" HERDR_ENV=1 HERDR_PANE_ID=w1:p1 \
+    HERDR_SOCKET_PATH="$dir/default/herdr.sock" PATH="$dir/guard:$PATH" bash "$DAEMON" 2>&1) || status=$?
+  [ "$status" -ne 0 ] || fail "daemon accepted a missing Herdr session"
+  assert_contains "$out" "without HERDR_SESSION" "daemon omitted the missing-session diagnostic"
+  assert_absent "$dir/herdr-calls" "daemon contacted Herdr after losing its session identity"
+  assert_absent "$dir/state/.supervise-daemon.pid" "refused daemon retained its pidfile"
+  assert_absent "$dir/state/.supervise-daemon.lock" "refused daemon retained its lock"
+  pass "daemon refuses lost Herdr session before backend access and releases startup ownership"
 }
 
 test_pane_is_busy_herdr_native_busy_state() {
@@ -3369,6 +3396,7 @@ test_fm_send_exits_nonzero_on_initial_send_failure
 test_fm_send_exits_nonzero_on_unproven_submit
 test_discover_supervisor_backend_precedence
 test_discover_supervisor_target_herdr
+test_daemon_refuses_lost_herdr_session
 test_pane_is_busy_herdr_native_busy_state
 test_primary_busy_guard_is_harness_scoped
 test_pane_is_busy_defaults_to_tmux_when_backend_omitted
