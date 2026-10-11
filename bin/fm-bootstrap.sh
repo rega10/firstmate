@@ -129,9 +129,9 @@
 #            skip - every LOCAL step, and none of the network ones. Skips
 #                 `gh auth status`, secondmate_liveness_sweep, secondmate_sync,
 #                 secondmate_handoff_resume, and fleet_sync.
-#            only - ONLY those network steps and nothing else. No tool detection,
-#                 no version floors, no tangle check, no backlog
-#                 reconciliation, no x_mode_setup: those already ran on the
+#            only - ONLY those network steps and nothing else. No backend
+#                 resolution, tool detection, version floors, tangle check, backlog
+#                 reconciliation, or x_mode_setup: those already ran on the
 #                 local pass.
 #          FM_BOOTSTRAP_DETECT_ONLY composes with it unchanged, so `only` plus
 #          detect-only is the read-only `gh auth status` probe on its own.
