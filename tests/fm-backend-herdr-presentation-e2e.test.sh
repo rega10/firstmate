@@ -304,6 +304,8 @@ EOF
       "$HERDR_LAB_HELPER" teardown "$HERDR_LAB_SESSION" >/dev/null 2>&1 || true
     LAB_READY=0
   fi
+  # Spawn leaves each state/<id>.git-hooks strip dir read-only.
+  find "$TMP_ROOT" -type d -exec chmod u+rwx {} + 2>/dev/null
   rm -rf "$TMP_ROOT"
 }
 trap cleanup_all EXIT
@@ -414,8 +416,11 @@ EOF
 }
 
 spawn_task() {  # <id> <home> <project> [extra fm-spawn args...]; SPAWN_DEADLINE_SECONDS bounds the run
-  local id=$1 home=$2 project=$3
+  local id=$1 home=$2 project="$3-$1"
   shift 3
+  # Simultaneous workers need separate pools while their task records exist.
+  # Repeated spawns of the same task keep the same project for recovery.
+  [ -d "$project" ] || make_project "$project" || return 1
   local -a deadline_cmd=()
   [ -z "${SPAWN_DEADLINE_SECONDS:-}" ] || deadline_cmd=(fm_run_timed "$SPAWN_DEADLINE_SECONDS")
   FM_GATE_REFUSE_BYPASS=1 FM_SPAWN_NO_GUARD=1 FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
