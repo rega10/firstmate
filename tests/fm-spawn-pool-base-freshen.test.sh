@@ -1012,7 +1012,7 @@ test_real_treehouse_preserves_a_recorded_stale_slot() {
     printf 'ok - skip: treehouse not found for recorded stale-slot regression\n'
     return 0
   }
-  id=pool-real-recorded-stale
+  id='pool-real-recorded-stale'
   rec=$(make_case real-recorded-stale "$id")
   read_case_record "$rec"
   # Allocate from the initial local refs. make_case already advanced origin,
