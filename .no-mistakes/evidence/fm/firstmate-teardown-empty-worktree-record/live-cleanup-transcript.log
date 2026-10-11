@@ -1,0 +1,44 @@
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home
+{"id":"cli:workspace:create","result":{"root_pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","focused":true,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","pane_id":"w1:p1","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t1","terminal_id":"term_65d87c36602e11","workspace_id":"w1"},"tab":{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"},"type":"workspace_created","workspace":{"active_tab_id":"w1:t1","agent_status":"unknown","focused":true,"label":"cleanup-record-lab","number":1,"pane_count":1,"tab_count":1,"workspace_id":"w1"}}}
+{"id":"cli:tab:create","result":{"root_pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","focused":false,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","pane_id":"w1:p2","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t2","terminal_id":"term_65d87c36646c02","workspace_id":"w1"},"tab":{"agent_status":"unknown","focused":false,"label":"fm-task-x1","number":2,"pane_count":1,"tab_id":"w1:t2","workspace_id":"w1"},"type":"tab_created"}}
+
+before cleanup normal: exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home
+REFUSED: task task-x1 has a missing, empty, or ambiguous worktree identity; preserving task state.
+{"id":"cli:pane:get","result":{"pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","focused":false,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","pane_id":"w1:p2","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t2","terminal_id":"term_65d87c36646c02","workspace_id":"w1"},"type":"pane_info"}}
+Preserved: task record, status, check, uncommitted sentinel, and real pane.
+
+before cleanup force: exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home
+REFUSED: task task-x1 has a missing, empty, or ambiguous worktree identity; preserving task state.
+{"id":"cli:pane:get","result":{"pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","focused":false,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","pane_id":"w1:p2","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t2","terminal_id":"term_65d87c36646c02","workspace_id":"w1"},"type":"pane_info"}}
+Preserved: task record, status, check, uncommitted sentinel, and real pane.
+
+after cleanup normal: exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home
+REFUSED: task task-x1 has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/state/task-x1.meta, then retry teardown without --force; preserving task state.
+{"id":"cli:pane:get","result":{"pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","focused":false,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","pane_id":"w1:p2","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t2","terminal_id":"term_65d87c36646c02","workspace_id":"w1"},"type":"pane_info"}}
+Preserved: task record, status, check, uncommitted sentinel, and real pane.
+
+after cleanup force: exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home
+REFUSED: task task-x1 has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/state/task-x1.meta, then retry teardown without --force; preserving task state.
+{"id":"cli:pane:get","result":{"pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","focused":false,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","pane_id":"w1:p2","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t2","terminal_id":"term_65d87c36646c02","workspace_id":"w1"},"type":"pane_info"}}
+Preserved: task record, status, check, uncommitted sentinel, and real pane.
+
+Restored verified path; normal cleanup: exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no live watcher process holds this home lock (last beat: 1s ago).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision with a foreground checkpoint: bin/fm-watch-checkpoint.sh --seconds 180.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REFUSED: worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy has uncommitted changes.
+uncommitted changes present
+Commit them (or get the captain's explicit OK to discard, then --force).
+{"id":"cli:pane:get","result":{"pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","focused":false,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.test-empty-worktree/live/home/local-copy","pane_id":"w1:p2","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t2","terminal_id":"term_65d87c36646c02","workspace_id":"w1"},"type":"pane_info"}}
+?? sentinel
+Dirty-work refusal preserved the restored record, uncommitted work, and real pane.
+Lab teardown completed; unchanged-default-session tripwire passed.
