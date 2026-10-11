@@ -1646,14 +1646,18 @@ for (const { name, actual } of rows) {
     throw new Error(`${name} was not hidden before export rendering`);
   }
 }
+// Current Pi resolves presentation separately from execution; older releases
+// accept getToolDefinition. Both callbacks must return the same real wrapper.
+const toolHtmlDependencies = {
+  getToolDefinition: (name) => tools.find((tool) => tool.name === name),
+  getToolRenderers: (name) => tools.find((tool) => tool.name === name),
+  theme,
+  cwd: process.cwd(),
+};
 async function assertStockHtmlRendering(command, submitData) {
   editorText = command;
   terminalInputHandler(submitData);
-  const htmlRenderer = createToolHtmlRenderer({
-    getToolDefinition: (name) => tools.find((tool) => tool.name === name),
-    theme,
-    cwd: process.cwd(),
-  });
+  const htmlRenderer = createToolHtmlRenderer(toolHtmlDependencies);
   const exportCases = [
     ...cases.filter(([toolName]) => toolName === "grep" || toolName === "find"),
     ["fm_watch_arm_pi", watchArgs, watchResult],
@@ -1680,11 +1684,7 @@ await assertStockHtmlRendering("/export calm.html", "\r");
 getKeybindings().setUserBindings({ "tui.input.submit": "alt+s" });
 editorText = "/export remapped.html";
 terminalInputHandler("\r");
-const unmatchedRenderer = createToolHtmlRenderer({
-  getToolDefinition: (name) => tools.find((tool) => tool.name === name),
-  theme,
-  cwd: process.cwd(),
-});
+const unmatchedRenderer = createToolHtmlRenderer(toolHtmlDependencies);
 if (unmatchedRenderer.renderCall("unmatched-submit", "grep", { pattern: "alpha", path: "." })) {
   throw new Error("ordinary non-submit input activated HTML export rendering");
 }
