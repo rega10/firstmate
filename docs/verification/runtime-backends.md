@@ -729,7 +729,7 @@ Cursor is deliberately outside this cursor-anchored empty-composer matrix becaus
 Verified against Claude Code 2.1.284 in an isolated Herdr lab and throwaway `FM_HOME`.
 A real foreground `zsh -df` with `PS1='❯ '` classified `empty` before the fix, although no agent was running.
 Claude's real idle screen contained a complete horizontal rule pair around `❯` plus U+00A0.
-The shared classifier now requires that container before a Claude-arrow row can authorize injection; omp's existing adjacent status-row shape remains supported.
+[`bin/fm-composer-lib.sh`](../../bin/fm-composer-lib.sh) owns the container-proof rule for the shared glyph, including omp's adjacent status-row exception.
 The existing six-column Claude rules, titled rules, boxed composers, ghost suggestions, and typed-input verdicts retain their fixture coverage.
 Prompt-only synthetic fixtures now include the enclosing rules, because the cropped arrow cannot distinguish Claude from zsh.
 
@@ -1558,7 +1558,7 @@ ok - forced teardown retains a nested secondmate home and its grandchild's Herdr
 
 Real captures verified these active distinctions:
 
-- Claude's `❯` row requires enclosing rules or borders; Codex's `›` row remains a bare composer.
+- Claude renders `❯` between enclosing rules; Codex renders a bare `›` composer.
 - Pi uses content between complete separator rows and requires exact native Pi identity.
 - Dim or faint suggestion text is ghost content, while normally styled text is pending input.
 - Grok dark truecolor placeholders are ghost content, while bright truecolor typed input remains pending.

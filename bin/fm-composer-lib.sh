@@ -658,8 +658,8 @@ fm_composer_idle_matches() {
 #   <bordered> 1 when <content> came from a genuine agent-composer container (a
 #              bordered composer box, an identity-proven separated composer, or
 #              a structurally-identified left-bar row); 0 for a bare
-#              agent-glyph row. The screen classifier additionally requires
-#              enclosing rules for Claude's shell-shared prompt glyph.
+#              agent-glyph row. The screen classifier applies THE SAFETY RULE
+#              to Claude's shell-shared prompt glyph.
 #   <content>  the candidate composer content, border-stripped by the caller.
 #   [idle_re]  optional idle-placeholder regex; empty means no idle matching.
 #              The screen classifier below passes the resolved fleet-wide idle
@@ -951,8 +951,8 @@ _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
         ;;
       *) leftbar_start=-1 ;;
     esac
-    # Bare agent-glyph rows identify candidates; the empty verdict below adds
-    # Claude's enclosing-rule proof because zsh also uses its glyph. Bare
+    # Bare agent-glyph rows identify candidates; the empty verdict below applies
+    # THE SAFETY RULE because zsh also uses Claude's glyph. Bare
     # shell glyphs are deliberately not candidates (dead-shell rule). Keep
     # lower shell prompts as staleness evidence for cursorless selection.
     # Pi's cost footer can open with `$0.000`; that is furniture, not a prompt.

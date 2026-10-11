@@ -60,7 +60,18 @@ assert_state() {  # <expected> <label>
   fail "Claude ($VERSION): $2 read $actual, expected $1"
 }
 
-wait_for_screen '❯'
+# An echoed launch command also contains the arrow. Wait for the actual
+# standalone prompt and verify that the requested clean zsh is foreground.
+for ((i=0; i<100; i++)); do
+  SCREEN=$(lab pane read "$PANE" --source visible)
+  if printf '%s\n' "$SCREEN" | grep -Eq '^❯[[:space:]]*$'; then break; fi
+  sleep 0.1
+done
+[ "$i" -lt 100 ] || fail "Claude ($VERSION): zsh never drew its standalone arrow prompt"
+lab pane process-info --pane "$PANE" | jq -e '
+  .result.process_info.foreground_processes as $p |
+  ($p | length) == 1 and $p[0].name == "zsh" and ($p[0].argv | index("-df") != null)
+' >/dev/null || fail "Claude ($VERSION): the clean zsh was not foreground"
 lab pane send-keys "$PANE" ctrl+l >/dev/null
 sleep 0.2
 assert_state unknown 'bare zsh arrow'
