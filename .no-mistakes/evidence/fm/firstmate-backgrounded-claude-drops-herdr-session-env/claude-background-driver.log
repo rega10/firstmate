@@ -1,0 +1,6 @@
+warning: --bg manages the session id; ignoring --session-id (use --resume <id> to continue an existing session)
+backgrounded · 2913a04c
+  claude agents             list sessions
+  claude attach 2913a04c    open in this terminal
+  claude logs 2913a04c      show recent output
+  claude stop 2913a04c      stop this session

@@ -1,0 +1,5 @@
+Herdr client 0.9.1; server 0.9.1
+intact target: fm-lab-firstmate-backgr-75905-10716:w1:p1
+lost-session target: default:w1:p1
+pane get w1:p1 --session default
+not ok - daemon attempted a Herdr call after losing session identity

@@ -1,0 +1,13 @@
+real pane identity: 1:fm-lab-daemon-matrix-48444-27052:w1:p1
+error: cannot resolve Herdr supervisor pane 'w1:p1' without HERDR_SESSION; set HERDR_SESSION or an explicit FM_SUPERVISOR_TARGET
+missing session: daemon exit=1; no backend calls; pid and lock absent
+error: cannot resolve Herdr supervisor pane 'w1:p1' without HERDR_SESSION; set HERDR_SESSION or an explicit FM_SUPERVISOR_TARGET
+empty session: daemon exit=1; no backend calls; pid and lock absent
+[2026-10-10T22:01:01-0500] daemon starting (pid 52239); target=fm-lab-daemon-matrix-48444-27052:w1:p1; target_source=HERDR_ENV(HERDR_PANE_ID); backend=herdr; backend_source=HERDR_ENV; afk=off; inject_skip='heartbeat'; stale_escalate=240s; batch=90s
+intact session: real daemon started against fm-lab-daemon-matrix-48444-27052:w1:p1 and cleaned up
+[2026-10-10T22:01:01-0500] daemon starting (pid 53447); target=fm-lab-daemon-matrix-48444-27052:w1:p1; target_source=FM_SUPERVISOR_TARGET; backend=herdr; backend_source=HERDR_ENV; afk=off; inject_skip='heartbeat'; stale_escalate=240s; batch=90s
+explicit session: real daemon started against fm-lab-daemon-matrix-48444-27052:w1:p1 and cleaned up
+pane get w1:p1 --session fm-lab-daemon-matrix-48444-27052
+pane get w1:p1 --session fm-lab-daemon-matrix-48444-27052
+pane get w1:p1 --session fm-lab-daemon-matrix-48444-27052
+pane get w1:p1 --session fm-lab-daemon-matrix-48444-27052
