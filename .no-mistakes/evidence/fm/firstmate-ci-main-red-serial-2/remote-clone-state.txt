@@ -1,0 +1,2 @@
+remote-root: 2355fb015ac02dc5e8bb55c9929677c1e687b2ee remote fixture root
+remote-home: 2355fb015ac02dc5e8bb55c9929677c1e687b2ee remote fixture root

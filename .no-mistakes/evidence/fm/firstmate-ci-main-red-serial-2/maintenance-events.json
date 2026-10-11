@@ -1,0 +1,69 @@
+{
+  "git_version": "git version 2.54.0 (Apple Git-157)",
+  "conditions": {
+    "gc.auto": "1",
+    "gc.autoDetach": "true"
+  },
+  "baseline": {
+    "commit_event": {
+      "event": "start",
+      "sid": "20261011T042843.089167Z-H6a7da57a-P00014953",
+      "thread": "main",
+      "time": "2026-10-11T04:28:43.096170Z",
+      "file": "common-init.c",
+      "line": 58,
+      "t_abs": 0.007415,
+      "argv": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/git",
+        "-C",
+        "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MK3VYR45ACTEYRC5V545EJ/state/gate-test/tmp/fm-remote-compact-adviser.eAIQvf/remote-root",
+        "commit",
+        "-qm",
+        "remote fixture root"
+      ]
+    },
+    "maintenance_children": [
+      {
+        "event": "child_start",
+        "sid": "20261011T042843.089167Z-H6a7da57a-P00014953",
+        "thread": "main",
+        "time": "2026-10-11T04:28:43.200725Z",
+        "file": "run-command.c",
+        "line": 739,
+        "child_id": 0,
+        "child_class": "?",
+        "use_shell": false,
+        "argv": [
+          "git",
+          "maintenance",
+          "run",
+          "--auto",
+          "--quiet",
+          "--detach"
+        ]
+      }
+    ]
+  },
+  "target": {
+    "commit_event": {
+      "event": "start",
+      "sid": "20261011T043047.606053Z-H6a7da57a-P0000fe4a",
+      "thread": "main",
+      "time": "2026-10-11T04:30:47.606643Z",
+      "file": "common-init.c",
+      "line": 58,
+      "t_abs": 0.000802,
+      "argv": [
+        "/Applications/Xcode.app/Contents/Developer/usr/bin/git",
+        "-C",
+        "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MK3VYR45ACTEYRC5V545EJ/state/gate-test/detached/state/test-tmp/fm-remote-compact-adviser.o1ZW3I/remote-root",
+        "-c",
+        "maintenance.auto=false",
+        "commit",
+        "-qm",
+        "remote fixture root"
+      ]
+    },
+    "maintenance_children": []
+  }
+}
