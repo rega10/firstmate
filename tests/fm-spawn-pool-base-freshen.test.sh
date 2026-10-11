@@ -6,7 +6,8 @@
 # These tests drive the real spawn path with a fake terminal, then prove it
 # starts the worker from the fetched origin tip, launches a clean origin-less
 # pool as-is, or stops when a configured origin is unusable or another task
-# record still holds the returned slot.
+# record still holds the returned slot. A real Treehouse case also proves
+# refusal before acquisition can reset a stale recorded checkout.
 set -u
 
 # shellcheck source=tests/fixtures.sh
@@ -1001,6 +1002,108 @@ EOF
     pass "the $variant slot is refused while another task records it and launches after that record is removed"
   done
 }
+
+# Real Treehouse acquisition refreshes an idle slot even with --no-fetch.
+# Keep the terminal simulated, but execute the allocator instead of assuming
+# that it leaves the returned checkout unchanged.
+test_real_treehouse_preserves_a_recorded_stale_slot() {
+  local treehouse_bin rec id out status before_head before_reflog before_state before_claim held_meta source_project project
+  treehouse_bin=$(command -v treehouse) || {
+    printf 'ok - skip: treehouse not found for recorded stale-slot regression\n'
+    return 0
+  }
+  id=pool-real-recorded-stale
+  rec=$(make_case real-recorded-stale "$id")
+  read_case_record "$rec"
+  # Allocate from the initial local refs. make_case already advanced origin,
+  # so the next acquisition would reset this idle checkout to that newer tip.
+  export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+  POOL_DIR=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" \
+    "$treehouse_bin" get --lease --no-fetch) || fail "real Treehouse setup failed"
+  case "$POOL_DIR" in
+    "$CASE_DIR/"*) ;;
+    *) fail "Treehouse allocated outside the fixture: $POOL_DIR" ;;
+  esac
+  (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return "$POOL_DIR") \
+    || fail "could not retire the fixture lease"
+  SLOT_CLAIM="$(dirname "$POOL_DIR")/.fm-slot-owner"
+  printf 'task=held-real\nhome=%s\n' "$HOME_DIR" > "$SLOT_CLAIM"
+  held_meta="$HOME_DIR/state/held-real.meta"
+  printf 'worktree=%s\nkind=ship\nbackend=tmux\n' "$POOL_DIR" > "$held_meta"
+  before_head=$(git -C "$POOL_DIR" rev-parse HEAD)
+  before_reflog=$(git -C "$POOL_DIR" reflog)
+  before_claim=$(cat "$SLOT_CLAIM")
+  before_state=$(cat "$(dirname "$(dirname "$POOL_DIR")")/treehouse-state.json")
+  [ "$before_head" = "$INITIAL_SHA" ] || fail "fixture slot is not stale"
+  cp "$held_meta" "$CASE_DIR/held.before"
+
+  # Forward Treehouse commands to the real executable under the isolated root.
+  cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+  mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux-base"
+  cat > "$FAKEBIN_DIR/tmux" <<'SH'
+#!/usr/bin/env bash
+case "${1:-}" in
+  new-window) touch "$FM_FAKE_NEW_ENDPOINT" ;;
+  kill-window) rm -f "$FM_FAKE_NEW_ENDPOINT" ;;
+  send-keys)
+    for arg in "$@"; do
+      if [ "$arg" = 'treehouse get' ]; then
+        (cd "$FM_REAL_PROJECT" && "$FM_REAL_TREEHOUSE" get --lease) \
+          > "$FM_REAL_ACQUIRE_LOG" 2>&1 || exit 1
+      fi
+    done
+    ;;
+esac
+exec "$(dirname "$0")/tmux-base" "$@"
+SH
+  chmod +x "$FAKEBIN_DIR/treehouse" "$FAKEBIN_DIR/tmux"
+  source_project=$PROJECT_DIR
+  git clone --quiet "file://$CASE_DIR/origin.git" "$CASE_DIR/another/project" \
+    || fail "could not create the second source clone"
+  # Same-name clones of one origin resolve to the same Treehouse pool, but
+  # have different common Git directories. Both must preserve the held copy.
+  for project in "$source_project" "$CASE_DIR/another/project"; do
+    PROJECT_DIR=$project
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" FM_REAL_PROJECT="$PROJECT_DIR" \
+      FM_REAL_ACQUIRE_LOG="$CASE_DIR/acquire.log" FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" \
+      FM_FAKE_LAUNCH_LOG="$CASE_DIR/launch.log" run_spawn "$id" --mode no-mistakes --yolo off)
+    status=$?
+    [ "$status" -ne 0 ] || fail "spawn accepted the real recorded slot: $out"
+    assert_contains "$out" 'is still recorded by task held-real' "spawn missed the held record"
+    [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$before_head" ] \
+      || fail "real Treehouse refreshed the held checkout before spawn refused it"
+    [ "$(git -C "$POOL_DIR" reflog)" = "$before_reflog" ] || fail "spawn changed the held reflog"
+    [ "$(cat "$(dirname "$(dirname "$POOL_DIR")")/treehouse-state.json")" = "$before_state" ] \
+      || fail "spawn changed the held Treehouse state"
+    [ "$(cat "$SLOT_CLAIM")" = "$before_claim" ] || fail "spawn replaced the held claim"
+    cmp -s "$held_meta" "$CASE_DIR/held.before" || fail "spawn changed the held task record"
+    [ ! -e "$CASE_DIR/new-endpoint" ] || fail "refused spawn left its new endpoint"
+    [ ! -s "$CASE_DIR/launch.log" ] || fail "refused spawn launched a worker"
+    [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published metadata"
+    [ ! -e "$POOL_DIR/advanced-main.txt" ] || fail "spawn changed held checkout files"
+    [ ! -e "$CASE_DIR/acquire.log" ] || fail "spawn acquired the held slot before refusing it"
+  done
+  PROJECT_DIR=$source_project
+
+  # Retiring the record permits acquisition, including Treehouse's refresh.
+  rm "$held_meta"
+  out=$(FM_REAL_TREEHOUSE="$treehouse_bin" FM_REAL_PROJECT="$PROJECT_DIR" \
+    FM_REAL_ACQUIRE_LOG="$CASE_DIR/acquire.log" FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" \
+    run_spawn "$id" --mode no-mistakes --yolo off)
+  status=$?
+  expect_code 0 "$status" "retired record should permit real Treehouse acquisition"$'\n'"$out"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse HEAD)" ] \
+    || fail "released slot did not refresh to the advanced origin"
+  assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn did not reuse the released slot"
+  assert_grep "task=$id" "$SLOT_CLAIM" "spawn did not claim the released slot"
+  unset TREEHOUSE_ROOT
+  pass "real Treehouse preserves a recorded stale slot and refreshes it after retirement"
+}
+
+test_real_treehouse_preserves_a_recorded_stale_slot
 
 test_pool_slot_still_recorded_by_another_task_refuses
 test_remote_seeded_home_spawns_from_treehouse_pool

@@ -178,9 +178,11 @@
 #   root Firstmate home's state directory before slot allocation and holds it through
 #   task metadata publication. Teardown holds that same lock while proving and
 #   returning a slot, so allocation cannot reuse a slot before its owner record
-#   is published. Under that same lock it refuses a returned worktree still named
-#   by a different task's state/*.meta in any local Firstmate home, before claiming
-#   or refreshing the slot or launching a worker; an exited worker does not retire its record.
+#   is published. Under that same lock it refuses acquisition when a slot in the
+#   project's pool is still named by a task's state/*.meta in any local Firstmate
+#   home. Treehouse can refresh an idle slot during get, before it returns its
+#   path, and cannot exclude a recorded slot; an exited worker does not retire
+#   its record. The returned path is checked again before claim or launch.
 #   A conflict closes only the new allocation endpoint, leaving the slot alone.
 #   It then writes the slot's owner claim, which is
 #   what lets teardown leave a slot reassigned since untouched; bin/fm-wake-lib.sh
@@ -3584,8 +3586,8 @@ validate_spawn_worktree() { # <source> <inspect-target>
   fi
 }
 
-refuse_recorded_spawn_worktree() {
-  local state_dir meta other_id other_worktree
+refuse_recorded_spawn_worktree() { # [<returned-worktree>]; absent checks the pool before acquisition
+  local worktree=${1:-} state_dir meta other_id other_worktree other_lock
   fm_local_firstmate_state_dirs "$STATE" || {
     echo "REFUSED: $FM_LOCAL_FIRSTMATE_ERROR; nothing was changed" >&2
     return 1
@@ -3598,8 +3600,18 @@ refuse_recorded_spawn_worktree() {
       [ "$other_id" = "$ID" ] && [ "$meta" -ef "$STATE/$ID.meta" ] && continue
       other_worktree=$(fm_meta_get "$meta" worktree)
       [ -n "$other_worktree" ] || continue
-      [ "$other_worktree" -ef "$WT" ] || continue
-      echo "error: refusing to spawn task $ID: returned worktree '$WT' is still recorded by task $other_id in $meta; reconcile that task before reusing its slot" >&2
+      if [ -n "$worktree" ]; then
+        [ "$other_worktree" -ef "$worktree" ] || continue
+      else
+        # Separate clones of the same origin share the allocation lock and can
+        # share a pool, even though their Git common directories differ.
+        if ! fm_treehouse_pool_slot "$PROJ_ABS" "$other_worktree"; then
+          fm_treehouse_pool_slot "$other_worktree" "$other_worktree" || continue
+          other_lock=$(fm_treehouse_project_lock_path "$other_worktree") || return 1
+          [ "$other_lock" = "$SPAWN_TREEHOUSE_PROJECT_LOCK" ] || continue
+        fi
+      fi
+      echo "error: refusing to spawn task $ID: worktree '$(real_path_or_raw "$other_worktree")' is still recorded by task $other_id in $meta; reconcile that task before reusing its slot" >&2
       return 1
     done
   done
@@ -4586,6 +4598,15 @@ elif [ "$RELAUNCH" -eq 1 ]; then
   fi
   [ "$KIND" = secondmate ] || validate_spawn_worktree "relaunch" "$T"
 elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
+  # get can reset an idle checkout before reporting its path and cannot exclude
+  # a recorded slot. Checking only idle slots would race a live worker's exit.
+  if ! refuse_recorded_spawn_worktree; then
+    if [ "$HERDR_PROJECTION_ABORT_CLEANUP" != 1 ]; then
+      fm_backend_kill "$BACKEND" "$T" "${ZELLIJ_TAB_ID:-}" "$W" ||
+        echo "warning: could not close refused task $ID's allocation endpoint $T" >&2
+    fi
+    exit 1
+  fi
   spawn_send_text_line "$WT_TARGET" 'treehouse get'
 
   # Wait for the treehouse subshell: the pane's cwd moves from the project to the worktree.
@@ -4646,7 +4667,7 @@ elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
   fi
 
   validate_spawn_worktree "treehouse get" "$T"
-  if ! refuse_recorded_spawn_worktree; then
+  if ! refuse_recorded_spawn_worktree "$WT"; then
     # Projected Herdr endpoints already have exact abort cleanup registered.
     # Other backends close only this spawn's new endpoint, never the held copy.
     if [ "$HERDR_PROJECTION_ABORT_CLEANUP" != 1 ]; then
