@@ -643,7 +643,7 @@ while [ ! -e "$FM_HOME/state/stop-spare" ]; do
   if [ -f "$req" ]; then
     out="$FM_HOME/state/phase-$n"
     mkdir -p "$out"
-    unset CLAUDE_CODE_SESSION_ID CLAUDE_PID
+    unset CLAUDE_CODE_SESSION_ID CLAUDE_PID FM_TEST_CLEAR
     # shellcheck disable=SC1090
     . "$req"
     ( . "$FM_HOME/bin/fm-session-lock-lib.sh" && fm_harness_ancestry_pids ) > "$out/ancestry" 2>/dev/null
@@ -666,6 +666,15 @@ while [ ! -e "$FM_HOME/state/stop-spare" ]; do
         "$FM_HOME/bin/fm-sessionstart-run.sh" --source resume > "$out/resume.out" 2>&1
         printf '%s\n' "$?" > "$out/resume.rc"
       fi
+    fi
+    if [ "${FM_TEST_CLEAR:-0}" = 1 ]; then
+      printf '%s\n' '{"source":"clear"}' \
+        | PATH="${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" \
+          "$FM_HOME/bin/fm-sessionstart-run.sh" > "$out/clear.out" 2>&1
+      printf '%s\n' "$?" > "$out/clear.rc"
+      cp "$FM_HOME/state/.lock" "$out/clear-lock-after"
+      cp "$FM_HOME/state/.lock-session" "$out/clear-session-after"
+      cp "$FM_HOME/state/.session-start-complete" "$out/clear-completion-after"
     fi
     : > "$out/done"
     n=$((n + 1))
@@ -747,7 +756,7 @@ expect_phase_foreign() {  # <dir> <n> <expected-arms> <owner-pid> <label>
 # The app/front-end stays in every background session's ancestry. Different
 # conversations must not inherit its fleet authority from that shared process.
 test_e2e_shared_frontend_refuses_other_sessions() {
-  local dir frontend daemon ptyhost spare
+  local dir frontend daemon ptyhost spare phase
   dir="$TMP_ROOT/e2e-shared-frontend"
   make_background_session_home "$dir"
   env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
@@ -786,15 +795,45 @@ test_e2e_shared_frontend_refuses_other_sessions() {
   cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "the refused prompt drained wakes"
 
   # Even equality with CLAUDE_PID cannot re-key an ordinary acquisition.
-  fire_phase "$dir" 2 "export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$frontend"
+  fire_phase "$dir" 2 "export FM_TEST_CLEAR=1; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$frontend"
   expect_phase_foreign "$dir" 2 0 "$frontend" "same anchor pid, different session"
   fire_phase "$dir" 3 ''
   expect_phase_foreign "$dir" 3 0 "$frontend" "shared front-end, missing session id"
 
+  fire_phase "$dir" 4 'export FM_TEST_CLEAR=1; export CLAUDE_CODE_SESSION_ID=S1-cleared; export CLAUDE_PID=$$'
+  expect_phase_foreign "$dir" 4 0 "$frontend" "owning clear with changed id and helper"
+  [ "$spare" != "$frontend" ] || fail "the clear fixture did not change helper processes"
+  grep -qx "$spare" "$dir/state/phase-4/ancestry" || fail "the changed helper was not in the clear ancestry"
+  for phase in 2 4; do
+    expect_code 0 "$(phase_value "$dir" "$phase" clear.rc)" "the clear hook did not deliver its refusal"
+    assert_grep "error: another live firstmate session holds the lock (pid $frontend, session S1); operate read-only until resolved" \
+      "$dir/state/phase-$phase/clear.out" "clear omitted the exact live-owner refusal"
+    assert_grep 'READ-ONLY SESSION' "$dir/state/phase-$phase/clear.out" "unproven clear did not enter read-only mode"
+    if grep -q 'SESSION START (CONTEXT RE-EMIT)' "$dir/state/phase-$phase/clear.out"; then
+      fail "unproven clear reused the owner's startup completion"
+    fi
+    [ "$(phase_value "$dir" "$phase" clear-lock-after)" = "$frontend" ] || fail "unproven clear changed the live anchor"
+    cmp -s "$dir/sidecar-initial" "$dir/state/phase-$phase/clear-session-after" || fail "unproven clear changed the owner id"
+    cmp -s "$dir/state/phase-$phase/clear-lock-after" "$dir/state/phase-$phase/clear-completion-after" \
+      || fail "unproven clear changed startup completion"
+  done
+  cmp -s "$dir/away-before" "$dir/state/.afk-contract" || fail "unproven clear changed away mode"
+  cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "unproven clear drained wakes"
+
   # Counterfactual: identical process tree, only the conversation id changes.
-  fire_phase "$dir" 4 'export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$$'
-  expect_phase_owned "$dir" 4 2 "$frontend" "shared front-end, same session"
-  expect_code 0 "$(phase_value "$dir" 4 prompt.rc)" "the owning session's prompt was blocked"
+  fire_phase "$dir" 5 'export FM_TEST_CLEAR=1; export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$$'
+  expect_phase_owned "$dir" 5 2 "$frontend" "shared front-end, same session"
+  expect_code 0 "$(phase_value "$dir" 5 prompt.rc)" "the owning session's prompt was blocked"
+  expect_code 0 "$(phase_value "$dir" 5 clear.rc)" "the proven owner's clear hook failed"
+  assert_grep 'SESSION START (CONTEXT RE-EMIT)' "$dir/state/phase-5/clear.out" "proven continuity did not reuse completed startup"
+  assert_grep 'are NOT repeated' "$dir/state/phase-5/clear.out" "proven continuity repeated startup sweeps"
+  if grep -q 'READ-ONLY SESSION' "$dir/state/phase-5/clear.out"; then
+    fail "the proven owner's clear hook refused its changed helper"
+  fi
+  cmp -s "$dir/sidecar-initial" "$dir/state/phase-5/clear-session-after" || fail "the proven clear changed the owner id"
+  [ "$(phase_value "$dir" 5 clear-lock-after)" = "$frontend" ] || fail "the proven clear changed the live anchor"
+  cmp -s "$dir/state/phase-5/clear-lock-after" "$dir/state/phase-5/clear-completion-after" \
+    || fail "the proven clear changed startup completion"
   : > "$dir/state/stop-spare"
   : > "$dir/state/stop-frontend"
   pass "session-lock e2e: a shared Claude front-end grants authority only to the owning session"
@@ -894,11 +933,7 @@ test_concurrent_sessions_sharing_one_pid_have_one_winner() {
   pass "session-lock: concurrent conversations sharing one Claude pid have exactly one winner"
 }
 
-# A same-session confirmation must refresh a /clear re-key even while another
-# process holds .lock.acquire. The prior-session-sweep-is-finishing refusal is
-# a takeover rule and does not apply here; the confirmation waits, then writes
-# the new id.
-test_same_session_confirmation_refreshes_rekeyed_id_under_claim_lock() {
+test_same_session_confirmation_preserves_id_under_claim_lock() {
   local dir session_pid holder_pid confirm_pid
   dir="$TMP_ROOT/confirm-under-claim"
   mkdir -p "$dir/state"
@@ -938,7 +973,7 @@ if [ ! -e "$FM_HOME/state/holder-ready" ]; then
   exit 2
 fi
 
-CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$ "$FM_LOCK" --claude-clear > "$FM_HOME/state/confirm.out" 2>&1 &
+CLAUDE_CODE_SESSION_ID=S1 CLAUDE_PID=$$ "$FM_LOCK" > "$FM_HOME/state/confirm.out" 2>&1 &
 printf '%s\n' "$!" > "$FM_HOME/state/confirm-pid"
 
 i=0
@@ -974,13 +1009,13 @@ SH
   wait "$session_pid" || true
   expect_code 0 "$(tr -d '[:space:]' < "$dir/state/confirm.rc")" \
     "the same-session confirmation failed while the claim lock was held: $(cat "$dir/state/confirm.out")"
-  [ "$(tr -d '[:space:]' < "$dir/state/.lock-session")" = S2 ] \
-    || fail "the sidecar still names $(cat "$dir/state/.lock-session"), expected the re-keyed id S2"
+  cmp -s "$dir/state/sidecar-after-acquire" "$dir/state/.lock-session" \
+    || fail "the same-session confirmation changed the sidecar"
   [ "$(tr -d '[:space:]' < "$dir/state/.lock")" = "$(tr -d '[:space:]' < "$dir/state/session-pid")" ] \
     || fail "the confirmation rewrote lock line 1"
   grep -q 'lock acquired: harness pid' "$dir/state/confirm.out" \
     || fail "the confirmation did not report acquisition: $(cat "$dir/state/confirm.out")"
-  pass "session-lock: a same-session confirmation waits for the claim lock and refreshes a re-keyed id"
+  pass "session-lock: a same-session confirmation waits for the claim lock and preserves its id"
 }
 
 # If another live session publishes while a confirmation is waiting on the claim
@@ -1042,7 +1077,7 @@ if [ ! -e "$FM_HOME/state/holder-ready" ]; then
   exit 2
 fi
 
-CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$ "$FM_LOCK" --claude-clear > "$FM_HOME/state/confirm.out" 2>&1 &
+CLAUDE_CODE_SESSION_ID=S1 CLAUDE_PID=$$ "$FM_LOCK" > "$FM_HOME/state/confirm.out" 2>&1 &
 printf '%s\n' "$!" > "$FM_HOME/state/confirm-pid"
 
 i=0
@@ -1196,7 +1231,7 @@ test_e2e_daemon_parented_session_claims_the_home
 test_e2e_daemon_parented_version_named_session_keeps_its_lock
 test_e2e_background_session_keeps_its_lock_across_a_recycled_chain
 test_concurrent_sessions_sharing_one_pid_have_one_winner
-test_same_session_confirmation_refreshes_rekeyed_id_under_claim_lock
+test_same_session_confirmation_preserves_id_under_claim_lock
 test_same_session_confirmation_does_not_steal_after_wait
 test_failed_lock_write_restores_previous_sidecar
 test_failed_lock_write_removes_new_sidecar_when_none_existed

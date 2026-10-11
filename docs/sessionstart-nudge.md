@@ -95,7 +95,9 @@ The full digest updates the completion record in this order:
 So `clear` or `compact` cannot skip startup sweeps after a truncated run.
 
 `bin/fm-session-lock-lib.sh` owns lock identity; a recorded Claude conversation id takes precedence over shared process ancestry.
-`bin/fm-lock.sh` owns the native `/clear` re-key path and preserves the live anchor during an owning session's confirmation.
+`bin/fm-lock.sh` preserves the live anchor during a proven owning session's confirmation.
+A Claude `/clear` with a changed conversation id cannot prove owning continuity from the supplied harness identity and receives the ordinary read-only refusal.
+Only a matching trusted conversation id may reuse completed startup while its anchor remains live.
 
 So a proven `clear` or `compact` re-emit re-verifies ownership and proceeds.
 A lock another live session took meanwhile still produces the ordinary read-only digest.

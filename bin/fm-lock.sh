@@ -24,9 +24,6 @@
 # recorded pid is reclaimed and rewritten to this session's anchor.
 #
 # Usage: fm-lock.sh           acquire; exit 1 unless ownership is verified
-#        fm-lock.sh --claude-clear
-#                             native clear hook only: re-key a trusted Claude
-#                             session whose exact model-loop pid owns the lock.
 #        fm-lock.sh status    print holder and liveness; always exits 0.
 #                             A held lock is not proof the holder is consuming
 #                             wakes. Machine-readable lock fields live on
@@ -104,15 +101,6 @@ rm -f "$probe" 2>/dev/null || {
 CLAIM_LOCK="$STATE/.lock.acquire"
 CLAIM_LOCK_HELD=0
 
-lock_owned_by_caller() {
-  fm_session_lock_owned_by_self "$STATE" && return 0
-  # /clear changes the conversation id without changing the model-loop pid.
-  # No ordinary acquire or shared ancestor is allowed to re-key a live owner.
-  [ "${1:-}" = --claude-clear ] || return 1
-  [ "$(fm_session_lock_owner_read "$STATE")" = "$me" ] || return 1
-  fm_session_lock_trusted_session_id >/dev/null
-}
-LOCK_MODE=${1:-}
 # PHASE 0: committed/none. 1: sidecar mutated, line 1 not written. 2: line 1 written, not verified.
 # KIND 0: no backup. 1: restore $LOCK_SESSION_PREV. 2: sidecar was absent.
 LOCK_SESSION_PHASE=0
@@ -196,7 +184,7 @@ publish_lock_session_or_die() {
 
 # This session already holds the lock, recorded as pid $1. Line 1 stays exactly
 # as recorded while that pid is alive; only the sidecar is refreshed, under the
-# claim lock. Only --claude-clear may replace an id inside the same process.
+# claim lock.
 # A same-session confirmation waits for the claim lock so the sidecar refresh
 # completes. After the wait, the lock is re-read and the sidecar is refreshed
 # only when this session still owns it; otherwise the claim lock is released
@@ -211,7 +199,7 @@ confirm_own_lock() {  # <recorded-pid>
     waited=1
   fi
   recorded=$(fm_session_lock_owner_read "$STATE" || true)
-  if lock_owned_by_caller "$LOCK_MODE"; then
+  if fm_session_lock_owned_by_self "$STATE"; then
     publish_lock_session_or_die
     commit_lock_session
     release_claim_lock
@@ -237,7 +225,7 @@ refuse_live_owner() {  # <recorded-pid>
 
 if [ -f "$LOCK" ] && [ ! -L "$LOCK" ]; then
   old=$(fm_session_lock_owner_read "$STATE" || true)
-  if lock_owned_by_caller "$LOCK_MODE"; then
+  if fm_session_lock_owned_by_self "$STATE"; then
     confirm_own_lock "$old"
     old=$(fm_session_lock_owner_read "$STATE" || true)
   fi
@@ -269,7 +257,7 @@ if [ -e "$LOCK" ] || [ -L "$LOCK" ]; then
     old=
   fi
   if fm_harness_pid_alive "$old"; then
-    lock_owned_by_caller "$LOCK_MODE" && confirm_own_lock "$old"
+    fm_session_lock_owned_by_self "$STATE" && confirm_own_lock "$old"
     old=$(fm_session_lock_owner_read "$STATE" || true)
     if fm_harness_pid_alive "$old"; then
       refuse_live_owner "$old"
