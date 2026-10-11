@@ -84,7 +84,8 @@
 #   axes chosen by firstmate at intake. They are only threaded into harnesses whose
 #   installed CLIs were verified to support that axis; unsupported axes are omitted
 #   from that harness's launch rather than guessed. Canonical Codex launches
-#   validate requested effort against the explicit model's supported_reasoning_levels
+#   require an explicit model for non-default effort and validate that effort
+#   against the model's supported_reasoning_levels
 #   in the effective worker environment's ${CODEX_HOME:-$HOME/.codex}/models_cache.json
 #   and refuse unsupported or unverifiable effort before launch.
 #   Ultra remains a separate exception:
