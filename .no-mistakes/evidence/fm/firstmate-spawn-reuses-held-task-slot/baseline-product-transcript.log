@@ -1,0 +1,26 @@
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/home bin/fm-spawn.sh pool-real-recorded-stale /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-real-recorded-stale
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-real-recorded-stale harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-real-recorded-stale worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/treehouse-root/.treehouse/project-933680/1/project
+exit=0
+allocated copy HEAD=979554142bf667ac0478b7beb65efe7db7ccbdaf
+task records after command:
+held-real.meta
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/treehouse-root/.treehouse/project-933680/1/project
+kind=ship
+backend=tmux
+pool-real-recorded-stale.meta
+window=firstmate:fm-pool-real-recorded-stale
+endpoint_task_id=pool-real-recorded-stale
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/treehouse-root/.treehouse/project-933680/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-real-recorded-stale
+tasktmp=/tmp/fm-pool-real-recorded-stale
+model=default
+effort=default
+spawn_gen=s1791689922.15603.17679

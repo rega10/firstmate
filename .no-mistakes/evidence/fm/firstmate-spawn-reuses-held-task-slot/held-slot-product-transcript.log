@@ -1,0 +1,286 @@
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home bin/fm-spawn.sh pool-real-recorded-stale /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-real-recorded-stale
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-real-recorded-stale: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/treehouse-root/.treehouse/project-57e441/1/project' is still recorded by task held-real in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home/state/held-real.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=0feaa3f9af489f7a84852be70d1134acda2ba68b
+task records after command:
+held-real.meta
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/treehouse-root/.treehouse/project-57e441/1/project
+kind=ship
+backend=tmux
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home bin/fm-spawn.sh pool-real-recorded-stale /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/another/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-real-recorded-stale
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-real-recorded-stale: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/treehouse-root/.treehouse/project-57e441/1/project' is still recorded by task held-real in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home/state/held-real.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=0feaa3f9af489f7a84852be70d1134acda2ba68b
+task records after command:
+held-real.meta
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/treehouse-root/.treehouse/project-57e441/1/project
+kind=ship
+backend=tmux
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home bin/fm-spawn.sh pool-real-recorded-stale /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-real-recorded-stale
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-real-recorded-stale harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-real-recorded-stale worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/treehouse-root/.treehouse/project-57e441/1/project
+exit=0
+allocated copy HEAD=3503ae2c3128b1e2f658af1e513702790698bb55
+task records after command:
+pool-real-recorded-stale.meta
+window=firstmate:fm-pool-real-recorded-stale
+endpoint_task_id=pool-real-recorded-stale
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/treehouse-root/.treehouse/project-57e441/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-real-recorded-stale
+tasktmp=/tmp/fm-pool-real-recorded-stale
+model=default
+effort=default
+spawn_gen=s1791689857.35634.19632
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/home bin/fm-spawn.sh pool-record-conflict-unclaimed /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/home/data/pool-record-conflict-unclaimed/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-unclaimed
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/home/data/pool-record-conflict-unclaimed/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-record-conflict-unclaimed: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/slots/1/project' is still recorded by task held-unclaimed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/home/state/held-unclaimed.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=9e985d60d015d270fa58d13e2f354dd06aabbac9
+task records after command:
+held-unclaimed.meta
+window=firstmate:fm-held-unclaimed
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/slots/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+backend=tmux
+unrelated.meta
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/unrelated-copy
+kind=scout
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/home bin/fm-spawn.sh pool-record-conflict-unclaimed /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/home/data/pool-record-conflict-unclaimed/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-unclaimed
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/home/data/pool-record-conflict-unclaimed/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-record-conflict-unclaimed harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-record-conflict-unclaimed worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/slots/1/project
+exit=0
+allocated copy HEAD=c5e1ac9cf931606230b87ad333add2f2073c573d
+task records after command:
+pool-record-conflict-unclaimed.meta
+window=firstmate:fm-pool-record-conflict-unclaimed
+endpoint_task_id=pool-record-conflict-unclaimed
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/slots/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-record-conflict-unclaimed
+tasktmp=/tmp/fm-pool-record-conflict-unclaimed
+model=default
+effort=default
+spawn_gen=s1791689862.43105.24958
+unrelated.meta
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-unclaimed/unrelated-copy
+kind=scout
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/home bin/fm-spawn.sh pool-record-conflict-claimed-alias /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/home/data/pool-record-conflict-claimed-alias/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-claimed-alias
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/home/data/pool-record-conflict-claimed-alias/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-record-conflict-claimed-alias: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/slots/1/project' is still recorded by task held-claimed-alias in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/home/state/held-claimed-alias.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=fb3742ce584825eb55ccfdb471840db181c168c6
+task records after command:
+held-claimed-alias.meta
+window=firstmate:fm-held-claimed-alias
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/held-alias/
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+backend=tmux
+unrelated.meta
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/unrelated-copy
+kind=scout
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/home bin/fm-spawn.sh pool-record-conflict-claimed-alias /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/home/data/pool-record-conflict-claimed-alias/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-claimed-alias
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/home/data/pool-record-conflict-claimed-alias/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-record-conflict-claimed-alias harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-record-conflict-claimed-alias worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/slots/1/project
+exit=0
+allocated copy HEAD=a62a4054c9a22a0f8ec33bb2245e22832cbe3e3e
+task records after command:
+pool-record-conflict-claimed-alias.meta
+window=firstmate:fm-pool-record-conflict-claimed-alias
+endpoint_task_id=pool-record-conflict-claimed-alias
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/slots/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-record-conflict-claimed-alias
+tasktmp=/tmp/fm-pool-record-conflict-claimed-alias
+model=default
+effort=default
+spawn_gen=s1791689867.50924.5866
+unrelated.meta
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-claimed-alias/unrelated-copy
+kind=scout
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/child-home bin/fm-spawn.sh pool-record-conflict-parent /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/child-home/data/pool-record-conflict-parent/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-parent
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/child-home/data/pool-record-conflict-parent/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-record-conflict-parent: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/slots/1/project' is still recorded by task held-parent in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/home/state/held-parent.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=6c3cd24cb19331daa7295c776203a35419df0660
+task records after command:
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/child-home bin/fm-spawn.sh pool-record-conflict-parent /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/child-home/data/pool-record-conflict-parent/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-parent
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/child-home/data/pool-record-conflict-parent/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-record-conflict-parent harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-record-conflict-parent worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/slots/1/project
+exit=0
+allocated copy HEAD=5c04585b79a966a65dc516ab5a464b44f78550bc
+task records after command:
+pool-record-conflict-parent.meta
+window=firstmate:fm-pool-record-conflict-parent
+endpoint_task_id=pool-record-conflict-parent
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/slots/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-parent/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-record-conflict-parent
+tasktmp=/tmp/fm-pool-record-conflict-parent
+model=default
+effort=default
+spawn_gen=s1791689872.56293.683
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/home bin/fm-spawn.sh pool-record-conflict-child /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/home/data/pool-record-conflict-child/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-child
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/home/data/pool-record-conflict-child/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-record-conflict-child: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/slots/1/project' is still recorded by task held-child in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/child-home/state/held-child.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=d0c0733529f54f577af0b4f41a34b6f79c63aa2d
+task records after command:
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/home bin/fm-spawn.sh pool-record-conflict-child /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/home/data/pool-record-conflict-child/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-child
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/home/data/pool-record-conflict-child/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-record-conflict-child harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-record-conflict-child worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/slots/1/project
+exit=0
+allocated copy HEAD=c108bce5639b103e43e923607ab72cdaa9d0e4e7
+task records after command:
+pool-record-conflict-child.meta
+window=firstmate:fm-pool-record-conflict-child
+endpoint_task_id=pool-record-conflict-child
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/slots/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-child/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-record-conflict-child
+tasktmp=/tmp/fm-pool-record-conflict-child
+model=default
+effort=default
+spawn_gen=s1791689877.63474.24220
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/child-home bin/fm-spawn.sh pool-record-conflict-sibling /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/child-home/data/pool-record-conflict-sibling/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-sibling
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/child-home/data/pool-record-conflict-sibling/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-record-conflict-sibling: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/slots/1/project' is still recorded by task held-sibling in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/other-home/state/held-sibling.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=070b7ef228568fb5e1b7e4bfed94de9812633e45
+task records after command:
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/child-home bin/fm-spawn.sh pool-record-conflict-sibling /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/child-home/data/pool-record-conflict-sibling/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-sibling
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/child-home/data/pool-record-conflict-sibling/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-record-conflict-sibling harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-record-conflict-sibling worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/slots/1/project
+exit=0
+allocated copy HEAD=0d2b4330591464b308ef77837dbbea4ecf783870
+task records after command:
+pool-record-conflict-sibling.meta
+window=firstmate:fm-pool-record-conflict-sibling
+endpoint_task_id=pool-record-conflict-sibling
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/slots/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-sibling/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-record-conflict-sibling
+tasktmp=/tmp/fm-pool-record-conflict-sibling
+model=default
+effort=default
+spawn_gen=s1791689882.71881.2109
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/home bin/fm-spawn.sh pool-record-conflict-nested /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/home/data/pool-record-conflict-nested/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-nested
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/home/data/pool-record-conflict-nested/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-record-conflict-nested: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/slots/1/project' is still recorded by task held-nested in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/other-home/state/held-nested.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=72ebc59cba49090fca34407ce171873ac9608319
+task records after command:
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/home bin/fm-spawn.sh pool-record-conflict-nested /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/home/data/pool-record-conflict-nested/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-nested
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/home/data/pool-record-conflict-nested/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-record-conflict-nested harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-record-conflict-nested worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/slots/1/project
+exit=0
+allocated copy HEAD=6d222844218b6b616af2ce48b73b7f4230a31a86
+task records after command:
+pool-record-conflict-nested.meta
+window=firstmate:fm-pool-record-conflict-nested
+endpoint_task_id=pool-record-conflict-nested
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/slots/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-nested/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-record-conflict-nested
+tasktmp=/tmp/fm-pool-record-conflict-nested
+model=default
+effort=default
+spawn_gen=s1791689887.79171.20796
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/home bin/fm-spawn.sh pool-record-conflict-same-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/home/data/pool-record-conflict-same-id/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-same-id
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/home/data/pool-record-conflict-same-id/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-record-conflict-same-id: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/slots/1/project' is still recorded by task pool-record-conflict-same-id in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/child-home/state/pool-record-conflict-same-id.meta; reconcile that task before reusing its slot
+exit=1
+allocated copy HEAD=fa23a9b91269b87dacc5dd6175d746604c2e5005
+task records after command:
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/home bin/fm-spawn.sh pool-record-conflict-same-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/project --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/home/data/pool-record-conflict-same-id/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-same-id
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/home/data/pool-record-conflict-same-id/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-record-conflict-same-id harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-record-conflict-same-id worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/slots/1/project
+exit=0
+allocated copy HEAD=c75ab265a3c7cb32d7e3454839e20efeb4e9ffc7
+task records after command:
+pool-record-conflict-same-id.meta
+window=firstmate:fm-pool-record-conflict-same-id
+endpoint_task_id=pool-record-conflict-same-id
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/slots/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/record-conflict-same-id/project
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/pool-record-conflict-same-id
+tasktmp=/tmp/fm-pool-record-conflict-same-id
+model=default
+effort=default
+spawn_gen=s1791689892.86779.31250

@@ -1,0 +1,16 @@
+Product validation passed. No tracked files changed.
+
+The real fm-spawn entrypoint refused seven held-slot variants through real Treehouse 2.3.0 allocation and real Herdr 0.9.1 panes. The final run confirmed same-home, path-alias, parent, child, sibling, nested, and same-task-ID cross-home conflicts. Each refusal preserved the old record, claim, HEAD, and reflog. The new endpoint disappeared, and no new task metadata or worker witness appeared.
+
+After the final competing record retired, the real entrypoint allocated the same slot. A supported raw shell task wrote its execution witness. The published metadata and slot claim named the new task. No credentialed AI harness worker was launched. This does not replace the author's limitation for credentialed harness launch evidence.
+
+The baseline cross-home regression failed with spawn accepting the parent's held slot. The same regression passed at the target, then accepted the slot after record removal. These two counterfactual runs used fake terminal and allocator dependencies, and are not live evidence.
+
+The two targeted spawn scripts passed through bin/fm-test-run.sh. Six existing teardown selectors also passed. No linter, formatter, full suite, or pipeline-control command ran.
+
+Lab setup incident requiring external cleanup authority:
+An initial real Herdr attempt inherited the server's pool environment instead of the launcher's disposable pool environment. It created a scratch copy at /Users/rega1011/.treehouse/project-d31a5d/1/project. This crossed the requested worktree boundary. The ownership guard did not fail: that copy was different from the held fixture copy.
+I stopped and deleted the named lab through bin/fm-herdr-lab.sh. I left the external copy untouched because the phase lacks authority to delete source outside the worktree. Its fixture primary was under the disposable lab and has been removed. The retained live-isolation-attempt.log records the actual unexpected allocation.
+The corrected setup configured an isolated shell for every new pane and checked HOME and TREEHOUSE_ROOT before spawning. All final allocations stayed under the worktree. Guarded teardown succeeded and the helper verified its default-session tripwire. No live fleet record or production credential was intentionally accessed or changed.
+
+Reviewer-visible evidence uses CLI transcripts because this change alters a CLI refusal, with no visual UI change.

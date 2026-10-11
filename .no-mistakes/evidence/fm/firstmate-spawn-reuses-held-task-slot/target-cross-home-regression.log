@@ -1,0 +1,13 @@
+Executable: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-spawn.sh
+Arguments: pool-record-conflict-parent --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase/tmp/fm-spawn-pool-base-freshen.rrbGGI/record-conflict-parent/child-home/data/pool-record-conflict-parent/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-parent
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase/tmp/fm-spawn-pool-base-freshen.rrbGGI/record-conflict-parent/child-home/data/pool-record-conflict-parent/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task pool-record-conflict-parent: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase/tmp/fm-spawn-pool-base-freshen.rrbGGI/record-conflict-parent/slots/1/project' is still recorded by task held-parent in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase/tmp/fm-spawn-pool-base-freshen.rrbGGI/record-conflict-parent/home/state/held-parent.meta; reconcile that task before reusing its slot
+exit=1
+Executable: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-spawn.sh
+Arguments: pool-record-conflict-parent --mode no-mistakes --yolo off
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase/tmp/fm-spawn-pool-base-freshen.rrbGGI/record-conflict-parent/child-home/data/pool-record-conflict-parent/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-record-conflict-parent
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase/tmp/fm-spawn-pool-base-freshen.rrbGGI/record-conflict-parent/child-home/data/pool-record-conflict-parent/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-record-conflict-parent harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-record-conflict-parent worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase/tmp/fm-spawn-pool-base-freshen.rrbGGI/record-conflict-parent/slots/1/project
+exit=0
+ok - the parent slot is refused while another task records it and launches after that record is removed

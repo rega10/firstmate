@@ -1,0 +1,11 @@
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/treehouse-root/.treehouse/project-57e441/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.D3eCnj/real-recorded-stale/treehouse-root/.treehouse/project-57e441/1/project' to release it.
+🌳 Worktree returned to pool.
+ok - real Treehouse preserves a recorded stale slot and refreshes it after retirement
+ok - the unclaimed slot is refused while another task records it and launches after that record is removed
+ok - the claimed-alias slot is refused while another task records it and launches after that record is removed
+ok - the parent slot is refused while another task records it and launches after that record is removed
+ok - the child slot is refused while another task records it and launches after that record is removed
+ok - the sibling slot is refused while another task records it and launches after that record is removed
+ok - the nested slot is refused while another task records it and launches after that record is removed
+ok - the same-id slot is refused while another task records it and launches after that record is removed

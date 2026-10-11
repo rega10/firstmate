@@ -1,0 +1,18 @@
+Causal control: reset only the disposable held checkout to its original fixture commit.
+before direct Treehouse allocation HEAD=2427dd19de0ff631feeb6aa4c37be52bb4fd4119
+$ treehouse get --lease --no-fetch
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' to release it.
+allocated=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+after direct Treehouse allocation HEAD=cda9507e0c56b199c728a424956fbd0e4c15c2f2
+Firstmate held record still present:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+kind=ship
+backend=herdr
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.

@@ -1,0 +1,9 @@
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/treehouse-root/.treehouse/project-933680/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/treehouse-root/.treehouse/project-933680/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+not ok - spawn accepted the real recorded slot: warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-real-recorded-stale
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/home/data/pool-real-recorded-stale/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned pool-real-recorded-stale harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-real-recorded-stale worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-phase-tmp/fm-spawn-pool-base-freshen.2HPt2J/real-recorded-stale/treehouse-root/.treehouse/project-933680/1/project

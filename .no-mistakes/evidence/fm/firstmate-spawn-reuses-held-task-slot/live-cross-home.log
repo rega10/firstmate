@@ -1,0 +1,192 @@
+lab=fm-lab-held-slot-44455-11200
+{"client":{"version":"0.9.1","channel":"stable","protocol":22,"endpoint_protocol_generation":1,"endpoint_capabilities":["surface_interest","presentation_effects_fence","health_check"],"remote_host_bridge":true,"remote_bridge_idle_timeout":true,"binary":"/opt/homebrew/bin/herdr","session":"fm-lab-held-slot-44455-11200"},"server":{"status":"running","running":true,"version":"0.9.1","protocol":22,"capabilities":{"live_handoff":true,"detached_server_daemon":false,"endpoint_protocol_generation":1,"surface_interest":true,"health_check":true},"compatible":true,"endpoint_compatible":true,"socket":"/Users/rega1011/.config/herdr/sessions/fm-lab-held-slot-44455-11200/herdr.sock","session":"fm-lab-held-slot-44455-11200","restart_needed":false,"server_binary_stale":false},"update":{"restart_needed":false,"server_binary_stale":false}}
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' to release it.
+allocated=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+launcher=w1:p1
+{"id":"cli:workspace:create","result":{"root_pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project","focused":true,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project","pane_id":"w1:p1","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t1","terminal_id":"term_65d8818ec8ddc1","workspace_id":"w1"},"tab":{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"},"type":"workspace_created","workspace":{"active_tab_id":"w1:t1","agent_status":"unknown","focused":true,"label":"isolated-spawn","number":1,"pane_count":1,"tab_count":1,"workspace_id":"w1"}}}
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/sibling
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/nested
+pool before=e7b363edd052db4fe9d439803b54b75171deb1be; remote=e7b363edd052db4fe9d439803b54b75171deb1be
+
+SCENARIO=unclaimed
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home bin/fm-spawn.sh attempt-unclaimed /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-unclaimed/launch-brief.md records no ship branch; defaulting to legacy branch fm/attempt-unclaimed
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-unclaimed/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task attempt-unclaimed: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-unclaimed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/state/held-unclaimed.meta; reconcile that task before reusing its slot
+exit=1
+error: refusing to spawn task attempt-unclaimed: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-unclaimed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/state/held-unclaimed.meta; reconcile that task before reusing its slot
+retained task record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+kind=ship
+backend=herdr
+retained claim:
+
+HEAD before=e7b363edd052db4fe9d439803b54b75171deb1be after=e7b363edd052db4fe9d439803b54b75171deb1be
+remaining tabs={"id":"cli:tab:list","result":{"tabs":[{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"}],"type":"tab_list"}}
+SCENARIO_PASS=unclaimed
+
+SCENARIO=alias
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home bin/fm-spawn.sh attempt-alias /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-alias/launch-brief.md records no ship branch; defaulting to legacy branch fm/attempt-alias
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-alias/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task attempt-alias: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-alias in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/state/held-alias.meta; reconcile that task before reusing its slot
+exit=1
+error: refusing to spawn task attempt-alias: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-alias in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/state/held-alias.meta; reconcile that task before reusing its slot
+retained task record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/slot-alias/
+kind=ship
+backend=herdr
+retained claim:
+task=held-alias
+home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+HEAD before=e7b363edd052db4fe9d439803b54b75171deb1be after=e7b363edd052db4fe9d439803b54b75171deb1be
+remaining tabs={"id":"cli:tab:list","result":{"tabs":[{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"}],"type":"tab_list"}}
+SCENARIO_PASS=alias
+
+SCENARIO=parent
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child bin/fm-spawn.sh attempt-parent /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child/data/attempt-parent/launch-brief.md records no ship branch; defaulting to legacy branch fm/attempt-parent
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child/data/attempt-parent/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task attempt-parent: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-parent in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/state/held-parent.meta; reconcile that task before reusing its slot
+exit=1
+error: refusing to spawn task attempt-parent: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-parent in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/state/held-parent.meta; reconcile that task before reusing its slot
+retained task record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+kind=ship
+backend=herdr
+retained claim:
+task=held-parent
+home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+HEAD before=e7b363edd052db4fe9d439803b54b75171deb1be after=e7b363edd052db4fe9d439803b54b75171deb1be
+remaining tabs={"id":"cli:tab:list","result":{"tabs":[{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"}],"type":"tab_list"}}
+SCENARIO_PASS=parent
+
+SCENARIO=child
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home bin/fm-spawn.sh attempt-child /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-child/launch-brief.md records no ship branch; defaulting to legacy branch fm/attempt-child
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-child/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task attempt-child: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-child in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child/state/held-child.meta; reconcile that task before reusing its slot
+exit=1
+error: refusing to spawn task attempt-child: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-child in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child/state/held-child.meta; reconcile that task before reusing its slot
+retained task record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+kind=ship
+backend=herdr
+retained claim:
+task=held-child
+home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child
+HEAD before=e7b363edd052db4fe9d439803b54b75171deb1be after=e7b363edd052db4fe9d439803b54b75171deb1be
+remaining tabs={"id":"cli:tab:list","result":{"tabs":[{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"}],"type":"tab_list"}}
+SCENARIO_PASS=child
+
+SCENARIO=sibling
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child bin/fm-spawn.sh attempt-sibling /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child/data/attempt-sibling/launch-brief.md records no ship branch; defaulting to legacy branch fm/attempt-sibling
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child/data/attempt-sibling/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task attempt-sibling: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-sibling in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/sibling/state/held-sibling.meta; reconcile that task before reusing its slot
+exit=1
+error: refusing to spawn task attempt-sibling: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-sibling in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/sibling/state/held-sibling.meta; reconcile that task before reusing its slot
+retained task record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+kind=ship
+backend=herdr
+retained claim:
+task=held-sibling
+home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/sibling
+HEAD before=e7b363edd052db4fe9d439803b54b75171deb1be after=e7b363edd052db4fe9d439803b54b75171deb1be
+remaining tabs={"id":"cli:tab:list","result":{"tabs":[{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"}],"type":"tab_list"}}
+SCENARIO_PASS=sibling
+
+SCENARIO=nested
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home bin/fm-spawn.sh attempt-nested /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-nested/launch-brief.md records no ship branch; defaulting to legacy branch fm/attempt-nested
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-nested/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task attempt-nested: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-nested in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/nested/state/held-nested.meta; reconcile that task before reusing its slot
+exit=1
+error: refusing to spawn task attempt-nested: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-nested in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/nested/state/held-nested.meta; reconcile that task before reusing its slot
+retained task record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+kind=ship
+backend=herdr
+retained claim:
+task=held-nested
+home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/nested
+HEAD before=e7b363edd052db4fe9d439803b54b75171deb1be after=e7b363edd052db4fe9d439803b54b75171deb1be
+remaining tabs={"id":"cli:tab:list","result":{"tabs":[{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"}],"type":"tab_list"}}
+SCENARIO_PASS=nested
+
+SCENARIO=same-id
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home bin/fm-spawn.sh attempt-same-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-same-id/launch-brief.md records no ship branch; defaulting to legacy branch fm/attempt-same-id
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-same-id/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task attempt-same-id: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task attempt-same-id in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child/state/attempt-same-id.meta; reconcile that task before reusing its slot
+exit=1
+error: refusing to spawn task attempt-same-id: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task attempt-same-id in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child/state/attempt-same-id.meta; reconcile that task before reusing its slot
+retained task record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+kind=ship
+backend=herdr
+retained claim:
+task=attempt-same-id
+home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child
+HEAD before=e7b363edd052db4fe9d439803b54b75171deb1be after=e7b363edd052db4fe9d439803b54b75171deb1be
+remaining tabs={"id":"cli:tab:list","result":{"tabs":[{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"}],"type":"tab_list"}}
+SCENARIO_PASS=same-id
+
+SCENARIO=released-slot
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home bin/fm-spawn.sh released-slot /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/released-slot/launch-brief.md records no ship branch; defaulting to legacy branch fm/released-slot
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/released-slot/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+spawned released-slot harness=sh kind=ship mode=no-mistakes yolo=off window=fm-lab-held-slot-44455-11200:w1:p9 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+exit=0
+window=fm-lab-held-slot-44455-11200:w1:p9
+endpoint_task_id=released-slot
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project
+harness=sh
+kind=ship
+mode=no-mistakes
+yolo=off
+branch=fm/released-slot
+tasktmp=/tmp/fm-released-slot
+model=default
+effort=default
+spawn_gen=s1791689006.66047.27785
+backend=herdr
+herdr_session=fm-lab-held-slot-44455-11200
+herdr_workspace_id=w1
+herdr_tab_id=w1:t9
+herdr_pane_id=w1:p9
+task=released-slot
+home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+task=released-slot
+sh-3.2$ treehouse get
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Entered worktree at ~/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project. Type 'exit' to return.
+sh-3.2$ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project'
+sh-3.2$ export GOTMPDIR=/tmp/fm-released-slot/gotmp
+sh-3.2$ export COMPACT_ADVISER_DISABLE=1
+sh-3.2$ export FM_TASK_ID=released-slot
+sh-3.2$ . '/tmp/fm-released-slot+84deb25b9aacbb4ea9444cca9d3ae9bd1bc034a7492b3b6354dff98a94dc203e/launch.s1791689006.66047.27785.sh'
+REAL_RAW_WORKER
+sh-3.2$SCENARIO_PASS=released-slot
+lab teardown exit=0

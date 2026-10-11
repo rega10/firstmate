@@ -1,0 +1,35 @@
+lab=fm-lab-held-slot-95455-20651
+{"client":{"version":"0.9.1","channel":"stable","protocol":22,"endpoint_protocol_generation":1,"endpoint_capabilities":["surface_interest","presentation_effects_fence","health_check"],"remote_host_bridge":true,"remote_bridge_idle_timeout":true,"binary":"/opt/homebrew/bin/herdr","session":"fm-lab-held-slot-95455-20651"},"server":{"status":"running","running":true,"version":"0.9.1","protocol":22,"capabilities":{"live_handoff":true,"detached_server_daemon":false,"endpoint_protocol_generation":1,"surface_interest":true,"health_check":true},"compatible":true,"endpoint_compatible":true,"socket":"/Users/rega1011/.config/herdr/sessions/fm-lab-held-slot-95455-20651/herdr.sock","session":"fm-lab-held-slot-95455-20651","restart_needed":false,"server_binary_stale":false},"update":{"restart_needed":false,"server_binary_stale":false}}
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' to release it.
+allocated=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+launcher=w1:p1
+{"id":"cli:workspace:create","result":{"root_pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project","focused":true,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project","pane_id":"w1:p1","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t1","terminal_id":"term_65d881c7891d81","workspace_id":"w1"},"tab":{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"},"type":"workspace_created","workspace":{"active_tab_id":"w1:t1","agent_status":"unknown","focused":true,"label":"isolated-spawn","number":1,"pane_count":1,"tab_count":1,"workspace_id":"w1"}}}
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/child
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/sibling
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/nested
+pool before=2427dd19de0ff631feeb6aa4c37be52bb4fd4119; remote=cda9507e0c56b199c728a424956fbd0e4c15c2f2
+
+SCENARIO=unclaimed
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home bin/fm-spawn.sh attempt-unclaimed /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/project "sh -c echo REAL_RAW_WORKER" --mode no-mistakes --yolo off --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-unclaimed/launch-brief.md records no ship branch; defaulting to legacy branch fm/attempt-unclaimed
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/data/attempt-unclaimed/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+error: refusing to spawn task attempt-unclaimed: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-unclaimed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/state/held-unclaimed.meta; reconcile that task before reusing its slot
+exit=1
+error: refusing to spawn task attempt-unclaimed: returned worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project' is still recorded by task held-unclaimed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/home/state/held-unclaimed.meta; reconcile that task before reusing its slot
+FAILED: held checkout changed despite refused spawn. HEAD before=2427dd19de0ff631feeb6aa4c37be52bb4fd4119 after=cda9507e0c56b199c728a424956fbd0e4c15c2f2
+held checkout file: advanced
+held task record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/pool/.treehouse/project-4f044f/1/project
+kind=ship
+backend=herdr
+new task metadata present=false
+{"id":"cli:tab:list","result":{"tabs":[{"agent_status":"unknown","focused":true,"label":"1","number":1,"pane_count":1,"tab_id":"w1:t1","workspace_id":"w1"}],"type":"tab_list"}}
+sh-3.2$ bash '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.test-tmp/live/spawn-in-pane.sh'
+sh-3.2$lab teardown exit=0
