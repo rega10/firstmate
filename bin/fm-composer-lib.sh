@@ -57,7 +57,10 @@
 #                tolerated, including Grok 1.0.5's three-column title overhang.
 #   bare       - an agent prompt glyph row with no border at all (claude `❯`,
 #                codex `›`, muse `⟩`, cursor `→`). The agent glyph is itself the container
-#                proof; a bare SHELL glyph (`>` `$` `%` `#`) never is.
+#                proof except for Claude's `❯`, which zsh prompts also use:
+#                that row needs enclosing horizontal rules or omp's adjacent
+#                status row before `empty` is safe. A bare SHELL glyph
+#                (`>` `$` `%` `#`) never is proof.
 #                A bare composer's WRAP region (typed input continuing on the
 #                rows beneath the glyph row) is bounded by blank rows, by
 #                structural edges, and by the FURNITURE rows a harness draws
@@ -131,8 +134,9 @@
 # target). A `$` followed immediately by a digit is Pi's cost footer, not this
 # prompt (`FM_COMPOSER_PI_STATUS_RE_DEFAULT`).
 # The AGENT glyphs `❯` (claude), `›` (codex), `⟩` (U+27E9, muse),
-# `→` (U+2192, cursor), and `❭` (U+276D, devin) are a genuine empty agent
-# composer either way.
+# `→` (U+2192, cursor), and `❭` (U+276D, devin) identify composer candidates.
+# A bare `❯` needs Claude rules or omp's status row to authorize `empty`, including
+# when ghost stripping removed the whole prompt or a wrapped suggestion.
 # Both glyph sets are declared
 # exactly once below; every decision reaches them through the declarations.
 #
@@ -458,12 +462,13 @@ fm_busy_lines_match() {  # [harness]
 }
 
 # The prompt glyphs, each declared exactly once (see THE SAFETY RULE above).
-# AGENT glyphs are a genuine empty agent composer on any row, bordered or bare.
+# AGENT glyphs identify candidates; THE SAFETY RULE owns their container proof.
 # SHELL glyphs are one only INSIDE a composer container; on a bare row they are
 # a dead-shell prompt and must never read `empty`. Newline-separated and
 # consumed by `read` rather than word splitting, so `$`, `%`, and `#` stay
 # literal and no entry is ever exposed to pathname expansion.
-FM_COMPOSER_AGENT_PROMPT_GLYPHS=$(printf '%s\n' '❯' '›' '⟩' '→' '❭')
+FM_COMPOSER_CLAUDE_PROMPT_GLYPH='❯'
+FM_COMPOSER_AGENT_PROMPT_GLYPHS=$(printf '%s\n' "$FM_COMPOSER_CLAUDE_PROMPT_GLYPH" '›' '⟩' '→' '❭')
 FM_COMPOSER_SHELL_PROMPT_GLYPHS=$(printf '%s\n' '>' '$' '%' '#')
 
 # The ONE fleet-wide idle-placeholder set: composer text a harness renders in
@@ -653,7 +658,8 @@ fm_composer_idle_matches() {
 #   <bordered> 1 when <content> came from a genuine agent-composer container (a
 #              bordered composer box, an identity-proven separated composer, or
 #              a structurally-identified left-bar row); 0 for a bare
-#              agent-glyph row, where only the agent glyph itself is proof.
+#              agent-glyph row. The screen classifier additionally requires
+#              enclosing rules for Claude's shell-shared prompt glyph.
 #   <content>  the candidate composer content, border-stripped by the caller.
 #   [idle_re]  optional idle-placeholder regex; empty means no idle matching.
 #              The screen classifier below passes the resolved fleet-wide idle
@@ -945,7 +951,8 @@ _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
         ;;
       *) leftbar_start=-1 ;;
     esac
-    # Bare agent-glyph rows: the glyph itself is the container proof. Bare
+    # Bare agent-glyph rows identify candidates; the empty verdict below adds
+    # Claude's enclosing-rule proof because zsh also uses its glyph. Bare
     # shell glyphs are deliberately not candidates (dead-shell rule). Keep
     # lower shell prompts as staleness evidence for cursorless selection.
     # Pi's cost footer can open with `$0.000`; that is furniture, not a prompt.
@@ -1230,6 +1237,46 @@ _fm_composer_classify_rows() {  # <screen> <styled> <ambiguous> <first-row> <las
   fi
 }
 
+# _fm_composer_bare_empty_verdict: content alone cannot distinguish Claude's
+# empty prompt from a zsh prompt using the same glyph. Require the selected
+# row or wrap region to be enclosed by Claude's rules, never an older pair
+# elsewhere on screen. Inspect the unstripped glyph so a dim shell prompt
+# cannot bypass this proof. omp shares this glyph but draws a known status
+# row immediately below it. Other harness glyphs keep their existing verdict.
+_fm_composer_bare_empty_verdict() {  # <plain-glyph-row> <first-row> <last-row> <screen>
+  local plain=$1 first=$2 last=$3 screen=$4 glyph='' top bottom
+  fm_composer_normalize_trim_var plain
+  fm_composer_leading_agent_glyph_var glyph "$plain" || { printf 'unknown'; return 0; }
+  if [ "$glyph" != "$FM_COMPOSER_CLAUDE_PROMPT_GLYPH" ]; then
+    printf 'empty'; return 0
+  fi
+  bottom=$(_fm_composer_screen_row "$((last + 1))" "$screen" | fm_composer_strip_ansi)
+  fm_composer_normalize_trim_var bottom
+  if _fm_composer_row_is_omp_status "$bottom"; then
+    printf 'empty'; return 0
+  fi
+  if [ "$FM_COMPOSER_SCAN_PI_PAIR_FOUND" = 1 ] \
+     && [ "$first" -gt "$FM_COMPOSER_SCAN_PI_OPEN" ] \
+     && [ "$last" -lt "$FM_COMPOSER_SCAN_PI_CLOSE" ]; then
+    printf 'empty'; return 0
+  fi
+  # The older Herdr Claude captures have six-column solid rules, shorter
+  # than Pi's eight-column floor. Accept that existing Claude shape only
+  # immediately around this region, without weakening Pi's separator proof.
+  if [ "$first" -gt 0 ]; then
+    top=$(_fm_composer_screen_row "$((first - 1))" "$screen" | fm_composer_strip_ansi)
+    fm_composer_normalize_trim_var top
+    case "$top:$bottom" in
+      ──────*:──────*)
+        if [ -z "${top//─/}" ] && [ -z "${bottom//─/}" ]; then
+          printf 'empty'; return 0
+        fi
+        ;;
+    esac
+  fi
+  printf 'unknown'
+}
+
 # _fm_composer_classify_bare_row: the bare agent-glyph row verdict, including
 # the styled=0 degradation: without styling, trailing text after the glyph may
 # be the harness's own idle suggestion (claude's rotating dim hint, codex's
@@ -1243,6 +1290,10 @@ _fm_composer_classify_bare_row() {  # <screen> <styled> <row>
   _fm_composer_bare_row_strip_furniture_var plain
   state=$(fm_composer_classify_content 0 "$content" \
     "${FM_COMPOSER_IDLE_RE:-$FM_COMPOSER_IDLE_RE_DEFAULT}" insensitive "$plain" 0 "$styled")
+  if [ "$state" = empty ]; then
+    _fm_composer_bare_empty_verdict "$plain" "$row" "$row" "$screen"
+    return 0
+  fi
   if [ "$styled" != 1 ] && [ "$state" = pending ]; then
     printf 'unknown'
     return 0
@@ -1337,7 +1388,8 @@ _fm_composer_classify_bare_wrap() {  # <screen> <styled> <glyph-row> <cursor-row
     row=$((row + 1))
   done
   if [ "$text_seen" = 0 ]; then
-    printf 'empty'
+    content=$(_fm_composer_screen_row "$g" "$screen" | fm_composer_strip_ansi)
+    _fm_composer_bare_empty_verdict "$content" "$g" "$cy" "$screen"
     return 0
   fi
   if [ "$styled" = 1 ]; then printf 'pending'; else printf 'unknown'; fi
