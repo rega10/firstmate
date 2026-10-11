@@ -1,0 +1,4 @@
+The real gh CLI uses isolated configuration and a disposable local HTTP endpoint. No production credentials are loaded.
+$ gh auth status
+exit=1
+failed to resolve authentication token: Secrets are unavailable from Keychain. Unlock the Mac and retry. You can allow Automic Vault to access the needed Secrets while locked: enable Available While Locked for them in the Automic Vault app. Authorization is still required. Login and credential changes may still require unlocking. (-25308)

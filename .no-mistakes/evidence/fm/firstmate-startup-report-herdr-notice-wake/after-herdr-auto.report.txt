@@ -1,0 +1,9 @@
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+105     elapsed=44
+  stage       network-checks probe                       start=+43      elapsed=110
+  slowest: stage network-checks probe 110ms, phase gh-auth 44ms
+
+Durable wake queue:
+(empty)

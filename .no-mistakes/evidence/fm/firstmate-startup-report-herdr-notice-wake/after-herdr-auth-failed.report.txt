@@ -1,0 +1,10 @@
+completed off the startup path in 0s: GitHub authentication.
+NEEDS_GH_AUTH
+These ran AFTER the sections above were composed, so re-read any record a line here names.
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+106     elapsed=45
+  stage       network-checks probe                       start=+41      elapsed=115
+  slowest: stage network-checks probe 115ms, phase gh-auth 45ms
+
+Durable wake queue:
+1791687594	1	check	startup-network	check: startup-network: deferred startup network checks finished (done); read them with /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report

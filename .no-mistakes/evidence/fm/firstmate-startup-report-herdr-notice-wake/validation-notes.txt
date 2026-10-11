@@ -1,0 +1,7 @@
+Product validation used the actual fm-startup-network.sh and fm-bootstrap.sh scripts with disposable FM_HOME directories.
+The actual upstream gh 2.65.0 executable used an isolated GH_CONFIG_DIR, disposable tokens, and a local Unix-socket HTTP endpoint. The endpoint supplied successful authentication and HTTP 401 responses.
+The installed gh executable attempted to use the locked Automic Vault credential store despite the isolated configuration. The workspace-local upstream executable resolved this setup blocker. No credential store was changed.
+The base bootstrap with the current cmux resolver reproduced the false wake before testing the target. Current Herdr detection is silent, so the actively emitting cmux resolver provided the non-vacuous NOTICE regression.
+Both targeted suites passed. fm-bootstrap.test.sh emitted nonfatal not-a-git-repository diagnostics because its non-repository fixtures could not discover the surrounding task repository across GIT_CEILING_DIRECTORIES. No assertion failed.
+This change has a CLI and persisted-state surface, with no rendered UI requiring screenshots. CLI transcripts retain the actual reports and wake queues.
+All disposable homes, the local HTTP endpoint, the downloaded gh executable, its archive, and test scratch directories were removed. No source changes were made.

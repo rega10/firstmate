@@ -1,0 +1,185 @@
+The real gh CLI uses isolated configuration and a disposable local HTTP endpoint. No production credentials are loaded.
+$ gh auth status
+exit=0
+startup-lab.invalid
+  ✓ Logged in to startup-lab.invalid account startup-lab (GH_ENTERPRISE_TOKEN)
+  - Active account: true
+  - Git operations protocol: https
+  - Token: ****************
+
+  ✓ Logged in to startup-lab.invalid account startup-lab (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/.startup-validation/live/gh-config/hosts.yml)
+  - Active account: false
+  - Git operations protocol: https
+  - Token: ****************
+
+github.com
+  ✓ Logged in to github.com account startup-lab (GH_TOKEN)
+  - Active account: true
+  - Git operations protocol: https
+  - Token: ****************
+
+SCENARIO: before-cmux-auto
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX
+exit=0
+NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.
+cmux
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/.startup-validation/live/baseline/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/.startup-validation/live/baseline/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.
+These ran AFTER the sections above were composed, so re-read any record a line here names.
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+237     elapsed=46
+  stage       network-checks probe                       start=+41      elapsed=246
+  slowest: stage network-checks probe 246ms, phase gh-auth 46ms
+Durable report bytes: 'NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.\n'
+Durable wake queue: 1791687593	1	check	startup-network	check: startup-network: deferred startup network checks finished (done); read them with /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/.startup-validation/live/baseline/bin/fm-startup-network.sh report
+REPRODUCED: the base version creates a wake for an incidental NOTICE.
+
+SCENARIO: after-herdr-configured
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX
+exit=0
+herdr
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 1s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+102     elapsed=46
+  stage       network-checks probe                       start=+38      elapsed=114
+  slowest: stage network-checks probe 114ms, phase gh-auth 46ms
+Durable report bytes: ''
+Durable wake queue: (empty)
+PASS: a successful probe produces an empty report and no durable wake.
+
+SCENARIO: after-herdr-auto
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX
+exit=0
+herdr
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+105     elapsed=44
+  stage       network-checks probe                       start=+43      elapsed=110
+  slowest: stage network-checks probe 110ms, phase gh-auth 44ms
+Durable report bytes: ''
+Durable wake queue: (empty)
+PASS: a successful probe produces an empty report and no durable wake.
+
+SCENARIO: after-herdr-auth-failed
+$ gh auth status
+exit=1
+startup-lab.invalid
+  X Failed to log in to startup-lab.invalid using token (GH_ENTERPRISE_TOKEN)
+  - Active account: true
+  - The token in GH_ENTERPRISE_TOKEN is invalid.
+
+  X Failed to log in to startup-lab.invalid account startup-lab (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/.startup-validation/live/gh-config/hosts.yml)
+  - Active account: false
+  - The token in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/.startup-validation/live/gh-config/hosts.yml is invalid.
+  - To re-authenticate, run: gh auth login -h startup-lab.invalid
+  - To forget about this account, run: gh auth logout -h startup-lab.invalid -u startup-lab
+
+github.com
+  X Failed to log in to github.com using token (GH_TOKEN)
+  - Active account: true
+  - The token in GH_TOKEN is invalid.
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX
+exit=0
+herdr
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+NEEDS_GH_AUTH
+These ran AFTER the sections above were composed, so re-read any record a line here names.
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+106     elapsed=45
+  stage       network-checks probe                       start=+41      elapsed=115
+  slowest: stage network-checks probe 115ms, phase gh-auth 45ms
+Durable report bytes: 'NEEDS_GH_AUTH\n'
+Durable wake queue: 1791687594	1	check	startup-network	check: startup-network: deferred startup network checks finished (done); read them with /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report
+PASS: an authentication failure still creates an actionable report and a durable wake.
+
+SCENARIO: after-cmux-configured
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX
+exit=0
+cmux
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+105     elapsed=50
+  stage       network-checks probe                       start=+41      elapsed=118
+  slowest: stage network-checks probe 118ms, phase gh-auth 50ms
+Durable report bytes: ''
+Durable wake queue: (empty)
+PASS: a successful probe produces an empty report and no durable wake.
+
+SCENARIO: after-cmux-auto
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX
+exit=0
+NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.
+cmux
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+108     elapsed=49
+  stage       network-checks probe                       start=+42      elapsed=120
+  slowest: stage network-checks probe 120ms, phase gh-auth 49ms
+Durable report bytes: ''
+Durable wake queue: (empty)
+PASS: a successful probe produces an empty report and no durable wake.
+
+SCENARIO: after-cmux-auth-failed
+$ gh auth status
+exit=1
+startup-lab.invalid
+  X Failed to log in to startup-lab.invalid using token (GH_ENTERPRISE_TOKEN)
+  - Active account: true
+  - The token in GH_ENTERPRISE_TOKEN is invalid.
+
+  X Failed to log in to startup-lab.invalid account startup-lab (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/.startup-validation/live/gh-config/hosts.yml)
+  - Active account: false
+  - The token in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/.startup-validation/live/gh-config/hosts.yml is invalid.
+  - To re-authenticate, run: gh auth login -h startup-lab.invalid
+  - To forget about this account, run: gh auth logout -h startup-lab.invalid -u startup-lab
+
+github.com
+  X Failed to log in to github.com using token (GH_TOKEN)
+  - Active account: true
+  - The token in GH_TOKEN is invalid.
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX
+exit=0
+NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.
+cmux
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 1s: GitHub authentication.
+NEEDS_GH_AUTH
+These ran AFTER the sections above were composed, so re-read any record a line here names.
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+110     elapsed=44
+  stage       network-checks probe                       start=+46      elapsed=112
+  slowest: stage network-checks probe 112ms, phase gh-auth 44ms
+Durable report bytes: 'NEEDS_GH_AUTH\n'
+Durable wake queue: 1791687596	1	check	startup-network	check: startup-network: deferred startup network checks finished (done); read them with /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME82BH54TSD9W4KA9F12MX/bin/fm-startup-network.sh report
+PASS: an authentication failure still creates an actionable report and a durable wake.

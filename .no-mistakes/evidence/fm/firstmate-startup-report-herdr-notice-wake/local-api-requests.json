@@ -1,0 +1,170 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  },
+  {
+    "method": "POST",
+    "path": "/api/graphql"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v3/"
+  },
+  {
+    "method": "POST",
+    "path": "/graphql"
+  }
+]
