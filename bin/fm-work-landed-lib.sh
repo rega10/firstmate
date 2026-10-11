@@ -164,10 +164,12 @@ fm_landed_pr_is_merged() {  # <worktree> <pr-url-or-empty> <branch> -> echoes ca
 # merged tree equals the default branch's tree. This isolates branch-only changes, so
 # unrelated commits the default branch gained past the merge-base do not count as
 # "added". Returns non-zero when inconclusive (no default ref, or a merge conflict),
-# so the caller refuses rather than guesses.
-fm_landed_content_in_default() {  # <worktree> <project-dir>
-  local wt=$1 proj=$2 name ref default_tree merged_tree
-  name=$(fm_landed_default_branch "$proj") || return 1
+# so the caller refuses rather than guesses. A task recorded against a named
+# base branch passes it as <base-branch>; that branch then stands in for the
+# default branch, because it is where the task's work lands.
+fm_landed_content_in_default() {  # <worktree> <project-dir> [base-branch]
+  local wt=$1 proj=$2 name=${3:-} ref default_tree merged_tree
+  [ -n "$name" ] || name=$(fm_landed_default_branch "$proj") || return 1
   if git -C "$wt" remote get-url origin >/dev/null 2>&1; then
     git -C "$wt" fetch --quiet origin "+refs/heads/$name:refs/remotes/origin/$name" >/dev/null 2>&1 || return 1
     ref="refs/remotes/origin/$name"

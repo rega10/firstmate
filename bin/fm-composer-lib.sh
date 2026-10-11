@@ -82,9 +82,11 @@
 #                conversation: `──────── Firstmate operational input ─`,
 #                captured live through Herdr on claude 2.1.284). A titled rule
 #                opens a pair only for this self-proving form: the rows down to
-#                the next solid rule must hold an agent-glyph row, so a titled
-#                rule over anything else stays the ordinary text it was and can
-#                never promote a blank region into a composer.
+#                the next solid rule must hold an agent-glyph row, and the
+#                titled rule must collapse to exactly that closing rule's
+#                column width, so a titled rule over anything else stays the
+#                ordinary text it was and can never promote a blank region
+#                into a composer.
 #
 # THE COMPOSER FOOTER ZONE (task firstmate-doorbell-vals-pending-p1): a
 # harness draws its own furniture BELOW the composer - a user statusLine, a
@@ -775,23 +777,36 @@ _fm_composer_pi_separator_row() {  # <trimmed-row>
   return 1
 }
 
-# _fm_composer_titled_rule_row: a `─` rule carrying a title - at least 8
-# leading `─` columns, one space-padded title holding no `─`, then a closing
-# `─` run (see the separated shape in this file's header). Byte-exact literal
-# tests only, so the answer is the same in every locale.
-_fm_composer_titled_rule_row() {  # <trimmed-row>
-  local row=$1 title
+# _fm_composer_titled_rule_row: 0 when a trimmed row is a composer rule with a
+# session title burned into it (Claude Code draws a named session's title into
+# its composer's TOP rule: `──────── <name> ─`, issues #5601 and #5558), proven
+# by collapsing to exactly the column width of <plain-rule-spaces>, the partner
+# closing rule already mapped to spaces.
+#
+# This is deliberately NOT a relaxation of _fm_composer_pi_separator_row, and
+# the two must not be merged: that predicate also feeds the pi identity
+# conjunction, so it stays strictly dashes-only. This one has the single
+# consumer _fm_composer_scan_screen, which calls it when a solid rule closes a
+# titled candidate that already holds an agent-glyph row.
+#
+# The row must OPEN with the same 8-column dash run the strict separator
+# requires. Width is proven by comparing canonical space strings, never by
+# `${#row}`, which counts characters under UTF-8 and bytes under LC_ALL=C
+# (issue #1988). Title text is ASCII-printable only, the same boundary
+# _fm_composer_titled_bottom_ok holds; any other glyph leaves residue, and the
+# verdict stays `unknown`, the safe direction.
+_fm_composer_titled_rule_row() {  # <trimmed-row> <plain-rule-spaces>
+  local row=$1 expected=$2 spaces
   case "$row" in
-    ────────*─) ;;
+    ────────*) ;;
     *) return 1 ;;
   esac
-  title="${row#"${row%%[!─]*}"}"
-  title="${title%"${title##*[!─]}"}"
-  case "$title" in
-    *─*) return 1 ;;
-    ' '*[!\ ]*' ') return 0 ;;
+  spaces=${row//─/ }
+  spaces=$(printf '%s' "$spaces" | LC_ALL=C sed 's/[!-~]/ /g')
+  case "$spaces" in
+    *[![:space:]]*) return 1 ;;
   esac
-  return 1
+  [ "$spaces" = "$expected" ]
 }
 
 # Row-scan results are returned through FM_COMPOSER_SCAN_* globals (bash 3.2
@@ -831,7 +846,7 @@ _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
   FM_COMPOSER_SCAN_LEFTBAR_GLYPH_ROW=-1
   FM_COMPOSER_SCAN_LEFTBAR_GLYPH=
   local leftbar_start=-1 pi_open=-1 pi_lines=0 pi_max
-  local titled_open=-1 titled_lines=0 titled_glyph_row=-1 titled_glyph=''
+  local titled_open=-1 titled_rule='' titled_lines=0 titled_glyph_row=-1 titled_glyph=''
   local probe row_glyph row_glyph_row
   local box_glyph_row=-1 box_glyph='' pi_glyph_row=-1 pi_glyph=''
   pi_max=$FM_COMPOSER_PI_MAX_LINES
@@ -879,10 +894,12 @@ _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
     # earlier transcript rule can never outrank the live bottom composer pair.
     # A titled rule (claude's top rule once the session has a title) opens a
     # pair only when an agent-glyph row proves the composer before the next
-    # solid rule closes it; unproven, it is ordinary text to the rules below.
+    # solid rule closes it and the titled rule matches that closing rule's
+    # width; unproven, it is ordinary text to the rules below.
     if _fm_composer_pi_separator_row "$trimmed"; then
       FM_COMPOSER_SCAN_PI_LAST_SEPARATOR=$row
-      if [ "$titled_open" -ge 0 ] && [ "$titled_glyph_row" -ge 0 ]; then
+      if [ "$titled_open" -ge 0 ] && [ "$titled_glyph_row" -ge 0 ] \
+         && _fm_composer_titled_rule_row "$titled_rule" "${trimmed//─/ }"; then
         FM_COMPOSER_SCAN_PI_PAIR_FOUND=1
         FM_COMPOSER_SCAN_PI_OPEN=$titled_open
         FM_COMPOSER_SCAN_PI_CLOSE=$row
@@ -911,8 +928,11 @@ _fm_composer_scan_screen() {  # <plain-screen> <cursor-or-empty> [extract-wrap]
       pi_glyph=''
       titled_open=-1
     else
-      if _fm_composer_titled_rule_row "$trimmed"; then
+      # A candidate titled rule opens with the strict separator's dash run;
+      # its width is proven against the closing rule when that rule arrives.
+      if [ "${trimmed#────────}" != "$trimmed" ]; then
         titled_open=$row
+        titled_rule=$trimmed
         titled_lines=0
         titled_glyph_row=-1
         titled_glyph=''
@@ -1718,9 +1738,80 @@ EOF
   printf '%s\n' "$joined" | LC_ALL=C awk '{$1=$1; printf "%s", $0}'
 }
 
+# fm_composer_blocking_dialog: name a screen whose next Enter would answer it.
+# Prints the name and returns 0 only for the recorded structure of one dialog:
+# the heading on its own line, then its selected row alone on a row, with the
+# recorded footer as the last non-blank row. A heading buried in a sentence,
+# or a last line that only starts with the same words, is not that dialog.
+# The strings alone are not enough, because a diff, a note, or a test fixture
+# on the pane can quote all of them above a normal composer. A miss returns 1
+# and prints nothing.
+# Recorded 2026-10-05 on Claude Code 2.1.289: /exit while a background shell
+# is still running opens this picker, and its selected row is Exit and stop tasks.
+fm_composer_blocking_dialog() {  # <screen> -> dialog name
+  local screen=${1-}
+  [ -n "$screen" ] || return 1
+  if printf '%s\n' "$screen" | fm_composer_strip_ansi | LC_ALL=C awk '
+    /^[ \t]*Background work is running[ \t\r]*$/ { heading = 1 }
+    heading && /^[ \t]*❯ 1\. Exit and stop tasks[ \t\r]*$/ { selected = 1 }
+    /[^ \t\r]/ { last = $0 }
+    END { exit !(selected && last ~ /^[ \t]*Enter to confirm · Esc to cancel[ \t\r]*$/) }
+  '; then
+    printf '%s' 'Claude background-task exit picker'
+    return 0
+  fi
+  return 1
+}
+
+# A command substitution drops a shell variable, and every composer read runs
+# inside one. The name is therefore written to FM_COMPOSER_DIALOG_SINK when
+# that path is set. The classifier verdict is unchanged. When the sink is
+# unset the name would be discarded, so the match is skipped.
+fm_composer_note_blocking_dialog() {  # <screen>
+  local name=
+  [ -n "${FM_COMPOSER_DIALOG_SINK:-}" ] || return 1
+  if name=$(fm_composer_blocking_dialog "$1"); then
+    printf '%s' "$name" > "$FM_COMPOSER_DIALOG_SINK" || return 1
+    return 0
+  fi
+  : > "$FM_COMPOSER_DIALOG_SINK" || return 1
+  return 1
+}
+
+# fm_composer_blocking_dialog_noted: print the name the latest classify wrote
+# to the sink. Returns 1 when the sink is unset or empty.
+fm_composer_blocking_dialog_noted() {
+  [ -n "${FM_COMPOSER_DIALOG_SINK:-}" ] || return 1
+  [ -s "$FM_COMPOSER_DIALOG_SINK" ] || return 1
+  cat "$FM_COMPOSER_DIALOG_SINK"
+}
+
+# Empty the sink, creating it when the caller has not. Sets
+# FM_COMPOSER_DIALOG_OWNED=1 only for a sink this call created, so a caller
+# that shares the path can still read the name after the release.
+fm_composer_dialog_sink_prepare() {
+  FM_COMPOSER_DIALOG_OWNED=0
+  if [ -z "${FM_COMPOSER_DIALOG_SINK:-}" ]; then
+    FM_COMPOSER_DIALOG_SINK=$(mktemp "${TMPDIR:-/tmp}/fm-composer-dialog.XXXXXX") || return 1
+    FM_COMPOSER_DIALOG_OWNED=1
+    return 0
+  fi
+  : > "$FM_COMPOSER_DIALOG_SINK"
+}
+
+fm_composer_dialog_sink_release() {
+  if [ "${FM_COMPOSER_DIALOG_OWNED:-}" = 1 ]; then
+    rm -f "$FM_COMPOSER_DIALOG_SINK"
+    FM_COMPOSER_DIALOG_SINK=
+    FM_COMPOSER_DIALOG_OWNED=0
+  fi
+}
+
 fm_composer_classify_screen() {  # <caps> <screen> [cursor_row] [identity]
   local caps=$1 screen=$2 cy=${3:-} identity=${4:-}
   local styled=0 cursor=0 has_identity=0 kv plain
+  # Note the dialog before any early return so a pending picker is still named.
+  fm_composer_note_blocking_dialog "$screen" || true
   while IFS= read -r kv; do
     case "$kv" in
       styled=1) styled=1 ;;
@@ -1842,6 +1933,11 @@ fm_composer_submit_retry_core() {  # <send-key-fn> <state-fn> <target> <retries>
     "$send_key_fn" "$target" Enter "$expected_label" || true
     sleep "$sleep_s"
     state=$("$state_fn" "$target" "$expected_label")
+    # The first Enter can open a picker. A later Enter would confirm it.
+    if fm_composer_blocking_dialog_noted >/dev/null; then
+      printf 'unknown'
+      return 0
+    fi
     case "$state" in
       pending|pending-unproven) ;;
       *) printf '%s' "$state"; return 0 ;;
