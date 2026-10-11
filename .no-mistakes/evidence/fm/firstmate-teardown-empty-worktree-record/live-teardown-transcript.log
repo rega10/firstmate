@@ -1,0 +1,120 @@
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-lab-home.sh create /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d
+exit=0
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-tasks-axi.sh add task-x1 Empty local-copy cleanup lab
+exit=0
+ok: added task-x1 -> Queued
+task:
+  id: task-x1
+  title: Empty local-copy cleanup lab
+  state: queued
+  blocked: no
+  blocked_by: none
+  held: no
+  hold_reason: "-"
+  hold_kind: "-"
+  hold_until: "-"
+  kind: task
+  repo: "-"
+  priority: "-"
+  created: 2026-10-11
+  closed: "-"
+  deps: none
+  links: none
+  body: ""
+help[2]:
+  - Run `tasks-axi start task-x1` to move it to in flight
+  - Run `tasks-axi block task-x1 --by <other>` to record a dependency
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-tasks-axi.sh start task-x1
+exit=0
+ok: start task-x1 -> In flight
+help[1]:
+  - Run `tasks-axi done task-x1 --pr <url>` when it ships
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d git init -q -b main /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/project
+exit=0
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/project add base
+exit=0
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/project commit -qm Lab base
+exit=0
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/project worktree add -q -b fm/lab-task-x1 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/wt
+exit=0
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-teardown.sh task-x1
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d
+REFUSED: task task-x1 has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/state/task-x1.meta, then retry teardown without --force; preserving task state.
+
+OBSERVED: Normal cleanup refuses an empty local-copy entry; original task records, backlog row, check, and local sentinel remain byte-identical. No completion output or close marker.
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-teardown.sh task-x1 --force
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d
+REFUSED: task task-x1 has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/state/task-x1.meta, then retry teardown without --force; preserving task state.
+
+OBSERVED: Forced cleanup refuses an empty local-copy entry; original task records, backlog row, check, and local sentinel remain byte-identical. No completion output or close marker.
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-teardown.sh task-x1 --force
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d
+REFUSED: task task-x1 has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/state/task-x1.meta, then retry teardown without --force; preserving task state.
+
+OBSERVED: Forced scout cleanup cannot bypass the empty-path refusal; original task records, backlog row, check, and local sentinel remain byte-identical. No completion output or close marker.
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-teardown.sh task-x1 --legacy-record --force
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d
+REFUSED: task task-x1 has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/state/task-x1.meta, then retry teardown without --force; preserving task state.
+
+OBSERVED: Legacy cleanup cannot bypass the empty-path refusal; original task records, backlog row, check, and local sentinel remain byte-identical. No completion output or close marker.
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-teardown.sh task-x1
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no watcher has a fresh beacon (last beat: never, grace 300s).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision with a foreground checkpoint: bin/fm-watch-checkpoint.sh --seconds 180.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REFUSED: local-only worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/wt has work not yet merged into main and not on any remote.
+uncommitted changes present
+Merge the branch into local main first (bin/fm-merge-local.sh after the captain approves), or push to a fork/remote, or get the captain's explicit OK to discard, then --force.
+
+OBSERVED: Restoring the verified local-copy path exposes the dirty-work guard; original task records, backlog row, check, and local sentinel remain byte-identical. No completion output or close marker.
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/wt add sentinel
+exit=0
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/wt commit -qm Unlanded lab work
+exit=0
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-teardown.sh task-x1
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+REFUSED: local-only worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d/wt has work not yet merged into main and not on any remote.
+commits not yet on main:
+0917326 Unlanded lab work
+Merge the branch into local main first (bin/fm-merge-local.sh after the captain approves), or push to a fork/remote, or get the captain's explicit OK to discard, then --force.
+
+OBSERVED: Restoring the verified path and committing work retains the landed-work guard; original task records, backlog row, check, and local sentinel remain byte-identical. No completion output or close marker.
+
+BACKLOG AFTER ALL REFUSALS:
+
+$ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.9ktnco0d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-tasks-axi.sh list
+exit=0
+count: 1
+tasks[1]{id,state,kind,repo,title}:
+  task-x1,in_flight,task,"-",Empty local-copy cleanup lab
+help[2]:
+  - Run `tasks-axi show <id>` for full notes on a task
+  - Run `tasks-axi ready` to see unblocked queued work
+
+CLEANUP: disposable lab home and Git repositories removed.

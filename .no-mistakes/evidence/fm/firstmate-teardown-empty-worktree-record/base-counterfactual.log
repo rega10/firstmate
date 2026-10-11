@@ -1,0 +1,58 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-lab-home.sh create /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.baseline._06cu2zu
+exit=0
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.baseline._06cu2zu
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-tasks-axi.sh add task-x1 Counterfactual cleanup lab
+exit=0
+ok: added task-x1 -> Queued
+task:
+  id: task-x1
+  title: Counterfactual cleanup lab
+  state: queued
+  blocked: no
+  blocked_by: none
+  held: no
+  hold_reason: "-"
+  hold_kind: "-"
+  hold_until: "-"
+  kind: task
+  repo: "-"
+  priority: "-"
+  created: 2026-10-11
+  closed: "-"
+  deps: none
+  links: none
+  body: ""
+help[2]:
+  - Run `tasks-axi start task-x1` to move it to in flight
+  - Run `tasks-axi block task-x1 --by <other>` to record a dependency
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-tasks-axi.sh start task-x1
+exit=0
+ok: start task-x1 -> In flight
+help[1]:
+  - Run `tasks-axi done task-x1 --pr <url>` when it ships
+
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/.test-step-base-teardown.sh task-x1
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.baseline._06cu2zu
+REFUSED: task task-x1 has a missing, empty, or ambiguous worktree identity; preserving task state.
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-teardown.sh task-x1
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.baseline._06cu2zu
+REFUSED: task task-x1 has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.baseline._06cu2zu/state/task-x1.meta, then retry teardown without --force; preserving task state.
+
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/.test-step-base-teardown.sh task-x1 --force
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.baseline._06cu2zu
+REFUSED: task task-x1 has a missing, empty, or ambiguous worktree identity; preserving task state.
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/bin/fm-teardown.sh task-x1 --force
+exit=1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.baseline._06cu2zu
+REFUSED: task task-x1 has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MVPSJMB4V9THXVW7RD8VME/.test-step-tmp/fm-lab.baseline._06cu2zu/state/task-x1.meta, then retry teardown without --force; preserving task state.
+
+OBSERVED: base refuses normal and forced cleanup with a generic identity error. Target replaces it with the exact record path and safe recovery action. Both preserve task records and local work.
+
+CLEANUP: baseline script and disposable lab removed.

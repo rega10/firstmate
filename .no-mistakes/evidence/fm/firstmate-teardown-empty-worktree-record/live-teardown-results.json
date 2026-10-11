@@ -1,0 +1,75 @@
+[
+  {
+    "name": "Normal cleanup refuses an empty local-copy entry",
+    "result": "pass",
+    "exit": 1,
+    "preserved_sha256": {
+      "state/task-x1.check.sh": "69a6f03ff078e7ba707d796ac963cb5f668ce4f24166b51bcd5b3b0f77013e9f",
+      "state/task-x1.meta": "97c991aa969a2f36ae879ea4c8f785e9377946b2c66dfebe700d44a083610074",
+      "state/task-x1.status": "a2670a7aa828180295a18c92bb06864521fe09cb774a6b98e75d0a5d888e591b",
+      "data/backlog.md": "b1a069c32fc7dc64c1aff0575f39495d9a64ada1df4fc588a2b8ef1a2f3ad255",
+      "wt/sentinel": "89c65b7af042e8d4b091d6af9a97472a413a5855ba6494d2dfa6f9a0d7ab8c60"
+    }
+  },
+  {
+    "name": "Forced cleanup refuses an empty local-copy entry",
+    "result": "pass",
+    "exit": 1,
+    "preserved_sha256": {
+      "state/task-x1.check.sh": "69a6f03ff078e7ba707d796ac963cb5f668ce4f24166b51bcd5b3b0f77013e9f",
+      "state/task-x1.meta": "97c991aa969a2f36ae879ea4c8f785e9377946b2c66dfebe700d44a083610074",
+      "state/task-x1.status": "a2670a7aa828180295a18c92bb06864521fe09cb774a6b98e75d0a5d888e591b",
+      "data/backlog.md": "b1a069c32fc7dc64c1aff0575f39495d9a64ada1df4fc588a2b8ef1a2f3ad255",
+      "wt/sentinel": "89c65b7af042e8d4b091d6af9a97472a413a5855ba6494d2dfa6f9a0d7ab8c60"
+    }
+  },
+  {
+    "name": "Forced scout cleanup cannot bypass the empty-path refusal",
+    "result": "pass",
+    "exit": 1,
+    "preserved_sha256": {
+      "state/task-x1.check.sh": "69a6f03ff078e7ba707d796ac963cb5f668ce4f24166b51bcd5b3b0f77013e9f",
+      "state/task-x1.meta": "c496497d21a410d65d75e739c6297d495c108e5a2cd8a7d7f157976588d20db9",
+      "state/task-x1.status": "a2670a7aa828180295a18c92bb06864521fe09cb774a6b98e75d0a5d888e591b",
+      "data/backlog.md": "b1a069c32fc7dc64c1aff0575f39495d9a64ada1df4fc588a2b8ef1a2f3ad255",
+      "wt/sentinel": "89c65b7af042e8d4b091d6af9a97472a413a5855ba6494d2dfa6f9a0d7ab8c60"
+    }
+  },
+  {
+    "name": "Legacy cleanup cannot bypass the empty-path refusal",
+    "result": "pass",
+    "exit": 1,
+    "preserved_sha256": {
+      "state/task-x1.check.sh": "69a6f03ff078e7ba707d796ac963cb5f668ce4f24166b51bcd5b3b0f77013e9f",
+      "state/task-x1.meta": "45ad94fbcd458221aee6561b7977546dffb9f2445dfa1059cb9c91cf163012d9",
+      "state/task-x1.status": "a2670a7aa828180295a18c92bb06864521fe09cb774a6b98e75d0a5d888e591b",
+      "data/backlog.md": "b1a069c32fc7dc64c1aff0575f39495d9a64ada1df4fc588a2b8ef1a2f3ad255",
+      "wt/sentinel": "89c65b7af042e8d4b091d6af9a97472a413a5855ba6494d2dfa6f9a0d7ab8c60"
+    }
+  },
+  {
+    "name": "Restoring the verified local-copy path exposes the dirty-work guard",
+    "result": "pass",
+    "exit": 1,
+    "preserved_sha256": {
+      "state/task-x1.check.sh": "69a6f03ff078e7ba707d796ac963cb5f668ce4f24166b51bcd5b3b0f77013e9f",
+      "state/task-x1.meta": "b307273ac2dd5405ed69dcc6bff5e182e1c553098d8ec338d159fba27131170f",
+      "state/task-x1.status": "a2670a7aa828180295a18c92bb06864521fe09cb774a6b98e75d0a5d888e591b",
+      "data/backlog.md": "b1a069c32fc7dc64c1aff0575f39495d9a64ada1df4fc588a2b8ef1a2f3ad255",
+      "wt/sentinel": "89c65b7af042e8d4b091d6af9a97472a413a5855ba6494d2dfa6f9a0d7ab8c60"
+    }
+  },
+  {
+    "name": "Restoring the verified path and committing work retains the landed-work guard",
+    "result": "pass",
+    "exit": 1,
+    "preserved_sha256": {
+      "state/.guard-watcher-stale-banner": "8c40be4a4e662bea4bfa4ee40ca3b0ea03e0af97893535e7b2995279118d7e64",
+      "state/task-x1.check.sh": "69a6f03ff078e7ba707d796ac963cb5f668ce4f24166b51bcd5b3b0f77013e9f",
+      "state/task-x1.meta": "b307273ac2dd5405ed69dcc6bff5e182e1c553098d8ec338d159fba27131170f",
+      "state/task-x1.status": "a2670a7aa828180295a18c92bb06864521fe09cb774a6b98e75d0a5d888e591b",
+      "data/backlog.md": "b1a069c32fc7dc64c1aff0575f39495d9a64ada1df4fc588a2b8ef1a2f3ad255",
+      "wt/sentinel": "89c65b7af042e8d4b091d6af9a97472a413a5855ba6494d2dfa6f9a0d7ab8c60"
+    }
+  }
+]
