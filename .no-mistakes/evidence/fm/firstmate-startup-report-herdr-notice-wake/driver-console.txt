@@ -1,0 +1,327 @@
+Authentication setup uses the real gh executable and an isolated disposable GitHub endpoint.
+$ gh auth status
+exit=0
+disposable.example
+  ✓ Logged in to disposable.example account disposable-lab (GH_ENTERPRISE_TOKEN)
+  - Active account: true
+  - Git operations protocol: https
+  - Token: *********************
+
+SCENARIO: Historical Herdr notice with pre-fix bootstrap reproduces a false wake
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/before-historical-herdr/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/before-historical-herdr/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 1s: GitHub authentication.
+NOTICE: auto-detected herdr runtime (HERDR_ENV=1) - spawning into the EXPERIMENTAL herdr backend. Set config/backend or pass --backend tmux to opt out.
+These ran AFTER the sections above were composed, so re-read any record a line here names.
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+1000    elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=1000
+  slowest: stage network-checks probe 1000ms, phase gh-auth 0ms
+Persisted report: 'NOTICE: auto-detected herdr runtime (HERDR_ENV=1) - spawning into the EXPERIMENTAL herdr backend. Set config/backend or pass --backend tmux to opt out.\n'
+Persisted wake queue: '1791698511\t1\tcheck\tstartup-network\tcheck: startup-network: deferred startup network checks finished (done); read them with /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/before-historical-herdr/root/bin/fm-startup-network.sh report\n'
+Persisted status:
+state=done
+pid=65808
+started=1791698510
+finished=1791698511
+rc=0
+locked=0
+phases=probe
+generation=1791698510.65808.manual
+lock_pid=
+report_published=1
+
+SCENARIO: Fixed bootstrap ignores historical Herdr notice during network checks
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-historical-herdr/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-historical-herdr/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+0       elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=0
+  slowest: phase gh-auth 0ms, stage network-checks probe 0ms
+Persisted report: ''
+Persisted wake queue: ''
+Persisted status:
+state=done
+pid=67201
+started=1791698511
+finished=1791698511
+rc=0
+locked=0
+phases=probe
+generation=1791698511.67201.manual
+lock_pid=
+report_published=1
+
+SCENARIO: Current cmux resolver with pre-fix bootstrap reproduces a false wake
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/before-current-cmux/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/before-current-cmux/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 1s: GitHub authentication.
+NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.
+These ran AFTER the sections above were composed, so re-read any record a line here names.
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+1000    elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=1000
+  slowest: stage network-checks probe 1000ms, phase gh-auth 0ms
+Persisted report: 'NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.\n'
+Persisted wake queue: '1791698512\t1\tcheck\tstartup-network\tcheck: startup-network: deferred startup network checks finished (done); read them with /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/before-current-cmux/root/bin/fm-startup-network.sh report\n'
+Persisted status:
+state=done
+pid=68165
+started=1791698511
+finished=1791698512
+rc=0
+locked=0
+phases=probe
+generation=1791698511.68165.manual
+lock_pid=
+report_published=1
+
+Resolver check for herdr
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root
+exit=0
+herdr
+
+SCENARIO: Configured herdr has a clean report and no wake
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+0       elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=0
+  slowest: phase gh-auth 0ms, stage network-checks probe 0ms
+Persisted report: ''
+Persisted wake queue: ''
+Persisted status:
+state=done
+pid=69650
+started=1791698512
+finished=1791698512
+rc=0
+locked=0
+phases=probe
+generation=1791698512.69650.manual
+lock_pid=
+report_published=1
+
+SCENARIO: Auto-detected herdr without config/backend has a clean report and no wake
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+0       elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=0
+  slowest: phase gh-auth 0ms, stage network-checks probe 0ms
+Persisted report: ''
+Persisted wake queue: ''
+Persisted status:
+state=done
+pid=70350
+started=1791698512
+finished=1791698512
+rc=0
+locked=0
+phases=probe
+generation=1791698512.70350.manual
+lock_pid=
+report_published=1
+
+SCENARIO: Rejected authentication under herdr still reports NEEDS_GH_AUTH and queues a durable wake
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+NEEDS_GH_AUTH
+These ran AFTER the sections above were composed, so re-read any record a line here names.
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+0       elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=0
+  slowest: phase gh-auth 0ms, stage network-checks probe 0ms
+Persisted report: 'NEEDS_GH_AUTH\n'
+Persisted wake queue: '1791698513\t1\tcheck\tstartup-network\tcheck: startup-network: deferred startup network checks finished (done); read them with /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-startup-network.sh report\n'
+Persisted status:
+state=done
+pid=71047
+started=1791698513
+finished=1791698513
+rc=0
+locked=0
+phases=probe
+generation=1791698513.71047.manual
+lock_pid=
+report_published=1
+
+SCENARIO: Local dependency detection remains active for herdr
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-bootstrap.sh
+exit=0
+MISSING_MANUAL: herdr (instructions: https://herdr.dev)
+MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)
+MISSING: node (install: brew install node  # or the platform's package manager)
+MISSING: no-mistakes (install: curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh)
+MISSING: gh-axi (install: npm install -g gh-axi && gh-axi setup hooks)
+MISSING: chrome-devtools-axi (install: npm install -g chrome-devtools-axi && chrome-devtools-axi setup hooks)
+MISSING: tasks-axi (install: npm install -g tasks-axi)
+MISSING: quota-axi (install: npm install -g quota-axi)
+PRESENTATION_UNAVAILABLE: lavish-axi (requires >=0.1.77; install: npm install -g lavish-axi && lavish-axi setup hooks) - nonvisual work may proceed with plain-text decisions and reports; install or upgrade before using Lavish
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-herdr/root/bin/fm-bootstrap.sh
+exit=0
+BACKEND_INVALID: bogus (known: tmux herdr zellij orca cmux)
+MISSING: node (install: brew install node  # or the platform's package manager)
+MISSING: no-mistakes (install: curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh)
+MISSING: gh-axi (install: npm install -g gh-axi && gh-axi setup hooks)
+MISSING: chrome-devtools-axi (install: npm install -g chrome-devtools-axi && chrome-devtools-axi setup hooks)
+MISSING: tasks-axi (install: npm install -g tasks-axi)
+MISSING: quota-axi (install: npm install -g quota-axi)
+PRESENTATION_UNAVAILABLE: lavish-axi (requires >=0.1.77; install: npm install -g lavish-axi && lavish-axi setup hooks) - nonvisual work may proceed with plain-text decisions and reports; install or upgrade before using Lavish
+
+Resolver check for cmux
+$ bash -c . "$1/bin/fm-backend.sh"; fm_backend_name _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root
+exit=0
+cmux
+stderr:
+NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.
+
+SCENARIO: Configured cmux has a clean report and no wake
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+0       elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=0
+  slowest: phase gh-auth 0ms, stage network-checks probe 0ms
+Persisted report: ''
+Persisted wake queue: ''
+Persisted status:
+state=done
+pid=72957
+started=1791698513
+finished=1791698513
+rc=0
+locked=0
+phases=probe
+generation=1791698513.72957.manual
+lock_pid=
+report_published=1
+
+SCENARIO: Auto-detected cmux without config/backend has a clean report and no wake
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+0       elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=0
+  slowest: phase gh-auth 0ms, stage network-checks probe 0ms
+Persisted report: ''
+Persisted wake queue: ''
+Persisted status:
+state=done
+pid=73876
+started=1791698514
+finished=1791698514
+rc=0
+locked=0
+phases=probe
+generation=1791698514.73876.manual
+lock_pid=
+report_published=1
+
+SCENARIO: Rejected authentication under cmux still reports NEEDS_GH_AUTH and queues a durable wake
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-startup-network.sh run --locked 0
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+NEEDS_GH_AUTH
+These ran AFTER the sections above were composed, so re-read any record a line here names.
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+0       elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=0
+  slowest: phase gh-auth 0ms, stage network-checks probe 0ms
+Persisted report: 'NEEDS_GH_AUTH\n'
+Persisted wake queue: '1791698514\t1\tcheck\tstartup-network\tcheck: startup-network: deferred startup network checks finished (done); read them with /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-startup-network.sh report\n'
+Persisted status:
+state=done
+pid=74768
+started=1791698514
+finished=1791698514
+rc=0
+locked=0
+phases=probe
+generation=1791698514.74768.manual
+lock_pid=
+report_published=1
+
+SCENARIO: Local dependency detection remains active for cmux
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-bootstrap.sh
+exit=0
+MISSING: cmux (install: brew install --cask cmux  # or see https://cmux.com)
+MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)
+MISSING: node (install: brew install node  # or the platform's package manager)
+MISSING: no-mistakes (install: curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh)
+MISSING: gh-axi (install: npm install -g gh-axi && gh-axi setup hooks)
+MISSING: chrome-devtools-axi (install: npm install -g chrome-devtools-axi && chrome-devtools-axi setup hooks)
+MISSING: tasks-axi (install: npm install -g tasks-axi)
+MISSING: quota-axi (install: npm install -g quota-axi)
+PRESENTATION_UNAVAILABLE: lavish-axi (requires >=0.1.77; install: npm install -g lavish-axi && lavish-axi setup hooks) - nonvisual work may proceed with plain-text decisions and reports; install or upgrade before using Lavish
+stderr:
+NOTICE: auto-detected cmux runtime (CMUX_WORKSPACE_ID) - spawning into the EXPERIMENTAL cmux backend. Set config/backend or pass --backend tmux to opt out.
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/after-cmux/root/bin/fm-bootstrap.sh
+exit=0
+BACKEND_INVALID: bogus (known: tmux herdr zellij orca cmux)
+MISSING: node (install: brew install node  # or the platform's package manager)
+MISSING: no-mistakes (install: curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh)
+MISSING: gh-axi (install: npm install -g gh-axi && gh-axi setup hooks)
+MISSING: chrome-devtools-axi (install: npm install -g chrome-devtools-axi && chrome-devtools-axi setup hooks)
+MISSING: tasks-axi (install: npm install -g tasks-axi)
+MISSING: quota-axi (install: npm install -g quota-axi)
+PRESENTATION_UNAVAILABLE: lavish-axi (requires >=0.1.77; install: npm install -g lavish-axi && lavish-axi setup hooks) - nonvisual work may proceed with plain-text decisions and reports; install or upgrade before using Lavish
+
+SCENARIO: Detached startup with no config/backend completes silently
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/detached-cmux/root/bin/fm-startup-network.sh start --locked 0 --harvest-pid 99999999
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/detached-cmux/root/bin/fm-startup-network.sh wait 20
+exit=0
+$ bash /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MRJDMWFA7KGAY3Y8E6SKEJ/.test-startup-notice/detached-cmux/root/bin/fm-startup-network.sh report
+exit=0
+completed off the startup path in 0s: GitHub authentication.
+(silent - no problems found)
+TIMINGS - where the deferred network checks spent their time (ms):
+  phase       gh-auth                                    start=+0       elapsed=0
+  stage       network-checks probe                       start=+0       elapsed=0
+  slowest: phase gh-auth 0ms, stage network-checks probe 0ms
+Persisted report: ''
+Persisted wake queue: ''
+Persisted status:
+state=done
+pid=76299
+started=1791698515
+finished=1791698515
+rc=0
+locked=0
+phases=probe
+generation=1791698515.76147.99999999
+lock_pid=
+report_published=1
+
+
+All live script scenarios met their expected observable results.
