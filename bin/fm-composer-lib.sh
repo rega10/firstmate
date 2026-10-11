@@ -55,12 +55,9 @@
 #                writes its model name there); a titled bottom border that
 #                still starts and ends with the family's rule glyph is
 #                tolerated, including Grok 1.0.5's three-column title overhang.
-#   bare       - an agent prompt glyph row with no border at all (claude `❯`,
-#                codex `›`, muse `⟩`, cursor `→`). The agent glyph is itself the container
-#                proof except for Claude's `❯`, which zsh prompts also use:
-#                that row needs enclosing horizontal rules or omp's adjacent
-#                status row before `empty` is safe. A bare SHELL glyph
-#                (`>` `$` `%` `#`) never is proof.
+#   bare       - an agent prompt glyph row without side borders (claude `❯`,
+#                codex `›`, muse `⟩`, cursor `→`). THE SAFETY RULE below owns
+#                the glyph's required container proof.
 #                A bare composer's WRAP region (typed input continuing on the
 #                rows beneath the glyph row) is bounded by blank rows, by
 #                structural edges, and by the FURNITURE rows a harness draws
@@ -135,8 +132,10 @@
 # prompt (`FM_COMPOSER_PI_STATUS_RE_DEFAULT`).
 # The AGENT glyphs `❯` (claude), `›` (codex), `⟩` (U+27E9, muse),
 # `→` (U+2192, cursor), and `❭` (U+276D, devin) identify composer candidates.
-# A bare `❯` needs Claude rules or omp's status row to authorize `empty`, including
-# when ghost stripping removed the whole prompt or a wrapped suggestion.
+# The other agent glyphs prove a bare composer themselves; `❯` also appears in
+# zsh prompts and needs enclosing Claude rules or omp's adjacent status row
+# to authorize `empty`, including when ghost stripping removed the whole
+# prompt or a wrapped suggestion.
 # Both glyph sets are declared
 # exactly once below; every decision reaches them through the declarations.
 #
