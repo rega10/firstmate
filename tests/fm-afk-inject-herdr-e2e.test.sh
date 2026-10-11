@@ -18,8 +18,8 @@
 # binary untouched.
 #
 # The "supervisor pane" is a tiny deterministic bash loop (not a real harness
-# binary): it draws a bordered composer row ("│ > <buf> │") that exercises the
-# bordered branch of fm_backend_herdr_composer_state, and logs every submitted
+# binary): it draws a bare Codex composer row ("› <buf>") that exercises the
+# bare branch of fm_backend_herdr_composer_state, and logs every submitted
 # line (hex + text + injection/user classification) - the same technique
 # tests/fm-afk-inject-e2e.test.sh uses for its tmux supervisor pane, so this
 # test asserts on submitted CONTENT, not pane appearance. It ALSO registers
@@ -133,7 +133,7 @@ EOF
 
 # --- deterministic bare-composer loop, drawn in the scratch pane -------------
 # Mirrors tests/fm-afk-inject-e2e.test.sh's supervisor-loop.sh, but draws the
-# shared classifier's positively identified bare-agent shape (`❯ <buf>`). This
+# shared classifier's positively identified bare Codex shape (`› <buf>`). This
 # remains readable under the strict blank-row posture without pretending that
 # one side-bordered row is a complete composer box. ALSO registers itself as a
 # real herdr agent via `herdr pane report-agent` and reports idle/working
@@ -190,7 +190,7 @@ redraw() {
   else
     shown="$_buf"
   fi
-  printf '\r\033[K❯ %s' "$shown"
+  printf '\r\033[K› %s' "$shown"
 }
 submit_line() {
   local _line=$_buf _c _hex

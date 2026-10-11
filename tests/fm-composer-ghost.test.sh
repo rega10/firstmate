@@ -692,6 +692,7 @@ test_real_zsh_arrow_defers_input() (
   lab_tmux=$("$helper" tmux-dir "$lab_home") || exit 1
   unset TMUX TMUX_PANE
   export TMUX_TMPDIR="$lab_tmux" FM_HOME="$lab_home"
+  # shellcheck disable=SC2329 # Invoked by the EXIT trap below.
   cleanup_zsh() {
     local rc=$?
     trap - EXIT
