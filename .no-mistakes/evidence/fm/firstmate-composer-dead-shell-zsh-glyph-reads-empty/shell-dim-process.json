@@ -1,0 +1,1 @@
+{"id":"cli:pane:process_info","result":{"process_info":{"foreground_process_group_id":82177,"foreground_processes":[{"argv":["zsh","-df"],"argv0":"zsh","cmdline":"zsh -df","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MSCKPP2EVVD8SJZ18502B1/.test-composer/manual-home","name":"zsh","pid":82177}],"pane_id":"w1:p1","shell_pid":82177},"type":"pane_process_info"}}

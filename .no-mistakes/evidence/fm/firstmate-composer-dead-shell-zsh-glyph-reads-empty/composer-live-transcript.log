@@ -1,0 +1,24 @@
+shell-fresh: expected=unknown actual=unknown
+Same live zsh pane with baseline composer library: empty
+inject_msg: rc=1 attempted=0 reason=deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+The shell screen stayed identical. No command marker was created.
+shell-dim: expected=unknown actual=unknown
+inject_msg: rc=1 attempted=0 reason=deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+The shell screen stayed identical. No command marker was created.
+shell-stale-rules: expected=unknown actual=unknown
+inject_msg: rc=1 attempted=0 reason=deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+The shell screen stayed identical. No command marker was created.
+claude-empty: expected=empty actual=empty
+claude-draft: expected=pending actual=pending
+inject_msg: rc=1 attempted=0 reason=deferred: supervisor composer not confirmed-empty (state=pending: pending input, dead-shell prompt, or unreadable pane)
+The shell screen stayed identical. No command marker was created.
+claude-cleared: expected=empty actual=empty
+shell-after-exit: expected=unknown actual=unknown
+inject_msg: rc=1 attempted=0 reason=deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+The shell screen stayed identical. No command marker was created.
+shell-after-clear: expected=unknown actual=unknown
+inject_msg: rc=1 attempted=0 reason=deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+The shell screen stayed identical. No command marker was created.
+Claude version: 2.1.284 (Claude Code)
+All live scenarios passed.
+Cleanup finished with status 0.
