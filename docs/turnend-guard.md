@@ -105,8 +105,8 @@ The lock-owning session remains responsible for restoring supervision.
 
 The exception has these limits:
 
-- Malformed, absent, dead, or ancestry-uncertain lock records do not satisfy this Claude-specific exception and retain the ordinary guard behavior.
-- A missing or mismatched sidecar or an untrusted id adds nothing to the verdict, so a live owner outside the ancestry still takes this exit exactly as before.
+- Malformed, absent, or dead lock records do not satisfy this Claude-specific exception and retain the ordinary guard behavior.
+- Unresolved caller identity does not prevent this safe exit when the shared classifier verifies a live owner.
 
 ### Pull-warning verdict by supervision model
 

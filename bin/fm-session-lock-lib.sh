@@ -150,9 +150,9 @@ fm_harness_ancestry_pids() {
 
 # Print the outermost pid of this session's contiguous harness run for callers
 # that need that ancestry identity. This is not necessarily the pid written to
-# the session lock: fm_session_lock_anchor_pid owns that choice and uses a
-# trusted Claude session's model-loop pid instead. Every non-Claude harness
-# reports a single pid, so this remains its innermost match unchanged. When no
+# the session lock: fm_session_lock_anchor_pid below owns that choice.
+# Every non-Claude harness reports a single pid, so this remains its innermost
+# match unchanged. When no
 # harness pid can be resolved at all, fm_session_lock_anchor_pid falls back to
 # the hosted Codex owner token.
 fm_harness_ancestry_pid() {
@@ -248,14 +248,11 @@ fm_harness_pid_alive() {
 
 # --- trusted same-session identity -------------------------------------------
 # Claude Code hands every hook and tool shell CLAUDE_CODE_SESSION_ID (the
-# session's conversation id) and CLAUDE_PID (the pid of the process running the
-# model loop). A background session runs that model loop in a transient helper
-# bridged to its front-end by a shared daemon, and when that bridge is recycled
-# the contiguous claude-named ancestry from a hook to the recorded lock owner
-# breaks while the owner pid stays alive, so ancestry alone reads the session's
-# own lock as another live session's. The id is the one identity that survives
-# the recycling, so it is accepted as the ownership signal - but only from
-# an environment proven to belong to the current Claude run.
+# session's conversation id) and CLAUDE_PID (a harness-supplied process pid).
+# Helper recycling can break the contiguous claude-named ancestry from a hook
+# to the recorded lock owner while the owner pid stays alive. The conversation
+# id survives that recycling, so it is accepted as the ownership signal - but
+# only from an environment proven to belong to the current Claude run.
 #
 # Trust gate: CLAUDE_PID must be a Claude-shaped member of this process's
 # contiguous harness ancestry. An id merely retained in a helper environment

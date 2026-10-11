@@ -77,7 +77,7 @@ A re-emit (`--reemit`) reprints the digest for a process that already has the he
 This routing deliberately inverts the previous nudge matcher, which fired on `startup|resume|clear` and excluded `compact`.
 
 - Compaction is covered where a tracked adapter delivers that source, because a compacted session has lost exactly the digest it needs.
-- Resume is excluded from the run because it restores that digest instead of losing it.
+- Resume normally restores the digest; the source-routing table defines the Claude refusal paths.
 
 ### Lock and completion interlock
 
@@ -95,11 +95,11 @@ The full digest updates the completion record in this order:
 So `clear` or `compact` cannot skip startup sweeps after a truncated run.
 
 `bin/fm-session-lock-lib.sh` owns lock identity; Claude acquisition requires a trusted conversation id, and ownership requires that id to match the recorded id, including for legacy locks.
-Unavailable harness inspection refuses ownership and acquisition until the harness identity can be verified.
+An unknown numeric harness classification refuses ownership and acquisition until the harness identity can be verified.
 `bin/fm-lock.sh` preserves the live anchor during a proven owning session's confirmation.
 Upgrading a running Claude primary with a legacy lock requires restarting its recorded owner process before session start can reacquire ownership.
 A Claude `/clear` with a changed conversation id cannot prove owning continuity from the supplied harness identity and receives the ordinary read-only refusal.
-Only a matching trusted conversation id may reuse completed startup while its anchor remains live.
+For Claude, only a matching trusted conversation id may reuse completed startup while its anchor remains live.
 
 So a proven `clear` or `compact` re-emit re-verifies ownership and proceeds.
 A lock another live session took meanwhile still produces the ordinary read-only digest.
@@ -220,7 +220,7 @@ None of these becomes a refusal to open the session.
 
 Claude also verifies the lock through `UserPromptSubmit`, immediately before each prompt.
 This check refuses a competing prompt with exit 2 before it can change away mode or supervise, even when its pre-warmed startup digest is old.
-It checks ownership only; it does not refresh the rest of the digest.
+It verifies or acquires the lock; it does not refresh the rest of the digest.
 `bin/fm-sessionstart-run.sh` owns that guard's mechanics.
 
 ## Harness transports
