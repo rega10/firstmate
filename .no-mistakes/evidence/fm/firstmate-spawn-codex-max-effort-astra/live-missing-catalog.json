@@ -1,0 +1,12 @@
+{
+  "name": "live-missing-catalog",
+  "result": "pass",
+  "live": true,
+  "exit_code": 1,
+  "task_metadata_published": false,
+  "received_requests": [],
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-missing-catalog/lab\nwarning: secondmate live-missing-catalog sync skipped before launch: primary default-branch commit cannot be resolved\nerror: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-missing-catalog/worker-codex/models_cache.json; refusing to launch\n",
+  "launch": "",
+  "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-missing-catalog/lab/state\n/.codex-catalog.gfyIn2Vk/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-missing-catalog/worker-codex/models_cache.json"
+}

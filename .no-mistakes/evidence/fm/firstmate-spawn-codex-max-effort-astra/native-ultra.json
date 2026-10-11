@@ -1,0 +1,38 @@
+[
+  {
+    "command": [
+      "bin/fm-harness.sh",
+      "validate-native-effort",
+      "pi",
+      "codex-native/gpt-6-astra",
+      "ultra"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "bin/fm-harness.sh",
+      "validate-native-effort",
+      "pi-signed",
+      "codex-native/gpt-6-astra",
+      "ultra"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "bin/fm-harness.sh",
+      "validate-native-effort",
+      "codex",
+      "gpt-6-astra",
+      "ultra"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "error: ultra effort requires pi or pi-signed with an explicit codex-native/<model> model\n"
+  }
+]

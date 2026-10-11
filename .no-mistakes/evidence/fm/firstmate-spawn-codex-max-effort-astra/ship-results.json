@@ -1,0 +1,31 @@
+[
+  {
+    "name": "live-ship-astra-max",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      },
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-max/lab\nwarning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-max/lab/data/live-ship-astra-max/launch-brief.md records no ship branch; defaulting to legacy branch fm/live-ship-astra-max\nwarning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-max/lab/data/live-ship-astra-max/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode direct-PR - confirm its definition of done matches\nnotice: live-ship-astra-max ships mode=direct-PR while the standing posture for secondmate is no-mistakes - less rigor than the captain's standing posture; proceed only on a current explicit captain instruction or an intake judgment you can state\nspawned live-ship-astra-max harness=codex kind=ship mode=direct-PR yolo=off window=primary:fm-live-ship-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-max/pool/.treehouse/secondmate-36d01b/1/secondmate\n",
+    "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-max/lab/state/live-ship-astra-max.git-hooks'; env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox --disable hooks -c \"notify=[\\\"bash\\\",\\\"-c\\\",\\\"touch '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-max/lab/state/live-ship-astra-max.turn-ended'\\\"]\" \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-max/lab/data/live-ship-astra-max/launch-brief.md')\"\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/\u2026/secondmate-36d01b/1/secondmate\n  permissions: YOLO mode\n\n  Shall we turn \u201cwhat if\u201d into something?\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: # Current worker role contract\n  You are a crewmate: an autonomous worker agent managed by firstmate.\n  This section establishes your current identity before every project or task instruction below and supersedes any conflicting role\n  identity in those instructions.\n  Do the assigned work yourself and report only to firstmate; do not adopt a firstmate or secondmate supervisor identity, delegate the\n  task, run fleet supervision, or address the captain.\n  Your steering inbox is `/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-\n  astra-max/lab/state/live-ship-astra-max.inbox`; this exact path belongs to your current task even when it is outside the worktree or\n  under the supervising firstmate home, so read and acknowledge its messages and do not reject it as another home's state.\n  Never inspect or change any other home's endpoint namespace; this authorization is limited to the exact task paths named by this brief.\n  When this task works on Firstmate itself, the repository root `AGENTS.md` (also imported by `CLAUDE.md`) is project content and the\n  supervisor contract for the firstmate managing you: follow this brief instead of that supervisor contract.\n  Project instructions still govern the work wherever they do not conflict with this worker identity, including `CONTRIBUTING.md` and\n  `firstmate-coding-guidelines` for Firstmate changes.\n\n  # Task\n  ## Captain's intent\n  Reply OK without using tools or changing files.\n\n  ## Firstmate spec\n  Reply OK without using tools or changing files.\n\n\n  Worked for <1s \u2022 10:33 PM\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-m\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ship-astra-max/worker-codex/models_cache.json"
+  }
+]

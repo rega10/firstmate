@@ -1,0 +1,424 @@
+[
+  {
+    "name": "live-astra-max",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab\nwarning: secondmate live-astra-max sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-astra-max harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate\n",
+    "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab/state/live-astra-max.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate/data/charter.md')\"\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate\n  permissions: YOLO mode\n\n  Your keyboard has entered the chat.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:30 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/se\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-luna-max",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-5.6-luna",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      },
+      {
+        "path": "/v1/responses",
+        "model": "gpt-5.6-luna",
+        "reasoning": {
+          "effort": "low",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/lab\nwarning: secondmate live-luna-max sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-luna-max harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-luna-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/secondmate\n",
+    "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/lab/state/live-luna-max.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-5.6-luna' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/secondmate/data/charter.md')\"\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/secondmate\n  permissions: YOLO mode\n\n  Got an itch to fix a thing?\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:30 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-5.6-Luna max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/se\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-future-max",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "future-model",
+        "reasoning": {
+          "effort": "max"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/lab\nwarning: secondmate live-future-max sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-future-max harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-future-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/secondmate\n",
+    "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/lab/state/live-future-max.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'future-model' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/secondmate/data/charter.md')\"\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/secondmate\n  permissions: YOLO mode\n\n  Hello, you. Got an idea?\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  future-model max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/\u2026\n  ? for shortcuts                                                                                                  \u26a0 1 warning \u00b7 f2 to view\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-future-max/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-worker-refusal",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-worker-refusal/lab\nwarning: secondmate live-worker-refusal sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-worker-refusal/worker-codex/models_cache.json (supported: high); refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-worker-refusal/lab/state/\n.codex-catalog.gJdzJerU/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-worker-refusal/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-filtered-supported",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-supported/lab\nwarning: secondmate live-filtered-supported sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-filtered-supported harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-filtered-supported worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-supported/secondmate\n",
+    "launch": "/usr/bin/env -i ${HOME+\"HOME=$HOME\"} ${PATH+\"PATH=$PATH\"} ${USER+\"USER=$USER\"} ${LOGNAME+\"LOGNAME=$LOGNAME\"} ${SHELL+\"SHELL=$SHELL\"} ${TERM+\"TERM=$TERM\"} ${COLORTERM+\"COLORTERM=$COLORTERM\"} ${LANG+\"LANG=$LANG\"} ${LC_ALL+\"LC_ALL=$LC_ALL\"} ${LC_CTYPE+\"LC_CTYPE=$LC_CTYPE\"} ${TMPDIR+\"TMPDIR=$TMPDIR\"} ${TMP+\"TMP=$TMP\"} ${TEMP+\"TEMP=$TEMP\"} ${GOTMPDIR+\"GOTMPDIR=$GOTMPDIR\"} ${TMUX+\"TMUX=$TMUX\"} ${TMUX_PANE+\"TMUX_PANE=$TMUX_PANE\"} ${HERDR_ENV+\"HERDR_ENV=$HERDR_ENV\"} ${HERDR_SESSION+\"HERDR_SESSION=$HERDR_SESSION\"} ${HERDR_SOCKET_PATH+\"HERDR_SOCKET_PATH=$HERDR_SOCKET_PATH\"} ${HERDR_PANE_ID+\"HERDR_PANE_ID=$HERDR_PANE_ID\"} ${CMUX_WORKSPACE_ID+\"CMUX_WORKSPACE_ID=$CMUX_WORKSPACE_ID\"} ${CMUX_SURFACE_ID+\"CMUX_SURFACE_ID=$CMUX_SURFACE_ID\"} ${CMUX_TAB_ID+\"CMUX_TAB_ID=$CMUX_TAB_ID\"} ${CMUX_PANEL_ID+\"CMUX_PANEL_ID=$CMUX_PANEL_ID\"} ${CMUX_SOCKET_PATH+\"CMUX_SOCKET_PATH=$CMUX_SOCKET_PATH\"} ${ZELLIJ+\"ZELLIJ=$ZELLIJ\"} ${ZELLIJ_SESSION_NAME+\"ZELLIJ_SESSION_NAME=$ZELLIJ_SESSION_NAME\"} ${ZELLIJ_PANE_ID+\"ZELLIJ_PANE_ID=$ZELLIJ_PANE_ID\"} ${FM_ZELLIJ_SESSION+\"FM_ZELLIJ_SESSION=$FM_ZELLIJ_SESSION\"} ${FM_TASK_ID+\"FM_TASK_ID=$FM_TASK_ID\"} ${COMPACT_ADVISER_DISABLE+\"COMPACT_ADVISER_DISABLE=$COMPACT_ADVISER_DISABLE\"} ${LAVISH_AXI_HOST+\"LAVISH_AXI_HOST=$LAVISH_AXI_HOST\"} COMPACT_ADVISER_DISABLE=1 /bin/sh -c 'export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-supported/lab/state/live-filtered-supported.git-hooks'\\''; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-supported/lab'\\'' FM_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-supported/secondmate'\\'' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model '\\''gpt-6-astra'\\'' -c '\\''model_reasoning_effort=\"max\"'\\'' --dangerously-bypass-approvals-and-sandbox \"$('\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh'\\'' encode launch-brief < '\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-supported/secondmate/data/charter.md'\\'')\"'\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/\u2026/live-filtered-supported/secondmate\n  permissions: YOLO mode\n\n  Here for a quick fix or the extended edition?\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-sup\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-supported/worker-user/.codex/models_cache.json"
+  },
+  {
+    "name": "live-filtered-refusal",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-refusal/lab\nwarning: secondmate live-filtered-refusal sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-refusal/worker-user/.codex/models_cache.json (supported: high); refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-refusal/lab/stat\ne/.codex-catalog.kUjXrFZZ/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-refusal/worker-user/.codex/models_cache.json"
+  },
+  {
+    "name": "live-allowed-supported",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      },
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supported/lab\nwarning: secondmate live-allowed-supported sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-allowed-supported harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-allowed-supported worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supported/secondmate\n",
+    "launch": "/usr/bin/env -i ${HOME+\"HOME=$HOME\"} ${PATH+\"PATH=$PATH\"} ${USER+\"USER=$USER\"} ${LOGNAME+\"LOGNAME=$LOGNAME\"} ${SHELL+\"SHELL=$SHELL\"} ${TERM+\"TERM=$TERM\"} ${COLORTERM+\"COLORTERM=$COLORTERM\"} ${LANG+\"LANG=$LANG\"} ${LC_ALL+\"LC_ALL=$LC_ALL\"} ${LC_CTYPE+\"LC_CTYPE=$LC_CTYPE\"} ${TMPDIR+\"TMPDIR=$TMPDIR\"} ${TMP+\"TMP=$TMP\"} ${TEMP+\"TEMP=$TEMP\"} ${GOTMPDIR+\"GOTMPDIR=$GOTMPDIR\"} ${TMUX+\"TMUX=$TMUX\"} ${TMUX_PANE+\"TMUX_PANE=$TMUX_PANE\"} ${HERDR_ENV+\"HERDR_ENV=$HERDR_ENV\"} ${HERDR_SESSION+\"HERDR_SESSION=$HERDR_SESSION\"} ${HERDR_SOCKET_PATH+\"HERDR_SOCKET_PATH=$HERDR_SOCKET_PATH\"} ${HERDR_PANE_ID+\"HERDR_PANE_ID=$HERDR_PANE_ID\"} ${CMUX_WORKSPACE_ID+\"CMUX_WORKSPACE_ID=$CMUX_WORKSPACE_ID\"} ${CMUX_SURFACE_ID+\"CMUX_SURFACE_ID=$CMUX_SURFACE_ID\"} ${CMUX_TAB_ID+\"CMUX_TAB_ID=$CMUX_TAB_ID\"} ${CMUX_PANEL_ID+\"CMUX_PANEL_ID=$CMUX_PANEL_ID\"} ${CMUX_SOCKET_PATH+\"CMUX_SOCKET_PATH=$CMUX_SOCKET_PATH\"} ${ZELLIJ+\"ZELLIJ=$ZELLIJ\"} ${ZELLIJ_SESSION_NAME+\"ZELLIJ_SESSION_NAME=$ZELLIJ_SESSION_NAME\"} ${ZELLIJ_PANE_ID+\"ZELLIJ_PANE_ID=$ZELLIJ_PANE_ID\"} ${FM_ZELLIJ_SESSION+\"FM_ZELLIJ_SESSION=$FM_ZELLIJ_SESSION\"} ${FM_TASK_ID+\"FM_TASK_ID=$FM_TASK_ID\"} ${COMPACT_ADVISER_DISABLE+\"COMPACT_ADVISER_DISABLE=$COMPACT_ADVISER_DISABLE\"} ${LAVISH_AXI_HOST+\"LAVISH_AXI_HOST=$LAVISH_AXI_HOST\"} ${CODEX_HOME+\"CODEX_HOME=$CODEX_HOME\"} COMPACT_ADVISER_DISABLE=1 /bin/sh -c 'export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supported/lab/state/live-allowed-supported.git-hooks'\\''; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supported/lab'\\'' FM_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supported/secondmate'\\'' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model '\\''gpt-6-astra'\\'' -c '\\''model_reasoning_effort=\"max\"'\\'' --dangerously-bypass-approvals-and-sandbox \"$('\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh'\\'' encode launch-brief < '\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supported/secondmate/data/charter.md'\\'')\"'\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supported/secondmate\n  permissions: YOLO mode\n\n  Well, well, well. An idea approaches.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supp\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-supported/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-allowed-refusal",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-refusal/lab\nwarning: secondmate live-allowed-refusal sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-refusal/worker-codex/models_cache.json (supported: high); refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-refusal/lab/state\n/.codex-catalog.a1ETv95k/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-refusal/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-fallback",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      },
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/lab\nwarning: secondmate live-fallback sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-fallback harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-fallback worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/secondmate\n",
+    "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/lab/state/live-fallback.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/secondmate/data/charter.md')\"\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/secondmate\n  permissions: YOLO mode\n\n  What are we getting into today?\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/sec\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-fallback/worker-user/.codex/models_cache.json"
+  },
+  {
+    "name": "live-relative",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      },
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/lab\nwarning: secondmate live-relative sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-relative harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-relative worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/secondmate\n",
+    "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/lab/state/live-relative.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/secondmate/data/charter.md')\"\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/secondmate\n  permissions: YOLO mode\n\n  Shall we put some verbs after that cursor?\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/sec\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-relative/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-filtered-shell-local",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-shell-local/lab\nwarning: secondmate live-filtered-shell-local sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-filtered-shell-local harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-filtered-shell-local worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-shell-local/secondmate\n",
+    "launch": "/usr/bin/env -i ${HOME+\"HOME=$HOME\"} ${PATH+\"PATH=$PATH\"} ${USER+\"USER=$USER\"} ${LOGNAME+\"LOGNAME=$LOGNAME\"} ${SHELL+\"SHELL=$SHELL\"} ${TERM+\"TERM=$TERM\"} ${COLORTERM+\"COLORTERM=$COLORTERM\"} ${LANG+\"LANG=$LANG\"} ${LC_ALL+\"LC_ALL=$LC_ALL\"} ${LC_CTYPE+\"LC_CTYPE=$LC_CTYPE\"} ${TMPDIR+\"TMPDIR=$TMPDIR\"} ${TMP+\"TMP=$TMP\"} ${TEMP+\"TEMP=$TEMP\"} ${GOTMPDIR+\"GOTMPDIR=$GOTMPDIR\"} ${TMUX+\"TMUX=$TMUX\"} ${TMUX_PANE+\"TMUX_PANE=$TMUX_PANE\"} ${HERDR_ENV+\"HERDR_ENV=$HERDR_ENV\"} ${HERDR_SESSION+\"HERDR_SESSION=$HERDR_SESSION\"} ${HERDR_SOCKET_PATH+\"HERDR_SOCKET_PATH=$HERDR_SOCKET_PATH\"} ${HERDR_PANE_ID+\"HERDR_PANE_ID=$HERDR_PANE_ID\"} ${CMUX_WORKSPACE_ID+\"CMUX_WORKSPACE_ID=$CMUX_WORKSPACE_ID\"} ${CMUX_SURFACE_ID+\"CMUX_SURFACE_ID=$CMUX_SURFACE_ID\"} ${CMUX_TAB_ID+\"CMUX_TAB_ID=$CMUX_TAB_ID\"} ${CMUX_PANEL_ID+\"CMUX_PANEL_ID=$CMUX_PANEL_ID\"} ${CMUX_SOCKET_PATH+\"CMUX_SOCKET_PATH=$CMUX_SOCKET_PATH\"} ${ZELLIJ+\"ZELLIJ=$ZELLIJ\"} ${ZELLIJ_SESSION_NAME+\"ZELLIJ_SESSION_NAME=$ZELLIJ_SESSION_NAME\"} ${ZELLIJ_PANE_ID+\"ZELLIJ_PANE_ID=$ZELLIJ_PANE_ID\"} ${FM_ZELLIJ_SESSION+\"FM_ZELLIJ_SESSION=$FM_ZELLIJ_SESSION\"} ${FM_TASK_ID+\"FM_TASK_ID=$FM_TASK_ID\"} ${COMPACT_ADVISER_DISABLE+\"COMPACT_ADVISER_DISABLE=$COMPACT_ADVISER_DISABLE\"} ${LAVISH_AXI_HOST+\"LAVISH_AXI_HOST=$LAVISH_AXI_HOST\"} COMPACT_ADVISER_DISABLE=1 /bin/sh -c 'export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-shell-local/lab/state/live-filtered-shell-local.git-hooks'\\''; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-shell-local/lab'\\'' FM_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-shell-local/secondmate'\\'' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model '\\''gpt-6-astra'\\'' -c '\\''model_reasoning_effort=\"max\"'\\'' --dangerously-bypass-approvals-and-sandbox \"$('\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh'\\'' encode launch-brief < '\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-shell-local/secondmate/data/charter.md'\\'')\"'\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/\u2026/live-filtered-shell-local/secondmate\n  permissions: YOLO mode\n\n  Greetings, fellow tinkerer.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-she\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-filtered-shell-local/worker-user/.codex/models_cache.json"
+  },
+  {
+    "name": "live-allowed-shell-local",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      },
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-shell-local/lab\nwarning: secondmate live-allowed-shell-local sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-allowed-shell-local harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-allowed-shell-local worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-shell-local/secondmate\n",
+    "launch": "/usr/bin/env -i ${HOME+\"HOME=$HOME\"} ${PATH+\"PATH=$PATH\"} ${USER+\"USER=$USER\"} ${LOGNAME+\"LOGNAME=$LOGNAME\"} ${SHELL+\"SHELL=$SHELL\"} ${TERM+\"TERM=$TERM\"} ${COLORTERM+\"COLORTERM=$COLORTERM\"} ${LANG+\"LANG=$LANG\"} ${LC_ALL+\"LC_ALL=$LC_ALL\"} ${LC_CTYPE+\"LC_CTYPE=$LC_CTYPE\"} ${TMPDIR+\"TMPDIR=$TMPDIR\"} ${TMP+\"TMP=$TMP\"} ${TEMP+\"TEMP=$TEMP\"} ${GOTMPDIR+\"GOTMPDIR=$GOTMPDIR\"} ${TMUX+\"TMUX=$TMUX\"} ${TMUX_PANE+\"TMUX_PANE=$TMUX_PANE\"} ${HERDR_ENV+\"HERDR_ENV=$HERDR_ENV\"} ${HERDR_SESSION+\"HERDR_SESSION=$HERDR_SESSION\"} ${HERDR_SOCKET_PATH+\"HERDR_SOCKET_PATH=$HERDR_SOCKET_PATH\"} ${HERDR_PANE_ID+\"HERDR_PANE_ID=$HERDR_PANE_ID\"} ${CMUX_WORKSPACE_ID+\"CMUX_WORKSPACE_ID=$CMUX_WORKSPACE_ID\"} ${CMUX_SURFACE_ID+\"CMUX_SURFACE_ID=$CMUX_SURFACE_ID\"} ${CMUX_TAB_ID+\"CMUX_TAB_ID=$CMUX_TAB_ID\"} ${CMUX_PANEL_ID+\"CMUX_PANEL_ID=$CMUX_PANEL_ID\"} ${CMUX_SOCKET_PATH+\"CMUX_SOCKET_PATH=$CMUX_SOCKET_PATH\"} ${ZELLIJ+\"ZELLIJ=$ZELLIJ\"} ${ZELLIJ_SESSION_NAME+\"ZELLIJ_SESSION_NAME=$ZELLIJ_SESSION_NAME\"} ${ZELLIJ_PANE_ID+\"ZELLIJ_PANE_ID=$ZELLIJ_PANE_ID\"} ${FM_ZELLIJ_SESSION+\"FM_ZELLIJ_SESSION=$FM_ZELLIJ_SESSION\"} ${FM_TASK_ID+\"FM_TASK_ID=$FM_TASK_ID\"} ${COMPACT_ADVISER_DISABLE+\"COMPACT_ADVISER_DISABLE=$COMPACT_ADVISER_DISABLE\"} ${LAVISH_AXI_HOST+\"LAVISH_AXI_HOST=$LAVISH_AXI_HOST\"} ${CODEX_HOME+\"CODEX_HOME=$CODEX_HOME\"} COMPACT_ADVISER_DISABLE=1 /bin/sh -c 'export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-shell-local/lab/state/live-allowed-shell-local.git-hooks'\\''; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-shell-local/lab'\\'' FM_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-shell-local/secondmate'\\'' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model '\\''gpt-6-astra'\\'' -c '\\''model_reasoning_effort=\"max\"'\\'' --dangerously-bypass-approvals-and-sandbox \"$('\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh'\\'' encode launch-brief < '\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-shell-local/secondmate/data/charter.md'\\'')\"'\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/\u2026/live-allowed-shell-local/secondmate\n  permissions: YOLO mode\n\n  Your cursor called. It wants a plot.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-shel\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-shell-local/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-secondmate-pin",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      },
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "max",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/lab\nwarning: secondmate live-secondmate-pin sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-secondmate-pin harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-secondmate-pin worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/secondmate\n",
+    "launch": "/usr/bin/env -i ${HOME+\"HOME=$HOME\"} ${PATH+\"PATH=$PATH\"} ${USER+\"USER=$USER\"} ${LOGNAME+\"LOGNAME=$LOGNAME\"} ${SHELL+\"SHELL=$SHELL\"} ${TERM+\"TERM=$TERM\"} ${COLORTERM+\"COLORTERM=$COLORTERM\"} ${LANG+\"LANG=$LANG\"} ${LC_ALL+\"LC_ALL=$LC_ALL\"} ${LC_CTYPE+\"LC_CTYPE=$LC_CTYPE\"} ${TMPDIR+\"TMPDIR=$TMPDIR\"} ${TMP+\"TMP=$TMP\"} ${TEMP+\"TEMP=$TEMP\"} ${GOTMPDIR+\"GOTMPDIR=$GOTMPDIR\"} ${TMUX+\"TMUX=$TMUX\"} ${TMUX_PANE+\"TMUX_PANE=$TMUX_PANE\"} ${HERDR_ENV+\"HERDR_ENV=$HERDR_ENV\"} ${HERDR_SESSION+\"HERDR_SESSION=$HERDR_SESSION\"} ${HERDR_SOCKET_PATH+\"HERDR_SOCKET_PATH=$HERDR_SOCKET_PATH\"} ${HERDR_PANE_ID+\"HERDR_PANE_ID=$HERDR_PANE_ID\"} ${CMUX_WORKSPACE_ID+\"CMUX_WORKSPACE_ID=$CMUX_WORKSPACE_ID\"} ${CMUX_SURFACE_ID+\"CMUX_SURFACE_ID=$CMUX_SURFACE_ID\"} ${CMUX_TAB_ID+\"CMUX_TAB_ID=$CMUX_TAB_ID\"} ${CMUX_PANEL_ID+\"CMUX_PANEL_ID=$CMUX_PANEL_ID\"} ${CMUX_SOCKET_PATH+\"CMUX_SOCKET_PATH=$CMUX_SOCKET_PATH\"} ${ZELLIJ+\"ZELLIJ=$ZELLIJ\"} ${ZELLIJ_SESSION_NAME+\"ZELLIJ_SESSION_NAME=$ZELLIJ_SESSION_NAME\"} ${ZELLIJ_PANE_ID+\"ZELLIJ_PANE_ID=$ZELLIJ_PANE_ID\"} ${FM_ZELLIJ_SESSION+\"FM_ZELLIJ_SESSION=$FM_ZELLIJ_SESSION\"} ${FM_TASK_ID+\"FM_TASK_ID=$FM_TASK_ID\"} ${COMPACT_ADVISER_DISABLE+\"COMPACT_ADVISER_DISABLE=$COMPACT_ADVISER_DISABLE\"} ${LAVISH_AXI_HOST+\"LAVISH_AXI_HOST=$LAVISH_AXI_HOST\"} COMPACT_ADVISER_DISABLE=1 /bin/sh -c 'export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/lab/state/live-secondmate-pin.git-hooks'\\''; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/lab'\\'' FM_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/secondmate'\\'' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model '\\''gpt-6-astra'\\'' -c '\\''model_reasoning_effort=\"max\"'\\'' --dangerously-bypass-approvals-and-sandbox \"$('\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh'\\'' encode launch-brief < '\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/secondmate/data/charter.md'\\'')\"'\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/secondmate\n  permissions: YOLO mode\n\n  Your keyboard has entered the chat.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-p\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/worker-user/.codex/models_cache.json"
+  },
+  {
+    "name": "live-removed-max",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-removed-max/lab\nwarning: secondmate live-removed-max sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-removed-max/worker-codex/models_cache.json (supported: high); refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-removed-max/lab/state/.co\ndex-catalog.2u1cKJuH/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-removed-max/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-unsupported-high",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unsupported-high/lab\nwarning: secondmate live-unsupported-high sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex model 'gpt-6-astra' does not support effort 'high' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unsupported-high/worker-codex/models_cache.json (supported: max); refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unsupported-high/lab/stat\ne/.codex-catalog.d07EXPzH/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unsupported-high/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-unknown-model",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unknown-model/lab\nwarning: secondmate live-unknown-model sync skipped before launch: primary default-branch commit cannot be resolved\nerror: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unknown-model/worker-codex/models_cache.json; refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unknown-model/lab/state/.\ncodex-catalog.CO9eyAp8/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unknown-model/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-missing-catalog",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-missing-catalog/lab\nwarning: secondmate live-missing-catalog sync skipped before launch: primary default-branch commit cannot be resolved\nerror: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-missing-catalog/worker-codex/models_cache.json; refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-missing-catalog/lab/state\n/.codex-catalog.gfyIn2Vk/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-missing-catalog/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-malformed-catalog",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-malformed-catalog/lab\nwarning: secondmate live-malformed-catalog sync skipped before launch: primary default-branch commit cannot be resolved\nerror: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-malformed-catalog/worker-codex/models_cache.json; refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-malformed-catalog/lab/sta\nte/.codex-catalog.x0rEI8E1/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-malformed-catalog/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-empty-levels",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-empty-levels/lab\nwarning: secondmate live-empty-levels sync skipped before launch: primary default-branch commit cannot be resolved\nerror: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-empty-levels/worker-codex/models_cache.json; refusing to launch\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-empty-levels/lab/state/.c\nodex-catalog.YQOUqyn5/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-empty-levels/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-no-model",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-no-model/lab\nwarning: secondmate live-no-model sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex effort 'max' requires an explicit --model to check its catalog capabilities\n",
+    "launch": "",
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-no-model/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-ultra-refusal",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ultra-refusal/lab\nerror: ultra effort requires pi or pi-signed with an explicit codex-native/<model> model\n",
+    "launch": "",
+    "pane": "can't find window: fm-live-ultra-refusal\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ultra-refusal/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-default-no-catalog",
+    "result": "pass",
+    "live": true,
+    "exit_code": 0,
+    "task_metadata_published": true,
+    "received_requests": [
+      {
+        "path": "/v1/responses",
+        "model": "gpt-6-astra",
+        "reasoning": {
+          "effort": "medium",
+          "context": "all_turns"
+        }
+      }
+    ],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-default-no-catalog/lab\nwarning: secondmate live-default-no-catalog sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-default-no-catalog harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-default-no-catalog worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-default-no-catalog/secondmate\n",
+    "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-default-no-catalog/lab/state/live-default-no-catalog.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-default-no-catalog/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-default-no-catalog/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-default-no-catalog/secondmate/data/charter.md')\"\n",
+    "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/\u2026/live-default-no-catalog/secondmate\n  permissions: YOLO mode\n\n  Anything interesting on the docket?\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:32 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra medium \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-default-n\u2026\n  ? for shortcuts\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-default-no-catalog/worker-codex/models_cache.json"
+  },
+  {
+    "name": "live-context-refusal",
+    "result": "pass",
+    "live": true,
+    "exit_code": 1,
+    "task_metadata_published": false,
+    "received_requests": [],
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-context-refusal/lab\nwarning: secondmate live-context-refusal sync skipped before launch: primary default-branch commit cannot be resolved\nerror: cannot establish codex catalog in the effective tmux worker environment; refusing to launch\n",
+    "launch": "",
+    "pane": ". '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-context-refusal/lab/state/.cod\nex-catalog.PFu2wthj/probe.sh'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-context-refusal/worker-codex/models_cache.json"
+  }
+]

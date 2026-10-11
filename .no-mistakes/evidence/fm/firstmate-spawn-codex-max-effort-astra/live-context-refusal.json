@@ -1,0 +1,12 @@
+{
+  "name": "live-context-refusal",
+  "result": "pass",
+  "live": true,
+  "exit_code": 1,
+  "task_metadata_published": false,
+  "received_requests": [],
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-context-refusal/lab\nwarning: secondmate live-context-refusal sync skipped before launch: primary default-branch commit cannot be resolved\nerror: cannot establish codex catalog in the effective tmux worker environment; refusing to launch\n",
+  "launch": "",
+  "pane": ". '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-context-refusal/lab/state/.cod\nex-catalog.PFu2wthj/probe.sh'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-context-refusal/worker-codex/models_cache.json"
+}

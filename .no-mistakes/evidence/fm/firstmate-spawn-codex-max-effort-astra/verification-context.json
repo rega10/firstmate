@@ -1,0 +1,11 @@
+{
+  "target_commit": "9499d1911ac9d1f5865d9045d00ff1754023c09f",
+  "base_commit": "81fa3fddbdefd27d5c507a427d4ec4baaa3d65df",
+  "codex": "0.159.2",
+  "tmux": "3.5a locally built with libevent 2.1.12",
+  "product_setup": "Exact commit archives installed inside the worktree; marked disposable FM_HOME instances; private tmux sockets; 140x40 terminal grids; isolated Codex configuration and localhost Responses endpoint; no production credentials or Herdr lifecycle calls.",
+  "baseline": "Astra requested max but sent medium; Luna sent max.",
+  "target": "All 23 secondmate cases and the ship case passed.",
+  "setup_repairs": "Built tmux locally because it was absent from PATH; disabled unavailable pipe2 during dependency configuration; installed source archives to keep secondmate homes outside the disposable code root; handled Codex trust and existing-model prompts; disabled disposable Codex daemon auto-start and stopped the daemon created during the first experiment.",
+  "cleanup": "Removed disposable product installations, fixtures, downloaded dependencies, compiled tools, and temporary test selectors. Kept evidence only."
+}

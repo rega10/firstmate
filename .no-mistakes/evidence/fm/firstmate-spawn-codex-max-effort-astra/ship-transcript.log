@@ -1,0 +1,1 @@
+live-ship-astra-max pass 0 [{'path': '/v1/responses', 'model': 'gpt-6-astra', 'reasoning': {'effort': 'max', 'context': 'all_turns'}}, {'path': '/v1/responses', 'model': 'gpt-6-astra', 'reasoning': {'effort': 'max', 'context': 'all_turns'}}] 

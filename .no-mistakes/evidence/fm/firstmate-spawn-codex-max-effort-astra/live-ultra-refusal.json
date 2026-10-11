@@ -1,0 +1,12 @@
+{
+  "name": "live-ultra-refusal",
+  "result": "pass",
+  "live": true,
+  "exit_code": 1,
+  "task_metadata_published": false,
+  "received_requests": [],
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ultra-refusal/lab\nerror: ultra effort requires pi or pi-signed with an explicit codex-native/<model> model\n",
+  "launch": "",
+  "pane": "can't find window: fm-live-ultra-refusal\n",
+  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-ultra-refusal/worker-codex/models_cache.json"
+}

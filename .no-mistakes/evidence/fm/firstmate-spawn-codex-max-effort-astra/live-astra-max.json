@@ -1,0 +1,21 @@
+{
+  "name": "live-astra-max",
+  "result": "pass",
+  "live": true,
+  "exit_code": 0,
+  "task_metadata_published": true,
+  "received_requests": [
+    {
+      "path": "/v1/responses",
+      "model": "gpt-6-astra",
+      "reasoning": {
+        "effort": "max",
+        "context": "all_turns"
+      }
+    }
+  ],
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab\nwarning: secondmate live-astra-max sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-astra-max harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate\n",
+  "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab/state/live-astra-max.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate/data/charter.md')\"\n",
+  "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate\n  permissions: YOLO mode\n\n  Your keyboard has entered the chat.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:30 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/se\u2026\n  ? for shortcuts\n",
+  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/worker-codex/models_cache.json"
+}

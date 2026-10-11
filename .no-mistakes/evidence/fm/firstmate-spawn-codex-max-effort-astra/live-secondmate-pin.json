@@ -1,0 +1,29 @@
+{
+  "name": "live-secondmate-pin",
+  "result": "pass",
+  "live": true,
+  "exit_code": 0,
+  "task_metadata_published": true,
+  "received_requests": [
+    {
+      "path": "/v1/responses",
+      "model": "gpt-6-astra",
+      "reasoning": {
+        "effort": "max",
+        "context": "all_turns"
+      }
+    },
+    {
+      "path": "/v1/responses",
+      "model": "gpt-6-astra",
+      "reasoning": {
+        "effort": "max",
+        "context": "all_turns"
+      }
+    }
+  ],
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/lab\nwarning: secondmate live-secondmate-pin sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-secondmate-pin harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-secondmate-pin worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/secondmate\n",
+  "launch": "/usr/bin/env -i ${HOME+\"HOME=$HOME\"} ${PATH+\"PATH=$PATH\"} ${USER+\"USER=$USER\"} ${LOGNAME+\"LOGNAME=$LOGNAME\"} ${SHELL+\"SHELL=$SHELL\"} ${TERM+\"TERM=$TERM\"} ${COLORTERM+\"COLORTERM=$COLORTERM\"} ${LANG+\"LANG=$LANG\"} ${LC_ALL+\"LC_ALL=$LC_ALL\"} ${LC_CTYPE+\"LC_CTYPE=$LC_CTYPE\"} ${TMPDIR+\"TMPDIR=$TMPDIR\"} ${TMP+\"TMP=$TMP\"} ${TEMP+\"TEMP=$TEMP\"} ${GOTMPDIR+\"GOTMPDIR=$GOTMPDIR\"} ${TMUX+\"TMUX=$TMUX\"} ${TMUX_PANE+\"TMUX_PANE=$TMUX_PANE\"} ${HERDR_ENV+\"HERDR_ENV=$HERDR_ENV\"} ${HERDR_SESSION+\"HERDR_SESSION=$HERDR_SESSION\"} ${HERDR_SOCKET_PATH+\"HERDR_SOCKET_PATH=$HERDR_SOCKET_PATH\"} ${HERDR_PANE_ID+\"HERDR_PANE_ID=$HERDR_PANE_ID\"} ${CMUX_WORKSPACE_ID+\"CMUX_WORKSPACE_ID=$CMUX_WORKSPACE_ID\"} ${CMUX_SURFACE_ID+\"CMUX_SURFACE_ID=$CMUX_SURFACE_ID\"} ${CMUX_TAB_ID+\"CMUX_TAB_ID=$CMUX_TAB_ID\"} ${CMUX_PANEL_ID+\"CMUX_PANEL_ID=$CMUX_PANEL_ID\"} ${CMUX_SOCKET_PATH+\"CMUX_SOCKET_PATH=$CMUX_SOCKET_PATH\"} ${ZELLIJ+\"ZELLIJ=$ZELLIJ\"} ${ZELLIJ_SESSION_NAME+\"ZELLIJ_SESSION_NAME=$ZELLIJ_SESSION_NAME\"} ${ZELLIJ_PANE_ID+\"ZELLIJ_PANE_ID=$ZELLIJ_PANE_ID\"} ${FM_ZELLIJ_SESSION+\"FM_ZELLIJ_SESSION=$FM_ZELLIJ_SESSION\"} ${FM_TASK_ID+\"FM_TASK_ID=$FM_TASK_ID\"} ${COMPACT_ADVISER_DISABLE+\"COMPACT_ADVISER_DISABLE=$COMPACT_ADVISER_DISABLE\"} ${LAVISH_AXI_HOST+\"LAVISH_AXI_HOST=$LAVISH_AXI_HOST\"} COMPACT_ADVISER_DISABLE=1 /bin/sh -c 'export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/lab/state/live-secondmate-pin.git-hooks'\\''; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/lab'\\'' FM_HOME='\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/secondmate'\\'' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model '\\''gpt-6-astra'\\'' -c '\\''model_reasoning_effort=\"max\"'\\'' --dangerously-bypass-approvals-and-sandbox \"$('\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh'\\'' encode launch-brief < '\\''/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/secondmate/data/charter.md'\\'')\"'\n",
+  "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/secondmate\n  permissions: YOLO mode\n\n  Your keyboard has entered the chat.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-p\u2026\n  ? for shortcuts\n",
+  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-secondmate-pin/worker-user/.codex/models_cache.json"
+}

@@ -1,0 +1,35 @@
+ok - codex receives --model and model_reasoning_effort profile flags
+ok - codex gpt-5.6-luna receives catalog-supported max reasoning effort
+ok - codex gpt-6-astra receives catalog-supported max reasoning effort
+ok - codex future-model receives catalog-supported max reasoning effort
+ok - codex unsupported effort refuses before task publication or launch
+ok - codex removed effort refuses before task publication or launch
+ok - codex lower effort refuses before task publication or launch
+ok - codex unknown effort refuses before task publication or launch
+ok - codex missing effort refuses before task publication or launch
+ok - codex malformed effort refuses before task publication or launch
+ok - codex empty-levels effort refuses before task publication or launch
+ok - codex no-model effort refuses before task publication or launch
+ok - codex default-model effort refuses before task publication or launch
+ok - codex ultra effort refuses before task publication or launch
+ok - codex reads HOME/.codex/models_cache.json when CODEX_HOME is empty
+ok - codex without requested effort keeps its defaults even without a catalog
+ok - codex absent/supported follows the effective worker catalog
+ok - codex absent/unsupported follows the effective worker catalog
+ok - codex filtered/supported follows the effective worker catalog
+ok - codex filtered/unsupported follows the effective worker catalog
+ok - codex allowed/supported follows the effective worker catalog
+ok - codex allowed/unsupported follows the effective worker catalog
+ok - codex filtered-local/supported follows the effective worker catalog
+ok - codex filtered-local/unsupported follows the effective worker catalog
+ok - codex allowed-local/supported follows the effective worker catalog
+ok - codex allowed-local/unsupported follows the effective worker catalog
+ok - codex fallback/supported follows the effective worker catalog
+ok - codex fallback/unsupported follows the effective worker catalog
+ok - codex relative/supported follows the effective worker catalog
+ok - codex relative/unsupported follows the effective worker catalog
+ok - codex missing-context/supported follows the effective worker catalog
+ok - codex missing-context/unsupported follows the effective worker catalog
+ok - a codex secondmate keeps the project hook layer its primary session runs on
+ok - native effort validator checks harness and model as separate axes
+ok - Ultra is explicit for native Pi and Pi-signed, including direct-PR, and refuses unsupported profiles before provisioning

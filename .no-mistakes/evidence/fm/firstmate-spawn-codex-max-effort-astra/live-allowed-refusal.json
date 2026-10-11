@@ -1,0 +1,12 @@
+{
+  "name": "live-allowed-refusal",
+  "result": "pass",
+  "live": true,
+  "exit_code": 1,
+  "task_metadata_published": false,
+  "received_requests": [],
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-refusal/lab\nwarning: secondmate live-allowed-refusal sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-refusal/worker-codex/models_cache.json (supported: high); refusing to launch\n",
+  "launch": "",
+  "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-refusal/lab/state\n/.codex-catalog.a1ETv95k/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-allowed-refusal/worker-codex/models_cache.json"
+}
