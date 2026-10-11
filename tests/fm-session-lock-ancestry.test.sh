@@ -81,6 +81,7 @@ esac
 SH
   chmod +x "$fakebin/ps"
   printf '700\n' > "$dir/state/.lock"
+  printf 'S1\n' > "$dir/state/.lock-session"
 
   for shape in linux macos; do
     got=$(FM_TEST_CLAUDE_SHAPE="$shape" lib_eval "$fakebin" 'fm_harness_ancestry_pid') \
@@ -88,7 +89,7 @@ SH
     [ "$got" = 700 ] || fail "$shape: ancestry resolved '$got', expected the version-named session pid 700"
     FM_TEST_CLAUDE_SHAPE="$shape" lib_eval "$fakebin" 'fm_harness_pid_alive 700' \
       || fail "$shape: a live version-named session was not recognized as a harness"
-    FM_TEST_CLAUDE_SHAPE="$shape" lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
+    FM_TEST_CLAUDE_SHAPE="$shape" FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=700 lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
       || fail "$shape: the session holding the lock did not recognize itself as the owner"
   done
   pass "session-lock: a version-named Claude Code session is identified from its install path and argv[0]"
@@ -125,6 +126,7 @@ esac
 SH
   chmod +x "$fakebin/ps"
   printf '1\n' > "$dir/state/.lock"
+  printf 'S1\n' > "$dir/state/.lock-session"
 
   # Non-vacuity: with a host-shaped pid 1 the same table must find nothing, so
   # this case cannot pass by the walk matching everything it reaches.
@@ -135,9 +137,36 @@ SH
   got=$(lib_eval "$fakebin" 'fm_harness_ancestry_pid') \
     || fail "the harness at namespace pid 1 was not found in the ancestry at all"
   [ "$got" = 1 ] || fail "ancestry resolved '$got', expected the namespace harness pid 1"
-  lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
+  FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=1 lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
     || fail "the session holding the lock at namespace pid 1 did not recognize itself as the owner"
   pass "session-lock: a harness that is pid 1 of its own namespace is examined, not skipped"
+}
+
+test_non_claude_legacy_ancestry_is_unchanged() {
+  local dir fakebin harness
+  dir="$TMP_ROOT/non-claude-legacy"
+  fakebin=$(fm_fakebin "$dir")
+  mkdir -p "$dir/state"
+  cat > "$fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+case "$*" in
+  '-o comm= -p 700'|'-o args= -p 700') printf '%s\n' "$FM_TEST_OWNER_HARNESS" ;;
+  '-o ppid= -p 700') printf '1\n' ;;
+  '-o comm= -p '*|'-o args= -p '*) printf 'bash\n' ;;
+  '-o ppid= -p '*) printf '700\n' ;;
+  *) exit 1 ;;
+esac
+SH
+  chmod +x "$fakebin/ps"
+  printf '700\n' > "$dir/state/.lock"
+  for harness in codex opencode grok kimi pi pi-signed omp cursor-agent; do
+    FM_TEST_OWNER_HARNESS="$harness" owned "$fakebin" "$dir/state" \
+      || fail "$harness: legacy ancestry ownership changed"
+    if FM_TEST_OWNER_HARNESS="$harness" foreign_owner "$fakebin" "$dir/state" >/dev/null; then
+      fail "$harness: its own legacy lock was classified as foreign"
+    fi
+  done
+  pass "session-lock: non-Claude harnesses preserve legacy ancestry ownership"
 }
 
 test_ordinary_paths_are_never_harness_processes() {
@@ -223,11 +252,12 @@ SH
   got=$(lib_eval "$fakebin" 'fm_harness_ancestry_pid') || fail "the contiguous harness run was not resolved"
   [ "$got" = 900 ] || fail "ancestry crossed a non-harness gap, resolved '$got' instead of 900"
   printf '920\n' > "$dir/state/.lock"
-  if lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'"; then
+  printf 'S1\n' > "$dir/state/.lock-session"
+  if FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=920 lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'"; then
     fail "an unrelated harness beyond a non-harness gap was accepted as this session's lock owner"
   fi
   printf '900\n' > "$dir/state/.lock"
-  lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
+  FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=900 lib_eval "$fakebin" "fm_session_lock_owned_by_self '$dir/state'" \
     || fail "the contiguous harness run did not recognize its own lock"
   pass "session-lock: ownership stops at the first non-harness gap above the contiguous run"
 }
@@ -371,7 +401,7 @@ test_same_session_id_owns_a_recycled_background_chain() {
   FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null \
     || fail "a carriage-return sidecar suppressed the foreign-owner verdict"
   printf 'S1\n' > "$state/.lock-session"
-  # 4. No id at all: the legacy ancestry verdict, unchanged.
+  # 4. No id at all.
   if owned "$fakebin" "$state"; then
     fail "with no session id the recycled chain claimed the lock"
   fi
@@ -386,15 +416,25 @@ test_same_session_id_owns_a_recycled_background_chain() {
   fi
   FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null \
     || fail "the shared ancestor was not reported as a foreign session owner"
-  # 6. Never fail open: no sidecar, a symlinked sidecar, and a dead recorded pid
-  # are all ancestry-only, so the dead one is left for the ordinary reclaim.
+  # 6. Never fail open: no sidecar, a symlinked sidecar, and a dead recorded pid.
   rm -f "$state/.lock-session"
-  if FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
     fail "a lock with no recorded session id was owned through the environment id"
   fi
+  FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null \
+    || fail "a missing recorded identity suppressed the foreign-owner verdict through shared ancestry"
+  : > "$state/.lock-session"
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+    fail "an empty recorded identity allowed ownership through shared ancestry"
+  fi
+  printf 'S1\r' > "$state/.lock-session"
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+    fail "an invalid recorded identity allowed ownership through shared ancestry"
+  fi
+  rm -f "$state/.lock-session"
   printf 'S1\n' > "$dir/elsewhere"
   ln -s "$dir/elsewhere" "$state/.lock-session"
-  if FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
     fail "a symlinked sidecar was trusted"
   fi
   rm -f "$state/.lock-session"
@@ -477,7 +517,8 @@ if [ "${FM_FIXTURE_ORPHAN_HERE:-0}" = 1 ]; then
   done
 fi
 printf '%s\n' "$$" > "$FM_HOME/state/session-pid"
-printf '%s\n' "$$" > "$FM_HOME/state/.lock"
+export CLAUDE_CODE_SESSION_ID=fixture-session CLAUDE_PID=$$
+"$FM_HOME/bin/fm-lock.sh" > "$FM_HOME/state/acquire.out" 2>&1
 "$FM_HOME/bin/fm-claude-stop-autoarm.sh" </dev/null > "$FM_HOME/state/hook.out" 2>&1
 printf '%s\n' "$?" > "$FM_HOME/state/hook.rc"
 SH
@@ -643,9 +684,16 @@ while [ ! -e "$FM_HOME/state/stop-spare" ]; do
   if [ -f "$req" ]; then
     out="$FM_HOME/state/phase-$n"
     mkdir -p "$out"
-    unset CLAUDE_CODE_SESSION_ID CLAUDE_PID FM_TEST_CLEAR
+    unset CLAUDE_CODE_SESSION_ID CLAUDE_PID FM_TEST_CLEAR FM_TEST_STARTUP
     # shellcheck disable=SC1090
     . "$req"
+    if [ "${FM_TEST_STARTUP:-0}" = 1 ]; then
+      PATH="${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}" \
+        "$FM_HOME/bin/fm-sessionstart-run.sh" --source startup </dev/null > "$out/startup.out" 2>&1
+      printf '%s\n' "$?" > "$out/startup.rc"
+      cp "$FM_HOME/state/.lock" "$out/startup-lock-after"
+      cp "$FM_HOME/state/.session-start-complete" "$out/startup-completion-after"
+    fi
     ( . "$FM_HOME/bin/fm-session-lock-lib.sh" && fm_harness_ancestry_pids ) > "$out/ancestry" 2>/dev/null
     printf '%s\n' '{"session_id":"fixture","stop_hook_active":true}' \
       | "$FM_HOME/bin/fm-claude-stop-autoarm.sh" > "$out/hook.out" 2>&1
@@ -837,6 +885,79 @@ test_e2e_shared_frontend_refuses_other_sessions() {
   : > "$dir/state/stop-spare"
   : > "$dir/state/stop-frontend"
   pass "session-lock e2e: a shared Claude front-end grants authority only to the owning session"
+}
+
+test_e2e_legacy_lock_upgrade_refuses_until_owner_restarts() {
+  local dir frontend daemon ptyhost spare phase i
+  dir="$TMP_ROOT/e2e-legacy-upgrade"
+  make_background_session_home "$dir"
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+    FM_HOME="$dir" FM_FIXTURE_CLAUDE="$NAMED_CLAUDE" FM_POLL=1 FM_HEARTBEAT=999999 \
+    FM_CLAUDE_AUTOARM_SYNC_WAIT_MS=0 \
+    bash -c '"$0" "$1" &' "$NAMED_CLAUDE" "$dir/frontend.sh"
+  wait_for_file "$dir/state/frontend-lock.rc" "the legacy front-end's lock result"
+  wait_for_file "$dir/state/spare-pid" "the legacy background helper"
+  frontend=$(cat "$dir/state/frontend-pid")
+  daemon=$(cat "$dir/state/daemon-pid")
+  ptyhost=$(cat "$dir/state/ptyhost-pid")
+  spare=$(cat "$dir/state/spare-pid")
+  BG_FIXTURE_PIDS+=("$frontend" "$daemon" "$ptyhost" "$spare")
+  expect_code 0 "$(cat "$dir/state/frontend-lock.rc")" "the legacy owner did not start"
+  rm -f "$dir/state/.lock-session"
+  cp "$dir/state/.lock" "$dir/legacy-lock"
+  cp "$dir/state/.lock" "$dir/state/.session-start-complete"
+  printf '%s\n' 'away mandate remains active' > "$dir/state/.afk-contract"
+  printf '%s\n' 'pending wake' > "$dir/state/.wake-queue"
+  cp "$dir/state/.afk-contract" "$dir/away-before"
+  cp "$dir/state/.wake-queue" "$dir/wakes-before"
+
+  fire_phase "$dir" 1 "export FM_TEST_PROMPT_GUARD=1; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$frontend"
+  expect_code 2 "$(phase_value "$dir" 1 prompt.rc)" "a competing prompt adopted the legacy lock"
+  expect_code 0 "$(phase_value "$dir" 1 resume.rc)" "resume did not deliver the legacy refusal"
+  assert_grep 'READ-ONLY SESSION' "$dir/state/phase-1/resume.out" "resume reused legacy owning context"
+  assert_grep 'fm-session-start.sh' "$dir/state/phase-1/nudge.out" "legacy ancestry suppressed the nudge"
+  grep -qx "$frontend" "$dir/state/phase-1/ancestry" || fail "the legacy fixture did not share the live owner"
+
+  fire_phase "$dir" 2 'export FM_TEST_STARTUP=1; export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$$'
+  expect_code 0 "$(phase_value "$dir" 2 startup.rc)" "the owning upgrade session did not receive its digest"
+  assert_grep 'READ-ONLY SESSION' "$dir/state/phase-2/startup.out" "startup claimed unproven legacy ownership"
+  assert_grep "restart the owning Claude process (pid $frontend) so that pid $frontend exits, then re-run bin/fm-session-start.sh" \
+    "$dir/state/phase-2/startup.out" "startup omitted the exact legacy recovery"
+  for phase in 1 2; do
+    expect_code 0 "$(phase_value "$dir" "$phase" hook.rc)" "a legacy hook attempted to arm supervision"
+    expect_code 0 "$(phase_value "$dir" "$phase" guard.rc)" "a legacy hook did not end safely"
+    expect_code 1 "$(phase_value "$dir" "$phase" lock.rc)" "a live legacy lock admitted an unproven owner"
+    assert_grep 'OWNED BY ANOTHER LIVE SESSION' "$dir/state/phase-$phase/guard.out" "legacy ownership bypassed the turn-end guard"
+    assert_grep 'the live legacy lock has no valid Claude session identity' "$dir/state/phase-$phase/lock.out" "legacy refusal omitted its cause"
+    cmp -s "$dir/legacy-lock" "$dir/state/phase-$phase/lock-after" || fail "the legacy refusal changed the lock"
+  done
+  expect_code 2 "$(phase_value "$dir" 2 prompt.rc)" "the unproven owning prompt was allowed"
+  [ "$(arm_count "$dir")" = 0 ] || fail "an unproven legacy session armed supervision"
+  assert_absent "$dir/state/.lock-session" "an unproven legacy session published its identity"
+  cmp -s "$dir/legacy-lock" "$dir/state/.session-start-complete" || fail "legacy refusal changed startup completion"
+  cmp -s "$dir/away-before" "$dir/state/.afk-contract" || fail "legacy refusal changed away mode"
+  cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "legacy refusal drained wakes"
+
+  : > "$dir/state/stop-frontend"
+  i=0
+  while [ "$i" -lt 200 ] && kill -0 "$frontend" 2>/dev/null; do
+    sleep 0.05
+    i=$((i + 1))
+  done
+  kill -0 "$frontend" 2>/dev/null && fail "the recorded legacy owner did not exit"
+  fire_phase "$dir" 3 'export FM_TEST_STARTUP=1; export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$$'
+  expect_code 0 "$(phase_value "$dir" 3 startup.rc)" "startup failed after the legacy owner exited"
+  assert_grep "lock acquired: harness pid $spare" "$dir/state/phase-3/startup.out" "startup did not reacquire the stale legacy lock"
+  if grep -q 'READ-ONLY SESSION' "$dir/state/phase-3/startup.out"; then
+    fail "the restarted owner remained read-only after the legacy anchor exited"
+  fi
+  [ "$(phase_value "$dir" 3 session-after)" = S1 ] || fail "the upgrade did not record the trusted identity"
+  [ "$(phase_value "$dir" 3 startup-lock-after)" = "$spare" ] || fail "the upgrade did not record the current helper"
+  cmp -s "$dir/state/phase-3/startup-lock-after" "$dir/state/phase-3/startup-completion-after" \
+    || fail "the upgrade did not complete startup under its new lock"
+  expect_code 0 "$(phase_value "$dir" 3 prompt.rc)" "the recovered owner's prompt was refused"
+  : > "$dir/state/stop-spare"
+  pass "session-lock e2e: a legacy upgrade refuses shared ancestry and recovers through startup after the recorded owner exits"
 }
 
 test_e2e_background_session_keeps_its_lock_across_a_recycled_chain() {
@@ -1219,8 +1340,10 @@ test_verified_reclaim_keeps_new_sidecar() {
 }
 
 test_e2e_shared_frontend_refuses_other_sessions
+test_e2e_legacy_lock_upgrade_refuses_until_owner_restarts
 test_version_named_session_is_identified_on_both_platforms
 test_harness_at_namespace_pid1_is_examined
+test_non_claude_legacy_ancestry_is_unchanged
 test_ordinary_paths_are_never_harness_processes
 test_harness_beyond_a_gap_never_owns_the_lock
 test_competing_version_named_session_is_seen_as_live

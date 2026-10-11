@@ -8,8 +8,7 @@
 # Stop hook fires inside the lock-owning primary session before it may arm or
 # rewake. A recorded Claude session id is authoritative for Claude callers: shared
 # app/helper ancestry cannot override a missing, untrusted, or different id.
-# Without a recorded id, legacy ancestry ownership remains available. Other
-# harnesses keep their ancestry-based ownership unchanged.
+# Other harnesses keep their ancestry-based ownership unchanged.
 # A numeric harness pid is the normal owner identity. Hosted Codex seatbelt
 # sessions can deny process ancestry reads, so they fall back to a stable
 # codex:<thread-id> token that is never age-reclaimed or treated as stale.
@@ -356,8 +355,7 @@ fm_session_lock_claude_ancestry() {  # <ancestry-pids>
 # A recorded Claude identity outranks ancestry, including an exact pid match:
 # multiple background conversations can share the same app/helper process.
 # A matching id still needs a live anchor; dead anchors take the reclaim path.
-# Legacy locks without a session sidecar and non-Claude harnesses retain their
-# ancestry verdict. The optional ancestry list avoids repeating a caller's walk.
+# The optional ancestry list avoids repeating a caller's walk.
 fm_session_lock_owned_by_self() {
   local state=$1 lock_pid pids=${2:-} pid
   lock_pid=$(fm_session_lock_owner_read "$state") || return 1
@@ -368,7 +366,7 @@ fm_session_lock_owned_by_self() {
       ;;
   esac
   [ -n "$pids" ] || pids=$(fm_harness_ancestry_pids) || return 1
-  if fm_session_lock_recorded_session_id "$state" >/dev/null && fm_session_lock_claude_ancestry "$pids"; then
+  if fm_session_lock_claude_ancestry "$pids"; then
     fm_session_lock_same_session "$state" "$pids" || return 1
     fm_harness_pid_alive "$lock_pid"
     return
@@ -378,8 +376,7 @@ fm_session_lock_owned_by_self() {
   done <<EOF
 $pids
 EOF
-  fm_session_lock_same_session "$state" "$pids" || return 1
-  fm_harness_pid_alive "$lock_pid"
+  return 1
 }
 
 # True when state dir $1 records a live verified harness this caller does not

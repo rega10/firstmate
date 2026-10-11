@@ -219,6 +219,9 @@ refuse_live_owner() {  # <recorded-pid>
     echo "error: another live firstmate session holds the lock ($holder, session $recorded); operate read-only until resolved" >&2
   else
     echo "error: another live firstmate session holds the lock ($holder); operate read-only until resolved" >&2
+    if fm_session_lock_claude_ancestry "$1" && fm_session_lock_claude_ancestry "$(fm_harness_ancestry_pids || true)"; then
+      echo "recovery: the live legacy lock has no valid Claude session identity; restart the owning Claude process (pid $1) so that pid $1 exits, then re-run bin/fm-session-start.sh in the restarted session to acquire the stale lock with its trusted session identity" >&2
+    fi
   fi
   exit 1
 }

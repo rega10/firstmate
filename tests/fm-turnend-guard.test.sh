@@ -1227,6 +1227,8 @@ run_integrated_autoarm() {
   # shellcheck disable=SC2016 # the fake harness expands FM_HOME inside its child shell.
   printf '{"session_id":"sess-claude-mode","stop_hook_active":false}\n' \
     | FM_HOME="$home" "$dir/fake-claude" -c '
+        export CLAUDE_CODE_SESSION_ID=sess-autoarm CLAUDE_PID=$$
+        printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
         printf "%s\n" "$$" > "$FM_HOME/state/.lock"
         "$FM_HOME/bin/fm-claude-stop-autoarm.sh"
       ' 2>&1

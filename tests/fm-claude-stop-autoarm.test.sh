@@ -78,6 +78,8 @@ run_autoarm() {
   local dir=$1 payload=${2:-'{"session_id":"sess-autoarm","stop_hook_active":false}'} rc=0
   printf '%s\n' "$payload" \
     | FM_HOME="$dir" "$FAKE_CLAUDE" -c '
+        export CLAUDE_CODE_SESSION_ID=sess-autoarm CLAUDE_PID=$$
+        printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
         printf "%s\n" "$$" > "$FM_HOME/state/.lock"
         "$FM_HOME/bin/fm-claude-stop-autoarm.sh"
       ' 2>&1 || rc=$?
@@ -235,6 +237,8 @@ run_autoarm_bg() {
   local dir=$1 out=$2
   printf '%s\n' '{"session_id":"sess-autoarm","stop_hook_active":false}' \
     | FM_HOME="$dir" "$FAKE_CLAUDE" -c '
+        export CLAUDE_CODE_SESSION_ID=sess-autoarm CLAUDE_PID=$$
+        printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
         printf "%s\n" "$$" > "$FM_HOME/state/.lock"
         "$FM_HOME/bin/fm-claude-stop-autoarm.sh"
       ' > "$out" 2>&1 &
@@ -295,6 +299,7 @@ test_reclaims_stale_session_lock_before_arming() {
   write_arm_fixture "$dir" actionable
   out=$(printf '%s\n' '{"session_id":"stale"}' \
     | FM_HOME="$dir" "$FAKE_CLAUDE" -c '
+        export CLAUDE_CODE_SESSION_ID=sess-autoarm CLAUDE_PID=$$
         printf "%s\n" "$$" > "$FM_HOME/state/expected-owner"
         "$FM_HOME/bin/fm-claude-stop-autoarm.sh"
       ' 2>&1); status=$?
@@ -381,6 +386,8 @@ test_resolves_outermost_claude_pid_in_nested_bgspare_chain() {
   # collapse the two-hop chain this test depends on down to one hop.
   out=$(printf '%s\n' '{"session_id":"nested"}' \
     | FM_HOME="$dir" "$FAKE_CLAUDE" -c '
+        export CLAUDE_CODE_SESSION_ID=sess-autoarm CLAUDE_PID=$$
+        printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
         printf "%s\n" "$$" > "$FM_HOME/state/.lock"
         "$FAKE_CLAUDE" -c "
           printf \"%s\n\" \"\$\$\" > \"\$FM_HOME/state/inner-pid\"
@@ -773,6 +780,8 @@ test_single_flight_admits_exactly_one_owner() {
   : > "$dir/state/task.meta"
   write_arm_fixture "$dir" slow-actionable
   FM_HOME="$dir" "$FAKE_CLAUDE" -c '
+    export CLAUDE_CODE_SESSION_ID=sess-autoarm CLAUDE_PID=$$
+    printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
     printf "%s\n" "$$" > "$FM_HOME/state/.lock"
     printf "%s\n" "{\"session_id\":\"s\"}" | "$FM_HOME/bin/fm-claude-stop-autoarm.sh" >/dev/null 2>"$FM_HOME/state/err1" &
     p1=$!
