@@ -377,14 +377,15 @@ test_same_session_id_owns_a_recycled_background_chain() {
   fi
   foreign_owner "$fakebin" "$state" >/dev/null \
     || fail "with no session id the live owner was not reported as foreign"
-  # 5. The healthy chain owns by ancestry whatever the environment says.
-  FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state" \
-    || fail "ancestry membership lost to a different session id"
-  FM_TEST_DAEMON_PRESENT=1 owned "$fakebin" "$state" \
-    || fail "ancestry membership lost with no session id"
-  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null; then
-    fail "an ancestor was reported as a foreign owner"
+  # 5. A shared ancestor cannot override the recorded conversation identity.
+  if FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 owned "$fakebin" "$state"; then
+    fail "a different session owned the lock through a shared ancestor"
   fi
+  if FM_TEST_DAEMON_PRESENT=1 owned "$fakebin" "$state"; then
+    fail "a missing session id owned the lock through a shared ancestor"
+  fi
+  FM_TEST_DAEMON_PRESENT=1 FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 foreign_owner "$fakebin" "$state" >/dev/null \
+    || fail "the shared ancestor was not reported as a foreign session owner"
   # 6. Never fail open: no sidecar, a symlinked sidecar, and a dead recorded pid
   # are all ancestry-only, so the dead one is left for the ordinary reclaim.
   rm -f "$state/.lock-session"
@@ -656,6 +657,16 @@ while [ ! -e "$FM_HOME/state/stop-spare" ]; do
     printf '%s\n' "$?" > "$out/lock.rc"
     cp "$FM_HOME/state/.lock" "$out/lock-after"
     [ ! -e "$FM_HOME/state/.lock-session" ] || cp "$FM_HOME/state/.lock-session" "$out/session-after"
+    if [ "${FM_TEST_PROMPT_GUARD:-0}" = 1 ]; then
+      printf '%s\n' '{"session_id":"fixture","prompt":"I am back"}' \
+        | "$FM_HOME/bin/fm-sessionstart-run.sh" --check-claude-lock > "$out/prompt.out" 2>&1
+      printf '%s\n' "$?" > "$out/prompt.rc"
+      "$FM_HOME/bin/fm-sessionstart-nudge.sh" > "$out/nudge.out" 2>&1
+      if [ "$n" = 1 ]; then
+        "$FM_HOME/bin/fm-sessionstart-run.sh" --source resume > "$out/resume.out" 2>&1
+        printf '%s\n' "$?" > "$out/resume.rc"
+      fi
+    fi
     : > "$out/done"
     n=$((n + 1))
   fi
@@ -733,6 +744,62 @@ expect_phase_foreign() {  # <dir> <n> <expected-arms> <owner-pid> <label>
   [ "$(phase_value "$dir" "$n" lock-after)" = "$owner" ] || fail "$label: a non-owner rewrote the lock"
 }
 
+# The app/front-end stays in every background session's ancestry. Different
+# conversations must not inherit its fleet authority from that shared process.
+test_e2e_shared_frontend_refuses_other_sessions() {
+  local dir frontend daemon ptyhost spare
+  dir="$TMP_ROOT/e2e-shared-frontend"
+  make_background_session_home "$dir"
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+    FM_HOME="$dir" FM_FIXTURE_CLAUDE="$NAMED_CLAUDE" FM_POLL=1 FM_HEARTBEAT=999999 \
+    FM_CLAUDE_AUTOARM_SYNC_WAIT_MS=0 \
+    bash -c '"$0" "$1" &' "$NAMED_CLAUDE" "$dir/frontend.sh"
+  wait_for_file "$dir/state/frontend-lock.rc" "the front-end's lock result"
+  wait_for_file "$dir/state/spare-pid" "the bg-spare"
+  frontend=$(cat "$dir/state/frontend-pid")
+  daemon=$(cat "$dir/state/daemon-pid")
+  ptyhost=$(cat "$dir/state/ptyhost-pid")
+  spare=$(cat "$dir/state/spare-pid")
+  BG_FIXTURE_PIDS+=("$frontend" "$daemon" "$ptyhost" "$spare")
+  expect_code 0 "$(cat "$dir/state/frontend-lock.rc")" "the front-end could not acquire the lock"
+  cp "$dir/state/.lock-session" "$dir/sidecar-initial"
+
+  # Cached startup completion must not authorize the first return prompt.
+  cp "$dir/state/.lock" "$dir/state/.session-start-complete"
+  printf '%s\n' 'away mandate remains active' > "$dir/state/.afk-contract"
+  printf '%s\n' 'pending wake' > "$dir/state/.wake-queue"
+  cp "$dir/state/.afk-contract" "$dir/away-before"
+  cp "$dir/state/.wake-queue" "$dir/wakes-before"
+  fire_phase "$dir" 1 'export FM_TEST_PROMPT_GUARD=1; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$$'
+  grep -qx "$frontend" "$dir/state/phase-1/ancestry" \
+    || fail "the competing session did not share the front-end ancestor"
+  expect_phase_foreign "$dir" 1 0 "$frontend" "shared front-end, different session"
+  cmp -s "$dir/sidecar-initial" "$dir/state/.lock-session" \
+    || fail "the competing session changed the owner's session id"
+
+  expect_code 2 "$(phase_value "$dir" 1 prompt.rc)" "a pre-warmed non-owner prompt was not blocked"
+  assert_grep 'READ-ONLY SESSION' "$dir/state/phase-1/prompt.out" "prompt refusal omitted the read-only diagnostic"
+  assert_grep 'fm-session-start.sh' "$dir/state/phase-1/nudge.out" "a shared ancestor suppressed the resume nudge"
+  expect_code 0 "$(phase_value "$dir" 1 resume.rc)" "the resumed session did not receive its digest"
+  assert_grep 'READ-ONLY SESSION' "$dir/state/phase-1/resume.out" "the resumed session reused stale owning context"
+  cmp -s "$dir/away-before" "$dir/state/.afk-contract" || fail "the refused prompt changed away mode"
+  cmp -s "$dir/wakes-before" "$dir/state/.wake-queue" || fail "the refused prompt drained wakes"
+
+  # Even equality with CLAUDE_PID cannot re-key an ordinary acquisition.
+  fire_phase "$dir" 2 "export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=$frontend"
+  expect_phase_foreign "$dir" 2 0 "$frontend" "same anchor pid, different session"
+  fire_phase "$dir" 3 ''
+  expect_phase_foreign "$dir" 3 0 "$frontend" "shared front-end, missing session id"
+
+  # Counterfactual: identical process tree, only the conversation id changes.
+  fire_phase "$dir" 4 'export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=$$'
+  expect_phase_owned "$dir" 4 2 "$frontend" "shared front-end, same session"
+  expect_code 0 "$(phase_value "$dir" 4 prompt.rc)" "the owning session's prompt was blocked"
+  : > "$dir/state/stop-spare"
+  : > "$dir/state/stop-frontend"
+  pass "session-lock e2e: a shared Claude front-end grants authority only to the owning session"
+}
+
 test_e2e_background_session_keeps_its_lock_across_a_recycled_chain() {
   local dir frontend daemon ptyhost spare i
   dir="$TMP_ROOT/e2e-background-session"
@@ -805,6 +872,28 @@ test_e2e_background_session_keeps_its_lock_across_a_recycled_chain() {
   pass "session-lock e2e: a background session keeps its lock and its supervision across a recycled helper chain"
 }
 
+test_concurrent_sessions_sharing_one_pid_have_one_winner() {
+  local dir
+  dir="$TMP_ROOT/shared-pid-race"
+  mkdir -p "$dir/state"
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID \
+    FM_HOME="$dir" FM_LOCK="$ROOT/bin/fm-lock.sh" \
+    "$NAMED_CLAUDE" -c '
+      export CLAUDE_PID=$$
+      for id in S1 S2 S3; do
+        (
+          CLAUDE_CODE_SESSION_ID="$id" "$FM_LOCK" > "$FM_HOME/$id.out" 2>&1
+          printf "%s\n" "$?" > "$FM_HOME/$id.rc"
+        ) &
+      done
+      wait
+      exit 0
+    '
+  [ "$(cat "$dir/"*.rc | grep -c '^0$')" = 1 ] \
+    || fail "concurrent conversations sharing one Claude pid did not produce exactly one winner"
+  pass "session-lock: concurrent conversations sharing one Claude pid have exactly one winner"
+}
+
 # A same-session confirmation must refresh a /clear re-key even while another
 # process holds .lock.acquire. The prior-session-sweep-is-finishing refusal is
 # a takeover rule and does not apply here; the confirmation waits, then writes
@@ -849,7 +938,7 @@ if [ ! -e "$FM_HOME/state/holder-ready" ]; then
   exit 2
 fi
 
-CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$ "$FM_LOCK" > "$FM_HOME/state/confirm.out" 2>&1 &
+CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$ "$FM_LOCK" --claude-clear > "$FM_HOME/state/confirm.out" 2>&1 &
 printf '%s\n' "$!" > "$FM_HOME/state/confirm-pid"
 
 i=0
@@ -953,7 +1042,7 @@ if [ ! -e "$FM_HOME/state/holder-ready" ]; then
   exit 2
 fi
 
-CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$ "$FM_LOCK" > "$FM_HOME/state/confirm.out" 2>&1 &
+CLAUDE_CODE_SESSION_ID=S2 CLAUDE_PID=$$ "$FM_LOCK" --claude-clear > "$FM_HOME/state/confirm.out" 2>&1 &
 printf '%s\n' "$!" > "$FM_HOME/state/confirm-pid"
 
 i=0
@@ -1094,6 +1183,7 @@ test_verified_reclaim_keeps_new_sidecar() {
   pass "session-lock: a verified reclaim keeps the new sidecar beside the new pid"
 }
 
+test_e2e_shared_frontend_refuses_other_sessions
 test_version_named_session_is_identified_on_both_platforms
 test_harness_at_namespace_pid1_is_examined
 test_ordinary_paths_are_never_harness_processes
@@ -1105,6 +1195,7 @@ test_e2e_version_named_session_claims_the_home
 test_e2e_daemon_parented_session_claims_the_home
 test_e2e_daemon_parented_version_named_session_keeps_its_lock
 test_e2e_background_session_keeps_its_lock_across_a_recycled_chain
+test_concurrent_sessions_sharing_one_pid_have_one_winner
 test_same_session_confirmation_refreshes_rekeyed_id_under_claim_lock
 test_same_session_confirmation_does_not_steal_after_wait
 test_failed_lock_write_restores_previous_sidecar

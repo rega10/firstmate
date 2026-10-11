@@ -16,7 +16,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-fm_live_gate opt-in FM_CLAUDE_LIVE_E2E claude
+fm_live_gate opt-in FM_CLAUDE_LIVE_E2E,FM_CLAUDE_SESSION_LOCK_LIVE_E2E claude
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -24,6 +24,104 @@ fail() {
   printf 'not ok - %s\n' "$1" >&2
   exit 1
 }
+
+# Focused live session-identity guard. The two real print-mode sessions submit
+# no model work: their UserPromptSubmit hook always blocks after recording the
+# real lock/guard verdict. This proves the vendor's hook environment, including
+# session ids and CLAUDE_PID, without requiring a desktop app or shared daemon.
+# The portable ancestry suite supplies the shared-app/recycled-process matrix.
+if [ "${FM_CLAUDE_SESSION_LOCK_LIVE_E2E:-0}" = 1 ]; then
+  LAB="$ROOT/.claude-session-lock-live.$$"
+  mkdir -p "$LAB"
+  LAB=$(cd "$LAB" && pwd -P)
+  LIVE_PIDS=()
+  cleanup_identity() {
+    : > "$LAB/release"
+    for pid in ${LIVE_PIDS[@]+"${LIVE_PIDS[@]}"}; do
+      kill "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+    done
+    rm -rf "$LAB"
+    fm_test_cleanup
+  }
+  trap cleanup_identity EXIT
+  "$ROOT/bin/fm-lab-home.sh" create "$LAB/home" >/dev/null || fail "cannot create live lock lab"
+  cp -R "$ROOT/bin" "$LAB/home/bin"
+  : > "$LAB/home/AGENTS.md"
+  git init -q "$LAB/home"
+  mkdir -p "$LAB/home/.claude"
+  VERSION=$(claude --version)
+  FIRST_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  SECOND_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+  cat > "$LAB/home/probe.sh" <<'SH'
+#!/usr/bin/env bash
+set -u
+payload=$(cat)
+. "$FM_HOME/bin/fm-session-lock-lib.sh"
+label=${FM_LIVE_LOCK_LABEL:?}
+id=$(printf '%s' "$payload" | jq -r '.session_id')
+trusted=$(fm_session_lock_trusted_session_id || true)
+[ -n "$trusted" ] && [ "$trusted" = "$id" ] || exit 1
+printf '%s\n' "$id" > "$FM_HOME/$label.id"
+if [ "$1" = start ]; then
+  "$FM_HOME/bin/fm-lock.sh" > "$FM_HOME/$label.lock.out" 2>&1
+  printf '%s\n' "$?" > "$FM_HOME/$label.lock.rc"
+  exit 0
+fi
+printf '%s\n' "$payload" | "$FM_HOME/bin/fm-sessionstart-run.sh" --check-claude-lock > "$FM_HOME/$label.prompt.out" 2>&1
+printf '%s\n' "$?" > "$FM_HOME/$label.prompt.rc"
+if [ "$label" = owner ]; then
+  # Hold the exact live anchor while the second real session tests refusal.
+  # Also exercise equality with that anchor using the contender's real id.
+  CLAUDE_CODE_SESSION_ID="$FM_LIVE_OTHER_ID" "$FM_HOME/bin/fm-lock.sh" > "$FM_HOME/shared-pid.out" 2>&1
+  printf '%s\n' "$?" > "$FM_HOME/shared-pid.rc"
+  : > "$FM_HOME/owner.ready"
+  for ((i=0; i<600; i++)); do
+    [ ! -e "$FM_HOME/../release" ] || break
+    sleep 0.1
+  done
+fi
+printf 'Live lock fixture deliberately blocks model execution.\n' >&2
+exit 2
+SH
+  chmod +x "$LAB/home/probe.sh"
+  cat > "$LAB/home/.claude/settings.json" <<'JSON'
+{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"\"$FM_HOME\"/probe.sh start","timeout":90}]}],"UserPromptSubmit":[{"hooks":[{"type":"command","command":"\"$FM_HOME\"/probe.sh prompt","timeout":90}]}]}}
+JSON
+  run_identity_session() {
+    cd "$LAB/home" || exit 1
+    exec env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_JOB_DIR \
+      FM_HOME="$LAB/home" FM_LIVE_LOCK_LABEL="$1" FM_LIVE_OTHER_ID="$SECOND_ID" \
+      claude -p 'This prompt must be blocked by the fixture hook.' --session-id "$2" \
+      --setting-sources project --strict-mcp-config --mcp-config '{"mcpServers":{}}' \
+      --tools '' --system-prompt 'Do not act. The hook must block this prompt.' \
+      > "$LAB/$1.out" 2>&1
+  }
+  wait_identity_file() {
+    local i=0
+    while [ ! -e "$1" ] && [ "$i" -lt 600 ]; do sleep 0.1; i=$((i+1)); done
+    [ -e "$1" ] || fail "Claude $VERSION did not emit $(basename "$1")"
+  }
+  run_identity_session owner "$FIRST_ID" &
+  LIVE_PIDS+=("$!")
+  wait_identity_file "$LAB/home/owner.ready"
+  cp "$LAB/home/state/.lock-session" "$LAB/owner-session"
+  run_identity_session contender "$SECOND_ID" &
+  LIVE_PIDS+=("$!")
+  wait_identity_file "$LAB/home/contender.prompt.rc"
+  expect_code 0 "$(cat "$LAB/home/owner.lock.rc")" "Claude $VERSION owner acquire"
+  expect_code 0 "$(cat "$LAB/home/owner.prompt.rc")" "Claude $VERSION owner prompt"
+  expect_code 1 "$(cat "$LAB/home/shared-pid.rc")" "Claude $VERSION shared-pid refusal"
+  expect_code 1 "$(cat "$LAB/home/contender.lock.rc")" "Claude $VERSION competing acquire"
+  expect_code 2 "$(cat "$LAB/home/contender.prompt.rc")" "Claude $VERSION competing prompt"
+  cmp -s "$LAB/owner-session" "$LAB/home/state/.lock-session" || fail "Claude $VERSION contender changed the session id"
+  [ "$(cat "$LAB/home/owner.id")" != "$(cat "$LAB/home/contender.id")" ] || fail "Claude $VERSION sessions reused an id"
+  : > "$LAB/release"
+  for pid in "${LIVE_PIDS[@]}"; do wait "$pid" || true; done
+  LIVE_PIDS=()
+  pass "Claude $VERSION: trusted hook identities preserve one owner and refuse competing prompts and shared-pid claims"
+  exit 0
+fi
 
 LAB="$ROOT/.claude-autoarm-live-e2e.$$"
 PROJECT="$LAB/project"

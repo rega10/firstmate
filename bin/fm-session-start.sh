@@ -216,13 +216,14 @@
 #             and a session that owns the lock is exactly the session that must
 #             handle and acknowledge them. Lock acquisition still runs, because
 #             ownership must be re-verified rather than assumed: fm-lock.sh
-#             already treats a lock owned through shared ancestry or a trusted
-#             same-session Claude id as its own, so the re-emit proceeds, while
+#             applies the shared ownership contract, so the re-emit proceeds
+#             for the owner, while
 #             a lock another live session took meanwhile still produces the
 #             ordinary read-only path.
 #
 #   --source  The native session-open source, supplied only by
-#             fm-sessionstart-run.sh. A genuine `startup` that owns the active
+#             fm-sessionstart-run.sh; `clear` permits the exact Claude owner
+#             process to re-key through fm-lock.sh --claude-clear. A genuine `startup` that owns the active
 #             session lock records AGENTS.md's SHA-256 baseline only after the
 #             digest completion record is published, keyed to that lock's
 #             harness pid. No resume, clear, reset, compact, or other rebuild
@@ -678,7 +679,9 @@ fi
 # --- 1. lock -----------------------------------------------------------
 stage lock
 subsection "LOCK"
-LOCK_OUT=$("$SCRIPT_DIR/fm-lock.sh" 2>&1)
+LOCK_ARGS=()
+[ "$SESSION_SOURCE" != clear ] || LOCK_ARGS+=(--claude-clear)
+LOCK_OUT=$("$SCRIPT_DIR/fm-lock.sh" ${LOCK_ARGS[@]+"${LOCK_ARGS[@]}"} 2>&1)
 LOCK_RC=$?
 printf '%s\n' "$LOCK_OUT"
 READ_ONLY=0

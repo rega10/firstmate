@@ -12,6 +12,12 @@
 # first turn is.
 #
 # Usage: fm-sessionstart-run.sh [--source <source>] [--pi-prerequisite]
+#        fm-sessionstart-run.sh --check-claude-lock
+#   --check-claude-lock
+#             Claude UserPromptSubmit guard: re-verify ownership immediately
+#             before a prompt, since background sessions can pre-warm startup
+#             minutes earlier. A refusal exits 2 to block the prompt before it
+#             can clear away mode or supervise. No digest sweeps run here.
 #   --source  The harness's own session-open source. When omitted, the source is
 #             read from a Claude/Codex-shaped JSON hook payload on stdin
 #             (the `source` field). An unreadable or unrecognized source is
@@ -33,8 +39,10 @@
 #                           this process still holds the lock (the nudge stays
 #                           silent) and a plain instruction is enough when a new
 #                           process resumed an old session (the nudge fires).
+#                           A Claude fork facing another live owner receives
+#                           the read-only digest immediately.
 #
-# Every ordinary transport path exits 0, exactly like the nudge wrapper: a
+# Session-open transport paths exit 0, exactly like the nudge wrapper: a
 # Claude SessionStart exit 2 blocks session initialization, so a failed session
 # start must reach the agent as digest text it can act on, never as a refusal to
 # open the session. The internal Pi prerequisite's silent exit 3 never reaches a
@@ -61,6 +69,7 @@ COMPLETION_FILE="$STATE/.session-start-complete"
 
 SOURCE=
 PI_PREREQUISITE=0
+CHECK_CLAUDE_LOCK=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --source)
@@ -70,6 +79,7 @@ while [ $# -gt 0 ]; do
       if [ $# -ge 2 ]; then shift 2; else shift; fi
       ;;
     --source=*) SOURCE=${1#--source=}; shift ;;
+    --check-claude-lock) CHECK_CLAUDE_LOCK=1; shift ;;
     --pi-prerequisite) PI_PREREQUISITE=1; shift ;;
     *) shift ;;
   esac
@@ -127,9 +137,28 @@ if [ -z "$SOURCE" ] && [ ! -t 0 ]; then
   ')
 fi
 
+if [ "$CHECK_CLAUDE_LOCK" -eq 1 ]; then
+  pids=$(fm_harness_ancestry_pids || true)
+  # A proven non-Claude caller stands down; unresolvable ancestry must let the
+  # lock command refuse, rather than letting an unverified Claude prompt act.
+  if [ -n "$pids" ] && ! fm_session_lock_claude_ancestry "$pids"; then exit 0; fi
+  if lock_result=$("$SCRIPT_DIR/fm-lock.sh" 2>&1); then
+    exit 0
+  fi
+  printf 'READ-ONLY SESSION: %s\nThis prompt was refused before fleet or away-mode actions.\n' "$lock_result" >&2
+  exit 2
+fi
+
 case "$SOURCE" in
   resume|reload|fork)
-    exec "$SCRIPT_DIR/fm-sessionstart-nudge.sh"
+    # Restored context may belong to an earlier owner. A Claude fork sharing
+    # its app ancestor must receive the refusal now, before any return action.
+    pids=$(fm_harness_ancestry_pids || true)
+    if fm_session_lock_claude_ancestry "$pids" && fm_session_lock_foreign_owner_live "$STATE"; then
+      "$SCRIPT_DIR/fm-session-start.sh" --source "$SOURCE" || true
+    else
+      exec "$SCRIPT_DIR/fm-sessionstart-nudge.sh"
+    fi
     ;;
   clear|compact)
     if session_start_completed; then
