@@ -629,6 +629,85 @@ test_codex_catalog_home_fallback_and_default_effort() {
   pass "codex without requested effort keeps its defaults even without a catalog"
 }
 
+test_codex_uses_effective_worker_catalog() {
+  local rec id setting support out status worker_home worker_codex launch probe result expected probe_fail local_env
+  for setting in absent filtered allowed filtered-local allowed-local fallback relative missing-context; do
+    for support in supported unsupported; do
+      id="codex-env-$setting-$support"
+      rec=$(make_spawn_case "$id" codex "$id")
+      read_case_record "$rec"
+      worker_home="$CASE_DIR/worker-home"
+      worker_codex="$CASE_DIR/worker-codex"
+      mkdir -p "$worker_home/.codex" "$worker_codex"
+      case "$setting" in
+        filtered|filtered-local) : > "$HOME_DIR/config/launch-env-allowlist"; worker_codex="$worker_home/.codex" ;;
+        allowed|allowed-local) printf 'CODEX_HOME\n' > "$HOME_DIR/config/launch-env-allowlist" ;;
+        fallback) worker_codex="$worker_home/.codex" ;;
+      esac
+      if [ "$support" = supported ]; then
+        printf '%s\n' '{"models":[{"slug":"gpt-6-astra","supported_reasoning_levels":[{"effort":"max"}]}]}' > "$worker_codex/models_cache.json"
+        printf '%s\n' '{"models":[{"slug":"gpt-6-astra","supported_reasoning_levels":[{"effort":"high"}]}]}' > "$HOME_DIR/codex-home/models_cache.json"
+        expected=0
+      else
+        printf '%s\n' '{"models":[{"slug":"gpt-6-astra","supported_reasoning_levels":[{"effort":"high"}]}]}' > "$worker_codex/models_cache.json"
+        expected=1
+      fi
+      case "$setting" in
+        fallback) worker_codex='' ;;
+        relative) worker_codex=../worker-codex ;;
+        missing-context) expected=1 ;;
+      esac
+      probe_fail=0 local_env=0
+      [ "$setting" != missing-context ] || probe_fail=1
+      case "$setting" in *-local) local_env=1 ;; esac
+      out=$(FM_FAKE_WORKER_HOME="$worker_home" FM_FAKE_WORKER_CODEX_HOME="$worker_codex" \
+        FM_FAKE_CODEX_PROBE_FAIL="$probe_fail" FM_FAKE_WORKER_LOCAL_ENV="$local_env" \
+        run_ship_spawn "$HOME_DIR" "$WT_DIR" "$FAKEBIN_DIR" "$LAUNCH_LOG" \
+        "$id" "$PROJ_DIR" --model gpt-6-astra --effort max)
+      status=$?
+      expect_code "$expected" "$status" "codex $setting/$support must use its worker catalog: $out"
+      if [ "$expected" = 0 ]; then
+        assert_meta_profile "$HOME_DIR/state/$id.meta" codex gpt-6-astra max
+        launch=$(cat "$LAUNCH_LOG")
+        assert_contains "$launch" 'model_reasoning_effort="max"' "worker catalog support lost max"
+        assert_not_contains "$launch" "$HOME_DIR/codex-home" "launch force-forwarded the invoking CODEX_HOME"
+        probe="$CASE_DIR/codex-probe.sh"
+        cat > "$probe" <<'SH'
+#!/bin/sh
+printf '%s\n' "${CODEX_HOME-unset}" "$HOME" "$*"
+SH
+        chmod +x "$probe"
+        mkdir -p "$CASE_DIR/probe-bin"
+        ln -s "$probe" "$CASE_DIR/probe-bin/codex"
+        if [ "$local_env" = 1 ]; then
+          result=$(PATH="$CASE_DIR/probe-bin:$PATH" /usr/bin/env -u HOME -u CODEX_HOME \
+            /bin/sh -c 'HOME=$1; CODEX_HOME=$2; cd "$3"; eval "$4"' sh \
+            "$worker_home" "$worker_codex" "$WT_DIR" "$launch") || fail "local worker launch probe failed"
+        else
+          result=$(HOME="$worker_home" CODEX_HOME="$worker_codex" PATH="$CASE_DIR/probe-bin:$PATH" \
+            /bin/sh -c 'cd "$1"; eval "$2"' sh "$WT_DIR" "$launch") || fail "worker launch probe failed"
+        fi
+        if [ "$setting" = filtered ] || [ "$setting" = filtered-local ]; then
+          assert_contains "$result" "unset" "empty allowlist retained CODEX_HOME"
+        else
+          assert_contains "$result" "$worker_codex" "launch changed the destination CODEX_HOME"
+        fi
+        assert_contains "$result" "$worker_home" "launch changed the destination HOME"
+        assert_contains "$result" 'model_reasoning_effort="max"' "executed worker lost max"
+      else
+        if [ "$setting" = missing-context ]; then
+          assert_contains "$out" 'cannot establish codex catalog' "missing worker context did not refuse clearly"
+        else
+          assert_contains "$out" "does not support effort 'max'" "worker refusal did not name the unsupported effort"
+        fi
+        [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "worker catalog refusal published task metadata"
+        [ ! -s "$LAUNCH_LOG" ] || fail "worker catalog refusal launched Codex"
+      fi
+      pass "codex $setting/$support follows the effective worker catalog"
+    done
+  done
+}
+
 # Codex parks a crewmate launch forever on its unanswerable hook-trust modal
 # unless the launch turns the hook layer off. These two cases pin the split:
 # a crewmate runs hook-free, a secondmate keeps the project hooks that carry its
@@ -664,8 +743,13 @@ test_codex_secondmate_launch_keeps_the_hook_layer() {
   sm="$CASE_DIR/secondmate-home"
   make_seeded_secondmate_home "$sm" "$id"
   printf 'codex gpt-6-astra max\n' > "$HOME_DIR/config/secondmate-harness"
+  mkdir -p "$CASE_DIR/worker-home/.codex"
+  cp "$HOME_DIR/codex-home/models_cache.json" "$CASE_DIR/worker-home/.codex/models_cache.json"
+  printf '%s\n' '{"models":[]}' > "$HOME_DIR/codex-home/models_cache.json"
+  : > "$HOME_DIR/config/launch-env-allowlist"
 
-  out=$(run_spawn "$HOME_DIR" "$WT_DIR" "$FAKEBIN_DIR" "$LAUNCH_LOG" "$id" "$sm" --secondmate)
+  out=$(FM_FAKE_WORKER_HOME="$CASE_DIR/worker-home" \
+    run_spawn "$HOME_DIR" "$WT_DIR" "$FAKEBIN_DIR" "$LAUNCH_LOG" "$id" "$sm" --secondmate)
   status=$?
   expect_code 0 "$status" "codex secondmate spawn should succeed"$'\n'"$out"
   assert_meta_profile "$HOME_DIR/state/$id.meta" codex gpt-6-astra max
@@ -1894,6 +1978,7 @@ test_codex_threads_model_and_effort
 test_codex_threads_model_and_max_effort
 test_codex_refuses_unverified_effort
 test_codex_catalog_home_fallback_and_default_effort
+test_codex_uses_effective_worker_catalog
 test_codex_crewmate_launch_disables_the_hook_layer
 test_codex_secondmate_launch_keeps_the_hook_layer
 test_grok_threads_model_and_reasoning_effort

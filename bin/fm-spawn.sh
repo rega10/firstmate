@@ -85,8 +85,9 @@
 #   installed CLIs were verified to support that axis; unsupported axes are omitted
 #   from that harness's launch rather than guessed. Canonical Codex launches
 #   validate requested effort against the explicit model's supported_reasoning_levels
-#   in ${CODEX_HOME:-$HOME/.codex}/models_cache.json and refuse unsupported or
-#   unverifiable effort before provisioning. Ultra remains a separate exception:
+#   in the effective worker environment's ${CODEX_HOME:-$HOME/.codex}/models_cache.json
+#   and refuse unsupported or unverifiable effort before launch.
+#   Ultra remains a separate exception:
 #   bin/fm-harness.sh validate-native-effort owns its model scope;
 #   supported Pi launches receive --codex-effort ultra, never --thinking ultra.
 #   OpenCode has no interactive effort flag, so its effort is written as the
@@ -1898,13 +1899,45 @@ pi_supports_tui_mode() {
 }
 
 codex_effort_validate() { # <model> <effort>
-  local model=$1 effort=$2 catalog levels
+  local model=$1 effort=$2 catalog levels probe command i
   [ -n "$effort" ] && [ "$effort" != default ] || return 0
   [ -n "$model" ] && [ "$model" != default ] || {
     echo "error: codex effort '$effort' requires an explicit --model to check its catalog capabilities" >&2
     return 1
   }
-  catalog="${CODEX_HOME:-$HOME/.codex}/models_cache.json"
+  probe=$(mktemp -d "$STATE/.codex-catalog.XXXXXXXX") || return 1
+  command='/bin/sh -c '
+  # shellcheck disable=SC2016
+  command="$command$(shell_quote 'catalog=${CODEX_HOME:-${HOME:?}/.codex}/models_cache.json; case "$catalog" in /*) ;; *) catalog=$PWD/$catalog ;; esac; printf "%s" "$catalog"')"
+  if [ "$LAUNCH_ENV_ENABLED" = 1 ]; then
+    case $'\n'"$LAUNCH_ENV_NAMES"$'\n' in
+      *$'\nCODEX_HOME\n'*)
+        # shellcheck disable=SC2016
+        command='/usr/bin/env -i ${HOME+"HOME=$HOME"} ${CODEX_HOME+"CODEX_HOME=$CODEX_HOME"} '"$command"
+        ;;
+      *)
+        # shellcheck disable=SC2016
+        command='/usr/bin/env -i ${HOME+"HOME=$HOME"} '"$command"
+        ;;
+    esac
+  fi
+  command="$command >$(shell_quote "$probe/path.tmp") && mv $(shell_quote "$probe/path.tmp") $(shell_quote "$probe/path")"
+  if ! (umask 077 && printf '%s\n' "$command" >"$probe/probe.sh"); then
+    rm -rf "$probe"
+    return 1
+  fi
+  if spawn_send_text_line "$T" ". $(shell_quote "$probe/probe.sh")"; then
+    for ((i = 0; i < 20; i++)); do
+      [ ! -s "$probe/path" ] || break
+      sleep 0.1
+    done
+  fi
+  catalog=$(cat "$probe/path" 2>/dev/null) || catalog=
+  rm -rf "$probe"
+  [ -n "$catalog" ] || {
+    echo "error: cannot establish codex catalog in the effective $BACKEND worker environment; refusing to launch" >&2
+    return 1
+  }
   levels=$(jq -er --arg model "$model" '
     [.models[] | select(.slug == $model)] | select(length == 1)
     | .[0].supported_reasoning_levels
@@ -2423,9 +2456,6 @@ if [ "$EFFORT" = ultra ]; then
     echo "error: --effort ultra requires the canonical --harness pi or pi-signed launch so its native flag cannot be omitted" >&2
     exit 1
   }
-fi
-if [ "$HARNESS" = codex ] && [ "$RAW_LAUNCH" = 0 ]; then
-  codex_effort_validate "$MODEL" "$EFFORT" || exit 1
 fi
 if [ "$HARNESS" = omp ]; then
   omp_model_validate "$OMP_BIN" "$MODEL" || exit 1
@@ -4397,6 +4427,9 @@ fi
 # tab's original project directory.
 spawn_enter_recorded_worktree
 spawn_assert_agent_worktree
+if [ "$HARNESS" = codex ] && [ "$RAW_LAUNCH" = 0 ]; then
+  codex_effort_validate "$MODEL" "$EFFORT" || exit 1
+fi
 
 # Pre-register Claude's workspace trust for the directory this launch starts in,
 # at the first point that directory is known and before any per-task state is

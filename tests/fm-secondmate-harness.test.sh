@@ -698,6 +698,11 @@ case "${1:-}" in
   list-windows) exit 0 ;;
   has-session|new-session|new-window|kill-window) exit 0 ;;
   send-keys)
+    for a in "$@"; do
+      case "$a" in
+        *'/.codex-catalog.'*) /bin/sh -c "$a"; exit "$?" ;;
+      esac
+    done
     if [ -n "${FM_FAKE_LAUNCH_LOG:-}" ]; then
       prev=
       for a in "$@"; do
