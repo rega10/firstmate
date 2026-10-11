@@ -2712,8 +2712,8 @@ effort_flag_for_harness() {
     # high|max, openai/* expose low|medium|high|xhigh), so emit the variant only
     # when the resolved model's provider is known to expose that effort; any
     # other provider, or an effort outside its family's list, keeps the
-    # permission-only launch and omits the variant (record-and-omit, as codex
-    # and grok do). Without a resolved model the variant has nothing to key to
+    # permission-only launch and omits the variant. Without a resolved model
+    # the variant has nothing to key to
     # and is likewise omitted. The fragment lands inside the launch's
     # single-quoted assignment, so a literal quote in the model id must close and
     # reopen that quoting.
