@@ -1,29 +1,31 @@
 {
-  "name": "live-luna-max",
-  "result": "pass",
-  "live": true,
-  "exit_code": 0,
-  "task_metadata_published": true,
-  "received_requests": [
-    {
-      "path": "/v1/responses",
-      "model": "gpt-5.6-luna",
-      "reasoning": {
-        "effort": "max",
-        "context": "all_turns"
-      }
-    },
-    {
-      "path": "/v1/responses",
-      "model": "gpt-5.6-luna",
-      "reasoning": {
-        "effort": "low",
-        "context": "all_turns"
-      }
-    }
+  "name": "luna-max",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab92459-luna-max",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--model",
+    "gpt-5.6-luna",
+    "--effort",
+    "max"
   ],
-  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/lab\nwarning: secondmate live-luna-max sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-luna-max harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-luna-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/secondmate\n",
-  "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/lab/state/live-luna-max.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-5.6-luna' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/secondmate/data/charter.md')\"\n",
-  "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/secondmate\n  permissions: YOLO mode\n\n  Got an itch to fix a thing?\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:30 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-5.6-Luna max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/se\u2026\n  ? for shortcuts\n",
-  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-luna-max/worker-codex/models_cache.json"
+  "exit": 0,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/primary\nwarning: secondmate clab92459-luna-max sync skipped before launch: cannot determine default branch\nspawned clab92459-luna-max harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-luna-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate\n",
+  "metadata_published": true,
+  "metadata": "window=fm-lab-codex:fm-clab92459-luna-max\nendpoint_task_id=clab92459-luna-max\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-luna-max\nmodel=gpt-5.6-luna\neffort=max\nspawn_gen=s1791699146.2439.12841\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate\nprojects=\n",
+  "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    " 4111  2207 /bin/bash --noprofile --norc",
+    " 6504  4111 codex --model gpt-5.6-luna -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+    " 7448  6504 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/worker-codex/.tmp/plugins-clone-DHd7dE fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+    " 7453  7448 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+    " 7459  7453 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+  ],
+  "codex_environment": {
+    "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/worker-user",
+    "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/worker-codex"
+  }
 }

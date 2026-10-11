@@ -1,0 +1,24 @@
+{
+  "name": "ultra-refused",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab92459-ultra-refused",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/ultra-refused/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--model",
+    "gpt-6-astra",
+    "--effort",
+    "ultra"
+  ],
+  "exit": 1,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/ultra-refused/primary\nerror: ultra effort requires pi or pi-signed with an explicit codex-native/<model> model\n",
+  "metadata_published": false,
+  "metadata": null,
+  "pane": "can't find window: fm-clab92459-ultra-refused\n",
+  "worker_processes": [
+    "35905 35886 /bin/bash --noprofile --norc"
+  ],
+  "codex_environment": {}
+}

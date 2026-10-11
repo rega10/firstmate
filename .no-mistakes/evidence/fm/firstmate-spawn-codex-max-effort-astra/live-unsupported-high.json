@@ -1,12 +1,24 @@
 {
-  "name": "live-unsupported-high",
-  "result": "pass",
-  "live": true,
-  "exit_code": 1,
-  "task_metadata_published": false,
-  "received_requests": [],
-  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unsupported-high/lab\nwarning: secondmate live-unsupported-high sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex model 'gpt-6-astra' does not support effort 'high' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unsupported-high/worker-codex/models_cache.json (supported: max); refusing to launch\n",
-  "launch": "",
-  "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB> . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unsupported-high/lab/stat\ne/.codex-catalog.d07EXPzH/probe.sh'\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-unsupported-high/worker-codex/models_cache.json"
+  "name": "unsupported-high",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab92459-unsupported-high",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--model",
+    "future-model",
+    "--effort",
+    "low"
+  ],
+  "exit": 1,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/primary\nwarning: secondmate clab92459-unsupported-high sync skipped before launch: cannot determine default branch\nerror: codex model 'future-model' does not support effort 'low' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/worker-codex/models_cache.json (supported: high, max, ultra); refusing to launch\n",
+  "metadata_published": false,
+  "metadata": null,
+  "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported\n-high/primary/state/.codex-catalog.BUUSNJ7n/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "17580 16799 /bin/bash --noprofile --norc"
+  ],
+  "codex_environment": {}
 }

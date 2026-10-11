@@ -1,21 +1,31 @@
 {
-  "name": "live-astra-max",
-  "result": "pass",
-  "live": true,
-  "exit_code": 0,
-  "task_metadata_published": true,
-  "received_requests": [
-    {
-      "path": "/v1/responses",
-      "model": "gpt-6-astra",
-      "reasoning": {
-        "effort": "max",
-        "context": "all_turns"
-      }
-    }
+  "name": "astra-max",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab92459-astra-max",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--model",
+    "gpt-6-astra",
+    "--effort",
+    "max"
   ],
-  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab\nwarning: secondmate live-astra-max sync skipped before launch: primary default-branch commit cannot be resolved\nspawned live-astra-max harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-live-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate\n",
-  "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab/state/live-astra-max.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate/data/charter.md')\"\n",
-  "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/secondmate\n  permissions: YOLO mode\n\n  Your keyboard has entered the chat.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:30 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra max \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/se\u2026\n  ? for shortcuts\n",
-  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-astra-max/worker-codex/models_cache.json"
+  "exit": 0,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/primary\nwarning: secondmate clab92459-astra-max sync skipped before launch: cannot determine default branch\nspawned clab92459-astra-max harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate\n",
+  "metadata_published": true,
+  "metadata": "window=fm-lab-codex:fm-clab92459-astra-max\nendpoint_task_id=clab92459-astra-max\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-astra-max\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699141.92957.27556\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate\nprojects=\n",
+  "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "94460 92779 /bin/bash --noprofile --norc",
+    "98226 94460 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+    "99614 98226 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/worker-codex/.tmp/plugins-clone-3a3QNN fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+    "99617 99614 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+    "99622 99617 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+  ],
+  "codex_environment": {
+    "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/worker-user",
+    "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/worker-codex"
+  }
 }

@@ -1,0 +1,256 @@
+Codex effort live validation
+Target: 1d974f67fe32db65cc1d8c07419a53f784d7491b
+Isolated target copy has the same tracked Git tree as the gate worktree: c917ceb77682ff98cefb5b45202fc27ef976cfdd.
+Real tools: tmux 3.5a, treehouse, codex-cli 0.159.2.
+Catalogs and homes contain disposable synthetic data. No operator configuration or credentials were used.
+Codex reached its sign-in screen. These checks establish the actual launch arguments and environment, without model inference.
+
+Baseline regression reproduced: True
+
+CASE: baseline-astra-max
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline/bin/fm-spawn.sh clab38469-baseline-astra-max /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/project --scout --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/primary
+spawned clab38469-baseline-astra-max harness=codex kind=scout window=fm-lab-codex:fm-clab38469-baseline-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/pool/.treehouse/project-ba1cfa/1/project
+REAL CODEX PROCESS: 43459 39913 codex --model gpt-6-astra --dangerously-bypass-approvals-and-sandbox --disable hooks -c notify=["bash","-c","touch '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/primary/state/clab38469-baseline-astra-max.turn-ended'"]
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/worker-codex"}
+TASK RECORD: harness=codex, kind=scout, model=gpt-6-astra, effort=max
+
+CASE: astra-max
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-astra-max /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/primary
+warning: secondmate clab92459-astra-max sync skipped before launch: cannot determine default branch
+spawned clab92459-astra-max harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate
+REAL CODEX PROCESS: 98226 94460 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=max
+
+CASE: luna-max
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-luna-max /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate --secondmate --harness codex --model gpt-5.6-luna --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/primary
+warning: secondmate clab92459-luna-max sync skipped before launch: cannot determine default branch
+spawned clab92459-luna-max harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-luna-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate
+REAL CODEX PROCESS:  6504  4111 codex --model gpt-5.6-luna -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-5.6-luna, effort=max
+
+CASE: catalog-only-model
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-catalog-only-model /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate --secondmate --harness codex --model future-model --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/primary
+warning: secondmate clab92459-catalog-only-model sync skipped before launch: cannot determine default branch
+spawned clab92459-catalog-only-model harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-catalog-only-model worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate
+REAL CODEX PROCESS: 11962 10145 codex --model future-model -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=future-model, effort=max
+
+CASE: removed-max
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-removed-max /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/removed-max/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/removed-max/primary
+warning: secondmate clab92459-removed-max sync skipped before launch: cannot determine default branch
+error: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/removed-max/worker-codex/models_cache.json (supported: high); refusing to launch
+
+CASE: unsupported-high
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-unsupported-high /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/mate --secondmate --harness codex --model future-model --effort low
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/primary
+warning: secondmate clab92459-unsupported-high sync skipped before launch: cannot determine default branch
+error: codex model 'future-model' does not support effort 'low' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/worker-codex/models_cache.json (supported: high, max, ultra); refusing to launch
+
+CASE: unknown-model
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-unknown-model /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unknown-model/mate --secondmate --harness codex --model unknown-model --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unknown-model/primary
+warning: secondmate clab92459-unknown-model sync skipped before launch: cannot determine default branch
+error: cannot verify codex model 'unknown-model' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unknown-model/worker-codex/models_cache.json; refusing to launch
+
+CASE: missing-catalog
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-missing-catalog /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-catalog/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-catalog/primary
+warning: secondmate clab92459-missing-catalog sync skipped before launch: cannot determine default branch
+error: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-catalog/worker-codex/models_cache.json; refusing to launch
+
+CASE: malformed-catalog
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-malformed-catalog /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/malformed-catalog/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/malformed-catalog/primary
+warning: secondmate clab92459-malformed-catalog sync skipped before launch: cannot determine default branch
+error: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/malformed-catalog/worker-codex/models_cache.json; refusing to launch
+
+CASE: empty-levels
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-empty-levels /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/empty-levels/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/empty-levels/primary
+warning: secondmate clab92459-empty-levels sync skipped before launch: cannot determine default branch
+error: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/empty-levels/worker-codex/models_cache.json; refusing to launch
+
+CASE: no-model
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-no-model /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/no-model/mate --secondmate --harness codex --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/no-model/primary
+warning: secondmate clab92459-no-model sync skipped before launch: cannot determine default branch
+error: codex effort 'max' requires an explicit --model to check its catalog capabilities
+
+CASE: default-model
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-default-model /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/default-model/mate --secondmate --harness codex --model default --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/default-model/primary
+warning: secondmate clab92459-default-model sync skipped before launch: cannot determine default branch
+error: codex effort 'max' requires an explicit --model to check its catalog capabilities
+
+CASE: ultra-refused
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-ultra-refused /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/ultra-refused/mate --secondmate --harness codex --model gpt-6-astra --effort ultra
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/ultra-refused/primary
+error: ultra effort requires pi or pi-signed with an explicit codex-native/<model> model
+
+CASE: defaults-without-catalog
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-defaults-without-catalog /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate --secondmate --harness codex
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/primary
+warning: secondmate clab92459-defaults-without-catalog sync skipped before launch: cannot determine default branch
+spawned clab92459-defaults-without-catalog harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-defaults-without-catalog worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate
+REAL CODEX PROCESS: 45962 43258 codex --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=default, effort=default
+
+CASE: home-fallback
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-home-fallback /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/primary
+warning: secondmate clab92459-home-fallback sync skipped before launch: cannot determine default branch
+spawned clab92459-home-fallback harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-home-fallback worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/mate
+REAL CODEX PROCESS: 54350 51297 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/worker-user", "CODEX_HOME": null}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=max
+
+CASE: relative-codex-home
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-relative-codex-home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/primary
+warning: secondmate clab92459-relative-codex-home sync skipped before launch: cannot determine default branch
+spawned clab92459-relative-codex-home harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-relative-codex-home worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/mate
+REAL CODEX PROCESS: 61598 58337 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/worker-user", "CODEX_HOME": "../worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=max
+
+CASE: filtered-support
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-filtered-support /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/primary
+warning: secondmate clab92459-filtered-support sync skipped before launch: cannot determine default branch
+spawned clab92459-filtered-support harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-filtered-support worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate
+REAL CODEX PROCESS: 71414 71367 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/worker-user", "CODEX_HOME": null}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=max
+
+CASE: filtered-refusal
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-filtered-refusal /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-refusal/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-refusal/primary
+warning: secondmate clab92459-filtered-refusal sync skipped before launch: cannot determine default branch
+error: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-refusal/worker-user/.codex/models_cache.json (supported: high); refusing to launch
+
+CASE: allowed-support
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-allowed-support /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/primary
+warning: secondmate clab92459-allowed-support sync skipped before launch: cannot determine default branch
+spawned clab92459-allowed-support harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-allowed-support worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate
+REAL CODEX PROCESS: 86383 86346 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=max
+
+CASE: allowed-refusal
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-allowed-refusal /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-refusal/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-refusal/primary
+warning: secondmate clab92459-allowed-refusal sync skipped before launch: cannot determine default branch
+error: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-refusal/worker-codex/models_cache.json (supported: high); refusing to launch
+
+CASE: configured-secondmate
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab92459-configured-secondmate /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/mate --secondmate
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/primary
+warning: secondmate clab92459-configured-secondmate sync skipped before launch: cannot determine default branch
+spawned clab92459-configured-secondmate harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-configured-secondmate worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/mate
+REAL CODEX PROCESS:  2218 97673 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=max
+
+CASE: filtered-local
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab15371-filtered-local /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/primary
+warning: secondmate clab15371-filtered-local sync skipped before launch: cannot determine default branch
+spawned clab15371-filtered-local harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab15371-filtered-local worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate
+REAL CODEX PROCESS: 19955 19913 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/worker-user", "CODEX_HOME": null}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=max
+
+CASE: allowed-local
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab15371-allowed-local /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/primary
+warning: secondmate clab15371-allowed-local sync skipped before launch: cannot determine default branch
+spawned clab15371-allowed-local harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab15371-allowed-local worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate
+REAL CODEX PROCESS: 28253 28202 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=max
+
+CASE: missing-context
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab15371-missing-context /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-context/mate --secondmate --harness codex --model gpt-6-astra --effort max
+EXIT: 1
+TASK RECORD PUBLISHED: False
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-context/primary
+warning: secondmate clab15371-missing-context sync skipped before launch: cannot determine default branch
+error: cannot establish codex catalog in the effective tmux worker environment; refusing to launch
+Unavailable destination: ['33710 32319 /bin/sleep 60']
+
+CASE: scout-astra-max
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab55830-scout-astra-max /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/project --scout --harness codex --model gpt-6-astra --effort max
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/primary
+spawned clab55830-scout-astra-max harness=codex kind=scout window=fm-lab-codex:fm-clab55830-scout-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/pool/.treehouse/project-1c431b/1/project
+REAL CODEX PROCESS: 64418 57543 codex --model gpt-6-astra -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox --disable hooks -c notify=["bash","-c","touch '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/primary/state/clab55830-scout-astra-max.turn-ended'"]
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/worker-codex"}
+TASK RECORD: harness=codex, kind=scout, model=gpt-6-astra, effort=max
+
+CASE: astra-high
+COMMAND: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh clab63068-astra-high /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate --secondmate --harness codex --model gpt-6-astra --effort high
+EXIT: 0
+TASK RECORD PUBLISHED: True
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/primary
+warning: secondmate clab63068-astra-high sync skipped before launch: cannot determine default branch
+spawned clab63068-astra-high harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab63068-astra-high worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate
+REAL CODEX PROCESS: 65013 64123 codex --model gpt-6-astra -c model_reasoning_effort="high" --dangerously-bypass-approvals-and-sandbox
+REAL CODEX ENVIRONMENT: {"HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/worker-user", "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/worker-codex"}
+TASK RECORD: harness=codex, kind=secondmate, model=gpt-6-astra, effort=high

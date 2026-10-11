@@ -1,0 +1,31 @@
+{
+  "name": "astra-high",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab63068-astra-high",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--model",
+    "gpt-6-astra",
+    "--effort",
+    "high"
+  ],
+  "exit": 0,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/primary\nwarning: secondmate clab63068-astra-high sync skipped before launch: cannot determine default branch\nspawned clab63068-astra-high harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab63068-astra-high worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate\n",
+  "metadata_published": true,
+  "metadata": "window=fm-lab-codex:fm-clab63068-astra-high\nendpoint_task_id=clab63068-astra-high\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab63068-astra-high\nmodel=gpt-6-astra\neffort=high\nspawn_gen=s1791699355.63288.4132\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate\nprojects=\n",
+  "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "64123 63192 /bin/bash --noprofile --norc",
+    "65013 64123 codex --model gpt-6-astra -c model_reasoning_effort=\"high\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+    "65516 65013 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/worker-codex/.tmp/plugins-clone-1Uvsqv fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+    "65517 65516 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+    "65518 65517 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+  ],
+  "codex_environment": {
+    "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/worker-user",
+    "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/worker-codex"
+  }
+}

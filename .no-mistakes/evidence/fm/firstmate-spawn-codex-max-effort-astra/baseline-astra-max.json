@@ -1,21 +1,35 @@
 {
   "name": "baseline-astra-max",
-  "result": "fail",
-  "live": true,
-  "exit_code": 0,
-  "task_metadata_published": true,
-  "received_requests": [
-    {
-      "path": "/v1/responses",
-      "model": "gpt-6-astra",
-      "reasoning": {
-        "effort": "medium",
-        "context": "all_turns"
-      }
-    }
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline/bin/fm-spawn.sh",
+    "clab38469-baseline-astra-max",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/project",
+    "--scout",
+    "--harness",
+    "codex",
+    "--model",
+    "gpt-6-astra",
+    "--effort",
+    "max"
   ],
-  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra-max/lab\nwarning: secondmate baseline-astra-max sync skipped before launch: primary default-branch commit cannot be resolved\nspawned baseline-astra-max harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-baseline-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra-max/secondmate\n",
-  "launch": "export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra-max/lab/state/baseline-astra-max.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra-max/lab' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra-max/secondmate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/base-product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra-max/secondmate/data/charter.md')\"\n",
-  "pane": "\n  >_ OpenAI Codex (v0.159.2)\n     /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra-max/secondmate\n  permissions: YOLO mode\n\n  Welcome to our little rectangle of possibility.\n\n\n\u203a FIRSTMATE_OP: v1 launch-brief: Reply OK. Do not use tools or modify files.\n\n\n  Worked for <1s \u2022 10:31 PM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\u203a Ask Codex to do anything\n\n  GPT-6-Astra medium \u00b7 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra\u2026\n  ? for shortcuts\n",
-  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/baseline-astra-max/worker-codex/models_cache.json"
+  "exit": 0,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/primary\nspawned clab38469-baseline-astra-max harness=codex kind=scout window=fm-lab-codex:fm-clab38469-baseline-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/pool/.treehouse/project-ba1cfa/1/project\n",
+  "metadata_published": true,
+  "metadata": "window=fm-lab-codex:fm-clab38469-baseline-astra-max\nendpoint_task_id=clab38469-baseline-astra-max\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/pool/.treehouse/project-ba1cfa/1/project\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/project\nharness=codex\nkind=scout\ntasktmp=/tmp/fm-clab38469-baseline-astra-max\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699257.38958.17060\n",
+  "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "39747 38879 /bin/bash --noprofile --norc",
+    "39751 39747 treehouse get",
+    "39913 39751 /bin/bash",
+    "43459 39913 codex --model gpt-6-astra --dangerously-bypass-approvals-and-sandbox --disable hooks -c notify=[\"bash\",\"-c\",\"touch '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/primary/state/clab38469-baseline-astra-max.turn-ended'\"] \\040-cFIRSTMATE_OP: v1 launch-brief: # Current worker role contract\\012You are a crewmate: an autonomous worker agent managed by firstmate.\\012This section establishes your current identity before every project or task instruction below and supersedes any conflicting role identity in those instructions.\\012Do the assigned work yourself and report only to firstmate; do not adopt a firstmate or secondmate supervisor identity, delegate the task, run fleet supervision, or address the captain.\\012Your steering inbox is `/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/primary/state/clab38469-baseline-astra-max.inbox`; this exact path belongs to your current task even when it is outside the worktree or under the supervising firstmate home, so read and acknowledge its messages and do not reject it as another home's state.\\012Never inspect or change any other home's endpoint namespace; this authorization is limited to the exact task paths named by this brief.\\012When this task works on Firstmate itself, the repository root `AGENTS.md` (also imported by `CLAUDE.md`) is project content and the supervisor contract for the firstmate managing you: follow this brief instead of that supervisor contract.\\012Project instructions still govern the work wherever they do not conflict with this worker identity, including `CONTRIBUTING.md` and `firstmate-coding-guidelines` for Firstmate changes.\\012\\012# Task\\012## Captain's intent\\012Remain idle without changing any file.\\012\\012## Firstmate spec\\012Do not execute any command.",
+    "44159 43459 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/worker-codex/.tmp/plugins-clone-a4F8T5 fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+    "44165 44159 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+    "44169 44165 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+  ],
+  "codex_environment": {
+    "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/worker-user",
+    "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/baseline-astra-max/worker-codex"
+  },
+  "baseline_commit": "3f2d62a13ca048e1c77a8d09927d3501249bd798",
+  "regression_reproduced": true
 }

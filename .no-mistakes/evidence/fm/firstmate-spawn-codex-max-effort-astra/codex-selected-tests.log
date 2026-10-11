@@ -1,0 +1,48 @@
+ok - allowlist=absent preserves the operational floor and filters only when opted in
+ok - allowlist=missing-config preserves the operational floor and filters only when opted in
+ok - allowlist=enabled preserves the operational floor and filters only when opted in
+ok - allowlist=empty preserves the operational floor and filters only when opted in
+ok - invalid allowlist names refuse before launch or task publication
+ok - inaccessible config with present allowlist refuses before launch or task publication
+ok - inaccessible config with absent allowlist refuses before launch or task publication
+ok - inaccessible ancestor with present allowlist refuses before launch or task publication
+ok - inaccessible ancestor with absent allowlist refuses before launch or task publication
+ok - secondmate launch inherits the allowlist for subsequent worker launches
+ok - local inheritance preserves the allowlist on source errors and mirrors proven absence
+ok - remote inheritance preserves the allowlist on source errors and mirrors proven absence
+ok - codex receives --model and model_reasoning_effort profile flags
+ok - codex gpt-5.6-luna receives catalog-supported max reasoning effort
+ok - codex gpt-6-astra receives catalog-supported max reasoning effort
+ok - codex future-model receives catalog-supported max reasoning effort
+ok - codex unsupported effort refuses before task publication or launch
+ok - codex removed effort refuses before task publication or launch
+ok - codex lower effort refuses before task publication or launch
+ok - codex unknown effort refuses before task publication or launch
+ok - codex missing effort refuses before task publication or launch
+ok - codex malformed effort refuses before task publication or launch
+ok - codex empty-levels effort refuses before task publication or launch
+ok - codex no-model effort refuses before task publication or launch
+ok - codex default-model effort refuses before task publication or launch
+ok - codex ultra effort refuses before task publication or launch
+ok - codex reads HOME/.codex/models_cache.json when CODEX_HOME is empty
+ok - codex without requested effort keeps its defaults even without a catalog
+ok - codex absent/supported follows the effective worker catalog
+ok - codex absent/unsupported follows the effective worker catalog
+ok - codex filtered/supported follows the effective worker catalog
+ok - codex filtered/unsupported follows the effective worker catalog
+ok - codex allowed/supported follows the effective worker catalog
+ok - codex allowed/unsupported follows the effective worker catalog
+ok - codex filtered-local/supported follows the effective worker catalog
+ok - codex filtered-local/unsupported follows the effective worker catalog
+ok - codex allowed-local/supported follows the effective worker catalog
+ok - codex allowed-local/unsupported follows the effective worker catalog
+ok - codex fallback/supported follows the effective worker catalog
+ok - codex fallback/unsupported follows the effective worker catalog
+ok - codex relative/supported follows the effective worker catalog
+ok - codex relative/unsupported follows the effective worker catalog
+ok - codex missing-context/supported follows the effective worker catalog
+ok - codex missing-context/unsupported follows the effective worker catalog
+ok - a codex crewmate launches with no hook layer and keeps its turn-end signal
+ok - a codex secondmate keeps the project hook layer its primary session runs on
+ok - native effort validator checks harness and model as separate axes
+ok - Ultra is explicit for native Pi and Pi-signed, including direct-PR, and refuses unsupported profiles before provisioning

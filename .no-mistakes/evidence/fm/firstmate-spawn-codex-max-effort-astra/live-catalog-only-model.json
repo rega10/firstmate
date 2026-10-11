@@ -1,0 +1,31 @@
+{
+  "name": "catalog-only-model",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab92459-catalog-only-model",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--model",
+    "future-model",
+    "--effort",
+    "max"
+  ],
+  "exit": 0,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/primary\nwarning: secondmate clab92459-catalog-only-model sync skipped before launch: cannot determine default branch\nspawned clab92459-catalog-only-model harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-catalog-only-model worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate\n",
+  "metadata_published": true,
+  "metadata": "window=fm-lab-codex:fm-clab92459-catalog-only-model\nendpoint_task_id=clab92459-catalog-only-model\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-catalog-only-model\nmodel=future-model\neffort=max\nspawn_gen=s1791699151.9112.28079\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate\nprojects=\n",
+  "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "10145  8995 /bin/bash --noprofile --norc",
+    "11962 10145 codex --model future-model -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+    "12707 11962 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/worker-codex/.tmp/plugins-clone-3QkVGs fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+    "12710 12707 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+    "12719 12710 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+  ],
+  "codex_environment": {
+    "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/worker-user",
+    "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/worker-codex"
+  }
+}

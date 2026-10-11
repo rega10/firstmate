@@ -1,0 +1,25 @@
+{
+  "name": "defaults-without-catalog",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab92459-defaults-without-catalog",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate",
+    "--secondmate",
+    "--harness",
+    "codex"
+  ],
+  "exit": 0,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/primary\nwarning: secondmate clab92459-defaults-without-catalog sync skipped before launch: cannot determine default branch\nspawned clab92459-defaults-without-catalog harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-defaults-without-catalog worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate\n",
+  "metadata_published": true,
+  "metadata": "window=fm-lab-codex:fm-clab92459-defaults-without-catalog\nendpoint_task_id=clab92459-defaults-without-catalog\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-defaults-without-catalog\nmodel=default\neffort=default\nspawn_gen=s1791699183.41004.12339\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate\nprojects=\n",
+  "pane": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "43258 40800 /bin/bash --noprofile --norc",
+    "45962 43258 codex --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+    "47725 45962 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/worker-codex/packages/app-server-daemon/releases/.staging.qp3g1Q/bin/codex --version"
+  ],
+  "codex_environment": {
+    "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/worker-user",
+    "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/worker-codex"
+  }
+}

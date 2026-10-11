@@ -1,12 +1,22 @@
 {
-  "name": "live-no-model",
-  "result": "pass",
-  "live": true,
-  "exit_code": 1,
-  "task_metadata_published": false,
-  "received_requests": [],
-  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-no-model/lab\nwarning: secondmate live-no-model sync skipped before launch: primary default-branch commit cannot be resolved\nerror: codex effort 'max' requires an explicit --model to check its catalog capabilities\n",
-  "launch": "",
-  "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nLAB>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
-  "effective_catalog": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/live-no-model/worker-codex/models_cache.json"
+  "name": "no-model",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab92459-no-model",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/no-model/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--effort",
+    "max"
+  ],
+  "exit": 1,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/no-model/primary\nwarning: secondmate clab92459-no-model sync skipped before launch: cannot determine default branch\nerror: codex effort 'max' requires an explicit --model to check its catalog capabilities\n",
+  "metadata_published": false,
+  "metadata": null,
+  "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "31602 30725 /bin/bash --noprofile --norc"
+  ],
+  "codex_environment": {}
 }

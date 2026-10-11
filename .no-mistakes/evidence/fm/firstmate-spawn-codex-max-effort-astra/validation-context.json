@@ -1,0 +1,51 @@
+{
+  "target_commit": "1d974f67fe32db65cc1d8c07419a53f784d7491b",
+  "target_tree": "c917ceb77682ff98cefb5b45202fc27ef976cfdd",
+  "baseline_commit": "3f2d62a13ca048e1c77a8d09927d3501249bd798",
+  "baseline_regression_reproduced": true,
+  "real_tools": [
+    "codex-cli 0.159.2",
+    "workspace-built tmux 3.5a",
+    "treehouse"
+  ],
+  "isolation": "Archived product trees, synthetic catalogs, marked lab homes, private tmux sockets, and disposable HOME/CODEX_HOME paths. No Herdr lifecycle ran.",
+  "setup_repairs": [
+    "Moved fixture roots outside the archived product directory, while keeping them inside the gate worktree.",
+    "Initialized the archived target as a disposable repository. Its tracked tree matches the target exactly.",
+    "Built libevent with ac_cv_func_pipe2=no because the SDK weak-imported an unavailable pipe2 symbol. Re-linked tmux."
+  ],
+  "runtime_limit": "Real Codex processes reached the sign-in screen. The evidence establishes launch flags and environment, without authenticated model inference.",
+  "live_case_results": {
+    "astra-max": "pass",
+    "luna-max": "pass",
+    "catalog-only-model": "pass",
+    "removed-max": "pass",
+    "unsupported-high": "pass",
+    "unknown-model": "pass",
+    "missing-catalog": "pass",
+    "malformed-catalog": "pass",
+    "empty-levels": "pass",
+    "no-model": "pass",
+    "default-model": "pass",
+    "ultra-refused": "pass",
+    "defaults-without-catalog": "pass",
+    "home-fallback": "pass",
+    "relative-codex-home": "pass",
+    "filtered-support": "pass",
+    "filtered-refusal": "pass",
+    "allowed-support": "pass",
+    "allowed-refusal": "pass",
+    "configured-secondmate": "pass",
+    "filtered-local": "pass",
+    "allowed-local": "pass",
+    "missing-context": "pass",
+    "scout-astra-max": "pass",
+    "astra-high": "pass"
+  },
+  "targeted_checks": {
+    "fm-spawn-dispatch-profile": "passed on final retry",
+    "fm-secondmate-harness": "passed",
+    "fm-control-relaunch": "passed",
+    "selected Codex and native effort checks": "passed"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "default-model",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab92459-default-model",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/default-model/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--model",
+    "default",
+    "--effort",
+    "max"
+  ],
+  "exit": 1,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/default-model/primary\nwarning: secondmate clab92459-default-model sync skipped before launch: cannot determine default branch\nerror: codex effort 'max' requires an explicit --model to check its catalog capabilities\n",
+  "metadata_published": false,
+  "metadata": null,
+  "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "34657 33450 /bin/bash --noprofile --norc"
+  ],
+  "codex_environment": {}
+}

@@ -1,3 +1,4 @@
+FM_TEST_BEGIN 2026-10-11T06:03:41Z tests/fm-spawn-dispatch-profile.test.sh family=backend-dispatch expected_gate_skip=none
 ok - allowlist=absent preserves the operational floor and filters only when opted in
 ok - allowlist=missing-config preserves the operational floor and filters only when opted in
 ok - allowlist=enabled preserves the operational floor and filters only when opted in
@@ -7,4 +8,50 @@ ok - inaccessible config with present allowlist refuses before launch or task pu
 ok - inaccessible config with absent allowlist refuses before launch or task publication
 ok - inaccessible ancestor with present allowlist refuses before launch or task publication
 ok - inaccessible ancestor with absent allowlist refuses before launch or task publication
-not ok - secondmate with an allowlist should spawn: error: secondmate home cannot be inside the firstmate repo: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.no-mistakes/test-live/test-tmp/fm-spawn-dispatch-profile.J5ePxN/env-secondmate/secondmate-home: expected exit 0, got 1
+not ok - secondmate with an allowlist should spawn: error: secondmate home cannot be inside the firstmate repo: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/tmp/fm-spawn-dispatch-profile.DOYWym/env-secondmate/secondmate-home: expected exit 0, got 1
+FM_TEST_END 2026-10-11T06:03:59Z tests/fm-spawn-dispatch-profile.test.sh exit=1 duration_ms=17939 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T06:03:59Z tests/fm-secondmate-harness.test.sh family=secondmate expected_gate_skip=none
+ok - A1 fm-harness.sh secondmate resolves the fallback chain; crew mode unchanged
+ok - fm-harness detects only Cursor Agent CLI's exact invocation marker
+ok - C1 fm-harness.sh secondmate-model/secondmate-effort resolve the optional tokens; bare harness stays empty (backward-compat)
+ok - pi-signed identity: authoritative launch selection distinguishes shared wrapper ancestry
+ok - harness identity: dash-leading ps command names are basename operands, not options
+ok - B1 propagate_inheritable_config: copy, idempotence, convergence, absence-mirror, exclusion, validation, no-op, skip diagnostics
+not ok - split: no meta written
+FM_TEST_END 2026-10-11T06:04:10Z tests/fm-secondmate-harness.test.sh exit=1 duration_ms=11110 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T06:04:10Z tests/fm-control-relaunch.test.sh family=backend-dispatch expected_gate_skip=none
+ok - fm-control relaunch: a same-harness relaunch replaces the agent in the same endpoint and worktree
+ok - fm-control relaunch: pending composer text refuses before the exit command is typed
+ok - fm-control relaunch: an unreadable composer fails safe before the exit command is typed
+ok - fm-control relaunch: a linked spawning home preserves committed and unfinished work in the recorded copy
+ok - fm-control relaunch: durable task metadata survives replacement launch publication
+ok - fm-control relaunch: an armed PR poll stays authenticated
+ok - fm-spawn --relaunch: trace metadata keeps an armed PR poll authenticated
+ok - fm-control relaunch: delivery and concurrent task metadata publication serialize
+ok - fm-control relaunch: disabling tracing clears metadata and pane context
+ok - fm-control relaunch: progress and the Firstmate-worktree worker identity reach the replacement
+ok - fm-control relaunch: a ship task refuses without the progress note its replacement needs
+ok - fm-control relaunch: switching harness is one ordinary relaunch, and the old wiring goes with the old agent
+ok - fm-control relaunch: a harness switch resets model and effort unless they are named too
+ok - fm-control relaunch: a prefixed recorded harness can switch adapters transactionally
+ok - fm-control relaunch: a prefixed command requires an explicit replacement harness
+ok - fm-control relaunch: a same-harness relaunch keeps the profile axes it was running with
+ok - native Ultra relaunch preserves its profile and rejects an unsupported model before stopping
+ok - fm-control relaunch: a signed-out worker account pin refuses before the old agent stops
+ok - fm-control relaunch: the replacement follows the home's current worker account pin
+ok - fm-control relaunch: explicit model and effort win over the recorded ones
+ok - fm-control relaunch: refuses to relaunch onto an adapter with no verified mechanics
+ok - fm-control relaunch: the retired incarnation's global turn-end token is revoked
+ok - fm-control relaunch: wiring cleanup failure refuses replacement arming
+ok - fm-control-lib: one owner resolves each harness's turn-end registry entry, and refuses a malformed token
+not ok - a configured secondmate harness should relaunch
+error: secondmate home cannot be inside the firstmate repo: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/tmp/fm-control-relaunch.fVE0Qp/smpin-24272/smhome
+error: the replacement agent for sm3 could not be launched on codex
+error: sm3's agent was stopped but the replacement did not launch; no agent is running, and its work plus the recorded progress note are preserved at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/tmp/fm-control-relaunch.fVE0Qp/smpin-24272/smhome: expected exit 0, got 1
+FM_TEST_END 2026-10-11T06:05:17Z tests/fm-control-relaunch.test.sh exit=1 duration_ms=66326 gate_skip=false
+FM_TEST_SUMMARY total=3 failed=3 skipped_gate=0 duration_ms=95548
+FM_TEST_SUMMARY_FAMILY family=backend-dispatch count=2 duration_ms=84265 failed=2
+FM_TEST_SUMMARY_FAMILY family=secondmate count=1 duration_ms=11110 failed=1
+FM_TEST_SLOWEST rank=1 script=tests/fm-control-relaunch.test.sh duration_ms=66326
+FM_TEST_SLOWEST rank=2 script=tests/fm-spawn-dispatch-profile.test.sh duration_ms=17939
+FM_TEST_SLOWEST rank=3 script=tests/fm-secondmate-harness.test.sh duration_ms=11110

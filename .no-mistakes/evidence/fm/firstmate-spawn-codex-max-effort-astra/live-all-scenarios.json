@@ -1,0 +1,711 @@
+[
+  {
+    "name": "astra-max",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-astra-max",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/primary\nwarning: secondmate clab92459-astra-max sync skipped before launch: cannot determine default branch\nspawned clab92459-astra-max harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-astra-max\nendpoint_task_id=clab92459-astra-max\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-astra-max\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699141.92957.27556\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "94460 92779 /bin/bash --noprofile --norc",
+      "98226 94460 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "99614 98226 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/worker-codex/.tmp/plugins-clone-3a3QNN fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "99617 99614 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "99622 99617 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-max/worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "luna-max",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-luna-max",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-5.6-luna",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/primary\nwarning: secondmate clab92459-luna-max sync skipped before launch: cannot determine default branch\nspawned clab92459-luna-max harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-luna-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-luna-max\nendpoint_task_id=clab92459-luna-max\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-luna-max\nmodel=gpt-5.6-luna\neffort=max\nspawn_gen=s1791699146.2439.12841\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      " 4111  2207 /bin/bash --noprofile --norc",
+      " 6504  4111 codex --model gpt-5.6-luna -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      " 7448  6504 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/worker-codex/.tmp/plugins-clone-DHd7dE fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      " 7453  7448 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      " 7459  7453 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/luna-max/worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "catalog-only-model",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-catalog-only-model",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "future-model",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/primary\nwarning: secondmate clab92459-catalog-only-model sync skipped before launch: cannot determine default branch\nspawned clab92459-catalog-only-model harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-catalog-only-model worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-catalog-only-model\nendpoint_task_id=clab92459-catalog-only-model\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-catalog-only-model\nmodel=future-model\neffort=max\nspawn_gen=s1791699151.9112.28079\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "10145  8995 /bin/bash --noprofile --norc",
+      "11962 10145 codex --model future-model -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "12707 11962 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/worker-codex/.tmp/plugins-clone-3QkVGs fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "12710 12707 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "12719 12710 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/catalog-only-model/worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "removed-max",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-removed-max",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/removed-max/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/removed-max/primary\nwarning: secondmate clab92459-removed-max sync skipped before launch: cannot determine default branch\nerror: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/removed-max/worker-codex/models_cache.json (supported: high); refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/removed-max\n/primary/state/.codex-catalog.tIWIIYUW/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "14788 13663 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "unsupported-high",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-unsupported-high",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "future-model",
+      "--effort",
+      "low"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/primary\nwarning: secondmate clab92459-unsupported-high sync skipped before launch: cannot determine default branch\nerror: codex model 'future-model' does not support effort 'low' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported-high/worker-codex/models_cache.json (supported: high, max, ultra); refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unsupported\n-high/primary/state/.codex-catalog.BUUSNJ7n/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "17580 16799 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "unknown-model",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-unknown-model",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unknown-model/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "unknown-model",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unknown-model/primary\nwarning: secondmate clab92459-unknown-model sync skipped before launch: cannot determine default branch\nerror: cannot verify codex model 'unknown-model' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unknown-model/worker-codex/models_cache.json; refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/unknown-mod\nel/primary/state/.codex-catalog.SnUXf3GB/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "20555 19490 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "missing-catalog",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-missing-catalog",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-catalog/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-catalog/primary\nwarning: secondmate clab92459-missing-catalog sync skipped before launch: cannot determine default branch\nerror: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-catalog/worker-codex/models_cache.json; refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-cat\nalog/primary/state/.codex-catalog.9phwEqe1/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "23258 22447 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "malformed-catalog",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-malformed-catalog",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/malformed-catalog/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/malformed-catalog/primary\nwarning: secondmate clab92459-malformed-catalog sync skipped before launch: cannot determine default branch\nerror: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/malformed-catalog/worker-codex/models_cache.json; refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/malformed-c\natalog/primary/state/.codex-catalog.VwL119Hh/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "26151 25141 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "empty-levels",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-empty-levels",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/empty-levels/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/empty-levels/primary\nwarning: secondmate clab92459-empty-levels sync skipped before launch: cannot determine default branch\nerror: cannot verify codex model 'gpt-6-astra' effort 'max' from /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/empty-levels/worker-codex/models_cache.json; refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/empty-level\ns/primary/state/.codex-catalog.oNnMlJYE/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "28875 27756 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "no-model",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-no-model",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/no-model/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/no-model/primary\nwarning: secondmate clab92459-no-model sync skipped before launch: cannot determine default branch\nerror: codex effort 'max' requires an explicit --model to check its catalog capabilities\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "31602 30725 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "default-model",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-default-model",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/default-model/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "default",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/default-model/primary\nwarning: secondmate clab92459-default-model sync skipped before launch: cannot determine default branch\nerror: codex effort 'max' requires an explicit --model to check its catalog capabilities\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "34657 33450 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "ultra-refused",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-ultra-refused",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/ultra-refused/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "ultra"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/ultra-refused/primary\nerror: ultra effort requires pi or pi-signed with an explicit codex-native/<model> model\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "can't find window: fm-clab92459-ultra-refused\n",
+    "worker_processes": [
+      "35905 35886 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "defaults-without-catalog",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-defaults-without-catalog",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate",
+      "--secondmate",
+      "--harness",
+      "codex"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/primary\nwarning: secondmate clab92459-defaults-without-catalog sync skipped before launch: cannot determine default branch\nspawned clab92459-defaults-without-catalog harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-defaults-without-catalog worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-defaults-without-catalog\nendpoint_task_id=clab92459-defaults-without-catalog\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-defaults-without-catalog\nmodel=default\neffort=default\nspawn_gen=s1791699183.41004.12339\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/mate\nprojects=\n",
+    "pane": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "43258 40800 /bin/bash --noprofile --norc",
+      "45962 43258 codex --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "47725 45962 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/worker-codex/packages/app-server-daemon/releases/.staging.qp3g1Q/bin/codex --version"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/defaults-without-catalog/worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "home-fallback",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-home-fallback",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/primary\nwarning: secondmate clab92459-home-fallback sync skipped before launch: cannot determine default branch\nspawned clab92459-home-fallback harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-home-fallback worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-home-fallback\nendpoint_task_id=clab92459-home-fallback\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-home-fallback\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699188.49578.31444\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "51297 49445 /bin/bash --noprofile --norc",
+      "54350 51297 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "55829 54350 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/worker-user/.codex/.tmp/plugins-clone-co0BUl fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "55834 55829 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "55839 55834 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/home-fallback/worker-user",
+      "CODEX_HOME": null
+    },
+    "result": "pass"
+  },
+  {
+    "name": "relative-codex-home",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-relative-codex-home",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/primary\nwarning: secondmate clab92459-relative-codex-home sync skipped before launch: cannot determine default branch\nspawned clab92459-relative-codex-home harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-relative-codex-home worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-relative-codex-home\nendpoint_task_id=clab92459-relative-codex-home\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-relative-codex-home\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699193.57442.4050\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "58337 57337 /bin/bash --noprofile --norc",
+      "61598 58337 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "63359 61598 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/worker-codex/.tmp/plugins-clone-28u6CT fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "63364 63359 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "63374 63364 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/relative-codex-home/worker-user",
+      "CODEX_HOME": "../worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "filtered-support",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-filtered-support",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/primary\nwarning: secondmate clab92459-filtered-support sync skipped before launch: cannot determine default branch\nspawned clab92459-filtered-support harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-filtered-support worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-filtered-support\nendpoint_task_id=clab92459-filtered-support\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-filtered-support\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699197.64973.9158\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "66401 64861 /bin/bash --noprofile --norc",
+      "71367 66401 /bin/sh -c export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/primary/state/clab92459-filtered-support.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/primary' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/mate/data/charter.md')\"",
+      "71414 71367 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "73198 71414 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/worker-user/.codex/.tmp/plugins-clone-JYcm1U fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "73208 73198 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "73214 73208 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "73816 73198 /Library/Developer/CommandLineTools/usr/libexec/git-core/git --shallow-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/worker-user/.codex/.tmp/plugins-clone-JYcm1U/.git/shallow.lock index-pack --stdin --fix-thin --keep=fetch-pack 73198 on RG-Mac-mini.local --pack_header=2,7305"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-support/worker-user",
+      "CODEX_HOME": null
+    },
+    "result": "pass"
+  },
+  {
+    "name": "filtered-refusal",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-filtered-refusal",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-refusal/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-refusal/primary\nwarning: secondmate clab92459-filtered-refusal sync skipped before launch: cannot determine default branch\nerror: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-refusal/worker-user/.codex/models_cache.json (supported: high); refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-re\nfusal/primary/state/.codex-catalog.RI9PpFdd/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "77569 75509 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "allowed-support",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-allowed-support",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/primary\nwarning: secondmate clab92459-allowed-support sync skipped before launch: cannot determine default branch\nspawned clab92459-allowed-support harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-allowed-support worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-allowed-support\nendpoint_task_id=clab92459-allowed-support\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-allowed-support\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699207.80873.2922\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "82798 80721 /bin/bash --noprofile --norc",
+      "86346 82798 /bin/sh -c export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/primary/state/clab92459-allowed-support.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/primary' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/mate/data/charter.md')\"",
+      "86383 86346 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "88187 86383 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/worker-codex/.tmp/plugins-clone-7BBOP2 fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "88194 88187 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "88205 88194 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-support/worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "allowed-refusal",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-allowed-refusal",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-refusal/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-refusal/primary\nwarning: secondmate clab92459-allowed-refusal sync skipped before launch: cannot determine default branch\nerror: codex model 'gpt-6-astra' does not support effort 'max' in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-refusal/worker-codex/models_cache.json (supported: high); refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": "\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ . '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-ref\nusal/primary/state/.codex-catalog.hWf3XOZ0/probe.sh'\nbash-3.2$\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "92308 90146 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "configured-secondmate",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab92459-configured-secondmate",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/mate",
+      "--secondmate"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/primary\nwarning: secondmate clab92459-configured-secondmate sync skipped before launch: cannot determine default branch\nspawned clab92459-configured-secondmate harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab92459-configured-secondmate worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab92459-configured-secondmate\nendpoint_task_id=clab92459-configured-secondmate\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab92459-configured-secondmate\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699215.96132.32485\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      " 2218 97673 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      " 3802  2218 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/worker-codex/.tmp/plugins-clone-2h1t4H fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      " 3811  3802 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      " 3818  3811 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "97673 96020 /bin/bash --noprofile --norc"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/configured-secondmate/worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "filtered-local",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab15371-filtered-local",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/primary\nwarning: secondmate clab15371-filtered-local sync skipped before launch: cannot determine default branch\nspawned clab15371-filtered-local harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab15371-filtered-local worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab15371-filtered-local\nendpoint_task_id=clab15371-filtered-local\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab15371-filtered-local\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699311.15718.5293\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "17035 15605 /bin/bash --noprofile --rcfile /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/worker-bashrc -i",
+      "19913 17035 /bin/sh -c export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/primary/state/clab15371-filtered-local.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/primary' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/mate/data/charter.md')\"",
+      "19955 19913 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "21458 19955 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/worker-user/.codex/.tmp/plugins-clone-UuHxI7 fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "21467 21458 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "21472 21467 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/filtered-local/worker-user",
+      "CODEX_HOME": null
+    },
+    "result": "pass"
+  },
+  {
+    "name": "allowed-local",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab15371-allowed-local",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/primary\nwarning: secondmate clab15371-allowed-local sync skipped before launch: cannot determine default branch\nspawned clab15371-allowed-local harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab15371-allowed-local worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab15371-allowed-local\nendpoint_task_id=clab15371-allowed-local\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab15371-allowed-local\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699316.23225.31122\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "24458 23111 /bin/bash --noprofile --rcfile /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/worker-bashrc -i",
+      "28202 24458 /bin/sh -c export COMPACT_ADVISER_DISABLE=1; export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/primary/state/clab15371-allowed-local.git-hooks'; FM_ROOT_OVERRIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERRIDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/primary' FM_HOME='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate' FM_TRACE_CONTEXT=off FM_SUPERVISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI codex --model 'gpt-6-astra' -c 'model_reasoning_effort=\"max\"' --dangerously-bypass-approvals-and-sandbox \"$('/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-operational-input.sh' encode launch-brief < '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/mate/data/charter.md')\"",
+      "28253 28202 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "30412 28253 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/worker-codex/.tmp/plugins-clone-7Em5tw fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "30426 30412 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "30437 30426 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/allowed-local/worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "missing-context",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab15371-missing-context",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-context/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 1,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-context/primary\nwarning: secondmate clab15371-missing-context sync skipped before launch: cannot determine default branch\nerror: cannot establish codex catalog in the effective tmux worker environment; refusing to launch\n",
+    "metadata_published": false,
+    "metadata": null,
+    "pane": ". '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-context/prima\nry/state/.codex-catalog.aieBAclR/probe.sh'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "33710 32319 /bin/sleep 60"
+    ],
+    "codex_environment": {},
+    "result": "pass"
+  },
+  {
+    "name": "scout-astra-max",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab55830-scout-astra-max",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/project",
+      "--scout",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "max"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/primary\nspawned clab55830-scout-astra-max harness=codex kind=scout window=fm-lab-codex:fm-clab55830-scout-astra-max worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/pool/.treehouse/project-1c431b/1/project\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab55830-scout-astra-max\nendpoint_task_id=clab55830-scout-astra-max\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/pool/.treehouse/project-1c431b/1/project\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/project\nharness=codex\nkind=scout\ntasktmp=/tmp/fm-clab55830-scout-astra-max\nmodel=gpt-6-astra\neffort=max\nspawn_gen=s1791699194.56346.24490\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "57125 56264 /bin/bash --noprofile --norc",
+      "57153 57125 treehouse get",
+      "57543 57153 /bin/bash",
+      "64418 57543 codex --model gpt-6-astra -c model_reasoning_effort=\"max\" --dangerously-bypass-approvals-and-sandbox --disable hooks -c notify=[\"bash\",\"-c\",\"touch '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/primary/state/clab55830-scout-astra-max.turn-ended'\"] \\040-cFIRSTMATE_OP: v1 launch-brief: # Current worker role contract\\012You are a crewmate: an autonomous worker agent managed by firstmate.\\012This section establishes your current identity before every project or task instruction below and supersedes any conflicting role identity in those instructions.\\012Do the assigned work yourself and report only to firstmate; do not adopt a firstmate or secondmate supervisor identity, delegate the task, run fleet supervision, or address the captain.\\012Your steering inbox is `/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/primary/state/clab55830-scout-astra-max.inbox`; this exact path belongs to your current task even when it is outside the worktree or under the supervising firstmate home, so read and acknowledge its messages and do not reject it as another home's state.\\012Never inspect or change any other home's endpoint namespace; this authorization is limited to the exact task paths named by this brief.\\012When this task works on Firstmate itself, the repository root `AGENTS.md` (also imported by `CLAUDE.md`) is project content and the supervisor contract for the firstmate managing you: follow this brief instead of that supervisor contract.\\012Project instructions still govern the work wherever they do not conflict with this worker identity, including `CONTRIBUTING.md` and `firstmate-coding-guidelines` for Firstmate changes.\\012\\012# Task\\012## Captain's intent\\012Remain idle without changing any file.\\012\\012## Firstmate spec\\012Do not execute any command.",
+      "66130 64418 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/worker-codex/.tmp/plugins-clone-M1wS00 fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "66137 66130 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "66145 66137 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/scout-astra-max/worker-codex"
+    },
+    "result": "pass"
+  },
+  {
+    "name": "astra-high",
+    "command": [
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+      "clab63068-astra-high",
+      "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate",
+      "--secondmate",
+      "--harness",
+      "codex",
+      "--model",
+      "gpt-6-astra",
+      "--effort",
+      "high"
+    ],
+    "exit": 0,
+    "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/primary\nwarning: secondmate clab63068-astra-high sync skipped before launch: cannot determine default branch\nspawned clab63068-astra-high harness=codex kind=secondmate mode=secondmate yolo=off window=fm-lab-codex:fm-clab63068-astra-high worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate\n",
+    "metadata_published": true,
+    "metadata": "window=fm-lab-codex:fm-clab63068-astra-high\nendpoint_task_id=clab63068-astra-high\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate\nharness=codex\nkind=secondmate\nmode=secondmate\nyolo=off\ntasktmp=/tmp/fm-clab63068-astra-high\nmodel=gpt-6-astra\neffort=high\nspawn_gen=s1791699355.63288.4132\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/mate\nprojects=\n",
+    "pane": "  Welcome to Codex, OpenAI's command-line coding agent\n\n  Sign in with ChatGPT to use Codex as part of your paid plan\n  or connect an API key for usage-based billing\n\n> 1. Sign in with ChatGPT\n     Usage included with Plus, Pro, Business, and Enterprise plans\n\n  2. Sign in with Device Code\n     Sign in from another device with a one-time code\n\n  3. Provide your own API key\n     Pay for what you use\n\n  Press enter to continue\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "worker_processes": [
+      "64123 63192 /bin/bash --noprofile --norc",
+      "65013 64123 codex --model gpt-6-astra -c model_reasoning_effort=\"high\" --dangerously-bypass-approvals-and-sandbox \\040-cFIRSTMATE_OP: v1 launch-brief: Remain idle. Do not execute any command or change any file.",
+      "65516 65013 /Library/Developer/CommandLineTools/usr/bin/git -c safe.bareRepository=explicit -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/worker-codex/.tmp/plugins-clone-1Uvsqv fetch --depth 1 --no-tags https://github.com/openai/plugins.git +0722921d5542fc593105c27bd52630babd8b8c2a:refs/codex/curated-sync",
+      "65517 65516 /Library/Developer/CommandLineTools/usr/libexec/git-core/git remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git",
+      "65518 65517 /Library/Developer/CommandLineTools/usr/libexec/git-core/git-remote-https https://github.com/openai/plugins.git https://github.com/openai/plugins.git"
+    ],
+    "codex_environment": {
+      "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/worker-user",
+      "CODEX_HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/astra-high/worker-codex"
+    },
+    "result": "pass"
+  }
+]

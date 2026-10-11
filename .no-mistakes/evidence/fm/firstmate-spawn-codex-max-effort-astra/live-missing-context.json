@@ -1,0 +1,24 @@
+{
+  "name": "missing-context",
+  "command": [
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/product/bin/fm-spawn.sh",
+    "clab15371-missing-context",
+    "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-context/mate",
+    "--secondmate",
+    "--harness",
+    "codex",
+    "--model",
+    "gpt-6-astra",
+    "--effort",
+    "max"
+  ],
+  "exit": 1,
+  "output": "fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-context/primary\nwarning: secondmate clab15371-missing-context sync skipped before launch: cannot determine default branch\nerror: cannot establish codex catalog in the effective tmux worker environment; refusing to launch\n",
+  "metadata_published": false,
+  "metadata": null,
+  "pane": ". '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEAE85KY2YG676VGCXTPCN/.test-codex-live/missing-context/prima\nry/state/.codex-catalog.aieBAclR/probe.sh'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+  "worker_processes": [
+    "33710 32319 /bin/sleep 60"
+  ],
+  "codex_environment": {}
+}
