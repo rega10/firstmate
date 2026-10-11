@@ -6,9 +6,8 @@
 # bin/fm-lock.sh uses it to acquire and inspect state/.lock and its
 # state/.lock-session sidecar; bin/fm-claude-stop-autoarm.sh uses it to prove a
 # Stop hook fires inside the lock-owning primary session before it may arm or
-# rewake. A recorded Claude session id is authoritative for Claude callers: shared
-# app/helper ancestry cannot override a missing, untrusted, or different id.
-# Other harnesses keep their ancestry-based ownership unchanged.
+# rewake. fm_session_lock_owned_by_self below owns the ownership contract for
+# every caller; shared Claude app/helper ancestry alone does not prove ownership.
 # A numeric harness pid is the normal owner identity. Hosted Codex seatbelt
 # sessions can deny process ancestry reads, so they fall back to a stable
 # codex:<thread-id> token that is never age-reclaimed or treated as stale.
@@ -265,9 +264,9 @@ fm_harness_pid_alive() {
 # and must never own a lock with them. Ids are read from the environment only,
 # never from ps argv, where prompts and briefs are visible.
 #
-# A --fork-session successor mints a new id, so it stays a foreign live owner
-# until the pre-fork process exits; that is the safe direction and a documented
-# non-goal. Two genuinely different live sessions sharing one id is not a
+# A --fork-session successor mints a new id and cannot inherit a live lock;
+# stale acquisition becomes possible after the recorded anchor exits.
+# Two genuinely different live sessions sharing one id is not a
 # supported state (Claude refuses to resume a running session under its id).
 
 # Print the Claude session id this process may own with, or return 1. $1 is the
@@ -319,13 +318,11 @@ fm_session_lock_same_session() {  # <state> [<ancestry-pids>]
 }
 
 # Print the pid bin/fm-lock.sh records on lock line 1 for this session. For a
-# Claude session with a trusted id that is CLAUDE_PID, the model-loop process:
-# never the shared transient daemon and never a front-end that outlives the
-# session, so "recorded pid dead" keeps meaning "session gone" instead of
-# wedging a home behind a live daemon whose session died. A replaced background
-# helper leaves a dead pid that its own session's next hook reclaims, because
-# the sidecar still names that session. Every other session records the
-# outermost pid of its contiguous run, exactly as before.
+# Claude session with a trusted id that is CLAUDE_PID, the process supplied by
+# the harness. This is a liveness anchor, not a unique conversation identity:
+# background conversations can share it. Dead anchors take fm-lock.sh's stale
+# reclaim path; live anchors require the ownership proof below.
+# Every other session records the outermost pid of its contiguous run.
 fm_session_lock_anchor_pid() {
   local pids
   if ! pids=$(fm_harness_ancestry_pids); then
@@ -352,9 +349,12 @@ fm_session_lock_claude_ancestry() {  # <ancestry-pids>
   [ "$FM_HARNESS_IS_CLAUDE" -eq 1 ]
 }
 
-# A recorded Claude identity outranks ancestry, including an exact pid match:
-# multiple background conversations can share the same app/helper process.
-# A matching id still needs a live anchor; dead anchors take the reclaim path.
+# Claude callers require a trusted conversation id matching the valid recorded
+# sidecar and a live anchor. Missing, untrusted, or different ids fail closed,
+# including legacy locks without a sidecar and exact pid matches: background
+# conversations can share the same app/helper process. The trust gate above
+# owns how an environment id is proven. Dead anchors take the reclaim path.
+# Other numeric owners retain ancestry membership; hosted Codex uses its token.
 # The optional ancestry list avoids repeating a caller's walk.
 fm_session_lock_owned_by_self() {
   local state=$1 lock_pid pids=${2:-} pid

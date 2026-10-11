@@ -4,7 +4,7 @@
 # tracked hook registrations each primary harness runs, and its feed.
 #
 # Every writer runs as a child of a fake harness (a bash symlink named
-# "claude") whose pid is the home's session lock, from a git checkout that
+# "claude") that acquires the home's session lock with its identity, from a git checkout that
 # passes the primary-scope check, exactly as a primary's own hook runs. Hook
 # payloads are the shapes measured from the real harnesses
 # (docs/supervision-host.md "The dialog mirror").
@@ -39,10 +39,11 @@ make_home() {  # <name> [opted-in: 1|0]
 }
 
 # Run a shell script as the lock-owning primary session of <home>: the script
-# runs under the fake harness whose pid it records as the session lock.
+# runs under the fake harness with its trusted session identity.
 as_session() {  # <home> <script>
   FM_HOME="$1" PRIMARY_ROOT="$PRIMARY_ROOT" MIRROR="$MIRROR" "$FAKE_CLAUDE" -c \
-    'printf "%s\n" "$$" > "$FM_HOME/state/.lock"; '"$2"
+    'export CLAUDE_PID=$$ CLAUDE_CODE_SESSION_ID="mirror-$$";
+     "$PRIMARY_ROOT/bin/fm-lock.sh" >/dev/null || exit 1; '"$2"
 }
 
 # The command string one tracked registration runs.
@@ -95,7 +96,7 @@ test_home_without_the_flag_is_untouched() {
   home=$(make_home without-flag 0)
   printf 'working: demo\n' > "$home/state/demo.status"
   # The fixture's own session lock is written by as_session, not by a writer.
-  snapshot() { (cd "$1/state" && find . -type f ! -name .lock | LC_ALL=C sort | while IFS= read -r f; do printf '%s %s\n' "$f" "$(cksum < "$f")"; done); }
+  snapshot() { (cd "$1/state" && find . -type f ! -name .lock ! -name .lock-session | LC_ALL=C sort | while IFS= read -r f; do printf '%s %s\n' "$f" "$(cksum < "$f")"; done); }
   before=$(snapshot "$home")
   CLAUDE_PROMPT=$(claude_cmd UserPromptSubmit) CLAUDE_STOP=$(claude_cmd Stop) \
   CURSOR_PROMPT=$(cursor_cmd beforeSubmitPrompt) CURSOR_RESPONSE=$(cursor_cmd afterAgentResponse) \
