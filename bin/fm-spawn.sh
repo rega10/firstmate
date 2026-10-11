@@ -179,10 +179,13 @@
 #   task metadata publication. Teardown holds that same lock while proving and
 #   returning a slot, so allocation cannot reuse a slot before its owner record
 #   is published. Under that same lock it refuses acquisition when a slot in the
-#   project's pool is still named by a task's state/*.meta in any local Firstmate
-#   home. Treehouse can refresh an idle slot during get, before it returns its
-#   path, and cannot exclude a recorded slot; an exited worker does not retire
-#   its record. The returned path is checked again before claim or launch.
+#   project's pool is still named by another task's state/*.meta in the local
+#   home tree enumerated by bin/fm-wake-lib.sh's fm_collect_local_firstmate_states.
+#   This refuses even when another slot is available: Treehouse can refresh an
+#   idle slot during get, before it returns its path, and cannot exclude a
+#   recorded slot. An exited worker does not retire its record; reconcile the
+#   recorded task before reusing its slot. The returned path is checked again
+#   before claim or launch.
 #   A conflict closes only the new allocation endpoint, leaving the slot alone.
 #   It then writes the slot's owner claim, which is
 #   what lets teardown leave a slot reassigned since untouched; bin/fm-wake-lib.sh
@@ -190,8 +193,8 @@
 #   cannot be claimed refuses the spawn rather than launching a worker whose slot
 #   could later be released out from under its successor. A spawn that aborts
 #   while it still holds the allocation lock drops its own claim; an abort after
-#   metadata publication has released that lock leaves the claim in place, and
-#   the next spawn's claim replaces it.
+#   metadata publication has released that lock leaves the claim in place.
+#   A later spawn can replace it only after the competing task record is retired.
 #   The local root is whatever bin/fm-wake-lib.sh's
 #   fm_firstmate_root_home resolves, so a home seeded from another machine anchors
 #   that lock itself rather than failing to resolve one;
@@ -4681,8 +4684,9 @@ elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
   # the pane above records only a process lease (Treehouse's durable
   # `get --lease --lease-holder`, which bin/fm-home-seed.sh uses for secondmate
   # homes, is not this path), so Treehouse cannot say which task a slot belongs
-  # to once that task's worker exits - and that is exactly when the slot is
-  # handed on and this task's worktree= line goes stale. The claim is what lets
+  # to once that task's worker exits. The recorded-slot guard above prevents
+  # reuse while a reachable task record still names it; bin/fm-wake-lib.sh owns
+  # why a claim is also needed for reassignment outside that scan. The claim lets
   # bin/fm-teardown.sh leave a slot that has since been reassigned untouched, so
   # a slot that cannot be claimed is refused here, at the cheapest point, rather
   # than launching a worker whose slot teardown could later release out from
