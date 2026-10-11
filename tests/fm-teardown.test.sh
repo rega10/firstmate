@@ -664,6 +664,71 @@ make_path_without_lsof() {  # <case-dir>
   printf '%s\n' "$path_dir"
 }
 
+test_empty_worktree_refuses_with_recovery_action() {
+  local dir id=task-x1 backend flag rc meta
+  for backend in herdr tmux; do
+    dir=$(make_case "empty-worktree-$backend")
+    meta="$dir/state/$id.meta"
+    printf 'manual\n' > "$dir/config/backlog-backend"
+    printf 'uncommitted work\n' > "$dir/wt/sentinel"
+    # A refusal must not reach even a read-only runtime call.
+    cat > "$dir/fakebin/tmux" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "${FM_RUNTIME_LOG:?}"
+exit 1
+SH
+    cp "$dir/fakebin/tmux" "$dir/fakebin/herdr"
+    fm_write_meta "$meta" \
+      "endpoint_task_id=$id" "worktree=" "project=$dir/project" \
+      "harness=codex" "kind=ship" "mode=no-mistakes" "spawn_gen=s1.1.1" "backend=$backend"
+    if [ "$backend" = herdr ]; then
+      printf '%s\n' 'window=fm-lab-empty:w1:p2' 'herdr_session=fm-lab-empty' \
+        'herdr_workspace_id=w1' 'herdr_tab_id=w1:t2' 'herdr_pane_id=w1:p2' >> "$meta"
+    else
+      printf 'window=isolated:fm-%s\n' "$id" >> "$meta"
+    fi
+    printf 'done: work ready\n' > "$dir/state/$id.status"
+    printf '# retained check\n' > "$dir/state/$id.check.sh"
+    cp "$meta" "$dir/before.meta"
+    cp "$dir/state/$id.status" "$dir/before.status"
+    cp "$dir/state/$id.check.sh" "$dir/before.check.sh"
+
+    for flag in '' --force; do
+      rc=0
+      FM_HOME="$dir" FM_ROOT_OVERRIDE="$ROOT" FM_TEARDOWN_GUARD_DONE=1 \
+      FM_RUNTIME_LOG="$dir/runtime.log" PATH="$dir/fakebin:$PATH" \
+        "$TEARDOWN" "$id" ${flag:+"$flag"} > "$dir/stdout" 2> "$dir/stderr" || rc=$?
+      [ "$rc" -ne 0 ] || fail "$backend $flag: empty worktree unexpectedly cleaned up"
+      [ ! -s "$dir/stdout" ] || fail "$backend $flag: refusal printed success output"
+      [ "$(wc -l < "$dir/stderr" | tr -d ' ')" = 1 ] \
+        || fail "$backend $flag: expected one actionable refusal: $(cat "$dir/stderr")"
+      assert_contains "$(cat "$dir/stderr")" "Restore the verified original worktree path in $meta" \
+        "$backend $flag: refusal must identify the repair and its record"
+      assert_contains "$(cat "$dir/stderr")" 'retry teardown without --force' \
+        "$backend $flag: repair must retain the landed-work checks"
+      cmp -s "$meta" "$dir/before.meta" || fail "$backend $flag: refusal changed metadata"
+      cmp -s "$dir/state/$id.status" "$dir/before.status" || fail "$backend $flag: refusal changed status"
+      cmp -s "$dir/state/$id.check.sh" "$dir/before.check.sh" || fail "$backend $flag: refusal changed check"
+      [ "$(cat "$dir/wt/sentinel")" = 'uncommitted work' ] || fail "$backend $flag: refusal lost local work"
+      [ ! -s "$dir/runtime.log" ] || fail "$backend $flag: refusal invoked a runtime"
+    done
+
+    # Restoring the one missing identity must expose, not bypass, the dirty gate.
+    sed "s|^worktree=$|worktree=$dir/wt|" "$dir/before.meta" > "$meta"
+    rc=0
+    FM_HOME="$dir" FM_ROOT_OVERRIDE="$ROOT" FM_TEARDOWN_GUARD_DONE=1 \
+    FM_RUNTIME_LOG="$dir/runtime.log" PATH="$dir/fakebin:$PATH" \
+      "$TEARDOWN" "$id" > "$dir/stdout" 2> "$dir/stderr" || rc=$?
+    [ "$rc" -ne 0 ] || fail "$backend: restored dirty worktree unexpectedly cleaned up"
+    assert_contains "$(cat "$dir/stderr")" 'uncommitted changes present' \
+      "$backend: restoring the worktree must retain the dirty-work refusal"
+    assert_present "$meta" "$backend: dirty-work refusal removed metadata"
+    [ "$(cat "$dir/wt/sentinel")" = 'uncommitted work' ] || fail "$backend: dirty-work refusal lost local work"
+    [ ! -s "$dir/runtime.log" ] || fail "$backend: dirty-work refusal invoked a runtime"
+  done
+  pass "fm-teardown: empty worktree records give one actionable refusal, even with --force, and preserve local work"
+}
+
 test_local_only_fork_remote_allows() {
   local case_dir rc
   case_dir=$(make_case fork-allow)
@@ -4244,6 +4309,7 @@ test_retained_sources_still_reach_the_ordinary_refusal() {
   pass "present required sources still reach the ordinary teardown refusal"
 }
 
+test_empty_worktree_refuses_with_recovery_action
 test_missing_startup_source_refuses_before_cleanup
 test_unreadable_startup_source_refuses_before_cleanup
 test_missing_adapter_sibling_refuses_before_cleanup
