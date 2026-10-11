@@ -368,6 +368,7 @@ E2E_ROOT="$E2E/root"
 E2E_HOME="$E2E/home"
 E2E_FAKEBIN="$E2E/fakebin"
 mkdir -p "$E2E_HOME/state" "$E2E_HOME/data" "$E2E_HOME/config" "$E2E_FAKEBIN"
+fm_git_identity
 git init -q -b main "$E2E_ROOT"
 git -C "$E2E_ROOT" commit -q --allow-empty -m init
 
@@ -378,14 +379,19 @@ make_hanging_tasks_axi "$E2E_FAKEBIN"
 # would be refused there and the sweep silently skipped. Pin the lock evidence
 # the same way tests/fm-session-start.test.sh's make_fake_ps_harness does:
 # every queried pid reports a live `claude` harness, independent of whatever
-# process tree the test itself was launched from.
+# process tree the test itself was launched from. The ancestry reaches this
+# test's stable pid, which carries the fixture's trusted session identity.
 cat > "$E2E_FAKEBIN/ps" <<'SH'
 #!/usr/bin/env bash
 set -u
 case "$*" in
   *"comm="*) printf '%s\n' '/usr/local/bin/claude'; exit 0 ;;
   *"args="*) printf '%s\n' 'claude'; exit 0 ;;
-  *"ppid="*) exit 1 ;;
+  *"ppid="*)
+    [ "${*: -1}" = "$CLAUDE_PID" ] && exit 1
+    printf '%s\n' "$CLAUDE_PID"
+    exit 0
+    ;;
 esac
 exit 1
 SH
@@ -409,6 +415,7 @@ fm_write_meta "$E2E_HOME/state/wedged-task.meta" \
 DIGEST="$E2E/digest.out"
 DIGEST_START=$(date +%s)
 env -u CLAUDECODE -u PI_CODING_AGENT -u FM_PI_HARNESS -u GROK_AGENT \
+  CLAUDE_PID=$$ CLAUDE_CODE_SESSION_ID="backlog-read-bound-$$" \
   FM_HOME="$E2E_HOME" FM_ROOT_OVERRIDE="$E2E_ROOT" PATH="$E2E_FAKEBIN:$BASE_PATH" \
   FM_BACKLOG_ROW_TIMEOUT_SECS="$BOUND_SECS" \
   "$ROOT/bin/fm-session-start.sh" > "$DIGEST" 2>&1 || true

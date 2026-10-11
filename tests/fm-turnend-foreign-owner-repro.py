@@ -149,8 +149,8 @@ def require(condition, message):
 try:
     root, env = make("nonowner")
     owner = start(
-        env,
-        '"$FM_ROOT_OVERRIDE/bin/fm-lock.sh" && touch "$FM_HOME/state/owner-ready" && while :; do sleep 1; done',
+        env | {"CLAUDE_CODE_SESSION_ID": "synthetic-owner"},
+        'export CLAUDE_PID=$$; "$FM_ROOT_OVERRIDE/bin/fm-lock.sh" && touch "$FM_HOME/state/owner-ready" && while :; do sleep 1; done',
         "owner-idle.txt",
     )
     lock_path = root / "state/.lock"
@@ -172,8 +172,8 @@ try:
     print("SETUP live synthetic owner=", owner.pid, "lock=", lock_owner, flush=True)
 
     acquisition = run(
-        env,
-        '"$FM_ROOT_OVERRIDE/bin/fm-lock.sh"; rc=$?; printf "lock_rc=%s\\n" "$rc"; true',
+        env | {"CLAUDE_CODE_SESSION_ID": "synthetic-second"},
+        'export CLAUDE_PID=$$; "$FM_ROOT_OVERRIDE/bin/fm-lock.sh"; rc=$?; printf "lock_rc=%s\\n" "$rc"; true',
     )
     print("second-session acquisition", "rc=" + str(acquisition.returncode), "stdout=" + repr(acquisition.stdout), "stderr=" + repr(acquisition.stderr), flush=True)
     require("lock_rc=1" in acquisition.stdout, "foreign session unexpectedly acquired the session lock")
