@@ -1,0 +1,66 @@
+FM_TEST_BEGIN 2026-10-11T07:06:23Z tests/fm-session-lock-ancestry.test.sh family=watcher-wake-lock expected_gate_skip=none
+ok - session-lock e2e: a shared Claude front-end grants authority only to the owning session
+ok - session-lock e2e: fresh and stale Claude acquisition require trusted identity before publication, prompts, or startup mutations
+ok - session-lock e2e: unavailable helper inspection refuses ownership, Stop, prompt, resume, and startup mutations
+ok - session-lock e2e: a legacy upgrade refuses shared ancestry and recovers through startup after the recorded owner exits
+ok - session-lock: a version-named Claude Code session is identified from its install path and argv[0]
+ok - session-lock: a harness that is pid 1 of its own namespace is examined, not skipped
+ok - session-lock: non-Claude harnesses preserve legacy ancestry ownership
+ok - session-lock: ordinary script paths under a harness directory are not harness processes
+ok - session-lock: ownership stops at the first non-harness gap above the contiguous run
+ok - session-lock: a live version-named session holding the lock is not mistaken for a stale owner
+ok - session-lock: a trusted same-session id keeps owning a recycled background chain, and nothing weaker does
+ok - session-lock: Claude anchor selection requires a trusted session id
+ok - session-lock e2e: a version-named session claims the home and arms supervision
+ok - session-lock e2e: a session parented by a harness-named daemon claims the home and arms supervision
+ok - session-lock e2e: a version-named session under a harness-named daemon keeps its own lock
+ok - session-lock e2e: a background session keeps its lock and its supervision across a recycled helper chain
+ok - session-lock: concurrent conversations sharing one Claude pid have exactly one winner
+ok - session-lock: a same-session confirmation waits for the claim lock and preserves its id
+ok - session-lock: a waiting confirmation does not steal another session's lock
+ok - session-lock: a failed lock write restores the previous sidecar
+ok - session-lock: a failed lock write removes a newly created sidecar
+ok - session-lock: a verified reclaim keeps the new sidecar beside the new pid
+FM_TEST_END 2026-10-11T07:07:42Z tests/fm-session-lock-ancestry.test.sh exit=0 duration_ms=79346 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T07:07:42Z tests/fm-sessionstart-nudge.test.sh family=session-bootstrap expected_gate_skip=none
+ok - fm-sessionstart-nudge: a genuine primary gets one explicitly marked instruction line
+ok - fm-sessionstart-nudge: NO_MISTAKES_GATE is silent
+ok - fm-sessionstart-nudge: .no-mistakes gate common-dir is silent
+ok - fm-sessionstart-nudge: an unmarked linked task worktree is silent
+ok - fm-sessionstart-nudge: a marked linked secondmate home is a primary
+ok - fm-sessionstart-nudge: a checkout without state is silent
+ok - fm-sessionstart-nudge: a lock holder in process ancestry is already run
+# skip: unprivileged PID namespaces are unavailable here, so the namespace pid 1 lock owner is unverified
+ok - OpenCode session.created delivers the exact wrapper nudge once per session
+ok - run wrapper: startup runs the full digest and never also nudges
+ok - run wrapper: clear and compact re-emit the digest without repeating startup sweeps
+ok - run wrapper forwards only stale-cache rebuild sources to immutable-baseline instruction refresh
+ok - run wrapper refreshes a compact even when startup completion is unproven
+ok - run wrapper: clear falls back to full startup when completion is unproven
+ok - run wrapper: clear accepts completion only from the current harness
+ok - run wrapper: resume delegates to the nudge instead of re-running the digest
+ok - run wrapper: the hook payload's source field drives routing with no explicit argument
+ok - run wrapper: an unrecognized or absent source takes the helm rather than skipping it
+ok - run wrapper: ordinary ineligible opens stay silent-zero and Pi preflight gets an explicit silent stand-down
+ok - run wrapper: a session start that cannot take the lock still opens the session and says so
+ok - Pi distinguishes header-proven restored CLI sessions from named create-if-missing startups
+ok - Pi provider preflight owns one generation-bound startup prerequisite with deterministic fallback, replacement, cancellation, timeout, and truncation
+ok - Pi reload shutdown releases its exit listener and stale startup generation
+ok - Pi retains a bounded digest prefix and loudly marks oversized preflight delivery
+FM_TEST_END 2026-10-11T07:08:52Z tests/fm-sessionstart-nudge.test.sh exit=0 duration_ms=69513 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T07:08:52Z tests/fm-lock.test.sh family=unclassified expected_gate_skip=none
+ok - fm-lock acquires with the hosted Codex thread fallback when ps is denied
+ok - fm-lock acquires with the hosted Codex thread fallback when parent lookup fails
+ok - fm-lock preserves a fresh Codex token lock owned by another thread
+ok - fm-lock preserves an old Codex token lock owned by another thread
+ok - fm-lock preserves a live holder when Codex seatbelt denies process inspection
+ok - fm-lock still reports a dead holder stale when ps is denied
+ok - fm-lock rejects a lock file with a malformed trailing fragment
+FM_TEST_END 2026-10-11T07:08:53Z tests/fm-lock.test.sh exit=0 duration_ms=1241 gate_skip=false
+FM_TEST_SUMMARY total=3 failed=0 skipped_gate=0 duration_ms=150442
+FM_TEST_SUMMARY_FAMILY family=session-bootstrap count=1 duration_ms=69513 failed=0
+FM_TEST_SUMMARY_FAMILY family=unclassified count=1 duration_ms=1241 failed=0
+FM_TEST_SUMMARY_FAMILY family=watcher-wake-lock count=1 duration_ms=79346 failed=0
+FM_TEST_SLOWEST rank=1 script=tests/fm-session-lock-ancestry.test.sh duration_ms=79346
+FM_TEST_SLOWEST rank=2 script=tests/fm-sessionstart-nudge.test.sh duration_ms=69513
+FM_TEST_SLOWEST rank=3 script=tests/fm-lock.test.sh duration_ms=1241

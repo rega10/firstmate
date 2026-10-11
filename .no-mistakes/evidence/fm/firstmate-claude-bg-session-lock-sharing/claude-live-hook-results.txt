@@ -1,0 +1,40 @@
+[contender.id]
+6e1d77b1-a2f0-4ef6-8734-9679b328be9b
+
+[contender.lock.out]
+error: another live firstmate session holds the lock (pid 65004, session 43ffd08d-3c5d-4f5e-8a81-e0a0bc3261e0); operate read-only until resolved
+
+[contender.lock.rc]
+1
+
+[contender.prompt.out]
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 65004, session 43ffd08d-3c5d-4f5e-8a81-e0a0bc3261e0); operate read-only until resolved
+This prompt was refused before fleet or away-mode actions.
+
+[contender.prompt.rc]
+2
+
+[owner.id]
+43ffd08d-3c5d-4f5e-8a81-e0a0bc3261e0
+
+[owner.lock.out]
+lock acquired: harness pid 65004
+
+[owner.lock.rc]
+0
+
+[owner.prompt.rc]
+0
+
+[shared-pid.out]
+error: another live firstmate session holds the lock (pid 65004, session 43ffd08d-3c5d-4f5e-8a81-e0a0bc3261e0); operate read-only until resolved
+
+[shared-pid.rc]
+1
+
+[state/.lock]
+65004
+
+[state/.lock-session]
+43ffd08d-3c5d-4f5e-8a81-e0a0bc3261e0
+

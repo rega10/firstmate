@@ -1,0 +1,3 @@
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 59378); operate read-only until resolved
+recovery: the live legacy lock has no valid Claude session identity; restart the owning Claude process (pid 59378) so that pid 59378 exits, then re-run bin/fm-session-start.sh in the restarted session to acquire the stale lock with its trusted session identity
+This prompt was refused before fleet or away-mode actions.

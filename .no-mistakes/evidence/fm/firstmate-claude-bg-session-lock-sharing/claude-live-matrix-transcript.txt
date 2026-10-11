@@ -1,0 +1,155 @@
+Firstmate live validation with Claude Code 2.1.284.
+Actual installed CLI with existing login, disposable marked homes, actual product scripts.
+The hook matrix supplies alternate identities, missing identities, and legacy records as adversarial inputs.
+The detached hook has no Claude ancestor and uses real process inspection.
+Native desktop backgrounding and actual Claude helper recycling were not driven.
+
+[owner.id]
+efeed27e-68ce-4061-9410-3c750bf4de09
+
+[owner.lock.out]
+lock acquired: harness pid 59378
+
+[owner.lock.rc]
+0
+
+[owner.prompt.rc]
+0
+
+[contender.id]
+299117db-57b2-4942-b29d-916c1b83297b
+
+[contender.lock.out]
+error: another live firstmate session holds the lock (pid 59378, session efeed27e-68ce-4061-9410-3c750bf4de09); operate read-only until resolved
+
+[contender.lock.rc]
+1
+
+[contender.prompt.out]
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 59378, session efeed27e-68ce-4061-9410-3c750bf4de09); operate read-only until resolved
+This prompt was refused before fleet or away-mode actions.
+
+[contender.prompt.rc]
+2
+
+[shared-pid.out]
+error: another live firstmate session holds the lock (pid 59378, session efeed27e-68ce-4061-9410-3c750bf4de09); operate read-only until resolved
+
+[shared-pid.rc]
+1
+
+[race-owner.out]
+error: another live firstmate session holds the lock (pid 59378, session 299117db-57b2-4942-b29d-916c1b83297b); operate read-only until resolved
+
+[race-owner.rc]
+1
+
+[race-other.out]
+lock acquired: harness pid 59378
+
+[race-other.rc]
+0
+
+[race-winner.snapshot]
+299117db-57b2-4942-b29d-916c1b83297b
+
+[missing-fresh.out]
+error: cannot verify harness ancestry or trusted Claude session identity; operate read-only until resolved
+
+[missing-fresh.rc]
+1
+
+[missing-fresh.snapshot]
+lock=ABSENT
+identity=ABSENT
+
+[untrusted-fresh.out]
+error: cannot verify harness ancestry or trusted Claude session identity; operate read-only until resolved
+
+[untrusted-fresh.rc]
+1
+
+[missing-stale.out]
+error: cannot verify harness ancestry or trusted Claude session identity; operate read-only until resolved
+
+[missing-stale.rc]
+1
+
+[missing-stale.snapshot]
+lock=9999999
+identity=old-identity
+
+[untrusted-stale.out]
+error: cannot verify harness ancestry or trusted Claude session identity; operate read-only until resolved
+
+[untrusted-stale.rc]
+1
+
+[legacy-acquire.out]
+error: another live firstmate session holds the lock (pid 59378); operate read-only until resolved
+recovery: the live legacy lock has no valid Claude session identity; restart the owning Claude process (pid 59378) so that pid 59378 exits, then re-run bin/fm-session-start.sh in the restarted session to acquire the stale lock with its trusted session identity
+
+[legacy-acquire.rc]
+1
+
+[legacy-prompt.out]
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 59378); operate read-only until resolved
+recovery: the live legacy lock has no valid Claude session identity; restart the owning Claude process (pid 59378) so that pid 59378 exits, then re-run bin/fm-session-start.sh in the restarted session to acquire the stale lock with its trusted session identity
+This prompt was refused before fleet or away-mode actions.
+
+[legacy-prompt.rc]
+2
+
+[owner-session.snapshot]
+efeed27e-68ce-4061-9410-3c750bf4de09
+
+[clear-session-after.snapshot]
+efeed27e-68ce-4061-9410-3c750bf4de09
+
+[away-before.snapshot]
+away mandate remains active
+
+[away-after.snapshot]
+away mandate remains active
+
+[wakes-before.snapshot]
+pending wake remains queued
+
+[wakes-after.snapshot]
+pending wake remains queued
+
+[unknown-prompt.out]
+READ-ONLY SESSION: cannot verify harness identity; this prompt was refused before fleet or away-mode actions.
+
+[unknown-prompt.rc]
+2
+
+[unknown-stop.out]
+
+[unknown-stop.rc]
+0
+
+[unknown-generation.snapshot]
+ABSENT
+
+[unknown-session-after.snapshot]
+efeed27e-68ce-4061-9410-3c750bf4de09
+
+[recovery.id]
+92180365-3058-4db1-8565-90b113facd6c
+
+[recovery.lock.out]
+lock acquired: harness pid 64652
+
+[recovery.lock.rc]
+0
+
+[recovery.prompt.rc]
+0
+
+[recovery-session.snapshot]
+92180365-3058-4db1-8565-90b113facd6c
+
+[recovery-completion.snapshot]
+64652
+
