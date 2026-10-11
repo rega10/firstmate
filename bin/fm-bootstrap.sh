@@ -54,7 +54,7 @@
 #          on a feature branch instead of its default branch - a crewmate's work
 #          landed in the primary instead of its own worktree; restore it per the line.
 #          treehouse is also MISSING when its installed version lacks
-#          "treehouse get --lease" support.
+#          JSON lease acquisition and conditional-return support.
 #          no-mistakes is also MISSING when its installed version is older than
 #          1.46.0 (structured pipeline attestation floor; see CONTRIBUTING.md).
 #          The AXI-family floor policy is owned beside GH_AXI_MIN and
@@ -859,7 +859,13 @@ LAVISH_AXI_MIN=0.1.80
 LAVISH_AXI_BOARD_MIN=0.1.77
 
 treehouse_supports_lease() {
-  treehouse get --help 2>&1 | grep -Eq '(^|[^[:alnum:]_-])--lease([^[:alnum:]_-]|$)'
+  local get_help return_help flag
+  get_help=$(treehouse get --help 2>&1) || return 1
+  return_help=$(treehouse return --help 2>&1) || return 1
+  for flag in lease json lease-holder; do
+    printf '%s\n' "$get_help" | grep -Eq "(^|[^[:alnum:]_-])--$flag([^[:alnum:]_-]|$)" || return 1
+  done
+  printf '%s\n' "$return_help" | grep -Eq '(^|[^[:alnum:]_-])--if-lease-id([^[:alnum:]_-]|$)'
 }
 
 # Shared semantic-version floor for the tool gates below. A version string that

@@ -414,10 +414,7 @@ case "${1:-}" in
 esac
 exit 0
 SH
-  cat > "$fakebin/treehouse" <<'SH'
-#!/usr/bin/env bash
-exit 0
-SH
+  fm_test_fake_treehouse_lease "$fakebin"
   cat > "$fakebin/worker-tool" <<'SH'
 #!/bin/sh
 [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] || exit 91

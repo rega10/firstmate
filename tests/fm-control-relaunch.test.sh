@@ -376,6 +376,13 @@ test_same_harness_relaunch_keeps_identity_and_reuses_the_endpoint() {
   local dir out rc gen_before gen_after
   dir=$(new_case same rl1)
   add_ship_task "$dir" rl1 claude
+  printf 'treehouse_lease_id=original-lease\ntreehouse_lease_holder=%s:rl1\n' "$dir/home" >> "$dir/home/state/rl1.meta"
+  cat > "$dir/fakebin/treehouse" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_FAKE_DIR/treehouse-calls"
+exit 1
+SH
+  chmod +x "$dir/fakebin/treehouse"
   gen_before=$("$ROOT/bin/fm-busy-event.sh" arm "$dir/home/state" rl1)
   printf 'busy_gen=%s\n' "$gen_before" >> "$dir/home/state/rl1.meta"
   out=$(run_control "$dir" rl1 relaunch --note "stopped mid-refactor"); rc=$?
@@ -385,6 +392,9 @@ test_same_harness_relaunch_keeps_identity_and_reuses_the_endpoint() {
     || fail "the endpoint must be reused, not recreated"
   [ "$(meta_field "$dir" rl1 worktree)" = "$dir/wt" ] \
     || fail "the worktree must be reused, not reallocated"
+  [ "$(meta_field "$dir" rl1 treehouse_lease_id)" = original-lease ] || fail "relaunch changed the lease identity"
+  [ "$(meta_field "$dir" rl1 treehouse_lease_holder)" = "$dir/home:rl1" ] || fail "relaunch changed the lease holder"
+  [ ! -e "$dir/fake/treehouse-calls" ] || fail "relaunch called the allocator"
   [ "$(meta_field "$dir" rl1 kind)" = ship ] || fail "kind must survive the relaunch"
   [ "$(meta_field "$dir" rl1 project)" = "$dir/proj" ] || fail "project must survive the relaunch"
   gen_after=$(meta_field "$dir" rl1 busy_gen)
@@ -2590,6 +2600,11 @@ SH
 
 test_exit_and_relaunch_remove_the_dialog_file
 test_exit_removes_the_dialog_file_before_releasing_the_lock
+if [ "${1:-}" = --lease ]; then
+  test_same_harness_relaunch_keeps_identity_and_reuses_the_endpoint
+  exit 0
+fi
+
 test_same_harness_relaunch_keeps_identity_and_reuses_the_endpoint
 test_relaunch_refuses_before_exit_when_the_composer_holds_pending_text
 test_relaunch_refuses_before_exit_when_the_composer_state_is_unproven

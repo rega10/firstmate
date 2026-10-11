@@ -221,6 +221,11 @@ jobs:
           set -eu
           npm install -g @earendil-works/pi-coding-agent
           npm ls -g --depth 0 @earendil-works/pi-coding-agent
+      - name: Install pinned Treehouse for lease lifecycle tests
+        run: |
+          set -eu
+          bin/fm-install-treehouse.sh "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
       - name: Run portable serial shard ${{ matrix.shard }}
         env:
           # job-total rather than a literal, so shrinking or growing the matrix

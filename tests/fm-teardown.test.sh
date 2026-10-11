@@ -4702,6 +4702,170 @@ test_retained_sources_still_reach_the_ordinary_refusal() {
   pass "present required sources still reach the ordinary teardown refusal"
 }
 
+# Kill only the exact test-owned teardown process at the return boundary.
+# The real allocator validates the receipt in both normal and retry paths.
+test_real_lease_teardown_recovers_interruption() {
+  local case_dir treehouse_bin receipt path lease_id out rc phase pid current replacement
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for lease teardown verification"
+  for phase in before-return after-return; do
+    case_dir=$(make_case "lease-$phase")
+    export TREEHOUSE_ROOT="$case_dir/treehouse-root"
+    receipt=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" get --lease --json --lease-holder "$case_dir:task-x1") || fail "could not allocate the teardown lease"
+    path=$(printf '%s\n' "$receipt" | jq -r .path)
+    lease_id=$(printf '%s\n' "$receipt" | jq -r .lease_id)
+    fm_write_meta "$case_dir/state/task-x1.meta" \
+      'window=firstmate:fm-task-x1' 'endpoint_task_id=task-x1' \
+      "worktree=$path" "project=$case_dir/project" 'kind=ship' \
+      'mode=local-only' 'spawn_gen=teardown-lease-test' \
+      "treehouse_lease_id=$lease_id" "treehouse_lease_holder=$case_dir:task-x1"
+    seed_backlog_in_flight "$case_dir"
+    # Exact conditional return must refuse the wrong identity without changing
+    # the lease. This uses Treehouse itself, not a simulated lease checker.
+    (cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" return --force --if-lease-id wrong-lease "$path") > "$case_dir/wrong-return" 2>&1
+    rc=$?
+    [ "$rc" -ne 0 ] || fail "Treehouse returned a lease with the wrong identity"
+    cat > "$case_dir/fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+# No account-wide worker sweep is part of this fixture.
+[ "${1:-}" != -u ] || exit 0
+exec "$REAL_PS_FOR_TEST" "$@"
+SH
+    cat > "$case_dir/fakebin/treehouse" <<'SH'
+#!/usr/bin/env bash
+set -eu
+printf '%s\n' "$*" >> "$FM_LEASE_TEST_DIR/returns"
+if [ "$1" = return ] && [ -n "${FM_LEASE_INTERRUPT:-}" ]; then
+  if [ "$FM_LEASE_INTERRUPT" = after-return ]; then
+    "$FM_REAL_TREEHOUSE" "$@"
+  fi
+  while [ ! -s "$FM_LEASE_TEST_DIR/teardown-pid" ]; do /bin/sleep 0.01; done
+  kill -KILL "$(cat "$FM_LEASE_TEST_DIR/teardown-pid")"
+  exit 1
+fi
+if [ "$1" = return ] && [ "${FM_LEASE_RETRY:-}" = 1 ] && [ ! -e "$FM_LEASE_TEST_DIR/transient-fired" ]; then
+  : > "$FM_LEASE_TEST_DIR/transient-fired"
+  echo "Unable to create '.git/index.lock': File exists" >&2
+  exit 1
+fi
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+    chmod +x "$case_dir/fakebin/treehouse" "$case_dir/fakebin/ps"
+    (exec env FM_HOME="$case_dir" HOME="$case_dir/user-home" FM_ROOT_OVERRIDE="$ROOT" \
+      FM_STATE_OVERRIDE="$case_dir/state" FM_DATA_OVERRIDE="$case_dir/data" \
+      FM_CONFIG_OVERRIDE="$case_dir/config" FM_LEASE_TEST_DIR="$case_dir" \
+      FM_REAL_TREEHOUSE="$treehouse_bin" FM_LEASE_INTERRUPT="$phase" \
+      PATH="$case_dir/fakebin:$PATH" "$TEARDOWN" task-x1 --force) \
+      > "$case_dir/stdout" 2> "$case_dir/stderr" &
+    pid=$!
+    printf '%s\n' "$pid" > "$case_dir/teardown-pid"
+    wait "$pid" 2>/dev/null; rc=$?
+    [ "$rc" -ne 0 ] || fail "the interrupted teardown unexpectedly completed"
+    assert_present "$case_dir/state/task-x1.meta" "interruption lost the recovery receipt"
+    [ "$(sed -n 's/^worktree=//p' "$case_dir/state/task-x1.meta")" = '' ] || fail "interruption retained an active worktree claim"
+    assert_grep "treehouse_retiring_worktree=$path" "$case_dir/state/task-x1.meta" "interruption lost the retirement path"
+    assert_grep "treehouse_lease_id=$lease_id" "$case_dir/state/task-x1.meta" "interruption lost the immutable receipt"
+    current=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json)
+    if [ "$phase" = before-return ]; then
+      printf '%s\n' "$current" | jq -e --arg id "$lease_id" 'any(.[]; .lease_id == $id)' >/dev/null || fail "interruption released a lease before return"
+    else
+      printf '%s\n' "$current" | jq -e --arg id "$lease_id" 'all(.[]; .lease_id != $id)' >/dev/null || fail "the after-return interruption did not release"
+      replacement=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" get --lease --json --lease-holder replacement) || fail "could not reallocate the released slot"
+      [ "$(printf '%s\n' "$replacement" | jq -r .path)" = "$path" ] || fail "the replacement did not reuse the slot"
+      printf 'replacement work\n' > "$path/replacement.txt"
+    fi
+    if [ "$phase" = before-return ]; then
+      printf 'retained work\n' > "$path/retained.txt"
+      out=$(FM_HOME="$case_dir" HOME="$case_dir/user-home" FM_REAL_TREEHOUSE="$treehouse_bin" \
+        FM_LEASE_TEST_DIR="$case_dir" run_teardown "$case_dir")
+      rc=$?
+      [ "$rc" -ne 0 ] || fail "a pending return discarded new unlanded work without force"
+      assert_grep 'retained work' "$path/retained.txt" "a pending return lost unlanded work"
+      assert_present "$case_dir/state/task-x1.meta" "a refused pending return lost its receipt"
+    fi
+    out=$(FM_HOME="$case_dir" HOME="$case_dir/user-home" FM_REAL_TREEHOUSE="$treehouse_bin" \
+      FM_LEASE_TEST_DIR="$case_dir" FM_LEASE_RETRY=1 FM_TREEHOUSE_RETURN_LOCK_RETRY_WAIT_SECS=0.01 run_teardown "$case_dir" --force)
+    rc=$?
+    expect_code 0 "$rc" "retry should complete the exact pending return"$'\n'"$out"
+    assert_absent "$case_dir/state/task-x1.meta" "retry did not retire the receipt"
+    [ "$(backlog_row_state "$case_dir")" = "done" ] || fail "retry did not close the backlog item"
+    assert_grep "return --force --if-lease-id $lease_id $path" "$case_dir/returns" "teardown did not use conditional release"
+    if [ "$phase" = before-return ]; then
+      [ "$(grep -Fc "return --force --if-lease-id $lease_id $path" "$case_dir/returns")" -eq 3 ] || fail "a retry lost or changed the conditional lease identity"
+    fi
+    if [ "$phase" = after-return ]; then
+      assert_grep 'replacement work' "$path/replacement.txt" "retry reset the replacement allocation"
+      current=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json)
+      printf '%s\n' "$current" | jq -e --arg id "$(printf '%s\n' "$replacement" | jq -r .lease_id)" 'any(.[]; .lease_id == $id)' >/dev/null || fail "retry released the replacement lease"
+    fi
+    unset TREEHOUSE_ROOT
+    pass "durable lease teardown recovers interruption $phase without touching a successor"
+  done
+}
+
+test_descendant_lease_return_is_recoverable() {
+  local case_dir home treehouse_bin receipt path lease_id out rc current
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for descendant lease verification"
+  case_dir=$(make_case leased-descendant)
+  write_meta "$case_dir" local-only secondmate
+  configure_secondmate_with_tmux_children "$case_dir"
+  home="$case_dir/secondmate-home"
+  mkdir -p "$case_dir/supervisor-home/state" "$case_dir/code-root"
+  ln -s "$ROOT/bin" "$case_dir/code-root/bin"
+  rm "$home/state/child-b.meta"
+  export TREEHOUSE_ROOT="$case_dir/treehouse-root"
+  receipt=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" get --lease --json --lease-holder "$home:child-a") || fail "could not acquire the child lease"
+  path=$(printf '%s\n' "$receipt" | jq -r .path)
+  lease_id=$(printf '%s\n' "$receipt" | jq -r .lease_id)
+  fm_write_meta "$home/state/child-a.meta" 'window=firstmate:fm-child-a' 'endpoint_task_id=child-a' \
+    "worktree=$path" "project=$case_dir/project" 'kind=ship' 'mode=local-only' \
+    "treehouse_lease_id=$lease_id" "treehouse_lease_holder=$home:child-a"
+  cat > "$case_dir/fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+[ "${1:-}" != -u ] || exit 0
+exec "$REAL_PS_FOR_TEST" "$@"
+SH
+  cat > "$case_dir/fakebin/treehouse" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_LEASE_TEST_DIR/returns"
+if [ "$1" = return ] && [ ! -e "$FM_LEASE_TEST_DIR/failed-once" ]; then
+  : > "$FM_LEASE_TEST_DIR/failed-once"
+  exit 1
+fi
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+  chmod +x "$case_dir/fakebin/treehouse" "$case_dir/fakebin/ps"
+  out=$(FM_HOME="$case_dir/supervisor-home" HOME="$case_dir/user-home" FM_REAL_TREEHOUSE="$treehouse_bin" \
+    FM_LEASE_TEST_DIR="$case_dir" FM_ROOT_OVERRIDE="$case_dir/code-root" \
+    FM_STATE_OVERRIDE="$case_dir/state" FM_DATA_OVERRIDE="$case_dir/data" \
+    FM_CONFIG_OVERRIDE="$case_dir/config" PATH="$case_dir/fakebin:$PATH" \
+    "$TEARDOWN" task-x1 --force)
+  rc=$?
+  [ "$rc" -ne 0 ] || fail "a failed child return did not stop home retirement"
+  assert_present "$home/state/child-a.meta" "failed child return lost its receipt"
+  [ "$(sed -n 's/^worktree=//p' "$home/state/child-a.meta")" = '' ] || fail "failed child return kept an active worktree claim"
+  out=$(FM_HOME="$case_dir/supervisor-home" HOME="$case_dir/user-home" FM_REAL_TREEHOUSE="$treehouse_bin" \
+    FM_LEASE_TEST_DIR="$case_dir" FM_ROOT_OVERRIDE="$case_dir/code-root" \
+    FM_STATE_OVERRIDE="$case_dir/state" FM_DATA_OVERRIDE="$case_dir/data" \
+    FM_CONFIG_OVERRIDE="$case_dir/config" PATH="$case_dir/fakebin:$PATH" \
+    "$TEARDOWN" task-x1 --force)
+  rc=$?
+  expect_code 0 "$rc" "descendant return retry should complete"$'\n'"$out"
+  assert_absent "$home" "successful descendant retirement left its home"
+  assert_grep "return --force --if-lease-id $lease_id $path" "$case_dir/returns" "descendant return lost its receipt"
+  current=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json)
+  printf '%s\n' "$current" | jq -e --arg id "$lease_id" 'all(.[]; .lease_id != $id)' >/dev/null || fail "descendant return retained the released lease"
+  unset TREEHOUSE_ROOT
+  pass "descendant teardown retains the exact lease receipt until its conditional return succeeds"
+}
+
+if [ "${1:-}" = --lease ]; then
+  test_real_lease_teardown_recovers_interruption
+  test_descendant_lease_return_is_recoverable
+  exit 0
+fi
+
+test_real_lease_teardown_recovers_interruption
+test_descendant_lease_return_is_recoverable
 test_empty_worktree_refuses_with_recovery_action
 test_missing_startup_source_refuses_before_cleanup
 test_unreadable_startup_source_refuses_before_cleanup

@@ -210,9 +210,6 @@ set -u
   done
   printf '\n'
 } >> "$TREEHOUSE_CALL_LOG"
-if [ -d "$POST_CREATE_ABORT_CONTROL" ] && [ "${1:-}" = get ]; then
-  exit 0
-fi
 # Treehouse's pool allocator is outside the Herdr concurrency contract under
 # test. Serialize its calls so simultaneous recovery spawns cannot race for
 # one pool slot before reaching the Herdr session lock exercised below.
@@ -870,7 +867,7 @@ finish_concurrent_expected_abort abort-b "$ABORT_B_STATUS" "$TMP_ROOT/abort-b.ou
 # The forced foreground_cwd is a plain non-git directory, which the discovery
 # poll now screens out on every read rather than adopting, so the armed failure
 # arrives as the poll's own deadline refusal naming that path.
-grep -F "did not enter an isolated worktree" "$TMP_ROOT/abort-a.err" >/dev/null 2>&1 \
+grep -F "not its recorded worktree" "$TMP_ROOT/abort-a.err" >/dev/null 2>&1 \
   || fail "post-create abort fixture A did not reach the armed validation failure"
 grep -F "did not enter an isolated worktree" "$TMP_ROOT/abort-b.err" >/dev/null 2>&1 \
   || fail "post-create abort fixture B did not reach the armed validation failure"

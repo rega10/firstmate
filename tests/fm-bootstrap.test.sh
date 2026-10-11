@@ -66,12 +66,19 @@ SH
   cat > "$fakebin/treehouse" <<'SH'
 #!/usr/bin/env bash
 if [ "${1:-}" = get ] && [ "${2:-}" = --help ]; then
-  if [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-}" = 1 ]; then
-    printf '%s\n' 'Usage: treehouse get [--lease] [--lease-holder <holder>]'
+  if [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-0}" != 0 ]; then
+    if [ "$FM_FAKE_TREEHOUSE_LEASE_HELP" = 2 ]; then
+      printf '%s\n' 'Usage: treehouse get [--lease] [--lease-holder <holder>]'
+      exit 0
+    fi
+    printf '%s\n' 'Usage: treehouse get [--lease] [--json] [--lease-holder <holder>]'
   else
     printf '%s\n' 'Usage: treehouse get'
   fi
   exit 0
+fi
+if [ "${1:-}" = return ] && [ "${2:-}" = --help ] && [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-0}" != 0 ] && [ "$FM_FAKE_TREEHOUSE_LEASE_HELP" != 3 ]; then
+  printf '%s\n' 'Usage: treehouse return [--if-lease-id <id>]'
 fi
 exit 0
 SH
@@ -305,6 +312,8 @@ test_bootstrap_reporting() {
     esac
   done <<'ROWS'
 treehouse --lease support is accepted silently^1^0.2.6^1^manual^empty^^
+treehouse without JSON receipts reports an upgrade^2^0.2.6^1^manual^grep^MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^
+treehouse without conditional release reports an upgrade^3^0.2.6^1^manual^grep^MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^
 treehouse without --lease reports an upgrade, gh auth is fine^0^0.2.6^1^-^grep^MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^NEEDS_GH_AUTH
 compatible tasks-axi is silent by default^1^0.2.6^1^-^empty^^
 missing tasks-axi is required by default^1^-^1^-^exact^MISSING: tasks-axi (install: npm install -g tasks-axi)^

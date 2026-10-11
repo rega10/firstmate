@@ -25,6 +25,13 @@
 # data/backlog.md; those cases print the manual follow-up. A configured
 # non-markdown adapter remains active without a markdown file; any active
 # automatic backend without compatible tasks-axi refuses before cleanup.
+# A leased ship/scout return first atomically replaces worktree= with an empty
+# value and treehouse_retiring_worktree= with the former path, retaining
+# treehouse_lease_id= and treehouse_lease_holder= in the same task record.
+# Only then does it return that exact lease with --if-lease-id, including retries.
+# A teardown retry uses the retained receipt and skips a successor's allocation.
+# Endpoint checks and final reporting precede this transition; the backlog-close
+# marker follows successful release so session replay cannot erase its receipt.
 # None of this loosens the landed-work gates below: the transition runs only on
 # the paths that already proceed to remove the record.
 # The close - and only the close - is replaced by `tasks-axi reopen` with the
@@ -440,6 +447,7 @@ if [ -f "$META" ] && [ ! -L "$META" ]; then
   TEARDOWN_LOCK_BACKEND=$(fm_meta_get "$META" backend)
   [ -n "$TEARDOWN_LOCK_BACKEND" ] || TEARDOWN_LOCK_BACKEND=tmux
   TEARDOWN_LOCK_WT=$(fm_meta_get "$META" worktree)
+  [ -n "$TEARDOWN_LOCK_WT" ] || TEARDOWN_LOCK_WT=$(fm_meta_get "$META" treehouse_retiring_worktree)
   TEARDOWN_LOCK_PROJECT=$(fm_meta_get "$META" project)
   if [ "$TEARDOWN_LOCK_KIND" != secondmate ] \
      && [ "$TEARDOWN_LOCK_BACKEND" != orca ] \
@@ -1163,7 +1171,8 @@ CLEANUP_RECOVERY=$TEARDOWN_CLEANUP_RECOVERY
 KIND=$TEARDOWN_META_KIND
 EXPECTED_TREEHOUSE_PROJECT_LOCK=
 if [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ] \
-   && fm_treehouse_pool_slot "$PROJ" "$WT"; then
+   && { fm_treehouse_pool_slot "$PROJ" "$WT" ||
+        fm_treehouse_pool_slot "$PROJ" "$(fm_meta_get "$META" treehouse_retiring_worktree)"; }; then
   EXPECTED_TREEHOUSE_PROJECT_LOCK=$(fm_treehouse_project_lock_path "$PROJ") || {
     echo "REFUSED: cannot resolve the shared Treehouse project lock for ${PROJ:-<missing>}; nothing was changed" >&2
     exit 1
@@ -1664,12 +1673,14 @@ cleanup_stale_lock_for_safety_check() {
 # Return a worktree/home via `treehouse return --force`, tolerating a transient or
 # stale git index.lock left by a killed crew process. See the script header.
 teardown_treehouse_return() {
-  local dir=$1 cd_dir=$2 label=$3 post_cleanup_check=${4:-}
+  local dir=$1 cd_dir=$2 label=$3 post_cleanup_check=${4:-} lease_id=${5:-}
   local out lock attempt=0 max_retries lock_desc
+  local lease_args=()
+  [ -z "$lease_id" ] || lease_args=(--if-lease-id "$lease_id")
 
   # Capture stdout+stderr so non-lock failures stay visible and lock failures can
   # be matched by signature even when the lock file is already gone mid-check.
-  if out=$( ( cd "$cd_dir" && treehouse return --force "$dir" ) 2>&1 ); then
+  if out=$( ( cd "$cd_dir" && treehouse return --force "${lease_args[@]+"${lease_args[@]}"}" "$dir" ) 2>&1 ); then
     [ -n "$out" ] && printf '%s\n' "$out"
     return 0
   fi
@@ -1694,7 +1705,7 @@ teardown_treehouse_return() {
     echo "teardown: $label return failed with transient git lock ($lock_desc); waiting ${TREEHOUSE_RETURN_LOCK_RETRY_WAIT_SECS}s and retrying ($attempt/${max_retries})" >&2
     sleep "$TREEHOUSE_RETURN_LOCK_RETRY_WAIT_SECS"
 
-    if out=$( ( cd "$cd_dir" && treehouse return --force "$dir" ) 2>&1 ); then
+    if out=$( ( cd "$cd_dir" && treehouse return --force "${lease_args[@]+"${lease_args[@]}"}" "$dir" ) 2>&1 ); then
       [ -n "$out" ] && printf '%s\n' "$out"
       echo "teardown: $label return succeeded on retry; lock cleared on its own" >&2
       return 0
@@ -1721,7 +1732,7 @@ teardown_treehouse_return() {
           return 1
         fi
       fi
-      if out=$( ( cd "$cd_dir" && treehouse return --force "$dir" ) 2>&1 ); then
+      if out=$( ( cd "$cd_dir" && treehouse return --force "${lease_args[@]+"${lease_args[@]}"}" "$dir" ) 2>&1 ); then
         [ -n "$out" ] && printf '%s\n' "$out"
         echo "teardown: $label return succeeded after stale-lock cleanup" >&2
         return 0
@@ -1754,6 +1765,47 @@ report_worktree_dirt() {
       }
     }
   ' >&2
+}
+
+# Atomically withdraw the active claim before release. The receipt stays in
+# the same record so a failed or interrupted return can be retried by teardown.
+# A retry never touches a slot whose lease has since changed.
+teardown_retire_treehouse_record() { # <meta> <project> <label> [<post-cleanup-check>]
+  local meta=$1 project=$2 label=$3 post_cleanup_check=${4:-}
+  local worktree lease_id pending tmp current WT
+  worktree=$(fm_meta_get "$meta" worktree)
+  pending=$(fm_meta_get "$meta" treehouse_retiring_worktree)
+  lease_id=$(fm_meta_get "$meta" treehouse_lease_id)
+  if [ -n "$worktree" ]; then
+    tmp=$(mktemp "$meta.retiring.XXXXXX") || return 1
+    if ! awk -F= '$1 != "worktree" && $1 != "treehouse_retiring_worktree"' "$meta" > "$tmp" ||
+      ! printf 'worktree=\ntreehouse_retiring_worktree=%s\n' "$worktree" >> "$tmp" ||
+      ! fm_backlog_atomic_transition publish "$tmp" "$meta" "task record" "$(dirname "$meta")"; then
+      rm -f "$tmp"
+      return 1
+    fi
+  else
+    worktree=$pending
+    [ -n "$worktree" ] || return 0
+  fi
+  WT=$worktree
+  if [ -n "$pending" ]; then
+    current=$(cd "$project" && treehouse status --json) || return 1
+    current=$(printf '%s\n' "$current" | jq -er --arg path "$worktree" '
+      if type != "array" then error("invalid Treehouse status") else
+        [.[] | select(.path == $path)] |
+        if length == 0 then "" elif length == 1 then (.[0].lease_id // "")
+        else error("duplicate Treehouse path") end end') || return 1
+    if [ "$current" != "$lease_id" ]; then
+      echo "teardown: $label lease $lease_id is already released; leaving the current allocation untouched" >&2
+      return 0
+    fi
+    if [ -n "$post_cleanup_check" ]; then
+      "$post_cleanup_check" || return 1
+    fi
+  fi
+  teardown_treehouse_return "$worktree" "$project" "$label" "$post_cleanup_check" "$lease_id" || return $?
+  fm_treehouse_slot_owner_release "$worktree" "$(basename "$meta" .meta)"
 }
 
 validate_worktree_teardown_safety() {
@@ -2798,6 +2850,7 @@ preflight_descendant_treehouse_slots() {
     [ -n "$kind" ] || kind=ship
     backend=$(fm_backend_of_meta "$meta")
     worktree=$(meta_value "$meta" worktree)
+    [ -n "$worktree" ] || worktree=$(meta_value "$meta" treehouse_retiring_worktree)
     project=$(meta_value "$meta" project)
     if [ "$kind" = secondmate ] || [ "$backend" = orca ]; then
       continue
@@ -3065,6 +3118,7 @@ cleanup_firstmate_home_children() {
   for child_meta in "$sub_state"/*.meta; do
     [ -e "$child_meta" ] || continue
     child_id=$(basename "$child_meta" .meta)
+    child_owner_rc=0
     child_wt=$(meta_value "$child_meta" worktree)
     child_proj=$(meta_value "$child_meta" project)
     child_kind=$(meta_value "$child_meta" kind)
@@ -3135,18 +3189,18 @@ cleanup_firstmate_home_children() {
         rm -f "$child_wt/.claude/settings.local.json" "$child_wt/.opencode/plugins/fm-turn-end.js" \
           "$child_wt/.opencode/plugins/fm-busy-state.js" \
           "$child_wt/.fm-grok-turnend" "$child_wt/.fm-kimi-turnend"
-        if [ -n "$child_proj" ] && [ -d "$child_proj" ] && command -v treehouse >/dev/null 2>&1; then
-          if teardown_treehouse_return "$child_wt" "$child_proj" "child worktree"; then
-            fm_treehouse_slot_owner_release "$child_wt" "$child_id"
-          else
-            child_return_rc=$?
-            if [ "$child_return_rc" -eq "$TEARDOWN_TREEHOUSE_LOCK_REFUSED" ]; then
-              return "$child_return_rc"
+        if [ -z "$(meta_value "$child_meta" treehouse_lease_id)" ]; then
+          if [ -n "$child_proj" ] && [ -d "$child_proj" ] && command -v treehouse >/dev/null 2>&1; then
+            if teardown_treehouse_return "$child_wt" "$child_proj" "child worktree"; then
+              fm_treehouse_slot_owner_release "$child_wt" "$child_id"
+            else
+              child_return_rc=$?
+              [ "$child_return_rc" -ne "$TEARDOWN_TREEHOUSE_LOCK_REFUSED" ] || return "$child_return_rc"
+              safe_rm_rf_child_worktree "$child_wt" "$child_proj"
             fi
+          else
             safe_rm_rf_child_worktree "$child_wt" "$child_proj"
           fi
-        else
-          safe_rm_rf_child_worktree "$child_wt" "$child_proj"
         fi
       fi
     fi
@@ -3160,6 +3214,18 @@ cleanup_firstmate_home_children() {
     retire_busy_state "$sub_state" "$child_id" "$child_busy_gen" || return 1
     status_retire_presentation_task "$sub_state" "$child_id" || return 1
     fm_wake_queue_prune_task "$sub_state" "$child_id" "$child_t" 2>/dev/null || true
+    if [ "$child_kind" != secondmate ] && [ "$child_backend" != orca ] &&
+      [ "$child_owner_rc" -ne "$TEARDOWN_SLOT_REASSIGNED_RC" ] &&
+      [ -n "$(meta_value "$child_meta" treehouse_lease_id)" ]; then
+      if [ -d "$child_wt" ] || [ -n "$(meta_value "$child_meta" treehouse_retiring_worktree)" ]; then
+        if [ -n "$child_proj" ] && [ -d "$child_proj" ] && command -v treehouse >/dev/null 2>&1; then
+          teardown_retire_treehouse_record "$child_meta" "$child_proj" "child worktree" || return $?
+        else
+          echo "error: Treehouse is required to release child $child_id's lease" >&2
+          return 1
+        fi
+      fi
+    fi
     fm_backlog_atomic_transition remove "$sub_state/$child_id.meta" "task record" "$sub_state" || return 1
     rm -f "$sub_state/$child_id.turn-ended" "$sub_state/$child_id.progress" \
       "$(fm_wake_signal_seen_path "$sub_state" "$sub_state/$child_id.turn-ended")" \
@@ -3386,7 +3452,8 @@ teardown_legacy_stamp_rollback() {
   fi
   BACKLOG_CLOSED=1
   META_SPAWN_GEN=$TEARDOWN_META_SPAWN_GEN
-  if ! fm_backlog_close_marker_write "$STATE" "$ID" "$DATA" "$META_SPAWN_GEN" \
+  if [ -z "$(fm_meta_get "$META" treehouse_lease_id)" ] &&
+     ! fm_backlog_close_marker_write "$STATE" "$ID" "$DATA" "$META_SPAWN_GEN" \
       "${BACKLOG_TRANSITION_FLAGS[@]+"${BACKLOG_TRANSITION_FLAGS[@]}"}" \
       "${BACKLOG_DONE_ARGS[@]+"${BACKLOG_DONE_ARGS[@]}"}"; then
     if [ "$TEARDOWN_LEGACY_ACCEPTED" = 1 ] && [ -z "$TEARDOWN_LEGACY_RETAINED_STAMP" ] \
@@ -3465,23 +3532,17 @@ elif [ -d "$WT" ] && [ "$KIND" != secondmate ]; then
   # Remove our hook file so a reused pool worktree cannot fire signals for a dead task.
   rm -f "$WT/.claude/settings.local.json" "$WT/.opencode/plugins/fm-turn-end.js" \
     "$WT/.fm-grok-turnend" "$WT/.fm-kimi-turnend"
-  # Kills remaining processes in the worktree (including the agent), resets, returns
-  # to pool. treehouse resolves the pool from the working directory, so run it from
-  # the project. teardown_treehouse_return tolerates transient and stale git locks
-  # left by a killed crew process; see the script header for retry and stale-lock proof.
-  post_lock_cleanup_check=
-  if [ "$FORCE" != "--force" ] && [ "$KIND" != scout ] && [ "$KIND" != secondmate ]; then
-    post_lock_cleanup_check=validate_worktree_teardown_safety
+  if [ -z "$(fm_meta_get "$META" treehouse_lease_id)" ]; then
+    post_lock_cleanup_check=
+    if [ "$FORCE" != "--force" ] && [ "$KIND" != scout ]; then
+      post_lock_cleanup_check=validate_worktree_teardown_safety
+    fi
+    teardown_treehouse_return "$WT" "$PROJ" "worktree" "$post_lock_cleanup_check" || {
+      echo "error: treehouse return failed for worktree $WT; teardown aborted" >&2
+      exit 1
+    }
+    fm_treehouse_slot_owner_release "$WT" "$ID"
   fi
-  teardown_treehouse_return "$WT" "$PROJ" "worktree" "$post_lock_cleanup_check" || {
-    echo "error: treehouse return failed for worktree $WT; teardown aborted" >&2
-    exit 1
-  }
-  # The slot is back in the pool, so this task's claim on it is spent. Dropping
-  # it here - and only after a return that succeeded - keeps a returned slot
-  # unclaimed until its next holder claims it, and leaves the claim in place
-  # whenever the return did not actually happen.
-  fm_treehouse_slot_owner_release "$WT" "$ID"
 fi
 
 HERDR_PRESENTATION_JOURNAL="$STATE/$ID.herdr-presentation"
@@ -3668,12 +3729,30 @@ if [ -e "$HERDR_PRESENTATION_JOURNAL" ] || [ -L "$HERDR_PRESENTATION_JOURNAL" ];
     echo "warning: retaining herdr presentation journal for $ID; it still names a projected workspace the session-start sweep owns, not the closed endpoint" >&2
   fi
 fi
+if [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ] && teardown_owns_worktree &&
+   [ -n "$(fm_meta_get "$META" treehouse_lease_id)" ]; then
+  if [ -d "$WT" ] || [ -n "$(fm_meta_get "$META" treehouse_retiring_worktree)" ]; then
+    post_lock_cleanup_check=
+    if [ "$FORCE" != "--force" ] && [ "$KIND" != scout ]; then
+      post_lock_cleanup_check=validate_worktree_teardown_safety
+    fi
+    teardown_retire_treehouse_record "$META" "$PROJ" "worktree" "$post_lock_cleanup_check" || {
+      echo "error: Treehouse return is incomplete for task $ID; retry teardown with its retained receipt" >&2
+      exit 1
+    }
+  fi
+fi
 # The record is gone, so the backlog must not still show this task in flight
 # when teardown reports success. Still under this task's meta lock, so a steer
 # racing the same id stays serialized exactly as it was before. A captain-held
 # row takes the retain transition here instead of the close: same record, same
 # ordering, the row returns to Queued with its deliverable recorded.
 if [ "$BACKLOG_CLOSED" = 1 ]; then
+  if [ -n "$(fm_meta_get "$META" treehouse_lease_id)" ]; then
+    fm_backlog_close_marker_write "$STATE" "$ID" "$DATA" "$META_SPAWN_GEN" \
+      "${BACKLOG_TRANSITION_FLAGS[@]+"${BACKLOG_TRANSITION_FLAGS[@]}"}" \
+      "${BACKLOG_DONE_ARGS[@]+"${BACKLOG_DONE_ARGS[@]}"}" || exit 1
+  fi
   BACKLOG_CLOSE_MARKER=$(fm_backlog_close_marker_path "$STATE" "$ID") || exit 1
   if ! fm_backlog_atomic_transition "$BACKLOG_TRANSITION" "$STATE/$ID.meta" "$BACKLOG_CLOSE_MARKER" \
       "$DATA" "$ID" "$STATE" "${BACKLOG_DONE_ARGS[@]+"${BACKLOG_DONE_ARGS[@]}"}"; then

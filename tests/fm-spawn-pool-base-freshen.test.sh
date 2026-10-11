@@ -6,8 +6,8 @@
 # These tests drive the real spawn path with a fake terminal, then prove it
 # starts the worker from the fetched origin tip, launches a clean origin-less
 # pool as-is, or stops when a configured origin is unusable or another task
-# record still holds the returned slot. A real Treehouse case also proves
-# refusal before acquisition can reset a stale recorded checkout.
+# record still holds the returned slot. Real Treehouse cases also prove that
+# leases preserve an exited owner's checkout while another slot launches.
 set -u
 
 # shellcheck source=tests/fixtures.sh
@@ -146,14 +146,10 @@ test_linked_spawning_home_rejects_primary_before_refresh() {
         || fail "spawn did not refresh the genuine scout copy"
     else
       [ "$status" -ne 0 ] || fail "linked spawning home accepted $returned as a disposable copy"
-      # None of these is an isolated copy, so the worktree poll never adopts one
-      # and the wait runs out instead: the spawning directory fails the poll's
-      # own project comparison, and the repository primary (named directly or
-      # through a symlink) fails the isolation screen the poll shares with the
-      # guard. The refusal names the last path the pane reported.
-      assert_contains "$out" "did not enter an isolated worktree" \
+      # The receipt's isolation screen rejects the spawning directory and
+      # the repository primary, including a symlink to the primary.
+      assert_contains "$out" "did not yield an isolated worktree" \
         "spawn did not explain its isolation refusal"
-      assert_contains "$out" "last seen" "refusal did not name the path the pane reported"
       [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published task metadata"
       [ ! -e "$primary/.git/FETCH_HEAD" ] || fail "refused spawn fetched before proving isolation"
     fi
@@ -526,7 +522,7 @@ strand_submodule_pin_via_spawn() {  # <seed-id>
   fm_test_spawn_brief "$HOME_DIR" "$id"
   out=$(run_spawn "$id" --mode no-mistakes --yolo off)
   status=$?
-  expect_code 0 "$status" "the spawn that moves the submodule pin should succeed"
+  expect_code 0 "$status" "the spawn that moves the submodule pin should succeed"$'\n'"$out"
   assert_contains "$out" "spawned $id" "the spawn that moves the submodule pin did not report success"
   [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$ADVANCED_SHA" ] \
     || fail "the first spawn did not move the pooled base across the moved submodule pin"
@@ -888,7 +884,7 @@ test_free_pool_slot_launches_while_another_slot_is_recorded() {
   lay_out_as_pool_slot
   held_slot=$POOL_DIR
   held_meta="$HOME_DIR/state/held-other-slot.meta"
-  printf 'worktree=%s\nkind=ship\nbackend=tmux\n' "$held_slot" > "$held_meta"
+  printf 'worktree=%s\nkind=ship\nbackend=tmux\ntreehouse_lease_id=held-lease\n' "$held_slot" > "$held_meta"
   printf 'task=held-other-slot\nhome=%s\n' "$HOME_DIR" > "$SLOT_CLAIM"
   before_meta=$(cat "$held_meta")
   before_claim=$(cat "$SLOT_CLAIM")
@@ -1075,7 +1071,11 @@ test_real_treehouse_preserves_a_recorded_stale_slot() {
   # Forward Treehouse commands to the real executable under the isolated root.
   cat > "$FAKEBIN_DIR/treehouse" <<'SH'
 #!/usr/bin/env bash
-exec "$FM_REAL_TREEHOUSE" "$@"
+if [ "${1:-}" = get ]; then
+  "$FM_REAL_TREEHOUSE" "$@" | tee "$FM_REAL_ACQUIRE_LOG"
+else
+  exec "$FM_REAL_TREEHOUSE" "$@"
+fi
 SH
   mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux-base"
   cat > "$FAKEBIN_DIR/tmux" <<'SH'
@@ -1083,14 +1083,7 @@ SH
 case "${1:-}" in
   new-window) touch "$FM_FAKE_NEW_ENDPOINT" ;;
   kill-window) rm -f "$FM_FAKE_NEW_ENDPOINT" ;;
-  send-keys)
-    for arg in "$@"; do
-      if [ "$arg" = 'treehouse get' ]; then
-        (cd "$FM_REAL_PROJECT" && "$FM_REAL_TREEHOUSE" get --lease) \
-          > "$FM_REAL_ACQUIRE_LOG" 2>&1 || exit 1
-      fi
-    done
-    ;;
+
 esac
 exec "$(dirname "$0")/tmux-base" "$@"
 SH
@@ -1137,6 +1130,81 @@ SH
   unset TREEHOUSE_ROOT
   pass "real Treehouse preserves a recorded stale slot and refreshes it after retirement"
 }
+
+# Execute real durable allocation with only the terminal and harness simulated.
+# Every allocation and receipt lives in this case's private Treehouse root.
+test_real_lease_survives_exit_and_failed_publication() {
+  local treehouse_bin rec id receipt held held_id held_before free_receipt out status lease_id phase
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for the lease regression"
+  for phase in success publication-failure; do
+    id="pool-lease-$phase"
+    rec=$(make_case "lease-$phase" "$id")
+    read_case_record "$rec"
+    export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch --lease-holder "$HOME_DIR:held") || fail "could not lease the held slot"
+    held=$(printf '%s\n' "$receipt" | jq -r .path)
+    held_id=$(printf '%s\n' "$receipt" | jq -r .lease_id)
+    held_before=$(git -C "$held" rev-parse HEAD)
+    printf 'worktree=%s\ntreehouse_lease_id=%s\ntreehouse_lease_holder=%s:held\nkind=ship\n' "$held" "$held_id" "$HOME_DIR" > "$HOME_DIR/state/held.meta"
+    # The acquisition process has exited. Reserve and return a second slot so
+    # its path is known to the terminal simulator before the tested spawn.
+    free_receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) || fail "could not prepare the free slot"
+    POOL_DIR=$(printf '%s\n' "$free_receipt" | jq -r .path)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force --if-lease-id "$(printf '%s\n' "$free_receipt" | jq -r .lease_id)" "$POOL_DIR") || fail "could not return the free slot"
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+set -o pipefail
+printf '%s\n' "$*" >> "$FM_LEASE_CALL_LOG"
+if [ "${1:-}" = get ]; then
+  "$FM_REAL_TREEHOUSE" "$@" | tee "$FM_LEASE_RECEIPT"
+else
+  exec "$FM_REAL_TREEHOUSE" "$@"
+fi
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    if [ "$phase" = publication-failure ]; then
+      cat > "$FAKEBIN_DIR/mv" <<'SH'
+#!/usr/bin/env bash
+for arg in "$@"; do
+  [ "$arg" != "$FM_FAIL_META" ] || exit 1
+done
+exec /bin/mv "$@"
+SH
+      chmod +x "$FAKEBIN_DIR/mv"
+    fi
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" FM_LEASE_CALL_LOG="$CASE_DIR/lease-calls" \
+      FM_LEASE_RECEIPT="$CASE_DIR/receipt" FM_FAIL_META="$HOME_DIR/state/$id.meta" run_spawn "$id" --scout)
+    status=$?
+    lease_id=$(jq -r .lease_id "$CASE_DIR/receipt")
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" status --json) || fail "status failed"
+    printf '%s\n' "$receipt" | jq -e --arg held "$held_id" '.[] | select(.lease_id == $held and .status == "leased")' >/dev/null || fail "the exited owner's lease was lost"
+    [ "$(git -C "$held" rev-parse HEAD)" = "$held_before" ] || fail "spawn refreshed the held slot"
+    if [ "$phase" = success ]; then
+      expect_code 0 "$status" "a real leased pool should spawn into its free slot"$'\n'"$out"
+      assert_grep "treehouse_lease_id=$lease_id" "$HOME_DIR/state/$id.meta" "spawn lost the lease identity"
+      assert_grep "treehouse_lease_holder=$HOME_DIR:$id" "$HOME_DIR/state/$id.meta" "spawn lost the lease holder"
+      assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn recorded the wrong receipt path"
+      printf '%s\n' "$receipt" | jq -e --arg id "$lease_id" '.[] | select(.lease_id == $id)' >/dev/null || fail "spawn lease was not durable"
+    else
+      [ "$status" -ne 0 ] || fail "spawn succeeded despite failed record publication"
+      [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "failed publication left an active record"
+      assert_grep "return --force --if-lease-id $lease_id $POOL_DIR" "$CASE_DIR/lease-calls" "rollback did not return the exact receipt"
+      printf '%s\n' "$receipt" | jq -e --arg id "$lease_id" 'all(.[]; .lease_id != $id)' >/dev/null || fail "failed publication leaked its lease"
+    fi
+    unset TREEHOUSE_ROOT
+    pass "real Treehouse lease: $phase preserves the exited owner's allocation"
+  done
+}
+
+if [ "${1:-}" = --lease ]; then
+  test_free_pool_slot_launches_while_another_slot_is_recorded
+  test_real_lease_survives_exit_and_failed_publication
+  test_real_treehouse_preserves_a_recorded_stale_slot
+  test_pool_slot_still_recorded_by_another_task_refuses
+  exit 0
+fi
+
+test_real_lease_survives_exit_and_failed_publication
 
 test_free_pool_slot_launches_while_another_slot_is_recorded
 test_real_treehouse_preserves_a_recorded_stale_slot

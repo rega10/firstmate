@@ -421,9 +421,20 @@ fm_backend_validate_task_endpoint() {  # <meta-file> <task-id>
     echo "REFUSED: task $id has a missing, empty, or ambiguous window endpoint; preserving task state." >&2
     return 1
   }
+  # A pending leased return retains endpoint identity but withdraws its active
+  # worktree claim. Only teardown may publish this receipt state.
   worktree=$(fm_backend_meta_exact_value "$meta" worktree) || {
-    echo "REFUSED: task $id has a missing, empty, or ambiguous worktree identity; preserving task state." >&2
-    return 1
+    if [ "$(grep -c '^worktree=' "$meta" 2>/dev/null)" = 1 ] &&
+      [ -z "$(fm_meta_get "$meta" worktree)" ] &&
+      [ -n "$(fm_backend_meta_exact_value "$meta" treehouse_lease_id)" ] &&
+      [ "$(fm_meta_get "$meta" backend)" != orca ] &&
+      { [ "$(fm_meta_get "$meta" kind)" = ship ] || [ "$(fm_meta_get "$meta" kind)" = scout ]; }; then
+      worktree=$(fm_backend_meta_exact_value "$meta" treehouse_retiring_worktree) || worktree=
+    fi
+    [ -n "$worktree" ] || {
+      echo "REFUSED: task $id has a missing, empty, or ambiguous worktree identity; preserving task state." >&2
+      return 1
+    }
   }
   project=$(fm_backend_meta_exact_value "$meta" project) || {
     echo "REFUSED: task $id has a missing, empty, or ambiguous project identity; preserving task state." >&2

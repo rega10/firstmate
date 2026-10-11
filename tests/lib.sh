@@ -440,6 +440,32 @@ fm_fakebin() {
   printf '%s\n' "$fakebin"
 }
 
+# The JSON receipt is the spawn allocator's executable interface. Keep custom
+# terminal fixtures on the same contract, with an optional fixed worktree path.
+fm_test_fake_treehouse_lease() { # <fakebin> [<path>]
+  local fakebin=$1 path=${2:-}
+  {
+    printf '#!/usr/bin/env bash\nfixture_path=%q\n' "$path"
+    cat <<'SH'
+if [ "${1:-}" = get ]; then
+  holder= json=0
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --lease-holder) shift; holder=$1 ;;
+      --json) json=1 ;;
+    esac
+    shift
+  done
+  if [ "$json" = 1 ]; then
+    jq -n --arg path "${FM_FAKE_PANE_PATH:-$fixture_path}" --arg holder "$holder" \
+      '{path:$path,lease_id:"fixture-lease",lease_holder:$holder}'
+  fi
+fi
+SH
+  } > "$fakebin/treehouse"
+  chmod +x "$fakebin/treehouse"
+}
+
 fm_fake_exit0() {
   local fakebin=$1 tool
   shift

@@ -97,7 +97,14 @@ case "${1:-}" in display-message) printf 'firstmate\n'; exit 0 ;; esac
 exit 0
 SH
   chmod +x "$fakebin/tmux"
-  fm_fake_exit0 "$fakebin" treehouse gh gh-axi no-mistakes
+  fm_test_fake_treehouse_lease "$fakebin"
+  fm_fake_exit0 "$fakebin" gh gh-axi no-mistakes
+  cat > "$fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+[ "${1:-}" != -u ] || exit 0
+exec /bin/ps "$@"
+SH
+  chmod +x "$fakebin/ps"
 
   fm_git_init_commit "$case_dir/project"
   fm_git_add_origin "$case_dir/project" "$case_dir/project.origin.git"
@@ -1814,6 +1821,11 @@ test_interrupted_destructive_cleanup_leaves_a_recoverable_close() {
   home=$(home_of "$case_dir")
   add_item "$case_dir" "$id"
   out=$(run_ship_spawn "$case_dir" "$id") || fail "spawn failed: $out"
+  # Legacy records keep their pre-release backlog-close recovery contract.
+  # Real leased interruption recovery is covered by fm-teardown.test.sh.
+  awk -F= '$1 != "treehouse_lease_id" && $1 != "treehouse_lease_holder"' \
+    "$home/state/$id.meta" > "$case_dir/legacy-meta"
+  mv "$case_dir/legacy-meta" "$home/state/$id.meta"
   marker="$home/state/$id.backlog-close"
   interrupt_teardown_during_treehouse_return "$case_dir"
 
