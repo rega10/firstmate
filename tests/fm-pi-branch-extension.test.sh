@@ -15,10 +15,9 @@ set -u
 TMP_ROOT=$(fm_test_tmproot fm-pi-branch-extension)
 EXT="$ROOT/.pi/extensions/fm-branch-supervision.ts"
 export NODE_NO_WARNINGS=1
-# The Pi release whose stock renderer stopped supplying an implicit reset at
-# multiline boundaries, which is the contract this file's renderer cases
-# compare against.
-PI_STOCK_RENDER_FLOOR=0.84.4
+# The Pi release whose stock call header includes tool arguments, which is
+# the contract this file's outcome renderer comparison targets.
+PI_STOCK_RENDER_FLOOR=0.99.0
 
 # Semantic-version floor for a version string this file already holds (Pi's
 # package.json field). bin/fm-bootstrap.sh's tool_version_at_least is the same
@@ -5006,11 +5005,11 @@ test_outcomes_tool_uses_stock_execution_and_export_consumers() {
   fi
   # This case compares the extension's own renderers against Pi's stock
   # rendering, so its verdict is only meaningful against the vendor contract
-  # those renderers target: since Pi 0.84.4 the stock renderer no longer
-  # supplies an implicit reset at multiline boundaries, and the extension
-  # emits that reset itself. An older installed Pi still supplies it, so the
-  # two legitimately differ there and a comparison would report a defect that
-  # is really a version skew. Name the version and skip rather than degrade
+  # those renderers target: since Pi 0.99 the stock call header includes
+  # tool arguments, and the extension preserves that header. Older installed
+  # Pi versions omit those arguments, so the two legitimately differ there
+  # and a comparison would report a defect that is really a version skew.
+  # Name the version and skip rather than degrade
   # quietly; a package whose version cannot be read at all is still a failure.
   package_version=$(node -p 'require(process.argv[1]).version || ""' "$package_dir/package.json" 2>/dev/null || printf '')
   [ -n "$package_version" ] \
