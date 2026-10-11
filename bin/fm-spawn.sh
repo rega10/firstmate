@@ -83,8 +83,13 @@
 #   --model <name> and --effort <low|medium|high|xhigh|max|ultra> are concrete profile
 #   axes chosen by firstmate at intake. They are only threaded into harnesses whose
 #   installed CLIs were verified to support that axis; unsupported axes are omitted
-#   from that harness's launch rather than guessed. Ultra is the explicit
-#   exception: bin/fm-harness.sh validate-native-effort owns its model scope;
+#   from that harness's launch rather than guessed. Canonical Codex launches
+#   require an explicit model for non-default effort and validate that effort
+#   against the model's supported_reasoning_levels
+#   in the effective worker environment's ${CODEX_HOME:-$HOME/.codex}/models_cache.json
+#   and refuse unsupported or unverifiable effort before launch.
+#   Ultra remains a separate exception:
+#   bin/fm-harness.sh validate-native-effort owns its model scope;
 #   supported Pi launches receive --codex-effort ultra, never --thinking ultra.
 #   OpenCode has no interactive effort flag, so its effort is written as the
 #   build agent's variant, keyed to the resolved model, inside the
@@ -1894,6 +1899,62 @@ pi_supports_tui_mode() {
   printf '%s\n' "$help" | grep -Eq -- '(^|[[:space:]])--tui-mode([[:space:]=]|$)'
 }
 
+codex_effort_validate() { # <model> <effort>
+  local model=$1 effort=$2 catalog levels probe command i
+  [ -n "$effort" ] && [ "$effort" != default ] || return 0
+  [ -n "$model" ] && [ "$model" != default ] || {
+    echo "error: codex effort '$effort' requires an explicit --model to check its catalog capabilities" >&2
+    return 1
+  }
+  probe=$(mktemp -d "$STATE/.codex-catalog.XXXXXXXX") || return 1
+  command='/bin/sh -c '
+  # shellcheck disable=SC2016
+  command="$command$(shell_quote 'catalog=${CODEX_HOME:-${HOME:?}/.codex}/models_cache.json; case "$catalog" in /*) ;; *) catalog=$PWD/$catalog ;; esac; printf "%s" "$catalog"')"
+  if [ "$LAUNCH_ENV_ENABLED" = 1 ]; then
+    case $'\n'"$LAUNCH_ENV_NAMES"$'\n' in
+      *$'\nCODEX_HOME\n'*)
+        # shellcheck disable=SC2016
+        command='/usr/bin/env -i ${HOME+"HOME=$HOME"} ${CODEX_HOME+"CODEX_HOME=$CODEX_HOME"} '"$command"
+        ;;
+      *)
+        # shellcheck disable=SC2016
+        command='/usr/bin/env -i ${HOME+"HOME=$HOME"} '"$command"
+        ;;
+    esac
+  fi
+  command="$command >$(shell_quote "$probe/path.tmp") && mv $(shell_quote "$probe/path.tmp") $(shell_quote "$probe/path")"
+  if ! (umask 077 && printf '%s\n' "$command" >"$probe/probe.sh"); then
+    rm -rf "$probe"
+    return 1
+  fi
+  if spawn_send_text_line "$T" ". $(shell_quote "$probe/probe.sh")"; then
+    for ((i = 0; i < 20; i++)); do
+      [ ! -s "$probe/path" ] || break
+      sleep 0.1
+    done
+  fi
+  catalog=$(cat "$probe/path" 2>/dev/null) || catalog=
+  rm -rf "$probe"
+  [ -n "$catalog" ] || {
+    echo "error: cannot establish codex catalog in the effective $BACKEND worker environment; refusing to launch" >&2
+    return 1
+  }
+  levels=$(jq -er --arg model "$model" '
+    [.models[] | select(.slug == $model)] | select(length == 1)
+    | .[0].supported_reasoning_levels
+    | select(type == "array" and length > 0)
+    | map(.effort) | select(all(.[]; type == "string" and length > 0))
+    | .[]
+  ' "$catalog" 2>/dev/null) || {
+    echo "error: cannot verify codex model '$model' effort '$effort' from $catalog; refusing to launch" >&2
+    return 1
+  }
+  printf '%s\n' "$levels" | grep -qxF -- "$effort" && return 0
+  levels=${levels//$'\n'/, }
+  echo "error: codex model '$model' does not support effort '$effort' in $catalog (supported: $levels); refusing to launch" >&2
+  return 1
+}
+
 # omp pre-launch model validation. `omp models --json` (omp 18.1.11) prints
 # {"models":[{"provider","id","selector":"<provider>/<id>",...}]} for built-in and
 # auto-discovered providers only; it never lists a provider an extension
@@ -2601,16 +2662,8 @@ effort_flag_for_harness() {
     esac
     ;;
   codex)
-    # The installed codex config schema uses model_reasoning_effort. The
-    # installed model catalog supports max for gpt-5.6-luna; keep that level
-    # scoped to the model whose catalog entry advertises it.
-    case "$effort" in
-    low | medium | high | xhigh) printf -- '-c %s ' "$(shell_quote "model_reasoning_effort=\"$effort\"")" ;;
-    max)
-      [ "$model" = gpt-5.6-luna ] || return 0
-      printf -- '-c %s ' "$(shell_quote 'model_reasoning_effort="max"')"
-      ;;
-    esac
+    # Canonical launches already checked the resolved model's catalog levels.
+    printf -- '-c %s ' "$(shell_quote "model_reasoning_effort=\"$effort\"")"
     ;;
   grok)
     # grok exposes both --effort and --reasoning-effort; firstmate's profile
@@ -2659,8 +2712,8 @@ effort_flag_for_harness() {
     # high|max, openai/* expose low|medium|high|xhigh), so emit the variant only
     # when the resolved model's provider is known to expose that effort; any
     # other provider, or an effort outside its family's list, keeps the
-    # permission-only launch and omits the variant (record-and-omit, as codex
-    # and grok do). Without a resolved model the variant has nothing to key to
+    # permission-only launch and omits the variant. Without a resolved model
+    # the variant has nothing to key to
     # and is likewise omitted. The fragment lands inside the launch's
     # single-quoted assignment, so a literal quote in the model id must close and
     # reopen that quoting.
@@ -4375,6 +4428,9 @@ fi
 # tab's original project directory.
 spawn_enter_recorded_worktree
 spawn_assert_agent_worktree
+if [ "$HARNESS" = codex ] && [ "$RAW_LAUNCH" = 0 ]; then
+  codex_effort_validate "$MODEL" "$EFFORT" || exit 1
+fi
 
 # Pre-register Claude's workspace trust for the directory this launch starts in,
 # at the first point that directory is known and before any per-task state is

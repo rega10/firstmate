@@ -120,6 +120,24 @@ case "${1:-}" in
     ;;
   has-session|new-session|new-window|kill-window|set-window-option) exit 0 ;;
   send-keys)
+    for a in "$@"; do
+      case "$a" in
+        *'/.codex-catalog.'*)
+          [ "${FM_FAKE_CODEX_PROBE_FAIL:-0}" = 0 ] || exit 1
+          (
+            cd -- "${FM_FAKE_PANE_PATH:-$PWD}" || exit 1
+            [ -z "${FM_FAKE_WORKER_HOME+x}" ] || export HOME="$FM_FAKE_WORKER_HOME"
+            [ -z "${FM_FAKE_WORKER_CODEX_HOME+x}" ] || export CODEX_HOME="$FM_FAKE_WORKER_CODEX_HOME"
+            if [ "${FM_FAKE_WORKER_LOCAL_ENV:-0}" = 1 ]; then
+              /usr/bin/env -u HOME -u CODEX_HOME /bin/sh -c 'HOME=$1; CODEX_HOME=$2; eval "$3"' sh "$HOME" "$CODEX_HOME" "$a"
+            else
+              /bin/sh -c "$a"
+            fi
+          )
+          exit "$?"
+          ;;
+      esac
+    done
     if [ -n "${FM_FAKE_LAUNCH_LOG:-}" ]; then
       prev=
       for a in "$@"; do

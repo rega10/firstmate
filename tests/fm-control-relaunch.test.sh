@@ -45,9 +45,9 @@ TASK_TMPS=()
 relaunch_cleanup() {
   local d
   for d in "${TASK_TMPS[@]:-}"; do
-    [ -n "$d" ] && rm -rf "$d"
+    [ -n "$d" ] && fm_test_remove_tree "$d"
   done
-  rm -rf "$TMP_ROOT"
+  fm_test_remove_tree "$TMP_ROOT"
 }
 trap relaunch_cleanup EXIT
 
@@ -73,6 +73,12 @@ case "${1:-}" in
       esac
     done
     payload=${1:-}
+    case "$payload" in
+      *'/.codex-catalog.'*)
+        (cd -- "$(cat "$D/cwd")" && /bin/sh -c "$payload")
+        exit "$?"
+        ;;
+    esac
     if [ "$literal" = 1 ]; then
       case "$payload" in
         ". '"*"'") staged=${payload#". '"}; staged=${staged%"'"}; [ ! -f "$staged" ] || payload=$(cat "$staged") ;;
@@ -949,6 +955,9 @@ test_secondmate_relaunch_picks_up_the_configured_harness_pin() {
   home="$dir/home"
   mkdir -p "$home/config"
   printf 'codex some-model high\n' > "$home/config/secondmate-harness"
+  mkdir -p "$dir/user-home/.codex"
+  printf '{"models":[{"slug":"some-model","supported_reasoning_levels":[{"effort":"high"}]}]}\n' \
+    > "$dir/user-home/.codex/models_cache.json"
   mkdir -p "$home/data/sm3"
   printf '# secondmate brief\n' > "$home/data/sm3/brief.md"
   fm_git_worktree "$dir/proj" "$dir/smhome" sm-branch
@@ -971,7 +980,7 @@ test_secondmate_relaunch_picks_up_the_configured_harness_pin() {
   printf '%s\n' "fm-sm3" > "$dir/fake/windows"
   printf '%s' "$dir/smhome" > "$dir/fake/cwd"
   printf 'codex' > "$dir/fake/becomes"
-  out=$(run_control "$dir" sm3 relaunch); rc=$?
+  out=$(CODEX_HOME='' run_control "$dir" sm3 relaunch); rc=$?
   expect_code 0 "$rc" "a configured secondmate harness should relaunch"$'\n'"$out"
   [ "$(journal_field "$dir" sm3 to_harness)" = codex ] \
     || fail "a secondmate relaunch should pick up the configured harness pin, got '$(journal_field "$dir" sm3 to_harness)'"
@@ -979,6 +988,10 @@ test_secondmate_relaunch_picks_up_the_configured_harness_pin() {
     || fail "the configured model token should come with the pin"
   [ "$(journal_field "$dir" sm3 to_effort)" = high ] \
     || fail "the configured effort token should come with the pin"
+  assert_contains "$(cat "$dir/fake/literal")" "--model 'some-model'" \
+    "the replacement launch should use the configured model"
+  assert_contains "$(cat "$dir/fake/literal")" 'model_reasoning_effort="high"' \
+    "the replacement launch should use the catalog-supported effort"
   assert_not_contains "$out" "not a verified harness" "codex is a verified harness"
   pass "fm-control relaunch: a secondmate relaunch re-resolves its durable configured harness pin"
 }
