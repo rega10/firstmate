@@ -880,6 +880,41 @@ test_scout_base_branch_refused_on_gerrit_forge() {
   pass "a based scout on a forge=gerrit project is refused at spawn"
 }
 
+test_free_pool_slot_launches_while_another_slot_is_recorded() {
+  local rec id held_slot held_meta before_meta before_claim before_head before_reflog out status
+  id='pool-free-slot'
+  rec=$(make_case free-slot "$id")
+  read_case_record "$rec"
+  lay_out_as_pool_slot
+  held_slot=$POOL_DIR
+  held_meta="$HOME_DIR/state/held-other-slot.meta"
+  printf 'worktree=%s\nkind=ship\nbackend=tmux\n' "$held_slot" > "$held_meta"
+  printf 'task=held-other-slot\nhome=%s\n' "$HOME_DIR" > "$SLOT_CLAIM"
+  before_meta=$(cat "$held_meta")
+  before_claim=$(cat "$SLOT_CLAIM")
+  before_head=$(git -C "$held_slot" rev-parse HEAD)
+  before_reflog=$(git -C "$held_slot" reflog)
+
+  POOL_DIR="$CASE_DIR/slots/2/project"
+  git -C "$PROJECT_DIR" worktree add --quiet --detach "$POOL_DIR" "$INITIAL_SHA" \
+    || fail "could not create the free slot in the fixture repository"
+  printf '{"worktrees":[{"name":"1","path":"%s"},{"name":"2","path":"%s"}]}\n' \
+    "$held_slot" "$POOL_DIR" > "$CASE_DIR/slots/treehouse-state.json"
+  out=$(FM_FAKE_LAUNCH_LOG="$CASE_DIR/launch.log" run_spawn "$id" --mode no-mistakes --yolo off)
+  status=$?
+  expect_code 0 "$status" "spawn should accept free slot 2 while another task records slot 1"$'\n'"$out"
+  assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn did not record free slot 2"
+  assert_grep "task=$id" "$CASE_DIR/slots/2/.fm-slot-owner" "spawn did not claim free slot 2"
+  [ -s "$CASE_DIR/launch.log" ] || fail "spawn did not launch the worker in free slot 2"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse HEAD)" ] \
+    || fail "spawn did not refresh free slot 2"
+  [ "$(cat "$held_meta")" = "$before_meta" ] || fail "spawn changed the record for slot 1"
+  [ "$(cat "$SLOT_CLAIM")" = "$before_claim" ] || fail "spawn changed the claim for slot 1"
+  [ "$(git -C "$held_slot" rev-parse HEAD)" = "$before_head" ] || fail "spawn refreshed slot 1"
+  [ "$(git -C "$held_slot" reflog)" = "$before_reflog" ] || fail "spawn changed the reflog for slot 1"
+  pass "free slot 2 launches while another task still records slot 1 in the same pool"
+}
+
 test_pool_slot_still_recorded_by_another_task_refuses() {
   local variant rec id held out status recorded before_meta before_claim before_head before_reflog
   local owner_home root_home child sibling sibling_parent
@@ -1103,6 +1138,7 @@ SH
   pass "real Treehouse preserves a recorded stale slot and refreshes it after retirement"
 }
 
+test_free_pool_slot_launches_while_another_slot_is_recorded
 test_real_treehouse_preserves_a_recorded_stale_slot
 
 test_pool_slot_still_recorded_by_another_task_refuses
