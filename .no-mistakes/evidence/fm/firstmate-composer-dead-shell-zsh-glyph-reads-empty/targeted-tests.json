@@ -1,0 +1,40 @@
+{
+  "families": [
+    {
+      "count": 2,
+      "duration_ms": 18193,
+      "failed": 0,
+      "name": "pure-contract-unit"
+    }
+  ],
+  "finished_at": "2026-10-11T03:04:58Z",
+  "run_id": "fm-test-run-1791687886063-34405",
+  "scripts": [
+    {
+      "duration_ms": 6281,
+      "exit": 0,
+      "expected_gate_skip": "none",
+      "family": "pure-contract-unit",
+      "gate_skip": true,
+      "gate_skip_reason": "real zsh arrow regression requires tmux and zsh",
+      "path": "tests/fm-composer-ghost.test.sh"
+    },
+    {
+      "duration_ms": 11912,
+      "exit": 0,
+      "expected_gate_skip": "none",
+      "family": "pure-contract-unit",
+      "gate_skip": false,
+      "gate_skip_reason": "",
+      "path": "tests/fm-composer-lib.test.sh"
+    }
+  ],
+  "selection": "scripts;jobs=4",
+  "started_at": "2026-10-11T03:04:46Z",
+  "summary": {
+    "duration_ms": 12054,
+    "failed": 0,
+    "skipped_gate": 1,
+    "total": 2
+  }
+}

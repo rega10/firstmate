@@ -1,0 +1,15 @@
+❯ env CLAUDE_CONFIG_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEH5P21K38BW04XD0DW0XM/.phase-test/tmp/
+fm-claude-shell.GVPyE6/home/claude claude --bare --setting-sources ""
+ ▐▛███▛█   Claude Code v2.1.284
+▝▜██████▀  Opus 5.5 · API Usage Billing
+ ▝▝   ▝▝   ~/…/worktrees/422718388d14/01M4MEH5P21K38BW04XD0DW0XM/.phase-test/tmp/fm-claude-shell.GVPyE6/home
+
+▎ Auto mode is now Claude Code's default permission mode.
+▎ Auto mode lets Claude handle permission prompts automatically. Claude checks each tool call for risky actions and
+▎ prompt injection before executing, runs the ones it assesses as lower-risk, and blocks the rest.
+▎ https://code.claude.com/docs/en/permission-modes
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← for agents                                              ◐ medium · /effort

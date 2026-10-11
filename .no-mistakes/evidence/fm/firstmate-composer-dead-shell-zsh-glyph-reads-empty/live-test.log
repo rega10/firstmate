@@ -1,0 +1,7 @@
+FM_TEST_BEGIN 2026-10-11T03:06:38Z tests/fm-composer-claude-shell-live-e2e.test.sh family=live-harness-optin expected_gate_skip=live-capability
+ok - Claude (2.1.284 (Claude Code)): idle=empty, draft=pending, exited zsh=unknown, cleared zsh=unknown
+FM_TEST_END 2026-10-11T03:06:42Z tests/fm-composer-claude-shell-live-e2e.test.sh exit=0 duration_ms=3840 gate_skip=false
+FM_TEST_SUMMARY total=1 failed=0 skipped_gate=0 duration_ms=3915
+FM_TEST_SUMMARY_FAMILY family=live-harness-optin count=1 duration_ms=3840 failed=0
+FM_TEST_SLOWEST rank=1 script=tests/fm-composer-claude-shell-live-e2e.test.sh duration_ms=3840
+fm-test-run: wrote timing artifact: /Users/rega1011/.no-mistakes/evidence/01M4MEH5P21K38BW04XD0DW0XM/live-test.json

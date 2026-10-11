@@ -1,0 +1,17 @@
+Injection refused for bare zsh arrow; submission attempted=0; screen unchanged; deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+bare zsh arrow: unknown
+Before fix: real zsh arrow=empty; after fix: real zsh arrow=unknown
+Injection refused for dim zsh arrow; submission attempted=0; screen unchanged; deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+dim zsh arrow: unknown
+Injection refused for wrapped ghost zsh arrow; submission attempted=0; screen unchanged; deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+wrapped ghost zsh arrow: unknown
+Injection refused for restored zsh arrow; submission attempted=0; screen unchanged; deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+restored zsh arrow: unknown
+real idle Claude composer: empty
+real Claude draft: pending
+cleared Claude draft: empty
+Injection refused for zsh arrow below exited Claude output; submission attempted=0; screen unchanged; deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+zsh arrow below exited Claude output: unknown
+Injection refused for cleared zsh arrow after Claude exited; submission attempted=0; screen unchanged; deferred: supervisor composer not confirmed-empty (state=unknown: pending input, dead-shell prompt, or unreadable pane)
+cleared zsh arrow after Claude exited: unknown
+ok - Claude (2.1.284 (Claude Code)): idle=empty, draft=pending, exited zsh=unknown, cleared zsh=unknown
