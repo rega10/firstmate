@@ -66,6 +66,11 @@
 # A gh lookup error falls back to the content check; if that is also inconclusive,
 # teardown refuses rather than risk discarding unlanded work.
 # Uncommitted changes are never landed.
+# An ordinary task record with an empty worktree= entry cannot identify its
+# local work or prove it landed. Teardown refuses with the record path and the
+# recovery action before endpoint validation, even with --force. Restore the
+# verified original worktree path and retry without --force so the existing
+# ownership, dirty-work, and landed-work checks can run.
 # local-only projects additionally accept work merged into the local default
 # branch (firstmate performs that merge after configured approval) as a fallback
 # for the common case where there is no remote at all.
@@ -514,6 +519,12 @@ fm_backlog_record_present "$META" "task record" "$STATE" || {
 }
 TEARDOWN_META_KIND=$(fm_meta_get "$META" kind)
 [ -n "$TEARDOWN_META_KIND" ] || TEARDOWN_META_KIND=ship
+if [ "$TEARDOWN_META_KIND" != secondmate ] \
+   && [ "$(LC_ALL=C grep -c '^worktree=' "$META" || true)" = 1 ] \
+   && LC_ALL=C grep -qx 'worktree=' "$META"; then
+  echo "REFUSED: task $ID has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in $META, then retry teardown without --force; preserving task state." >&2
+  exit 1
+fi
 # Retiring a persistent secondmate is main's alone in both postures; the kind
 # is read under the metadata lock (role partition: bin/fm-lease-lib.sh).
 [ "$TEARDOWN_META_KIND" != secondmate ] || fm_lease_forbid_branch "secondmate retirement (fm-teardown)"
