@@ -1101,6 +1101,29 @@ The CLI matrix was checked directly:
 All destructive verification used `bin/fm-herdr-lab.sh` with a non-default `fm-lab-` name and a byte-identical default-session tripwire.
 No ambient `herdr server stop` command is a supported test operation.
 
+### Supervisor discovery after session environment loss
+
+Verified on 2026-10-11 with Herdr client and server 0.9.1 on macOS using:
+
+```sh
+bash bin/fm-test-run.sh tests/fm-daemon.test.sh tests/fm-supervisor-herdr-session-e2e.test.sh
+```
+
+Observed output:
+
+```text
+ok - daemon refuses lost Herdr session before backend access and releases startup ownership
+Herdr client 0.9.1; server 0.9.1
+ok - real Herdr daemon refuses lost session identity before any backend call
+```
+
+The real-Herdr regression starts the production daemon from a named lab pane in a disposable home after removing `HERDR_SESSION` and replacing its socket environment with a default-shaped path.
+The same pane resolves correctly before the session name is removed.
+A CLI guard intercepts every foreign or unscoped call before Herdr can receive it, and guarded teardown verifies the default-session tripwire.
+This test simulates the reported tool-environment loss without launching Claude or claiming to verify Claude's environment handling.
+The portable daemon tests also cover an empty session name, explicit named and default sessions, explicit supervisor targets, and nested tmux precedence.
+The discovery boundary is independent of the primary harness; unsupported supervisor backends still use the existing startup refusal.
+
 ### fm-remote server birth and login-keychain access
 
 Measured 2026-09-09 on macOS 26 (Darwin 25.6.0) aarch64 with Claude Code 2.1.266 and Herdr 0.9.0, the guarantee behind `bin/fm-remote-herdr-guard.sh` and the doctor's `herdr-server` check: login-keychain access follows the audit session a process was born into, never the launch shape or the shell.

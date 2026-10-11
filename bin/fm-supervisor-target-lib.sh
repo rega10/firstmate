@@ -29,8 +29,9 @@ FM_SUPERVISOR_BACKEND_DEFAULT="tmux"
 #      process launched from firstmate's own pane.
 #   3. $HERDR_ENV=1 + $HERDR_PANE_ID - herdr injects both into every process it
 #      manages a pane for; compose the "<session>:<pane-id>" target from
-#      $HERDR_SESSION (defaulting to "default", mirroring bin/backends/herdr.sh's
-#      fm_backend_herdr_session) and $HERDR_PANE_ID. Checked after $TMUX_PANE so a
+#      $HERDR_SESSION and $HERDR_PANE_ID. A missing or empty session returns 2
+#      without a target: pane ids are reused across sessions, so substituting
+#      "default" can address an unrelated live pane. Checked after $TMUX_PANE so a
 #      tmux pane nested inside herdr still resolves to tmux, matching
 #      fm_backend_detect's innermost-first rule.
 #   4. FM_SUPERVISOR_TARGET_DEFAULT - legacy tmux fallback (may not resolve if the
@@ -45,7 +46,11 @@ discover_supervisor_target() {
     return 0
   fi
   if [ "${HERDR_ENV:-}" = "1" ] && [ -n "${HERDR_PANE_ID:-}" ]; then
-    printf '%s:%s' "${HERDR_SESSION:-default}" "$HERDR_PANE_ID"
+    if [ -z "${HERDR_SESSION:-}" ]; then
+      echo "error: cannot resolve Herdr supervisor pane '$HERDR_PANE_ID' without HERDR_SESSION; set HERDR_SESSION or an explicit FM_SUPERVISOR_TARGET" >&2
+      return 2
+    fi
+    printf '%s:%s' "$HERDR_SESSION" "$HERDR_PANE_ID"
     return 0
   fi
   printf '%s' "$FM_SUPERVISOR_TARGET_DEFAULT"
