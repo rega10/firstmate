@@ -154,7 +154,7 @@ remember_lock_session() {
 # naming this id is left untouched, so a same-session confirmation keeps it
 # byte-identical.
 publish_lock_session() {
-  local trusted= recorded tmp pids
+  local trusted='' recorded tmp pids
   case "$me" in
     codex:*) ;;
     *)
