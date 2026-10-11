@@ -179,8 +179,8 @@
 #   task metadata publication. Teardown holds that same lock while proving and
 #   returning a slot, so allocation cannot reuse a slot before its owner record
 #   is published. Under that same lock it refuses a returned worktree still named
-#   by a different task's state/*.meta in this home, before claiming or refreshing
-#   the slot or launching a worker; an exited worker does not retire its record.
+#   by a different task's state/*.meta in any local Firstmate home, before claiming
+#   or refreshing the slot or launching a worker; an exited worker does not retire its record.
 #   A conflict closes only the new allocation endpoint, leaving the slot alone.
 #   It then writes the slot's owner claim, which is
 #   what lets teardown leave a slot reassigned since untouched; bin/fm-wake-lib.sh
@@ -3585,19 +3585,23 @@ validate_spawn_worktree() { # <source> <inspect-target>
 }
 
 refuse_recorded_spawn_worktree() {
-  local meta other_id other_worktree
-  for meta in "$STATE"/*.meta; do
-    [ -f "$meta" ] || continue
-    other_id=${meta##*/}
-    other_id=${other_id%.meta}
-    [ "$other_id" != "$ID" ] || continue
-    other_worktree=$(fm_meta_get "$meta" worktree)
-    [ -n "$other_worktree" ] || continue
-    # Compare directory identity so a symlink or trailing slash in the older
-    # record cannot hide the slot it still holds.
-    [ "$other_worktree" -ef "$WT" ] || continue
-    echo "error: refusing to spawn task $ID: returned worktree '$WT' is still recorded by task $other_id in $meta; reconcile that task before reusing its slot" >&2
+  local state_dir meta other_id other_worktree
+  fm_local_firstmate_state_dirs "$STATE" || {
+    echo "REFUSED: $FM_LOCAL_FIRSTMATE_ERROR; nothing was changed" >&2
     return 1
+  }
+  for state_dir in "${FM_LOCAL_FIRSTMATE_STATES[@]}"; do
+    for meta in "$state_dir"/*.meta; do
+      [ -f "$meta" ] || continue
+      other_id=${meta##*/}
+      other_id=${other_id%.meta}
+      [ "$other_id" = "$ID" ] && [ "$meta" -ef "$STATE/$ID.meta" ] && continue
+      other_worktree=$(fm_meta_get "$meta" worktree)
+      [ -n "$other_worktree" ] || continue
+      [ "$other_worktree" -ef "$WT" ] || continue
+      echo "error: refusing to spawn task $ID: returned worktree '$WT' is still recorded by task $other_id in $meta; reconcile that task before reusing its slot" >&2
+      return 1
+    done
   done
   return 0
 }

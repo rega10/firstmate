@@ -881,12 +881,55 @@ test_scout_base_branch_refused_on_gerrit_forge() {
 
 test_pool_slot_still_recorded_by_another_task_refuses() {
   local variant rec id held out status recorded before_meta before_claim before_head before_reflog
-  for variant in unclaimed claimed-alias; do
+  local owner_home root_home child sibling sibling_parent
+  for variant in unclaimed claimed-alias parent child sibling nested same-id; do
     id="pool-record-conflict-$variant"
     held="held-$variant"
     rec=$(make_case "record-conflict-$variant" "$id")
     read_case_record "$rec"
     lay_out_as_pool_slot
+    root_home=$HOME_DIR
+    owner_home=$HOME_DIR
+    case "$variant" in
+      parent|child|sibling|nested|same-id)
+        child="$CASE_DIR/child-home"
+        mkdir -p "$child/state" "$child/data" "$child/config" "$child/projects"
+        printf 'codex\n' > "$child/config/crew-harness"
+        touch "$child/state/.last-watcher-beat"
+        printf 'schema=fm-secondmate-parent.v1\nroute=local\nparent_home=%s\n' "$root_home" \
+          > "$child/.fm-secondmate-parent"
+        printf '%s\n' "- child - fixture (home: $child; scope: test; projects: ; added 2026-01-01)" \
+          > "$root_home/data/secondmates.md"
+        if [ "$variant" = parent ]; then
+          HOME_DIR=$child
+          fm_test_spawn_brief "$HOME_DIR" "$id"
+        else
+          owner_home=$child
+        fi
+        if [ "$variant" = sibling ] || [ "$variant" = nested ]; then
+          sibling="$CASE_DIR/other-home"
+          sibling_parent=$root_home
+          mkdir -p "$sibling/state" "$sibling/data"
+          if [ "$variant" = nested ]; then
+            sibling_parent=$child
+            printf '%s\n' "- other - fixture (home: $sibling; scope: test; projects: ; added 2026-01-01)" \
+              > "$child/data/secondmates.md"
+          else
+            printf '%s\n' "- other - fixture (home: $sibling; scope: test; projects: ; added 2026-01-01)" \
+              >> "$root_home/data/secondmates.md"
+            HOME_DIR=$child
+            fm_test_spawn_brief "$HOME_DIR" "$id"
+          fi
+          printf 'schema=fm-secondmate-parent.v1\nroute=local\nparent_home=%s\n' \
+            "$sibling_parent" \
+            > "$sibling/.fm-secondmate-parent"
+          owner_home=$sibling
+        fi
+        [ "$variant" != same-id ] || held=$id
+        printf '%s\n' "- remote - fixture (host: unavailable; root: /unavailable; home: /unavailable; scope: test; projects: ; added 2026-01-01)" \
+          >> "$root_home/data/secondmates.md"
+        ;;
+    esac
     # Track the new allocation endpoint independently from the held task.
     mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux-base"
     cat > "$FAKEBIN_DIR/tmux" <<'SH'
@@ -902,14 +945,14 @@ exec "$(dirname "$0")/tmux-base" "$@"
 SH
     chmod +x "$FAKEBIN_DIR/tmux"
     recorded=$POOL_DIR
-    if [ "$variant" = claimed-alias ]; then
+    if [ "$variant" != unclaimed ]; then
       ln -s "$POOL_DIR" "$CASE_DIR/held-alias"
       recorded="$CASE_DIR/held-alias/"
-      printf 'task=%s\nhome=%s\n' "$held" "$HOME_DIR" > "$SLOT_CLAIM"
+      printf 'task=%s\nhome=%s\n' "$held" "$owner_home" > "$SLOT_CLAIM"
     fi
     # The worker has exited, so the pool may offer this slot again. Its task
     # record still owns the copy, even when no slot-owner claim was written.
-    cat > "$HOME_DIR/state/$held.meta" <<EOF
+    cat > "$owner_home/state/$held.meta" <<EOF
 window=firstmate:fm-$held
 worktree=$recorded
 project=$PROJECT_DIR
@@ -919,8 +962,11 @@ mode=no-mistakes
 yolo=off
 backend=tmux
 EOF
-    printf 'done: awaiting review\n' > "$HOME_DIR/state/$held.status"
-    before_meta=$(cat "$HOME_DIR/state/$held.meta")
+    printf 'done: awaiting review\n' > "$owner_home/state/$held.status"
+    mkdir "$CASE_DIR/unrelated-copy"
+    printf 'worktree=%s\nkind=scout\n' "$CASE_DIR/unrelated-copy" \
+      > "$owner_home/state/unrelated.meta"
+    before_meta=$(cat "$owner_home/state/$held.meta")
     before_claim=$(cat "$SLOT_CLAIM" 2>/dev/null || true)
     before_head=$(git -C "$POOL_DIR" rev-parse HEAD)
     before_reflog=$(git -C "$POOL_DIR" reflog)
@@ -936,7 +982,7 @@ EOF
     [ ! -e "$CASE_DIR/new-endpoint" ] || fail "refused spawn left its allocation endpoint open"
     [ ! -e "$HOME_DIR/state/$id.git-hooks" ] || fail "refused spawn installed task hooks"
     [ ! -s "$CASE_DIR/launch.log" ] || fail "refused spawn launched a worker"
-    [ "$(cat "$HOME_DIR/state/$held.meta")" = "$before_meta" ] || fail "spawn changed the holding task record"
+    [ "$(cat "$owner_home/state/$held.meta")" = "$before_meta" ] || fail "spawn changed the holding task record"
     [ "$(cat "$SLOT_CLAIM" 2>/dev/null || true)" = "$before_claim" ] || fail "spawn changed the held slot claim"
     [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$before_head" ] || fail "spawn refreshed the held slot"
     [ "$(git -C "$POOL_DIR" reflog)" = "$before_reflog" ] || fail "spawn touched the held slot reflog"
@@ -944,7 +990,7 @@ EOF
 
     # Remove only the competing fixture record. The same slot and any old
     # claim must then follow the ordinary successful spawn path.
-    rm "$HOME_DIR/state/$held.meta"
+    rm "$owner_home/state/$held.meta"
     out=$(FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" FM_FAKE_NEW_TASK="$id" \
       run_spawn "$id" --mode no-mistakes --yolo off)
     status=$?
