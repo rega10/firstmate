@@ -166,6 +166,71 @@ await_pid_exit() {  # <pid> <tenths>
 
 # --- tests -------------------------------------------------------------------
 
+# Exercise the real bootstrap through the deferred stage, with no configured
+# backend. Herdr's old auto-detect notice has been removed; cmux still emits
+# the same kind of notice, so it keeps this reproduction non-vacuous.
+# Runtime markers are sufficient: no backend CLI or lifecycle is needed.
+test_real_bootstrap_backend_notice_does_not_wake() (
+  local backend rec home root log report detected fixture_path
+  unset FM_BACKEND TMUX TMUX_PANE HERDR_ENV HERDR_PANE_ID HERDR_SESSION HERDR_SOCKET_PATH \
+    CMUX_WORKSPACE_ID CMUX_SURFACE_ID CMUX_SOCKET_PATH CMUX_TAB_ID CMUX_PANEL_ID
+  for backend in herdr cmux; do
+    rec=$(new_world "real-bootstrap-$backend")
+    IFS='|' read -r home root log <<EOF
+$rec
+EOF
+    rm "$root/bin/fm-bootstrap.sh"
+    ln -s "$ROOT/bin/fm-bootstrap.sh" "$root/bin/fm-bootstrap.sh"
+    mkdir -p "$home/config"
+    cat > "$root/bin/gh" <<'SH'
+#!/usr/bin/env bash
+[ "$*" = 'auth status' ] || exit 2
+exit "${FM_FAKE_GH_RC:-0}"
+SH
+    chmod +x "$root/bin/gh"
+    fixture_path="$root/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    export FM_HOME="$home" FM_ROOT_OVERRIDE="$root" FM_STATE_OVERRIDE="$home/state" \
+      FM_CONFIG_OVERRIDE="$home/config" FM_DATA_OVERRIDE="$home/data" FM_PROJECTS_OVERRIDE="$home/projects"
+    if [ "$backend" = herdr ]; then
+      export HERDR_ENV=1 CMUX_WORKSPACE_ID=''
+    else
+      export HERDR_ENV='' CMUX_WORKSPACE_ID=fixture-workspace
+    fi
+
+    # Prove the actual resolver sees the runtime marker and still emits the
+    # incidental cmux notice outside the network-only phase.
+    # shellcheck disable=SC2016 # positional params expand in the child shell.
+    detected=$(env PATH="$fixture_path" bash -c '. "$1/bin/fm-backend.sh"; fm_backend_name' _ "$root" 2>"$home/backend.err")
+    [ "$detected" = "$backend" ] || fail "runtime marker did not select $backend: $detected"
+    if [ "$backend" = cmux ]; then
+      assert_grep 'NOTICE: auto-detected cmux runtime' "$home/backend.err" \
+        "the notice reproduction no longer exercises an emitting backend"
+    fi
+
+    # Configuring the same backend masks the leak. Removing only that setting
+    # must leave the clean report equally silent.
+    printf '%s\n' "$backend" > "$home/config/backend"
+    env PATH="$fixture_path" bash "$root/bin/fm-startup-network.sh" run --locked 0 \
+      || fail "configured $backend stage failed"
+    [ ! -s "$home/state/.wake-queue" ] || fail "configured $backend queued a clean-result wake"
+    rm "$home/config/backend"
+    env PATH="$fixture_path" bash "$root/bin/fm-startup-network.sh" run --locked 0 \
+      || fail "auto-detected $backend stage failed"
+    report=$(env PATH="$fixture_path" bash "$root/bin/fm-startup-network.sh" report)
+    assert_contains "$report" '(silent - no problems found)' \
+      "auto-detected $backend polluted the clean network report: $report"
+    [ ! -s "$home/state/.wake-queue" ] || fail "auto-detected $backend queued a clean-result wake"
+
+    env PATH="$fixture_path" FM_FAKE_GH_RC=1 bash "$root/bin/fm-startup-network.sh" run --locked 0 \
+      || fail "failed-auth stage did not publish"
+    report=$(env PATH="$fixture_path" bash "$root/bin/fm-startup-network.sh" report)
+    assert_contains "$report" 'NEEDS_GH_AUTH' "auto-detected $backend lost the authentication failure"
+    assert_grep $'check\tstartup-network' "$home/state/.wake-queue" \
+      "auto-detected $backend suppressed an actionable authentication wake"
+  done
+  pass "fm-startup-network: real bootstrap keeps backend notices out of clean reports and preserves actionable wakes"
+)
+
 # `start` is called from inside a session-open hook whose stdout the harness
 # reads to EOF. A worker that inherited that pipe would hold the session open for
 # exactly as long as the network work it was supposed to get off the critical
@@ -859,6 +924,7 @@ EOF
   pass "fm-startup-network: a held publish lock ends the worker inside its budget with a failed-rerun record"
 }
 
+test_real_bootstrap_backend_notice_does_not_wake || exit 1
 test_wait_fails_without_a_published_stage
 test_start_returns_without_holding_the_callers_stdout
 test_harvest_acknowledgement_suppresses_the_wake_and_no_claim_produces_it

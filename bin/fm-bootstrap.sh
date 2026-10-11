@@ -839,19 +839,7 @@ missing_tool_diagnostic() {
   echo "MISSING: $tool (install: $(install_cmd "$tool"))"
 }
 
-# Required-tool detection follows the RESOLVED backend, not a one-size default:
-# a universal toolchain every home needs plus the backend-specific delta owned by
-# fm_backend_required_tools (bin/fm-backend.sh). So a herdr/zellij/cmux home is
-# never told tmux is missing, and only orca drops treehouse. A backend value with
-# no verified dependency set is reported before the universal checks continue.
 COMMON_TOOLS="node git gh no-mistakes gh-axi chrome-devtools-axi tasks-axi quota-axi"
-BACKEND=$(fm_backend_name)
-BACKEND_VALID=1
-if ! BACKEND_TOOLS=$(fm_backend_required_tools "$BACKEND"); then
-  BACKEND_VALID=0
-  BACKEND_TOOLS=""
-fi
-TOOLS="$BACKEND_TOOLS $COMMON_TOOLS"
 NO_MISTAKES_MIN=1.46.0
 # AXI-FAMILY FLOOR POLICY. Every axi-family floor is the CURRENT LATEST published
 # version of that tool, captain-bumped periodically to keep the whole fleet on the
@@ -1398,6 +1386,18 @@ fi
 # Local detection: presence, version floors, and configuration. Nothing here
 # leaves this machine, so it stays on the session-start critical path.
 detect_local_tools() {
+  # Resolve the backend only for local tool detection, so an auto-detect notice
+  # cannot contaminate the deferred network report and trigger a false wake.
+  # Required tools follow the resolved backend's dependency set, owned by
+  # fm_backend_required_tools, plus the universal toolchain every home needs.
+  local BACKEND BACKEND_VALID BACKEND_TOOLS TOOLS
+  BACKEND=$(fm_backend_name)
+  BACKEND_VALID=1
+  if ! BACKEND_TOOLS=$(fm_backend_required_tools "$BACKEND"); then
+    BACKEND_VALID=0
+    BACKEND_TOOLS=""
+  fi
+  TOOLS="$BACKEND_TOOLS $COMMON_TOOLS"
   if [ "$BACKEND_VALID" -eq 0 ]; then
     echo "BACKEND_INVALID: $BACKEND (known: $FM_BACKEND_KNOWN)"
   fi
