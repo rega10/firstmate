@@ -943,8 +943,11 @@ test_spawn_explicit_harness_uses_explicit_profile_axes() {
   mkdir -p "$w/home/config"
   printf 'claude opus high\n' > "$w/home/config/secondmate-harness"
   make_seeded_home "$sm" sm
-
-  spawn_secondmate_capture "$w" sm "$sm" "$launchlog" --harness codex --model gpt-5.5 --effort xhigh >/dev/null 2>&1
+  mkdir -p "$w/codex-home"
+  printf '{"models":[{"slug":"gpt-5.5","supported_reasoning_levels":[{"effort":"xhigh"}]}]}\n' \
+    > "$w/codex-home/models_cache.json"
+  CODEX_HOME="$w/codex-home" spawn_secondmate_capture "$w" sm "$sm" "$launchlog" \
+    --harness codex --model gpt-5.5 --effort xhigh >/dev/null 2>&1
 
   meta="$w/home/state/sm.meta"
   [ "$(meta_field "$meta" harness)" = codex ] || fail "explicit-harness-explicit-axes: meta harness not codex"

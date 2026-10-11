@@ -83,8 +83,11 @@
 #   --model <name> and --effort <low|medium|high|xhigh|max|ultra> are concrete profile
 #   axes chosen by firstmate at intake. They are only threaded into harnesses whose
 #   installed CLIs were verified to support that axis; unsupported axes are omitted
-#   from that harness's launch rather than guessed. Ultra is the explicit
-#   exception: bin/fm-harness.sh validate-native-effort owns its model scope;
+#   from that harness's launch rather than guessed. Canonical Codex launches
+#   validate requested effort against the explicit model's supported_reasoning_levels
+#   in ${CODEX_HOME:-$HOME/.codex}/models_cache.json and refuse unsupported or
+#   unverifiable effort before provisioning. Ultra remains a separate exception:
+#   bin/fm-harness.sh validate-native-effort owns its model scope;
 #   supported Pi launches receive --codex-effort ultra, never --thinking ultra.
 #   OpenCode has no interactive effort flag, so its effort is written as the
 #   build agent's variant, keyed to the resolved model, inside the
@@ -1894,6 +1897,30 @@ pi_supports_tui_mode() {
   printf '%s\n' "$help" | grep -Eq -- '(^|[[:space:]])--tui-mode([[:space:]=]|$)'
 }
 
+codex_effort_validate() { # <model> <effort>
+  local model=$1 effort=$2 catalog levels
+  [ -n "$effort" ] && [ "$effort" != default ] || return 0
+  [ -n "$model" ] && [ "$model" != default ] || {
+    echo "error: codex effort '$effort' requires an explicit --model to check its catalog capabilities" >&2
+    return 1
+  }
+  catalog="${CODEX_HOME:-$HOME/.codex}/models_cache.json"
+  levels=$(jq -er --arg model "$model" '
+    [.models[] | select(.slug == $model)] | select(length == 1)
+    | .[0].supported_reasoning_levels
+    | select(type == "array" and length > 0)
+    | map(.effort) | select(all(.[]; type == "string" and length > 0))
+    | .[]
+  ' "$catalog" 2>/dev/null) || {
+    echo "error: cannot verify codex model '$model' effort '$effort' from $catalog; refusing to launch" >&2
+    return 1
+  }
+  printf '%s\n' "$levels" | grep -qxF -- "$effort" && return 0
+  levels=${levels//$'\n'/, }
+  echo "error: codex model '$model' does not support effort '$effort' in $catalog (supported: $levels); refusing to launch" >&2
+  return 1
+}
+
 # omp pre-launch model validation. `omp models --json` (omp 18.1.11) prints
 # {"models":[{"provider","id","selector":"<provider>/<id>",...}]} for built-in and
 # auto-discovered providers only; it never lists a provider an extension
@@ -2397,6 +2424,9 @@ if [ "$EFFORT" = ultra ]; then
     exit 1
   }
 fi
+if [ "$HARNESS" = codex ] && [ "$RAW_LAUNCH" = 0 ]; then
+  codex_effort_validate "$MODEL" "$EFFORT" || exit 1
+fi
 if [ "$HARNESS" = omp ]; then
   omp_model_validate "$OMP_BIN" "$MODEL" || exit 1
 fi
@@ -2601,16 +2631,8 @@ effort_flag_for_harness() {
     esac
     ;;
   codex)
-    # The installed codex config schema uses model_reasoning_effort. The
-    # installed model catalog supports max for gpt-5.6-luna; keep that level
-    # scoped to the model whose catalog entry advertises it.
-    case "$effort" in
-    low | medium | high | xhigh) printf -- '-c %s ' "$(shell_quote "model_reasoning_effort=\"$effort\"")" ;;
-    max)
-      [ "$model" = gpt-5.6-luna ] || return 0
-      printf -- '-c %s ' "$(shell_quote 'model_reasoning_effort="max"')"
-      ;;
-    esac
+    # Canonical launches already checked the resolved model's catalog levels.
+    printf -- '-c %s ' "$(shell_quote "model_reasoning_effort=\"$effort\"")"
     ;;
   grok)
     # grok exposes both --effort and --reasoning-effort; firstmate's profile
