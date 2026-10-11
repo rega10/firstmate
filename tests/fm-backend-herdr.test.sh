@@ -122,7 +122,7 @@ herdr_submit_claude_prefix() {  # <resp-dir> <typed-text>
   local resp=$1 text=$2
   herdr_submit_shift "$resp" 3
   printf '{"result":{"agent":{"agent":"claude","agent_status":"idle"}}}\n' > "$resp/1.out"
-  printf '  \xe2\x9d\xaf\n' > "$resp/2.out"
+  printf '──────\n  \xe2\x9d\xaf\n──────\n' > "$resp/2.out"
   printf '  \xe2\x9d\xaf %s\n' "$text" > "$resp/4.out"
 }
 
@@ -4521,7 +4521,7 @@ test_send_text_submit_idle_native_empty_composer_confirms_delivery() {
   # that empty verdict is positive delivery, not a swallow.
   printf '{"result":{"agent":{"agent_status":"idle"}}}\n' > "$resp/2.out"
   printf '{"result":{"agent":{"agent_status":"idle"}}}\n' > "$resp/4.out"
-  printf '  \xe2\x9d\xaf\n' > "$resp/5.out"
+  printf '──────\n  \xe2\x9d\xaf\n──────\n' > "$resp/5.out"
   herdr_submit_identity_prefix "$resp" codex
   fb=$(make_herdr_fakebin "$dir")
   out=$( PATH="$fb:$PATH" FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" FM_BACKEND_HERDR_SUBMIT_POLLS=1 \
@@ -4794,7 +4794,7 @@ herdr_ctrl_u_count() {  # <log>
 herdr_wrapped_composer() {  # <text> <width> <drop>
   local text=$1 width=$2 drop=$3 prefix='  \xe2\x9d\xaf '
   text=${text:$((drop * width))}
-  [ -n "$text" ] || { printf '  \xe2\x9d\xaf\n'; return 0; }
+  [ -n "$text" ] || { printf '──────\n  \xe2\x9d\xaf\n──────\n'; return 0; }
   while [ -n "$text" ]; do
     printf "$prefix%s\n" "${text:0:$width}"
     text=${text:$width}
@@ -4853,7 +4853,7 @@ test_send_text_submit_refuses_enter_when_composer_holds_only_the_suffix() {
   suffix=${text: -480}
   herdr_submit_claude_prefix "$resp" "$text"
   printf '  \xe2\x9d\xaf %s\n' "$suffix" > "$resp/4.out"
-  printf '  \xe2\x9d\xaf\n' > "$resp/6.out"
+  printf '──────\n  \xe2\x9d\xaf\n──────\n' > "$resp/6.out"
   printf '{"result":{"agent":{"agent_status":"working"}}}\n' > "$resp/7.out"
   fb=$(make_herdr_fakebin "$dir")
   out=$( PATH="$fb:$PATH" FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" FM_BACKEND_HERDR_SUBMIT_POLLS=1 \
@@ -4913,9 +4913,9 @@ test_send_text_submit_refused_suffix_then_clean_retry_submits_only_the_message()
   suffix=${text: -480}
   herdr_submit_claude_prefix "$resp" "$text"
   printf '  \xe2\x9d\xaf %s\n' "$suffix" > "$resp/4.out"
-  printf '  \xe2\x9d\xaf\n' > "$resp/6.out"
+  printf '──────\n  \xe2\x9d\xaf\n──────\n' > "$resp/6.out"
   printf '{"result":{"agent":{"agent":"claude","agent_status":"idle"}}}\n' > "$resp/7.out"
-  printf '  \xe2\x9d\xaf\n' > "$resp/8.out"
+  printf '──────\n  \xe2\x9d\xaf\n──────\n' > "$resp/8.out"
   printf '  \xe2\x9d\xaf %s\n' "$text" > "$resp/10.out"
   printf '{"result":{"agent":{"agent_status":"idle"}}}\n' > "$resp/11.out"
   printf '{"result":{"agent":{"agent_status":"working"}}}\n' > "$resp/13.out"
@@ -4957,7 +4957,7 @@ test_send_text_submit_refuses_suffix_when_transcript_still_shows_the_head() {
     printf '%s\n' "$text"
     printf '  \xe2\x9d\xaf %s\n' "$suffix"
   } > "$resp/4.out"
-  printf '  \xe2\x9d\xaf\n' > "$resp/6.out"
+  printf '──────\n  \xe2\x9d\xaf\n──────\n' > "$resp/6.out"
   fb=$(make_herdr_fakebin "$dir")
   out=$( PATH="$fb:$PATH" FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" FM_BACKEND_HERDR_SUBMIT_POLLS=1 \
     bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_send_text_submit default:w1:p2 "$1" 3 0.01 0.01' "$ROOT" "$text" )
@@ -5006,7 +5006,7 @@ test_send_text_submit_refuses_marked_digest_missing_its_head() {
   shown=${text//$'\xe2\x81\xa3'/}
   herdr_submit_claude_prefix "$resp" "$text"
   printf '  \xe2\x9d\xaf\xc2\xa0%s\n' "${shown: -480}" > "$resp/4.out"
-  printf '  \xe2\x9d\xaf\n' > "$resp/6.out"
+  printf '──────\n  \xe2\x9d\xaf\n──────\n' > "$resp/6.out"
   fb=$(make_herdr_fakebin "$dir")
   out=$( PATH="$fb:$PATH" FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" FM_BACKEND_HERDR_SUBMIT_POLLS=1 \
     bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_send_text_submit default:w1:p2 "$1" 3 0.01 0.01' "$ROOT" "$text" )
@@ -5102,7 +5102,7 @@ test_send_text_submit_refuses_placeholder_followed_by_a_literal_remainder() {
   suffix=${text: -480}
   herdr_submit_claude_prefix "$resp" "$text"
   printf '  \xe2\x9d\xaf [Pasted text #1]%s\n' "$suffix" > "$resp/4.out"
-  printf '  \xe2\x9d\xaf\n' > "$resp/6.out"
+  printf '──────\n  \xe2\x9d\xaf\n──────\n' > "$resp/6.out"
   fb=$(make_herdr_fakebin "$dir")
   out=$( PATH="$fb:$PATH" FM_HERDR_LOG="$log" FM_HERDR_RESPONSES="$resp" FM_BACKEND_HERDR_SUBMIT_POLLS=1 \
     bash -c '. "$0/bin/backends/herdr.sh"; fm_backend_herdr_send_text_submit default:w1:p2 "$1" 3 0.01 0.01' "$ROOT" "$text" )

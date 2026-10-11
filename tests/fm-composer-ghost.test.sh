@@ -190,8 +190,8 @@ test_dim_ghost_only_composer_is_not_pending() {
   fb=$(make_fake_tmux "$dir")
   capture="$dir/styled.txt"
   # The exact rendering claude emits: a normal prompt glyph + a DIM predicted prompt.
-  printf '\xe2\x9d\xaf \033[2mWhat is the largest country by area?\033[0m\n' > "$capture"
-  if PATH="$fb:$PATH" FM_FAKE_STYLED="$capture" FM_FAKE_CY=0 \
+  printf '────────────────────────\n\xe2\x9d\xaf \033[2mWhat is the largest country by area?\033[0m\n────────────────────────\n' > "$capture"
+  if PATH="$fb:$PATH" FM_FAKE_STYLED="$capture" FM_FAKE_CY=1 \
      fm_pane_input_pending "fakepane"; then
     fail "dim ghost-only composer falsely read as pending"
   fi
@@ -257,8 +257,8 @@ test_dark_truecolor_ghost_only_composer_is_not_pending() {
   # A grok-style pristine composer: bright prompt glyph + a dark/muted truecolor
   # placeholder. It must read NOT pending (the grok TRUECOLOR gap, now covered by
   # the same ANSI-aware owner as claude's dim ghost).
-  printf '\xe2\x9d\xaf \033[38;2;50;47;70mType a message...\033[0m\n' > "$capture"
-  if PATH="$fb:$PATH" FM_FAKE_STYLED="$capture" FM_FAKE_CY=0 \
+  printf '────────────────────────\n\xe2\x9d\xaf \033[38;2;50;47;70mType a message...\033[0m\n────────────────────────\n' > "$capture"
+  if PATH="$fb:$PATH" FM_FAKE_STYLED="$capture" FM_FAKE_CY=1 \
      fm_pane_input_pending "fakepane"; then
     fail "dark truecolor ghost-only composer falsely read as pending"
   fi
@@ -681,6 +681,54 @@ test_peek_output_is_escape_free() {
   pass "fm-peek output is escape-free (no raw -e bytes reach firstmate context)"
 }
 
+test_real_zsh_arrow_defers_input() (
+  if ! command -v tmux >/dev/null || ! command -v zsh >/dev/null; then
+    printf 'skip: real zsh arrow regression requires tmux and zsh\n'
+    return 0
+  fi
+  local helper=${LAB_HOME_HELPER:-$ROOT/bin/fm-lab-home.sh} i screen out
+  local lab_home lab_tmux
+  lab_home=$("$helper" create "$TMP_ROOT/zsh-home") || exit 1
+  lab_tmux=$("$helper" tmux-dir "$lab_home") || exit 1
+  unset TMUX TMUX_PANE
+  export TMUX_TMPDIR="$lab_tmux" FM_HOME="$lab_home"
+  # shellcheck disable=SC2329 # Invoked by the EXIT trap below.
+  cleanup_zsh() {
+    local rc=$?
+    trap - EXIT
+    tmux kill-server 2>/dev/null || true
+    "$helper" teardown "$lab_home" || rc=1
+    exit "$rc"
+  }
+  trap cleanup_zsh EXIT
+  tmux -f /dev/null new-session -d -s zsh-arrow -x 100 -y 30 -c "$lab_home" \
+    env PS1='❯ ' RPS1='' zsh -df || exit 1
+  for ((i=0; i<100; i++)); do
+    screen=$(tmux capture-pane -p -t zsh-arrow)
+    case "$screen" in ❯*) break ;; esac
+    sleep 0.1
+  done
+  [ "$i" -lt 100 ] || fail 'the real zsh shell never drew its arrow prompt'
+  [ "$(tmux display-message -p -t zsh-arrow '#{pane_current_command}')" = zsh ] \
+    || fail 'the arrow regression must exercise a real foreground zsh'
+  out=$(fm_tmux_composer_state zsh-arrow)
+  [ "$out" = unknown ] || fail "real zsh arrow read $out, expected unknown"
+  fm_pane_input_pending zsh-arrow || fail 'the real zsh arrow did not defer input'
+  # Redraw in the same shell with enclosing rules to supply the missing
+  # structural proof; no agent process or identity probe supplies it.
+  tmux send-keys -t zsh-arrow -l 'printf "\033[2J\033[H────────────────────────\n❯ \n────────────────────────\033[A"; sleep 300'
+  tmux send-keys -t zsh-arrow Enter
+  for ((i=0; i<100; i++)); do
+    screen=$(tmux capture-pane -p -t zsh-arrow)
+    case "$screen" in '────────────────────────'*) break ;; esac
+    sleep 0.1
+  done
+  out=$(fm_tmux_composer_state zsh-arrow)
+  [ "$out" = empty ] || fail "rule-enclosed counterfactual read $out, expected empty"
+  pass 'real zsh arrow defers input; enclosing rules supply the missing composer proof'
+)
+
+test_real_zsh_arrow_defers_input || exit 1
 test_strip_ghost_drops_dim_keeps_normal
 test_strip_ghost_handles_combined_and_boundary_codes
 test_strip_ghost_keeps_colored_text_with_2_payloads

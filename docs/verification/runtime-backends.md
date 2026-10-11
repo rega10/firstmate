@@ -724,6 +724,32 @@ Cursor is deliberately outside this cursor-anchored empty-composer matrix becaus
 
 `zellij action dump-screen --pane-id <id> --ansi` was verified at zellij 0.44.0 to preserve ANSI styling (real Claude Code rendered inside a zellij pane dumped `ESC[m` `❯` U+00A0 for its idle composer row), which is the capability the zellij composer classifier reads.
 
+### 2026-10-11 Claude arrow shared with zsh
+
+Verified against Claude Code 2.1.284 in an isolated Herdr lab and throwaway `FM_HOME`.
+A real foreground `zsh -df` with `PS1='❯ '` classified `empty` before the fix, although no agent was running.
+Claude's real idle screen contained a complete horizontal rule pair around `❯` plus U+00A0.
+[`bin/fm-composer-lib.sh`](../../bin/fm-composer-lib.sh) owns the container-proof rule for the shared glyph, including omp's adjacent status-row exception.
+The existing six-column Claude rules, titled rules, boxed composers, ghost suggestions, and typed-input verdicts retain their fixture coverage.
+Prompt-only synthetic fixtures now include the enclosing rules, because the cropped arrow cannot distinguish Claude from zsh.
+
+Refresh with the token-free live guard:
+
+```sh
+bin/fm-test-run.sh tests/fm-composer-claude-shell-live-e2e.test.sh
+```
+
+Observed output:
+
+```text
+ok - Claude (2.1.284 (Claude Code)): idle=empty, draft=pending, exited zsh=unknown, cleared zsh=unknown
+```
+
+The guard keeps Claude's configuration inside the disposable home, submits no model prompt, and routes every Herdr operation through the lab helper.
+`tests/fm-composer-lib.test.sh` pins bare, dimmed, wrapped-ghost, one-rule, stale-rule, and stale-identity refusals across all backend capability profiles and both locales.
+`tests/fm-composer-ghost.test.sh` additionally drives a real zsh prompt through the tmux input guard wherever tmux and zsh are installed.
+On the same date, `bin/fm-test-run.sh tests/fm-composer-ghost.test.sh` passed on tmux 3.7c and zsh 5.9.1, including `ok - real zsh arrow defers input; enclosing rules supply the missing composer proof`.
+
 ### 2026-10-02 claude 2.1.284 titled composer rule through Herdr
 
 Verified on 2026-10-02 on macOS arm64 (Darwin 25.6.0) against Claude Code 2.1.284 in an isolated `fm-lab-` session on Herdr 0.9.1, read through Herdr's ANSI viewport capture with its exact capability descriptor (`styled=1`, `cursor=0`, `identity=1`).
@@ -1555,7 +1581,7 @@ ok - forced teardown retains a nested secondmate home and its grandchild's Herdr
 
 Real captures verified these active distinctions:
 
-- Claude and Codex use bare `❯` and `›` agent composers.
+- Claude renders `❯` between enclosing rules; Codex renders a bare `›` composer.
 - Pi uses content between complete separator rows and requires exact native Pi identity.
 - Dim or faint suggestion text is ghost content, while normally styled text is pending input.
 - Grok dark truecolor placeholders are ghost content, while bright truecolor typed input remains pending.

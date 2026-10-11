@@ -626,13 +626,7 @@ A human-blocked permission dialog has no busy banner and still surfaces.
 
 Herdr has no direct cursor-row primitive.
 The adapter is a thin capture.
-It hands the visible pane's ANSI viewport plus Herdr's capability facts to the fleet-wide classifier in `bin/fm-composer-lib.sh`, which owns every shape:
-
-- Bordered boxes.
-- Bare agent-glyph rows, including muse's `⟩`, which the adapter's retired local pattern silently omitted.
-- Claude's titled composer, including resumed or backgrounded conversations.
-- opencode's left bar.
-- The Pi separator region this adapter pioneered, admitted only when native `agent get` identity is exactly Pi and state is idle or done.
+It hands the visible pane's ANSI viewport plus Herdr's capability facts to the fleet-wide classifier in [`bin/fm-composer-lib.sh`](../bin/fm-composer-lib.sh), whose header owns every shape and its required container proof.
 
 ### Pi composer states
 

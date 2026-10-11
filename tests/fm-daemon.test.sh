@@ -628,7 +628,8 @@ test_unknown_wake_ack_suppresses_handled_identity() {
   state="$dir/state"
   fakebin="$dir/fakebin"
   sent="$dir/sent.log"; : > "$sent"
-  capture="$dir/pane.txt"; printf '\342\235\257 \n' > "$capture"
+  local -x FM_FAKE_TMUX_CURSOR_Y=1
+  capture="$dir/pane.txt"; printf '────────────────────────\n❯ \n────────────────────────\n' > "$capture"
 
   FM_ESCALATE_BATCH_SECS=999 handle_wake "frobnicate: already-handled" "$state" \
     || fail "the first unknown wake was not handled"
@@ -685,7 +686,8 @@ test_unknown_wake_ack_failure_still_clears_delivered_digest() {
   state="$dir/state"
   fakebin="$dir/fakebin"
   sent="$dir/sent.log"; : > "$sent"
-  capture="$dir/pane.txt"; printf '\342\235\257 \n' > "$capture"
+  local -x FM_FAKE_TMUX_CURSOR_Y=1
+  capture="$dir/pane.txt"; printf '────────────────────────\n❯ \n────────────────────────\n' > "$capture"
   mkdir -p "$state/.subsuper-unknown-acked"
 
   FM_ESCALATE_BATCH_SECS=999 handle_wake "frobnicate: ack-write-fails" "$state" \
@@ -1563,7 +1565,8 @@ test_escalate_batches_into_one_digest() {
   state="$dir/state"
   fakebin="$dir/fakebin"
   sent="$dir/sent.log"; : > "$sent"
-  capture="$dir/pane.txt"; printf '\342\235\257 \n' > "$capture"  # a proven-empty bare claude composer: STRICT injection needs positive proof
+  local -x FM_FAKE_TMUX_CURSOR_Y=1
+  capture="$dir/pane.txt"; printf '────────────────────────\n❯ \n────────────────────────\n' > "$capture"  # a rule-enclosed Claude composer supplies positive proof
   escalate_add "$state" "event A: done: PR 1"
   escalate_add "$state" "event B: done: PR 2"
   afk_enter "$state"
@@ -1597,7 +1600,8 @@ test_escalate_marker_preserving_primary_types_envelope() {
   state="$dir/state"
   fakebin="$dir/fakebin"
   sent="$dir/sent.log"; : > "$sent"
-  capture="$dir/pane.txt"; printf '\342\235\257 \n' > "$capture"
+  local -x FM_FAKE_TMUX_CURSOR_Y=1
+  capture="$dir/pane.txt"; printf '────────────────────────\n❯ \n────────────────────────\n' > "$capture"
   escalate_add "$state" "event C: done: PR 3"
   afk_enter "$state"
   PATH="$fakebin:$PATH" FM_FAKE_TMUX_PANE_ALIVE=1 FM_FAKE_TMUX_SENT="$sent" \
@@ -1646,7 +1650,8 @@ test_escalate_batch_age_uses_first_append() {
   state="$dir/state"
   fakebin="$dir/fakebin"
   sent="$dir/sent.log"; : > "$sent"
-  capture="$dir/pane.txt"; printf '\342\235\257 \n' > "$capture"  # a proven-empty bare claude composer: STRICT injection needs positive proof
+  local -x FM_FAKE_TMUX_CURSOR_Y=1
+  capture="$dir/pane.txt"; printf '────────────────────────\n❯ \n────────────────────────\n' > "$capture"  # a rule-enclosed Claude composer supplies positive proof
   escalate_add "$state" "event A: done: PR 1"
   escalate_add "$state" "event B: done: PR 2"
   echo $(( $(date +%s) - 100 )) > "$state/.subsuper-escalations.since"
@@ -1879,7 +1884,8 @@ test_afk_absent_daemon_does_not_inject() {
   state="$dir/state"
   fakebin="$dir/fakebin"
   sent="$dir/sent.log"; : > "$sent"
-  capture="$dir/pane.txt"; printf '\342\235\257 \n' > "$capture"  # a proven-empty bare claude composer: STRICT injection needs positive proof
+  local -x FM_FAKE_TMUX_CURSOR_Y=1
+  capture="$dir/pane.txt"; printf '────────────────────────\n❯ \n────────────────────────\n' > "$capture"  # a rule-enclosed Claude composer supplies positive proof
   escalate_add "$state" "done: PR 1"
   # afk flag deliberately NOT set
   if PATH="$fakebin:$PATH" FM_FAKE_TMUX_PANE_ALIVE=1 FM_FAKE_TMUX_SENT="$sent" \
@@ -2031,14 +2037,14 @@ test_pane_input_pending_requires_proven_empty_prompt() {
   state="$dir/state"
   fakebin="$dir/fakebin"
   capture="$dir/pane.txt"
-  for prompt in '$' '>'; do
+  for prompt in '$' '>' '❯'; do
     printf 'output\noutput\n%s \n' "$prompt" > "$capture"
     PATH="$fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_Y=2 \
       pane_input_pending "fakepane" \
       || fail "bare shell prompt '$prompt' should defer as unknown"
   done
   for prompt in '❯' '›'; do
-    printf 'output\noutput\n%s \n' "$prompt" > "$capture"
+    printf 'output\n────────────────────────\n%s \n────────────────────────\n' "$prompt" > "$capture"
     if PATH="$fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_Y=2 \
       pane_input_pending "fakepane"; then
       fail "proven empty agent prompt '$prompt' should not defer"
@@ -2056,7 +2062,7 @@ test_tmux_composer_state_bare_shell_is_unknown() {
   local dir fakebin capture g out
   dir=$(make_supercase composer-bare-shell)
   fakebin="$dir/fakebin"; capture="$dir/pane.txt"
-  for g in '$' '%' '#' '>'; do
+  for g in '$' '%' '#' '>' '❯'; do
     printf 'output\noutput\n%s \n' "$g" > "$capture"
     out=$(PATH="$fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_Y=2 \
       fm_tmux_composer_state "fakepane")
@@ -2067,7 +2073,7 @@ test_tmux_composer_state_bare_shell_is_unknown() {
 }
 
 # The other side of the fix: a bordered composer box (the harness draws its own
-# prompt glyph inside it) and a bare AGENT prompt glyph (claude ❯, codex ›) are
+# prompt glyph inside it), rule-enclosed Claude ❯, and a bare Codex › are
 # genuine empty agent composers and must still read `empty`.
 test_tmux_composer_state_bordered_and_agent_rows_are_empty() {
   local dir fakebin capture out
@@ -2077,15 +2083,15 @@ test_tmux_composer_state_bordered_and_agent_rows_are_empty() {
   out=$(PATH="$fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_Y=1 \
     fm_tmux_composer_state "fakepane")
   [ "$out" = empty ] || fail "a bordered '│ > │' composer should read empty, got '$out'"
-  printf '%s\n' "❯ " > "$capture"
-  out=$(PATH="$fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_Y=0 \
+  printf '────────────────────────\n❯ \n────────────────────────\n' > "$capture"
+  out=$(PATH="$fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_Y=1 \
     fm_tmux_composer_state "fakepane")
-  [ "$out" = empty ] || fail "a bare claude '❯' composer should read empty, got '$out'"
+  [ "$out" = empty ] || fail "a rule-enclosed Claude '❯' composer should read empty, got '$out'"
   printf '%s\n' "› " > "$capture"
   out=$(PATH="$fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_Y=0 \
     fm_tmux_composer_state "fakepane")
   [ "$out" = empty ] || fail "a bare codex '›' composer should read empty, got '$out'"
-  pass "fm_tmux_composer_state: a bordered composer box and bare agent glyphs (❯/›) still read empty"
+  pass "fm_tmux_composer_state: a bordered box, rule-enclosed Claude, and bare Codex still read empty"
 }
 
 test_tmux_composer_state_requires_matching_box_borders() {
@@ -3135,7 +3141,8 @@ test_inject_msg_herdr_submits_through_backend_dispatch() {
 }
 
 # A real shell can draw Claude's prompt glyph after Claude exits. Its emitted
-# prompt passes the composer classifier, but its process must block injection.
+# prompt passes the deliberately content-only stub below, but its process must
+# independently block injection even under that historical composer verdict.
 test_inject_msg_defers_on_shell_with_agent_glyph() {
   local dir state
   dir=$(make_supercase inject-shell-agent-glyph)

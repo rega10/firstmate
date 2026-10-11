@@ -10,7 +10,8 @@
 #   2. The SAME shell glyph INSIDE a bordered composer box is the harness's own
 #      prompt and still reads `empty` (existing behavior preserved).
 #   3. The AGENT prompt glyphs `❯` (claude), `›` (codex), `⟩` (muse), and `→`
-#      (cursor) are a genuine empty agent composer either way, bordered or bare.
+#      (cursor) have empty content either way, bordered or bare. The screen
+#      classifier additionally proves a container for the shell-shared `❯`.
 #   4. Real unsubmitted text reads `pending`; a known idle placeholder reads
 #      `empty`.
 set -u
@@ -189,6 +190,31 @@ test_matrix_claude_bare_nbsp_row() {
   pass "matrix: claude's ❯+NBSP row reads empty on every profile in both locales (#1988)"
 }
 
+test_claude_glyph_without_container_is_not_injectable() {
+  local caps screen pair out
+  pair=$'────────────────────────\n❯\n────────────────────────'
+  for caps in "$CAPS_TMUX" "$CAPS_STYLED" "$CAPS_STYLED_NOID" "$CAPS_PLAIN"; do
+    for screen in '❯ ' "❯$NBSP" "${ESC}[2m❯ ${ESC}[0m" \
+      "${ESC}[38;2;50;47;70m❯ ${ESC}[0m"; do
+      assert_screen "zsh arrow needs a container" unknown "$caps" "$screen" 0 probe-absent
+      assert_screen "stale identity cannot prove a shell arrow" unknown "$caps" "$screen" 0 $'claude\tidle'
+    done
+    assert_screen "zsh arrow below stale Claude rules" unknown "$caps" "$pair"$'\n❯ ' 3 probe-absent
+    assert_screen "zsh arrow below one rule" unknown "$caps" $'────────────────────────\n❯ ' 1 probe-absent
+    assert_screen "zsh arrow above one rule" unknown "$caps" $'❯ \n────────────────────────' 0 probe-absent
+    assert_screen "zsh arrow under stale titled composer" unknown "$caps" \
+      $'──────── session title ─\n❯\n────────────────────────\n❯ ' 3 probe-absent
+    assert_screen "six-column Claude rules remain supported" empty "$caps" $'──────\n❯\n──────' 1 probe-absent
+  done
+  screen=$'❯ '"${ESC}[2mwrapped shell suggestion${ESC}[0m"$'\n'"${ESC}[2mcontinued suggestion${ESC}[0m"
+  assert_screen "uncontained ghost wrap with cursor" unknown "$CAPS_TMUX" "$screen" 1
+  assert_screen "uncontained ghost wrap without cursor" unknown "$CAPS_STYLED" "$screen"
+  for out in "$CAPS_TMUX" "$CAPS_STYLED" "$CAPS_STYLED_NOID"; do
+    assert_screen "uncontained typed command still refuses" pending "$out" '❯ echo draft' 0
+  done
+  pass "zsh's Claude arrow never authorizes injection without enclosing composer rules"
+}
+
 test_matrix_claude_arrow_statusline_footer() {
   # Real claude 2.x on herdr (captured live 2026-09-20, herdr 0.8.0): the
   # composer is a bare `❯`+U+00A0 row between two solid rules, and the harness
@@ -319,7 +345,7 @@ test_composer_footer_zone_is_shape_independent() {
   # The deliberate counterexample, pinned as such: codex's startup banner has
   # no glyph row inside it, so it proves no composer, opens no footer zone, and
   # the live bare row contiguously below it keeps winning.
-  screen=$'╭────────────────────────╮\n│ permissions: YOLO mode │\n╰────────────────────────╯\n❯'"$NBSP"
+  screen=$'╭────────────────────────╮\n│ permissions: YOLO mode │\n╰────────────────────────╯\n›'"$NBSP"
   assert_screen "unproven banner still yields to the bare row below it" empty "$CAPS_PLAIN" "$screen"
   pass "fm_composer_classify_screen: the footer zone holds for boxes, not only separator pairs"
 }
@@ -359,7 +385,7 @@ test_composer_footer_zone_refuses_rather_than_allows() {
   # 3. The other direction, which the demotion must not invert either: a pair
   #    holding a QUOTED prompt in the transcript above a live, visibly empty
   #    composer row reads empty, and the quoted text is never composer content.
-  screen=$'────────────────────────\ntranscript one\ntranscript two\n❯ some quoted prompt in the transcript\n────────────────────────\n❯'"$NBSP"
+  screen=$'────────────────────────\ntranscript one\ntranscript two\n❯ some quoted prompt in the transcript\n────────────────────────\n❯'"$NBSP"$'\n────────────────────────'
   assert_screen "a quoted prompt above a live empty row stays empty" empty "$CAPS_STYLED_NOID" "$screen"
   out=$(fm_composer_extract_selected_content "$CAPS_STYLED_NOID" "$screen")
   case "$out" in
@@ -793,10 +819,12 @@ test_matrix_claude_inside_zellij_ansi_dump() {
   # Real claude captured through `zellij action dump-screen --ansi`
   # (capability established by the audit): `ESC[m` `❯` U+00A0.
   local screen plain
-  screen=$'zellij pane transcript\n'"${ESC}[m❯${NBSP}"
-  plain=$'zellij pane transcript\n❯'"$NBSP"
-  assert_screen "claude-in-zellij on tmux" empty "$CAPS_TMUX" "$screen" 1
-  assert_screen "claude-in-zellij on herdr" empty "$CAPS_STYLED" "$screen"
+  # Keep the captured ANSI prompt bytes inside the actual Claude rule pair;
+  # a cropped prompt alone is indistinguishable from the zsh regression.
+  screen=$'zellij pane transcript\n────────────────────────\n'"${ESC}[m❯${NBSP}"$'\n────────────────────────'
+  plain=$'zellij pane transcript\n────────────────────────\n❯'"$NBSP"$'\n────────────────────────'
+  assert_screen "claude-in-zellij on tmux" empty "$CAPS_TMUX" "$screen" 2 probe-absent
+  assert_screen "claude-in-zellij on herdr" empty "$CAPS_STYLED" "$screen" '' probe-absent
   assert_screen "claude-in-zellij on zellij" empty "$CAPS_STYLED_NOID" "$screen"
   assert_screen "claude-in-zellij on plain backends" empty "$CAPS_PLAIN" "$plain"
   pass "matrix: the real claude-in-zellij --ansi dump reads empty in both locales"
@@ -838,8 +866,8 @@ test_bare_wrap_region_classifies() {
   assert_screen "wrapped typed input" pending "$CAPS_TMUX" "$wrapped" 1
   wrapped=$'❯ wrapped typed input\ncontinues without a terminal-inserted glyph'
   assert_screen "ordinary wrapped input" pending "$CAPS_TMUX" "$wrapped" 1
-  ghost_wrapped=$'❯ '"${ESC}[2ma long rotating suggestion that${ESC}[0m"$'\n'"${ESC}[2mwraps onto the next line${ESC}[0m"
-  out=$(fm_composer_classify_screen "$CAPS_TMUX" "$ghost_wrapped" 1)
+  ghost_wrapped=$'────────────────────────\n❯ '"${ESC}[2ma long rotating suggestion that${ESC}[0m"$'\n'"${ESC}[2mwraps onto the next line${ESC}[0m"$'\n────────────────────────'
+  out=$(fm_composer_classify_screen "$CAPS_TMUX" "$ghost_wrapped" 2)
   [ "$out" = empty ] || fail "a wrapped ghost suggestion should still prove empty, got '$out'"
   # A structural row between the glyph and the cursor breaks the wrap claim.
   out=$(fm_composer_classify_screen "$CAPS_TMUX" $'❯ text\n────────────────\nbelow the rule' 2)
@@ -851,25 +879,25 @@ test_bare_wrap_region_classifies() {
 
 test_contiguous_transcript_reanchors_on_live_prompt() {
   local screen
-  screen=$'❯ hi\nHello!\n❯'
+  screen=$'❯ hi\nHello!\n────────────────────────\n❯\n────────────────────────'
   assert_screen "contiguous transcript live prompt on cursorless styled backend" empty "$CAPS_STYLED_NOID" "$screen"
   assert_screen "contiguous transcript live prompt on cursorless plain backend" empty "$CAPS_PLAIN" "$screen"
-  assert_screen "contiguous transcript live prompt with cursor" empty "$CAPS_TMUX" "$screen" 2
+  assert_screen "contiguous transcript live prompt with cursor" empty "$CAPS_TMUX" "$screen" 3 probe-absent
   pass "fm_composer_classify_screen: a row-leading agent glyph reanchors the live composer"
 }
 
 test_lower_dead_shell_invalidates_cursorless_candidate() {
   local stale live out
-  stale=$'old transcript\n❯\nprocess exited\n$'
+  stale=$'────────────────────────\n❯\n────────────────────────\nprocess exited\n$'
   assert_screen "stale composer above dead shell on herdr" unknown "$CAPS_STYLED" "$stale"
   assert_screen "stale composer above dead shell on zellij" unknown "$CAPS_STYLED_NOID" "$stale"
   assert_screen "stale composer above dead shell on cmux/orca" unknown "$CAPS_PLAIN" "$stale"
-  out=$(fm_composer_classify_screen "$CAPS_TMUX" "$stale" 1)
+  out=$(fm_composer_classify_screen "$CAPS_TMUX" "$stale" 1 probe-absent)
   [ "$out" = empty ] \
     || fail "cursor mode must keep the cursor-anchored composer verdict, got '$out'"
 
-  live=$'transcript shell snippet\n$ echo old output\nmore transcript\n❯'
-  assert_screen "shell transcript above live composer on herdr" empty "$CAPS_STYLED" "$live"
+  live=$'transcript shell snippet\n$ echo old output\nmore transcript\n────────────────────────\n❯\n────────────────────────'
+  assert_screen "shell transcript above live composer on herdr" empty "$CAPS_STYLED" "$live" '' probe-absent
   assert_screen "shell transcript above live composer on zellij" empty "$CAPS_STYLED_NOID" "$live"
   assert_screen "shell transcript above live composer on cmux/orca" empty "$CAPS_PLAIN" "$live"
   pass "fm_composer_classify_screen: a lower dead shell invalidates only cursorless stale composers"
@@ -892,7 +920,7 @@ test_cursorless_bare_wrap_region_classifies() {
   assert_screen "rule-bounded claude footer on zellij" empty "$CAPS_STYLED_NOID" "$bounded"
   assert_screen "rule-bounded claude footer on cmux/orca" empty "$CAPS_PLAIN" "$bounded"
 
-  ghost=$'❯ '"${ESC}[2ma long rotating suggestion that${ESC}[0m"$'\n'"${ESC}[2mwraps onto the next line${ESC}[0m"
+  ghost=$'────────────────────────\n❯ '"${ESC}[2ma long rotating suggestion that${ESC}[0m"$'\n'"${ESC}[2mwraps onto the next line${ESC}[0m"$'\n────────────────────────'
   out=$(fm_composer_classify_screen "$CAPS_STYLED" "$ghost")
   [ "$out" = empty ] || fail "cursorless ghost wrap on herdr should be empty, got '$out'"
   out=$(fm_composer_classify_screen "$CAPS_STYLED_NOID" "$ghost")
@@ -926,11 +954,11 @@ test_bottom_most_candidate_wins() {
   # decorative box (codex's startup banner) can never outrank the real row
   # below it - the confidently-wrong orca case from the audit.
   local screen out
-  screen=$'╭────────────────────────╮\n│ permissions: YOLO mode │\n╰────────────────────────╯\n❯'"$NBSP"
+  screen=$'╭────────────────────────╮\n│ permissions: YOLO mode │\n╰────────────────────────╯\n────────────────────────\n❯'"$NBSP"$'\n────────────────────────'
   assert_screen "banner above live claude row" empty "$CAPS_PLAIN" "$screen"
   out=$(fm_composer_classify_screen "$CAPS_PLAIN" $'╭────────────────────────╮\n│ permissions: YOLO mode │\n╰────────────────────────╯\n› Use /skills to list available skills')
   [ "$out" != pending ] || fail "a stale banner must never classify as pending composer text"
-  screen=$'❯ old draft\n\n❯'
+  screen=$'❯ old draft\n\n────────────────────────\n❯\n────────────────────────'
   assert_screen "blank-separated newer bare composer" empty "$CAPS_STYLED_NOID" "$screen"
   pass "fm_composer_classify_screen: the bottom-most candidate wins; stale banners cannot"
 }
@@ -1013,6 +1041,7 @@ test_idle_placeholder_is_empty
 test_idle_placeholder_case_mode_is_explicit
 test_real_text_is_pending
 test_matrix_claude_bare_nbsp_row
+test_claude_glyph_without_container_is_not_injectable
 test_matrix_claude_arrow_statusline_footer
 test_matrix_claude_titled_top_rule
 test_composer_footer_demotion_needs_a_proven_pair
