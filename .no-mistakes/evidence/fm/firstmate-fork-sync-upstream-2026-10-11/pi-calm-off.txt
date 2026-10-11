@@ -1,0 +1,40 @@
+XKFu/home PI_CODING_AGENT_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phas
+e/tmp/pi-live.9mXKFu/pi-config PI_OFFLINE=1 PI_TELEMETRY=0 pi --approve --no-context-files --no-skills --no-prompt-temp
+lates --no-extensions -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.pi/extensions/
+fm-calm.ts --session /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/pi-
+live.9mXKFu/session.jsonl
+
+ pi v0.87.1
+ escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o more
+ Press ctrl+o to show full startup help and loaded resources.
+
+ Pi can explain its own features and look up its docs. Ask it how to use or extend Pi.
+
+[Extensions]
+  fm-calm.ts
+
+
+ Explain the disposable rendering check.
+
+
+ Thinking...
+
+
+ $ printf "example"
+
+ example
+
+
+ The disposable rendering check is complete.
+
+ Warning: No models available. Use /login to log into a provider via OAuth or API key. See:
+   /Users/rega1011/.nvm/versions/node/v24.20.0/lib/node_modules/@earendil-works/pi-coding-agent/docs/providers.md
+   /Users/rega1011/.nvm/versions/node/v24.20.0/lib/node_modules/@earendil-works/pi-coding-agent/docs/models.md
+
+ Tool output: collapsed
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+~/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/pi-live.9mXKFu (detached)
+↑4 ↓2 0.0%/0 (auto)                                                                                             unknown

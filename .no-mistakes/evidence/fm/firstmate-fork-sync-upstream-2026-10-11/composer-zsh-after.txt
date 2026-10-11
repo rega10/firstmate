@@ -1,0 +1,35 @@
+❯ env CLAUDE_CONFIG_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/
+fm-claude-shell.hFvI2t/home/claude claude --bare --setting-sources ""
+ ▐▛███▛█   Claude Code v2.1.284
+▝▜██████▀  Opus 5.5 · API Usage Billing
+ ▝▝   ▝▝   ~/…/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/fm-claude-shell.hFvI2t/home
+
+▎ Auto mode is now Claude Code's default permission mode.
+▎ Auto mode lets Claude handle permission prompts automatically. Claude checks each tool call for risky actions and
+▎ prompt injection before executing, runs the ones it assesses as lower-risk, and blocks the rest.
+▎ https://code.claude.com/docs/en/permission-modes
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ /exit
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  /exit                         Exit the CLI
+  /context                      Visualize current context usage as a colored grid
+  /doctor                       Health-check the user's Claude Code setup and fix issues: diagnose installation
+                                health — what the `claude doctor` terminal diagnostics cover — from local data (dupl…
+  /verify                       Verify that a code change actually does what it's supposed to by exercising it
+                                end-to-end and observing behavior — drive the affected flow, not just tests or typec…
+  /memory                       Edit CLAUDE.md files and memory settings
+  /autocompact                  Set how full the context gets before auto-summarizing
+  /subtask                      Send a subagent off with your full context; its result comes back here
+  /clear                        Start a new session with empty context; previous session stays on disk (resumable
+                                with /resume)
+  /compact                      Free up context by summarizing the conversation so far
+
+
+
+
+
+
+
+
+❯

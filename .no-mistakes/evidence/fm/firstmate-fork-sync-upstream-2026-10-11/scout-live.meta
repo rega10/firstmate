@@ -1,0 +1,15 @@
+window=fm-lab-fork-sync-6117-8894:w1:p2
+endpoint_task_id=gate-live-fork-sync
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/pool/.treehouse/project-4bf5a3/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-gate-live-fork-sync
+model=default
+effort=default
+spawn_gen=s1791716337.6917.4002
+backend=herdr
+herdr_session=fm-lab-fork-sync-6117-8894
+herdr_workspace_id=w1
+herdr_tab_id=w1:t2
+herdr_pane_id=w1:p2

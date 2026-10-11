@@ -1,0 +1,7 @@
+composer zsh-before=unknown
+composer claude-idle=empty
+composer claude-draft=pending
+composer claude-cleared=empty
+composer zsh-after=unknown
+composer zsh-after-clear=unknown
+ok - Claude (2.1.284 (Claude Code)): idle=empty, draft=pending, exited zsh=unknown, cleared zsh=unknown

@@ -1,0 +1,5 @@
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Destroyed 1 worktree in ~/.treehouse/project-f21132/1/project and freed 611 B.
+  1     [unverified]  611 B  ~/.treehouse/project-f21132/1/project  (backing repository missing: gitdir /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.LMM81q/project/.git/worktrees/project does not exist)

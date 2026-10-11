@@ -1,0 +1,59 @@
+scaffolded: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home/data/gate-live-fork-sync/brief.md (scout; replace {TASK} and {FIRSTMATE_SPEC})
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home
+spawned gate-live-fork-sync harness=sh kind=scout window=fm-lab-fork-sync-6117-8894:w1:p2 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/pool/.treehouse/project-4bf5a3/1/project
+Real worker shell received the complete 6144-byte launch payload.
+67d8836cc88d021ebda55f3c0d79fc30ae419642abc89c387fd6e605d3817411  /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/long-launch-result
+window=fm-lab-fork-sync-6117-8894:w1:p2
+endpoint_task_id=gate-live-fork-sync
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/pool/.treehouse/project-4bf5a3/1/project
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-gate-live-fork-sync
+model=default
+effort=default
+spawn_gen=s1791716337.6917.4002
+backend=herdr
+herdr_session=fm-lab-fork-sync-6117-8894
+herdr_workspace_id=w1
+herdr_tab_id=w1:t2
+herdr_pane_id=w1:p2
+spawned pooled HEAD=90c23091b5ffe556de1fb92325f8c33b0c59bc76 expected origin HEAD=90c23091b5ffe556de1fb92325f8c33b0c59bc76
+
+Attempt cleanup before scout report:
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no watcher has a fresh beacon (last beat: never, grace 300s).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision with a foreground checkpoint: bin/fm-watch-checkpoint.sh --seconds 180.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REFUSED: scout task gate-live-fork-sync has no report at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home/data/gate-live-fork-sync/report.md.
+The report is the work product. Have the crewmate write it, or use --force after explicit discard approval.
+
+Attempt cleanup with an empty worktree path:
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home
+REFUSED: task gate-live-fork-sync has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home/state/gate-live-fork-sync.meta, then retry teardown without --force; preserving task state.
+
+Attempt cleanup without completed inventory:
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+fm-captain-hold: origin gate-live-fork-sync has no completed captain-call inventory
+REFUSED: scout task gate-live-fork-sync has not passed the captain-call completion gate.
+Inventory its report and any visual review through bin/fm-captain-hold.sh before teardown.
+complete: gate-live-fork-sync captain-call inventory reviewed
+
+Cleanup completed scout:
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+teardown: reaping leaked worktree process(es) for gate-live-fork-sync: 10472 17010 17022
+teardown: force-killing leaked worktree process(es) for gate-live-fork-sync: 10472
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+teardown gate-live-fork-sync complete (window fm-lab-fork-sync-6117-8894:w1:p2, worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/pool/.treehouse/project-4bf5a3/1/project)
+Backlog: gate-live-fork-sync just finished (config/backlog-backend selects manual editing). Update /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/runtime.697XNy/home/data/backlog.md - move gate-live-fork-sync to Done, keep Done to the 10 most recent, then re-scan Queued and dispatch only work whose blockers are gone and date is due.
+{"error":{"code":"pane_not_found","message":"pane w1:p2 not found"},"id":"cli:pane:get"}
+Completed scout retained report=yes and removed metadata and exact pane.

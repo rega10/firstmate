@@ -1,0 +1,4 @@
+Herdr client 0.9.1; server 0.9.1
+intact target: fm-lab-firstmate-backgr-14225-20213:w1:p1
+lost-session target: 
+ok - real Herdr daemon refuses lost session identity before any backend call

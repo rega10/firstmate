@@ -1,0 +1,17 @@
+
+Attempt sync with uncommitted work:
+fork: STUCK: on branch main with uncommitted changes, 72 commits behind origin/main - needs attention
+The dirty checkout remained at the fork base and retained the edit.
+
+Fast-forward clean fork checkout:
+fork: synced c4498d09..6b9c6587
+Fast-forward result HEAD=6b9c65871656d79696ea605ec74236e564b532c7
+Merge commit and parents: 6b9c65871656d79696ea605ec74236e564b532c7 c4498d09cfa2afabac6d7586f5d2995cceefc60a 072a7da3eee2632fc02a6e0674d7601ca25a30ba
+Retained fork corrections:
+c4498d09 fix: refuse teardown for task records with empty worktree paths (#37)
+aa0e3e92 fix: honor catalog-supported Codex reasoning effort (#40)
+f39da776 fix: prevent Claude background sessions from sharing primary ownership (#41)
+af7d16b7 fix: prevent zsh arrow prompts from reading as empty composers (#39)
+228f3f57 fix: refuse Herdr supervisor startup without session identity (#38)
+0caf8eb5 fix: keep backend notices out of startup network reports (#36)
+3f2d62a1 fix: stabilize CI fixtures and away timestamps (#43)

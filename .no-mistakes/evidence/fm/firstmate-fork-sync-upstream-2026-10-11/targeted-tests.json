@@ -1,0 +1,109 @@
+{
+  "families": [
+    {
+      "count": 1,
+      "duration_ms": 16315,
+      "failed": 1,
+      "name": "backend-dispatch"
+    },
+    {
+      "count": 1,
+      "duration_ms": 6322,
+      "failed": 1,
+      "name": "pr-forge"
+    },
+    {
+      "count": 3,
+      "duration_ms": 311365,
+      "failed": 0,
+      "name": "pure-contract-unit"
+    },
+    {
+      "count": 1,
+      "duration_ms": 12839,
+      "failed": 0,
+      "name": "secondmate"
+    },
+    {
+      "count": 1,
+      "duration_ms": 120098,
+      "failed": 0,
+      "name": "standalone"
+    }
+  ],
+  "finished_at": "2026-10-11T10:55:14Z",
+  "run_id": "fm-test-run-1791715647068-97991",
+  "scripts": [
+    {
+      "duration_ms": 10894,
+      "exit": 0,
+      "expected_gate_skip": "none",
+      "family": "pure-contract-unit",
+      "gate_skip": false,
+      "gate_skip_reason": "",
+      "path": "tests/fm-composer-lib.test.sh"
+    },
+    {
+      "duration_ms": 120098,
+      "exit": 0,
+      "expected_gate_skip": "none",
+      "family": "standalone",
+      "gate_skip": false,
+      "gate_skip_reason": "",
+      "path": "tests/fm-spawn-pool-base-freshen.test.sh"
+    },
+    {
+      "duration_ms": 16315,
+      "exit": 1,
+      "expected_gate_skip": "none",
+      "family": "backend-dispatch",
+      "gate_skip": false,
+      "gate_skip_reason": "",
+      "path": "tests/fm-spawn-dispatch-profile.test.sh"
+    },
+    {
+      "duration_ms": 6322,
+      "exit": 1,
+      "expected_gate_skip": "none",
+      "family": "pr-forge",
+      "gate_skip": false,
+      "gate_skip_reason": "",
+      "path": "tests/fm-teardown.test.sh"
+    },
+    {
+      "duration_ms": 12839,
+      "exit": 0,
+      "expected_gate_skip": "none",
+      "family": "secondmate",
+      "gate_skip": false,
+      "gate_skip_reason": "",
+      "path": "tests/fm-shared-captain-inheritance.test.sh"
+    },
+    {
+      "duration_ms": 16858,
+      "exit": 0,
+      "expected_gate_skip": "none",
+      "family": "pure-contract-unit",
+      "gate_skip": false,
+      "gate_skip_reason": "",
+      "path": "tests/fm-calm-pi-extension.test.sh"
+    },
+    {
+      "duration_ms": 283613,
+      "exit": 0,
+      "expected_gate_skip": "none",
+      "family": "pure-contract-unit",
+      "gate_skip": false,
+      "gate_skip_reason": "",
+      "path": "tests/fm-test-run.test.sh"
+    }
+  ],
+  "selection": "scripts;jobs=1",
+  "started_at": "2026-10-11T10:47:27Z",
+  "summary": {
+    "duration_ms": 467197,
+    "failed": 2,
+    "skipped_gate": 0,
+    "total": 7
+  }
+}

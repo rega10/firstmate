@@ -1,0 +1,190 @@
+FM_TEST_BEGIN 2026-10-11T10:47:27Z tests/fm-composer-lib.test.sh family=pure-contract-unit expected_gate_skip=none
+ok - fm_composer_classify_content: a bare shell prompt glyph (>/$/%/#) reads unknown, never empty
+ok - fm_composer_classify_content: stripped unbordered content is unknown except verified agent glyphs
+ok - fm_composer_classify_content: a bare shell prompt carrying a command is not empty
+ok - fm_composer_classify_content: a bare prompt glyph inside a bordered composer box reads empty (claude's own idle composer)
+ok - fm_composer_classify_content: agent prompt glyphs (❯ claude, › codex, ⟩ muse) read empty bordered or bare
+ok - fm_composer_classify_content: an empty composer reads empty
+ok - fm_composer_classify_content: idle matching is limited to proven placeholder positions
+ok - fm_composer_classify_content: idle matching preserves the caller's case mode
+ok - fm_composer_classify_content: real unsubmitted text reads pending (including a popup argument-hint fill)
+ok - matrix: claude's ❯+NBSP row reads empty on every profile in both locales (#1988)
+ok - zsh's Claude arrow never authorizes injection without enclosing composer rules
+ok - matrix: claude's arrow statusline is footer furniture, not a composer holding text
+ok - matrix: claude's titled composer top rule reads empty when idle and still defers on a draft, a dead shell, or an unreadable pane
+ok - fm_composer_classify_screen: footer demotion needs a contiguous, glyph-proven pair
+ok - fm_composer_classify_screen: the footer zone holds for boxes, not only separator pairs
+ok - fm_composer_classify_screen: the footer zone only ever refuses, never allows
+ok - matrix: codex's dim hint is empty when styling proves it, unknown (never pending) when it cannot
+ok - matrix: muse's ⟩ reads empty everywhere and survives losing the styled-glyph signal
+ok - matrix: cursor's reverse-video placeholder remnant reads empty; real typed text stays pending
+ok - matrix: herdr half-block rules bound a bare composer's wrap region
+ok - matrix: omp's status row bounds the bare composer's wrap region
+ok - matrix: codex 0.154's starfield rows are furniture; typed, mixed, and unanchored rows keep their verdicts
+ok - matrix: pi's separated composer needs identity + structure; the blank row alone never proves it
+ok - matrix: a dollar-first pi status footer reads empty; dead shells still refuse
+ok - matrix: opencode's left-bar composer reads empty everywhere and scans the full active run
+ok - matrix: grok's real oversized titled bottom is empty while typed and unproved panes stay safe
+ok - matrix: claude's titled top rule proves an idle composer empty and a draft pending (#5601, #5558)
+ok - matrix: kimi's bordered shell-glyph box reads empty through the shared owner (spawn's fourth copy retired)
+ok - matrix: the real claude-in-zellij --ansi dump reads empty in both locales
+ok - strict posture: blank and unidentified rows are unknown, never injectable empty
+ok - fm_composer_classify_screen: the bare composer's wrap region stays identified; structure breaks it
+ok - fm_composer_classify_screen: a row-leading agent glyph reanchors the live composer
+ok - fm_composer_classify_screen: a lower dead shell invalidates only cursorless stale composers
+ok - fm_composer_classify_screen: cursorless bare wrap regions participate in verdicts
+ok - fm_composer_classify_screen: cursorless containers reject only contiguous unclaimed activity
+ok - fm_composer_classify_screen: the bottom-most candidate wins; stale banners cannot
+ok - fm_composer_classify_screen: incomplete lower structure invalidates stale boxes
+ok - fm_composer_classify_screen: titled bottoms retain full box geometry
+ok - fm_composer_classify_screen: a proven box tolerates a bottom-border cursor
+ok - fm_composer_extract_selected_content: scopes user content and excludes furniture
+ok - fm_composer_queued_enter_verdict: pending + busy returns empty (queued Enter)
+ok - fm_composer_queued_enter_verdict: pending + idle/unknown stays pending
+ok - fm_composer_queued_enter_verdict: only proven pending is converted
+ok - the Claude background-task exit picker stays pending and receives no confirming Enter
+ok - a buried heading or a different last line is not the exit picker
+ok - a dialog note without a sink skips the match, and release leaves a caller RETURN trap
+ok - picker text quoted above a normal composer is not read as a live picker
+FM_TEST_END 2026-10-11T10:47:38Z tests/fm-composer-lib.test.sh exit=0 duration_ms=10894 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T10:47:38Z tests/fm-spawn-pool-base-freshen.test.sh family=standalone expected_gate_skip=none
+ok - a remote-seeded secondmate home allocates and launches from its Treehouse pool
+ok - a Treehouse slot claim names the launched task, refuses when unclaimable, and is dropped by a locked abort
+ok - linked spawning home: primary preserves the primary before any refresh
+ok - linked spawning home: primary-alias preserves the primary before any refresh
+ok - linked spawning home: spawning preserves the primary before any refresh
+ok - linked spawning home: scout preserves the primary before any refresh
+ok - a stale pooled worktree refreshes to current origin/main before a crew branch is created
+ok - --base-branch picks the copy's starting point and is recorded; a missing or local-only base refuses
+ok - a spawn refuses when --base-branch and the brief's Base branch lines disagree
+ok - a Base branch line in the captain's intent neither blocks nor redirects a spawn
+ok - a based scout on a forge=gerrit project is refused at spawn
+ok - a stale pooled worktree resolves and refreshes a non-main default branch
+ok - direct-PR ships and scouts both refresh stale pooled worktrees before launch
+ok - a dirty pooled worktree is refused without discarding its local work
+ok - an unresolved remote default branch refuses the pooled worktree
+ok - an unreachable origin refuses a potentially stale pooled worktree
+ok - an origin-less pooled worktree launches as-is, skipping the freshness gate
+ok - a dirty origin-less pooled worktree is refused without discarding its local work
+ok - an origin configuration without a URL refuses the pooled worktree
+ok - an empty origin configuration section refuses the pooled worktree
+ok - an empty-only included origin section documents the accepted detection boundary
+ok - an inactive conditional origin include leaves the pooled worktree origin-less
+ok - an origin-less pool with a stale submodule pin refuses while naming both pins and no remedy
+ok - an unpushed submodule commit keeps the uncommitted-work refusal and survives it
+ok - work inside a submodule is still refused as uncommitted work, not called stale
+ok - a stale pin carrying real work is refused conservatively, never called stale
+ok - a stale pin beside other dirt yields the conservative refusal alone, with no stale-pin line
+# all fm-spawn-pool-base-freshen tests passed
+FM_TEST_END 2026-10-11T10:49:38Z tests/fm-spawn-pool-base-freshen.test.sh exit=0 duration_ms=120098 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T10:49:38Z tests/fm-spawn-dispatch-profile.test.sh family=backend-dispatch expected_gate_skip=none
+ok - allowlist=absent preserves the operational floor and filters only when opted in
+ok - allowlist=missing-config preserves the operational floor and filters only when opted in
+ok - allowlist=enabled preserves the operational floor and filters only when opted in
+ok - allowlist=empty preserves the operational floor and filters only when opted in
+ok - invalid allowlist names refuse before launch or task publication
+ok - inaccessible config with present allowlist refuses before launch or task publication
+ok - inaccessible config with absent allowlist refuses before launch or task publication
+ok - inaccessible ancestor with present allowlist refuses before launch or task publication
+ok - inaccessible ancestor with absent allowlist refuses before launch or task publication
+not ok - secondmate with an allowlist should spawn: error: secondmate home cannot be inside the firstmate repo: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4N87G9S5XAGQN3JVMYEBRDM/.test-phase/tmp/fm-spawn-dispatch-profile.LTI3ne/env-secondmate/secondmate-home: expected exit 0, got 1
+FM_TEST_END 2026-10-11T10:49:54Z tests/fm-spawn-dispatch-profile.test.sh exit=1 duration_ms=16315 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T10:49:54Z tests/fm-teardown.test.sh family=pr-forge expected_gate_skip=none
+ok - fm-teardown: empty worktree records give one actionable refusal, even with --force, and preserve local work
+ok - a missing teardown startup source refuses before cleanup
+ok - an unreadable teardown startup source refuses before cleanup
+ok - a missing adapter sibling refuses before cleanup
+not ok - missing-child-source: the refusal did not name the missing source
+FM_TEST_END 2026-10-11T10:50:00Z tests/fm-teardown.test.sh exit=1 duration_ms=6322 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T10:50:00Z tests/fm-shared-captain-inheritance.test.sh family=secondmate expected_gate_skip=none
+ok - shared captain first copy, unchanged copy, and source-only edit stay quiet
+ok - shared captain true divergence after inherit is still quarantined
+ok - interrupted publication that already matches source heals without quarantine
+ok - remote receiver accepts a source-only edit quietly and still quarantines real drift
+ok - shared captain drift is quarantined collision-safely and repeated convergence is idempotent
+ok - missing primary shared file mirrors absence only after quarantining a local copy
+ok - unsafe shared captain artifacts are rejected and failure restores read-only mode
+ok - spawn convergence point propagates data/captain-shared.md from FM_DATA_OVERRIDE
+ok - bootstrap convergence point propagates data/captain-shared.md from FM_DATA_OVERRIDE
+ok - fm-config-push convergence point updates changed shared captain source bytes from FM_DATA_OVERRIDE
+ok - fm-config-push source-only edit after inherit stays quiet
+ok - session-start digest renders data/captain-shared.md with the shared read-only label
+ok - the header check names the first required phrase it did not find, without widening the accept set
+# all fm-shared-captain-inheritance tests passed
+FM_TEST_END 2026-10-11T10:50:13Z tests/fm-shared-captain-inheritance.test.sh exit=0 duration_ms=12839 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T10:50:13Z tests/fm-calm-pi-extension.test.sh family=pure-contract-unit expected_gate_skip=none
+ok - Pi calm resolves its persistent home independently of Pi's launch directory
+ok - Pi calm compatibility evidence never rejects a Pi version for being newer than 0.82.0, and still fails closed on a missing or malformed version
+ok - a missing collapsed-thinking presentation API degrades only that Calm adapter with a clear skip reason, while the rest of Calm still registers
+ok - missing Pi presentation class exports reach the independent adapter degradation path
+ok - Calm hides queued Firstmate rows only on a session that can keep them, keeps hidden ones out of the editor on Escape, delivers them once in order, and leaves unsupported sessions and Calm off stock
+ok - Calm registers none of its 7 built-in tool wrappers at load while config/calm is off, and all 7 synchronously at load while config/calm is on
+ok - Calm's first same-session /calm activation claims every uncontested built-in, leaves a foreign bash tool fully intact and callable, warns prominently and logs the contested name, and only rows constructed before that activation - the documented bound - fail to retroactively collapse
+ok - Pi calm centralizes transcript visibility, preserves execution/export data, keeps Pi's stock working row visible while no run is active, and persists its choice across session starts
+ok - Pi calm on collapses mid-turn assistant working notes to zero height while Calm off keeps them, leaves streaming, truncated-final, and genuine final replies untouched, never mutates the messages, ignores every /calm argument, and restores a legacy persisted max as ordinary Calm on
+skip: pi or tmux not found for Pi operational follow-up E2E
+skip: pi or tmux not found for Pi Calm queued-row Escape E2E
+skip: pi or tmux not found for Pi Calm hidden-block geometry E2E
+ok - Pi Calm working ship keeps its centered two-row asymmetric Unicode boat inside a deterministic long-wave trough, paints all water standard blue and the whole boat standard yellow with balanced resets, keeps ANSI-stripped width exact, reverses cleanly at both edges and every width, clamps visible and hidden resizes, falls back deterministically when narrow, freezes and resumes across settle/start without hidden-time jumps or duplicate timers, resets only on a fresh session, and leaves Calm-off visibility untouched
+ok - SKIP: no standalone Pi Calm extension is installed, so dual-install coverage used the pinned shared-slot contract; set FM_STANDALONE_CALM_SHIP to check one
+ok - the rendered-export-DOM guard renders in one pass, retries a bounded number of Chrome start-up failures, and reports the Chrome binary, Chrome version, Pi version, exit status, and Chrome diagnostic when every attempt fails
+skip: pi or tmux not found for Pi calm interactive E2E
+FM_TEST_END 2026-10-11T10:50:30Z tests/fm-calm-pi-extension.test.sh exit=0 duration_ms=16858 gate_skip=false
+FM_TEST_BEGIN 2026-10-11T10:50:30Z tests/fm-test-run.test.sh family=pure-contract-unit expected_gate_skip=none
+ok - exact suite coverage: --all lists every tests/*.test.sh once
+ok - family selection returns a proper subset of the suite
+ok - single-script selection lists exactly that path
+ok - changed-file selection stays conservative (never silent full suite)
+ok - a task marker refuses execution in the primary checkout and leaves worktrees and inspection alone
+ok - runner and its documentation surfaces select their curated family, not just their contract owners
+ok - shell line-ending policy selects runner coverage
+fm-test-run: no tests selected for changes vs HEAD (map is conservative; use --all for the complete suite)
+ok - changed selection covers dependents, fails closed for live unmapped source, and accepts retired unconsumed source
+ok - a bin reference selects the referencing scripts, and consumers still select their curated families
+ok - changed defaults to bounded automatic scheduling with serial override
+ok - Windows emulation exempts only synthetic POSIX modes
+ok - a plain script list defaults to bounded automatic concurrency without an automatic timeout
+ok - family proofs run concurrently only within separate family phases
+ok - empty changed selection emits deterministic text and JSON summaries
+ok - timing markers and JSON artifact are valid
+ok - aggregate exit reflects any script failure
+ok - gate-skip accounting is honest and non-failing
+ok - a gate skip records why it skipped
+ok - a script that actually ran records no skip reason
+ok - live guards are recorded as a capability class, not a bare env opt-in
+ok - fail-on-gate-skip converts herdr-not-found into a hard failure
+ok - exclude-family drops the named primary family after selection
+ok - proven-isolated scheduling ignores parallel hints
+ok - family, all, changed, and script selections ignore parallel hints
+ok - portable shard union, disjointness, and coverage guard hold
+ok - portable parallel lanes are fully hinted and packed within 5% of each other
+ok - portable serial shards are a deterministic disjoint cover of the serial lane
+ok - coverage guard bounds the unmeasured share and serial packing within twenty minutes
+ok - serial packing accepts the exact budget and refuses one millisecond above it
+ok - portable serial shard lanes refuse mismatched, out-of-range, and countless names
+ok - --jobs refuses non-proven / stateful selections
+ok - --jobs admits and schedules a family with a recorded concurrent proof
+ok - an unclassified new test stays serial while the proven residual family runs concurrently
+ok - a changed shared test fixture selects its readers while an unread tests/ path still refuses
+ok - a concurrent run starts the longest-hint script first
+ok - --per-script-timeout-secs turns a hung script into a bounded failure
+ok - the automatic --changed bound gives the slow watcher suite at least 1500s
+ok - --max-wall-ms fails an over-budget run and refuses a malformed budget
+ok - jobs scheduler runs proven scripts; failure propagates; non-proven refused
+ok - Herdr CI family-run step times out at 20 min under a 75 min job backstop
+ok - aggregate-json merges lane timing artifacts
+FM_TEST_END 2026-10-11T10:55:14Z tests/fm-test-run.test.sh exit=0 duration_ms=283613 gate_skip=false
+FM_TEST_SUMMARY total=7 failed=2 skipped_gate=0 duration_ms=467197
+FM_TEST_SUMMARY_FAMILY family=backend-dispatch count=1 duration_ms=16315 failed=1
+FM_TEST_SUMMARY_FAMILY family=pr-forge count=1 duration_ms=6322 failed=1
+FM_TEST_SUMMARY_FAMILY family=pure-contract-unit count=3 duration_ms=311365 failed=0
+FM_TEST_SUMMARY_FAMILY family=secondmate count=1 duration_ms=12839 failed=0
+FM_TEST_SUMMARY_FAMILY family=standalone count=1 duration_ms=120098 failed=0
+FM_TEST_SLOWEST rank=1 script=tests/fm-test-run.test.sh duration_ms=283613
+FM_TEST_SLOWEST rank=2 script=tests/fm-spawn-pool-base-freshen.test.sh duration_ms=120098
+FM_TEST_SLOWEST rank=3 script=tests/fm-calm-pi-extension.test.sh duration_ms=16858
+FM_TEST_SLOWEST rank=4 script=tests/fm-spawn-dispatch-profile.test.sh duration_ms=16315
+FM_TEST_SLOWEST rank=5 script=tests/fm-shared-captain-inheritance.test.sh duration_ms=12839
+FM_TEST_SLOWEST rank=6 script=tests/fm-composer-lib.test.sh duration_ms=10894
+FM_TEST_SLOWEST rank=7 script=tests/fm-teardown.test.sh duration_ms=6322
+fm-test-run: wrote timing artifact: /Users/rega1011/.no-mistakes/evidence/01M4N87G9S5XAGQN3JVMYEBRDM/targeted-tests.json
