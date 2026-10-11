@@ -1,0 +1,15 @@
+Live cleanup validation used the real fm-teardown executable, real Git worktrees, a helper-marked disposable FM_HOME, and a real pane in a named non-default Herdr lab. The baseline executable came from base commit 3f2d62a13ca048e1c77a8d09927d3501249bd798. No runtime CLI or login was mocked in the live driver. Every live lab was removed by fm-herdr-lab.sh teardown and passed its unchanged-default-session tripwire.
+
+The first teardown regression run placed TMPDIR inside the repository. Its descendant-removal fixture then encountered the intentional protection against deleting a directory inside the code root. The test was repeated with its standard temporary placement.
+
+The live driver initially called prepare before provision. Provision prepares a previously absent session itself, so it refused the already-created tripwire. The driver then used provision's integrated prepare path. The abandoned prepared lab was cleaned through the helper and its tripwire passed.
+
+The live driver initially required one total stderr line. The marked-home gate allowance prints a separate diagnostic, so the driver was corrected to require exactly one actionable REFUSED line. The refusal's full stderr remains in the evidence.
+
+The installed Pi package is 0.87.1. The changed outcome consumer comparison initially failed because stock 0.87.1 omits arguments in the tool header, while the extension targets the Pi 0.99 header contract. The base test has the same failure. A workspace-local Pi 0.99.0 package exercised the actual stock rendering and export consumers successfully. The test's version floor was corrected from 0.84.4 to 0.99.0 with its explanation. No product rendering changed.
+
+pi-extension-0.99-regression.log contains a command-parsing disturbance because the source test changed while that earlier run was reading it. Its runner exit is not reliable evidence. pi-extension-fixed-floor-0.99.log is the replacement run against stable test contents.
+
+The change affects a CLI refusal and test fixtures. No rendered product UI changed. Product evidence consists of CLI transcripts and real pane inventory responses.
+
+Final results: the standard-temp teardown suite exited 0. The corrected branch extension suite exited 0 with installed Pi 0.87.1, explicitly skipping only the incompatible stock-renderer comparison. The stable-content branch extension suite exited 0 against workspace-local Pi 0.99.0 with no gate skip. All live cleanup scenarios passed. The only retained tracked change from this phase corrects the outcome-renderer comparison minimum Pi version and explanation. All disposable homes, Herdr sessions, local vendor dependencies, test copies, and driver files inside the worktree were removed.

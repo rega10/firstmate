@@ -1,0 +1,2 @@
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.phase-test/live/home
+REFUSED: task empty-record has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.phase-test/live/home/state/empty-record.meta, then retry teardown without --force; preserving task state.

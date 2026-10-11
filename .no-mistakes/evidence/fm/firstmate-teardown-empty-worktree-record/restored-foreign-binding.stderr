@@ -1,0 +1,2 @@
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.phase-test/live/home
+REFUSED: endpoint metadata belongs to task foreign-task, not empty-record; preserving task state.

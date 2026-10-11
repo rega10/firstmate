@@ -1,0 +1,6 @@
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.phase-test/live/home
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+REFUSED: local-only worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME5F63K13TBCT6DGA2AVZ4/.phase-test/live/wt has work not yet merged into main and not on any remote.
+commits not yet on main:
+507ba93 Fixture unlanded work
+Merge the branch into local main first (bin/fm-merge-local.sh after the captain approves), or push to a fork/remote, or get the captain's explicit OK to discard, then --force.

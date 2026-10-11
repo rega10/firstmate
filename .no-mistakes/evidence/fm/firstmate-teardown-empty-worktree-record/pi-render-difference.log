@@ -1,0 +1,45 @@
+not ok - Pi outcomes rendering consumers must preserve stock behavior: file:///private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-pi-branch-extension.BCprdW/stock-render-consumers/[eval1]:71
+  throw new Error("Calm-off ToolExecutionComponent rendering differs from Pi stock\n" + JSON.stringify({stock: collapsedStock, actual: collapsedActual}, null, 2));
+        ^
+
+Error: Calm-off ToolExecutionComponent rendering differs from Pi stock
+{
+  "stock": [
+    "",
+    "\u001b[48;5;22m                                                                                                    \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;188mfm_branch_outcomes\u001b[39m                                                                                 \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_ONE\u001b[39m                                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_TWO\u001b[39m                                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_THREE\u001b[39m                                                                                      \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_FOUR\u001b[39m                                                                                       \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_FIVE\u001b[39m                                                                                       \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_SIX\u001b[39m                                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_SEVEN\u001b[39m                                                                                      \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_EIGHT\u001b[39m                                                                                      \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_NINE\u001b[39m                                                                                       \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_TEN\u001b[39m\u001b[38;5;244m                                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244m... (2 more lines,\u001b[39m \u001b[38;5;241m\u001b[39m\u001b[38;5;244m to expand\u001b[39m\u001b[38;5;244m)\u001b[39m                                                                     \u001b[49m",
+    "\u001b[48;5;22m                                                                                                    \u001b[49m"
+  ],
+  "actual": [
+    "",
+    "\u001b[48;5;22m                                                                                                    \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;188mfm_branch_outcomes\u001b[39m \u001b[38;5;244mrecent=2\u001b[39m                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_ONE\u001b[39m                                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_TWO\u001b[39m                                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_THREE\u001b[39m                                                                                      \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_FOUR\u001b[39m                                                                                       \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_FIVE\u001b[39m                                                                                       \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_SIX\u001b[39m                                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_SEVEN\u001b[39m                                                                                      \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_EIGHT\u001b[39m                                                                                      \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_NINE\u001b[39m                                                                                       \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244mOUTCOME_TEN\u001b[39m\u001b[38;5;244m                                                                                        \u001b[49m",
+    "\u001b[48;5;22m \u001b[38;5;244m... (2 more lines,\u001b[39m \u001b[38;5;241m\u001b[39m\u001b[38;5;244m to expand\u001b[39m\u001b[38;5;244m)\u001b[39m                                                                     \u001b[49m",
+    "\u001b[48;5;22m                                                                                                    \u001b[49m"
+  ]
+}
+    at file:///private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-pi-branch-extension.BCprdW/stock-render-consumers/[eval1]:71:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v24.20.0: expected exit 0, got 1
