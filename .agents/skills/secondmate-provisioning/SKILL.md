@@ -117,6 +117,8 @@ A present primary value always converges byte-exact into validated secondmate ho
 Explicit per-spawn `--backend` and `FM_BACKEND` remain stronger than every home's local `config/backend`, including an inherited default.
 Inherited `config/claude-automic-vault` carries only the fail-closed opt-in between validated local homes on the same Mac; the Automic Vault token is never copied, and remote inheritance omits and removes this machine-local flag.
 Before any local convergence can inherit an enabled Claude Automic Vault flag, the validated destination revision must track the authentication-owner version marker at or above the primary's required contract and every owner implementation file must match that revision; absent, stale, untracked, substituted, unsafe, or inconclusive proof blocks propagation, and the separate launch check blocks launch, until tracked code is synchronized.
+The declared `config/supervision-host-off` opt-out follows the same primary-authoritative propagation: its presence opts secondmate homes out even if they have their own engine setting, and its absence removes their copy at convergence.
+`config/supervision-host` itself is not inherited; each home selects its own engine.
 `config/secondmate-harness` is not inherited because it is only the primary's knob for launching secondmate agents.
 `config/claude-account` and `config/pi-account` are not inherited: a local secondmate agent launches on the launching home's worker account pin, and a secondmate home that should pin its own workers needs its own file ([`docs/configuration.md`](../../../docs/configuration.md) "Worker account pin").
 `data/captain-shared.md` is main-authoritative in the primary home and read-only in secondmate homes.
