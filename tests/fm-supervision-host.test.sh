@@ -214,7 +214,9 @@ start_host() {  # <home> [park options...]
   shift
   FM_HOME="$home" FM_CREW_STATE_BIN="$home/fakebin/fm-crew-state.sh" PATH="$home/fakebin:$PATH" \
     MIRROR_ROOT="$MIRROR_ROOT" "$FAKE_CLAUDE" -c '
+      export CLAUDE_PID=$$ CLAUDE_CODE_SESSION_ID=sess-host
       printf "%s\n" "$$" > "$FM_HOME/state/.lock"
+      printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
       printf "%s\n" "$$" >> "$FM_HOME/claude-pids"
       rm -f "$FM_HOME/host.rc"
       for seed in "$FM_HOME"/mirror-seed.*; do
@@ -994,7 +996,9 @@ test_attended_close_with_unidentified_main_session_passes_to_main() {
   home=$(make_home attended-unidentified attended)
   FM_HOME="$home" FM_CREW_STATE_BIN="$home/fakebin/fm-crew-state.sh" PATH="$home/fakebin:$PATH" \
     "$FAKE_CLAUDE" -c '
+      export CLAUDE_PID=$$ CLAUDE_CODE_SESSION_ID=sess-host-unidentified
       printf "%s\n" "$$" > "$FM_HOME/state/.lock"
+      printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
       printf "%s\n" "$$" >> "$FM_HOME/claude-pids"
       mkdir -p "$FM_HOME/proc/$$"
       printf "%s (claude) S\n" "$$" > "$FM_HOME/proc/$$/stat"
@@ -1088,7 +1092,9 @@ start_hook_session() {  # <home>
   local home=$1
   FM_HOME="$home" FM_ROOT_OVERRIDE="$home" FM_CREW_STATE_BIN="$home/fakebin/fm-crew-state.sh" \
     PATH="$home/fakebin:$PATH" "$FAKE_CLAUDE" -c '
+      export CLAUDE_PID=$$ CLAUDE_CODE_SESSION_ID=sess-host-hook
       printf "%s\n" "$$" > "$FM_HOME/state/.lock"
+      printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
       printf "%s\n" "$$" >> "$FM_HOME/claude-pids"
       for seed in "$FM_HOME"/mirror-seed.*; do
         [ -f "$seed" ] || continue
@@ -2204,7 +2210,9 @@ start_session() {  # <home>
   local home=$1
   FM_HOME="$home" FM_CREW_STATE_BIN="$home/fakebin/fm-crew-state.sh" PATH="$home/fakebin:$PATH" \
     MIRROR_ROOT="$MIRROR_ROOT" "$FAKE_CLAUDE" -c '
+      export CLAUDE_PID=$$ CLAUDE_CODE_SESSION_ID=sess-host-persistent
       printf "%s\n" "$$" > "$FM_HOME/state/.lock"
+      printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
       printf "%s\n" "$$" >> "$FM_HOME/claude-pids"
       while [ ! -e "$FM_HOME/session.stop" ]; do
         if [ -e "$FM_HOME/park.go" ]; then
@@ -2452,7 +2460,9 @@ test_superseded_host_leaves_the_owner_untouched() {
   # under an auto-arm generation the ledger has already superseded.
   FM_HOME="$home" FM_CREW_STATE_BIN="$home/fakebin/fm-crew-state.sh" PATH="$home/fakebin:$PATH" \
     "$FAKE_CLAUDE" -c '
+      export CLAUDE_PID=$$ CLAUDE_CODE_SESSION_ID=sess-host-superseded
       printf "%s\n" "$$" > "$FM_HOME/state/.lock"
+      printf "%s\n" "$CLAUDE_CODE_SESSION_ID" > "$FM_HOME/state/.lock-session"
       printf "%s\n" "$$" >> "$FM_HOME/claude-pids"
       "$0" park > "$FM_HOME/host.out" 2>&1 &
       while [ ! -e "$FM_HOME/go-second" ]; do sleep 0.1; done

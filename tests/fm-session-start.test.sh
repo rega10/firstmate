@@ -40,6 +40,7 @@ SESSION_START="$ROOT/bin/fm-session-start.sh"
 BASE_PATH=${FM_TEST_BASE_PATH:-/usr/bin:/bin:/usr/sbin:/sbin}
 TMP_ROOT=$(fm_test_tmproot fm-session-start-tests)
 SESSION_START_TEST_HARNESS_PID=$$
+export CLAUDE_PID=$SESSION_START_TEST_HARNESS_PID CLAUDE_CODE_SESSION_ID="session-start-$$"
 SESSION_START_SECOND_MATE_ID="fmtest-sm-${TMP_ROOT##*.}"
 SESSION_START_SECOND_MATE_TMP="/tmp/fm-$SESSION_START_SECOND_MATE_ID"
 SESSION_START_HERDR_SECOND_MATE_ID="fmtest-herdr-${TMP_ROOT##*.}"
@@ -262,7 +263,6 @@ case "$*" in
     exit 0
     ;;
   *"ppid="*)
-    [ -n "${FM_FAKE_HARNESS_PID:-}" ] || exit 1
     /bin/ps -o ppid= -p "$pid"
     ;;
 esac
@@ -938,6 +938,7 @@ EOF
   sleep 300 &
   holder_pid=$!
   printf '%s\n' "$holder_pid" > "$home/state/.lock"
+  printf 'foreign-trace-session\n' > "$home/state/.lock-session"
   out=$(FM_TRACE_CONTEXT=off run_session_start "$home" "$root" "$fakebin:$BASE_PATH")
   kill "$holder_pid" 2>/dev/null || true
   wait "$holder_pid" 2>/dev/null || true
@@ -1000,6 +1001,7 @@ SH
         sleep 0.01
       done
       if FM_HOME="$home" FM_FAKE_LOCK_STATE="$home/state" \
+        CLAUDE_PID="$harness_pid" CLAUDE_CODE_SESSION_ID="concurrent-$i" \
         FM_FAKE_HARNESS_PID="$harness_pid" PATH="$fakebin:$BASE_PATH" \
         "$ROOT/bin/fm-lock.sh" >/dev/null 2>&1; then
         printf '%s\n' "$harness_pid" >> "$winners"
@@ -2376,7 +2378,7 @@ SH
   # shellcheck disable=SC2016 # $$ must expand in the launched shell, not here.
   out=$(env -u CLAUDECODE -u PI_CODING_AGENT -u FM_PI_HARNESS -u GROK_AGENT \
     FM_HOME="$home" FM_ROOT_OVERRIDE="$root" PATH="$fakebin:$BASE_PATH" \
-    bash -c 'export FM_FAKE_HARNESS_PID=$$; exec "$1" 8 "$2"' _ "$nest" "$SESSION_START")
+    bash -c 'export FM_FAKE_HARNESS_PID=$$ CLAUDE_PID=$$; exec "$1" 8 "$2"' _ "$nest" "$SESSION_START")
 
   assert_contains "$out" "lock acquired: harness pid" \
     "the runtime bound's wrapper processes pushed the harness out of the bounded ancestry walk"
@@ -2643,6 +2645,7 @@ EOF
   sleep 300 &
   holder_pid=$!
   printf '%s\n' "$holder_pid" > "$home/state/.lock"
+  printf 'foreign-reemit-session\n' > "$home/state/.lock-session"
   readonly_out=$(FM_HOME="$home" FM_ROOT_OVERRIDE="$root" PATH="$fakebin:$BASE_PATH" \
     env -u CLAUDECODE -u PI_CODING_AGENT -u FM_PI_HARNESS -u GROK_AGENT \
     "$SESSION_START" --reemit)

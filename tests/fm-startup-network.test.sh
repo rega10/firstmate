@@ -43,6 +43,7 @@ new_world() {
   home="$w/home"
   root="$w/root"
   mkdir -p "$home/state" "$root/bin"
+  printf 'startup-network-session\n' > "$home/state/.lock-session"
   for f in "$ROOT"/bin/*.sh; do
     ln -s "$f" "$root/bin/$(basename "$f")"
   done
@@ -121,6 +122,7 @@ run_stage() {  # <home> <root> <args...>
   local home=$1 root=$2
   shift 2
   PATH="$root/bin:$PATH" FM_FAKE_HARNESS_PID="${FM_FAKE_HARNESS_PID_OVERRIDE:-$$}" \
+    CLAUDE_PID="${FM_FAKE_HARNESS_PID_OVERRIDE:-$$}" CLAUDE_CODE_SESSION_ID=startup-network-session \
     FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/fm-startup-network.sh" "$@"
 }
 
@@ -629,6 +631,7 @@ EOF
   started=$(date +%s)
   rc=0
   out=$(PATH="$root/bin:$PATH" FM_FAKE_HARNESS_PID="$next_owner" \
+    CLAUDE_PID="$next_owner" CLAUDE_CODE_SESSION_ID=next-startup-network-session \
     FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/fm-lock.sh" 2>&1) || rc=$?
   elapsed=$(( $(date +%s) - started ))
   [ "$rc" -ne 0 ] || fail "lock takeover succeeded while the prior sweep was mutating"
@@ -640,6 +643,7 @@ EOF
 
   run_stage "$home" "$root" wait 30 >/dev/null || fail "the leased sweep never settled"
   out=$(PATH="$root/bin:$PATH" FM_FAKE_HARNESS_PID="$next_owner" \
+    CLAUDE_PID="$next_owner" CLAUDE_CODE_SESSION_ID=next-startup-network-session \
     FM_HOME="$home" FM_ROOT_OVERRIDE="$root" "$root/bin/fm-lock.sh" 2>&1) \
     || fail "lock takeover still failed after the sweep released its lease"
   new_owner=$(cat "$home/state/.lock")

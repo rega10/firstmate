@@ -35,6 +35,7 @@ if [ "${FM_CLAUDE_SESSION_LOCK_LIVE_E2E:-0}" = 1 ]; then
   mkdir -p "$LAB"
   LAB=$(cd "$LAB" && pwd -P)
   LIVE_PIDS=()
+  # shellcheck disable=SC2329 # Invoked by the EXIT trap in this opt-in branch.
   cleanup_identity() {
     : > "$LAB/release"
     for pid in ${LIVE_PIDS[@]+"${LIVE_PIDS[@]}"}; do
