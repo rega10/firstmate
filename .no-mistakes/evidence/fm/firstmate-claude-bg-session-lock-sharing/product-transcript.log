@@ -1,0 +1,73 @@
+
+Owner acquisition [owner-acquire.log]
+lock acquired: harness pid 11361
+
+Owner identity [owner-prompt.identity]
+session=5e0d6f62-0b90-445b-8727-de18b332562b
+trusted=5e0d6f62-0b90-445b-8727-de18b332562b
+claude_pid=11361
+
+Competing acquisition [contender-acquire.log]
+error: another live firstmate session holds the lock (pid 11361, session 5e0d6f62-0b90-445b-8727-de18b332562b); operate read-only until resolved
+
+Competing prompt refusal [contender-prompt.log]
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 11361, session 5e0d6f62-0b90-445b-8727-de18b332562b); operate read-only until resolved
+This prompt was refused before fleet or away-mode actions.
+
+Same-PID claim refusal [owner-equal-pid-other.log]
+error: another live firstmate session holds the lock (pid 11361, session 5e0d6f62-0b90-445b-8727-de18b332562b); operate read-only until resolved
+
+Cached startup refusal [owner-cached-foreign-prompt.log]
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 11361, session 5e0d6f62-0b90-445b-8727-de18b332562b); operate read-only until resolved
+This prompt was refused before fleet or away-mode actions.
+
+Legacy recovery diagnostic [owner-legacy-own.log]
+error: another live firstmate session holds the lock (pid 11361); operate read-only until resolved
+recovery: the live legacy lock has no valid Claude session identity; restart the owning Claude process (pid 11361) so that pid 11361 exits, then re-run bin/fm-session-start.sh in the restarted session to acquire the stale lock with its trusted session identity
+
+New helper with matching identity [continuity-prompt.identity]
+session=5e0d6f62-0b90-445b-8727-de18b332562b
+trusted=5e0d6f62-0b90-445b-8727-de18b332562b
+claude_pid=24296
+
+Context re-emission excerpt [continuity-clear.log]
+
+================================================================================
+SESSION START (CONTEXT RE-EMIT) - /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEHR57QJFKWDE7ACAC08MS/.live-lock-validation/home
+================================================================================
+This session already took the helm at its own startup and has only lost its
+context. Lock ownership is re-verified and the durable records below are
+reprinted, but the sweeps startup already reconciled - project clone refresh,
+secondmate convergence and liveness, pending remote handoff
+retry, X-mode artifact writes, and stale Herdr child cleanup - are NOT repeated.
+Queued wakes ARE still drained: they arrived after startup and are this turn work.
+
+LOCK
+--------------------------------------------------------------------------------
+lock acquired: harness pid 11361
+
+Restarted startup excerpt [recovery-startup.log]
+
+================================================================================
+SESSION START - /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEHR57QJFKWDE7ACAC08MS/.live-lock-validation/home
+================================================================================
+
+LOCK
+--------------------------------------------------------------------------------
+lock acquired: harness pid 27904
+
+BOOTSTRAP
+
+Simultaneous winning claim [race-a-acquire.log]
+lock acquired: harness pid 31777
+
+Simultaneous losing claim [race-b-acquire.log]
+error: another live firstmate session holds the lock (pid 31777, session 498eea3c-3e6d-41ec-ad01-c92ac39131a1); operate read-only until resolved
+
+Codex ownership [nonclaude-live.log]
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4MEHR57QJFKWDE7ACAC08MS/.live-nonclaude-regression
+codex
+lock acquired: harness pid 3499
+lock acquired: harness pid 3499
+lock: held by live harness pid 3499
+persisted owner: 3499

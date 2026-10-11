@@ -1,0 +1,2 @@
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 31777, session 498eea3c-3e6d-41ec-ad01-c92ac39131a1); operate read-only until resolved
+This prompt was refused before fleet or away-mode actions.

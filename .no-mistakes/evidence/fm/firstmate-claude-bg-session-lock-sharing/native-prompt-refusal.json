@@ -1,0 +1,14 @@
+{
+  "type": "system",
+  "subtype": "hook_response",
+  "hook_id": "7ee53ff9-0f6a-411e-8775-6fea3edfdfcc",
+  "hook_name": "UserPromptSubmit",
+  "hook_event": "UserPromptSubmit",
+  "output": "READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 14411, session c46421ad-c3e9-48bf-a962-82af4bcc36dc); operate read-only until resolved\nThis prompt was refused before fleet or away-mode actions.\n",
+  "stdout": "",
+  "stderr": "READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 14411, session c46421ad-c3e9-48bf-a962-82af4bcc36dc); operate read-only until resolved\nThis prompt was refused before fleet or away-mode actions.\n",
+  "exit_code": 2,
+  "outcome": "error",
+  "uuid": "ca982da9-9da2-4156-93f3-6c2e63e8e10c",
+  "session_id": "d4f07c32-6beb-4bbf-be56-008cd269fc4b"
+}

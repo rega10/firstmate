@@ -1,0 +1,39 @@
+{
+  "mirror": {
+    "owner_prompt_recorded": true,
+    "contender_prompt_dropped": true
+  },
+  "cached_startup_and_identity_boundaries": {
+    "cached_completion_did_not_authorize_prompt": true,
+    "same_pid_clear_refused": true,
+    "missing_id_refused": true,
+    "untrusted_pid_refused": true
+  },
+  "competing_session": {
+    "owner_anchor": "11361",
+    "owner_id": "5e0d6f62-0b90-445b-8727-de18b332562b",
+    "contender_id": "9af80278-f243-45d2-93bc-d52983bcd2b6",
+    "lock_and_away_and_wakes_unchanged": true,
+    "no_autoarm_epoch": true
+  },
+  "continuity": {
+    "new_process_same_vendor_id": true,
+    "live_anchor_preserved": true,
+    "context_reemit": true
+  },
+  "legacy_upgrade": {
+    "refused_while_owner_alive": true,
+    "diagnostic_gives_exact_restart": true,
+    "startup_reacquired_after_exit": true,
+    "trusted_identity_persisted": true,
+    "startup_completed": true
+  },
+  "simultaneous_claims": {
+    "winner": "race-a",
+    "loser": "race-b",
+    "only_one_acquired": true,
+    "loser_prompt_blocked": true,
+    "recorded_id": "498eea3c-3e6d-41ec-ad01-c92ac39131a1"
+  },
+  "version": "2.1.284 (Claude Code)"
+}
