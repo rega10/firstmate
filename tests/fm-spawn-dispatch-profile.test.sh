@@ -680,6 +680,7 @@ SH
         mkdir -p "$CASE_DIR/probe-bin"
         ln -s "$probe" "$CASE_DIR/probe-bin/codex"
         if [ "$local_env" = 1 ]; then
+          # shellcheck disable=SC2016 # Expand HOME, CODEX_HOME, and positional arguments in the child shell.
           result=$(PATH="$CASE_DIR/probe-bin:$PATH" /usr/bin/env -u HOME -u CODEX_HOME \
             /bin/sh -c 'HOME=$1; CODEX_HOME=$2; cd "$3"; eval "$4"' sh \
             "$worker_home" "$worker_codex" "$WT_DIR" "$launch") || fail "local worker launch probe failed"
