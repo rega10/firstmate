@@ -178,7 +178,11 @@
 #   root Firstmate home's state directory before slot allocation and holds it through
 #   task metadata publication. Teardown holds that same lock while proving and
 #   returning a slot, so allocation cannot reuse a slot before its owner record
-#   is published. Under that same lock it writes the slot's owner claim, which is
+#   is published. Under that same lock it refuses a returned worktree still named
+#   by a different task's state/*.meta in this home, before claiming or refreshing
+#   the slot or launching a worker; an exited worker does not retire its record.
+#   A conflict closes only the new allocation endpoint, leaving the slot alone.
+#   It then writes the slot's owner claim, which is
 #   what lets teardown leave a slot reassigned since untouched; bin/fm-wake-lib.sh
 #   owns the claim and bin/fm-teardown.sh owns what it protects. A slot that
 #   cannot be claimed refuses the spawn rather than launching a worker whose slot
@@ -3580,6 +3584,24 @@ validate_spawn_worktree() { # <source> <inspect-target>
   fi
 }
 
+refuse_recorded_spawn_worktree() {
+  local meta other_id other_worktree
+  for meta in "$STATE"/*.meta; do
+    [ -f "$meta" ] || continue
+    other_id=${meta##*/}
+    other_id=${other_id%.meta}
+    [ "$other_id" != "$ID" ] || continue
+    other_worktree=$(fm_meta_get "$meta" worktree)
+    [ -n "$other_worktree" ] || continue
+    # Compare directory identity so a symlink or trailing slash in the older
+    # record cannot hide the slot it still holds.
+    [ "$other_worktree" -ef "$WT" ] || continue
+    echo "error: refusing to spawn task $ID: returned worktree '$WT' is still recorded by task $other_id in $meta; reconcile that task before reusing its slot" >&2
+    return 1
+  done
+  return 0
+}
+
 # A pooled slot whose only deviation is a submodule gitlink is stale, not dirty:
 # an earlier refresh moved the superproject and left the submodule checkout on
 # the pin the previous base recorded. The refusal still stands and this gate
@@ -4620,6 +4642,15 @@ elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
   fi
 
   validate_spawn_worktree "treehouse get" "$T"
+  if ! refuse_recorded_spawn_worktree; then
+    # Projected Herdr endpoints already have exact abort cleanup registered.
+    # Other backends close only this spawn's new endpoint, never the held copy.
+    if [ "$HERDR_PROJECTION_ABORT_CLEANUP" != 1 ]; then
+      fm_backend_kill "$BACKEND" "$T" "${ZELLIJ_TAB_ID:-}" "$W" ||
+        echo "warning: could not close refused task $ID's allocation endpoint $T" >&2
+    fi
+    exit 1
+  fi
 
   # Claim the pool slot for this task. The interactive `treehouse get` sent to
   # the pane above records only a process lease (Treehouse's durable

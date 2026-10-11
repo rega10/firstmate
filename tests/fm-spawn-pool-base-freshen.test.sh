@@ -5,7 +5,8 @@
 # advanced after the worktree was allocated.
 # These tests drive the real spawn path with a fake terminal, then prove it
 # starts the worker from the fetched origin tip, launches a clean origin-less
-# pool as-is, or stops when a configured origin is unusable.
+# pool as-is, or stops when a configured origin is unusable or another task
+# record still holds the returned slot.
 set -u
 
 # shellcheck source=tests/fixtures.sh
@@ -183,6 +184,8 @@ test_stale_pool_base_refreshes_before_branching() {
       "$branch_head" "$current" "$(cat "$POOL_DIR/advanced-main.txt")"
   fi
 
+  # The prior fixture task has been retired before its slot is offered again.
+  rm "$HOME_DIR/state/$id.meta"
   id='pool-current-base-repeat-r1'
   fm_test_spawn_brief "$HOME_DIR" "$id"
   out=$(run_spawn "$id" --mode no-mistakes --yolo off)
@@ -528,6 +531,8 @@ strand_submodule_pin_via_spawn() {  # <seed-id>
     || fail "the first spawn did not move the pooled base across the moved submodule pin"
   [ "$(git -C "$POOL_DIR/ui" rev-parse HEAD)" = "$SUBPIN1" ] \
     || fail "the first spawn did not strand the submodule on the pin the old base recorded"
+  # Retire the seed fixture task before the next task takes its stale slot.
+  rm "$HOME_DIR/state/$id.meta"
 }
 
 test_stale_submodule_pin_explains_itself() {
@@ -874,6 +879,84 @@ test_scout_base_branch_refused_on_gerrit_forge() {
   pass "a based scout on a forge=gerrit project is refused at spawn"
 }
 
+test_pool_slot_still_recorded_by_another_task_refuses() {
+  local variant rec id held out status recorded before_meta before_claim before_head before_reflog
+  for variant in unclaimed claimed-alias; do
+    id="pool-record-conflict-$variant"
+    held="held-$variant"
+    rec=$(make_case "record-conflict-$variant" "$id")
+    read_case_record "$rec"
+    lay_out_as_pool_slot
+    # Track the new allocation endpoint independently from the held task.
+    mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux-base"
+    cat > "$FAKEBIN_DIR/tmux" <<'SH'
+#!/usr/bin/env bash
+case "${1:-}" in
+  new-window) touch "$FM_FAKE_NEW_ENDPOINT" ;;
+  kill-window)
+    [ "$*" = "kill-window -t =firstmate:=fm-$FM_FAKE_NEW_TASK" ] || exit 1
+    rm "$FM_FAKE_NEW_ENDPOINT"
+    ;;
+esac
+exec "$(dirname "$0")/tmux-base" "$@"
+SH
+    chmod +x "$FAKEBIN_DIR/tmux"
+    recorded=$POOL_DIR
+    if [ "$variant" = claimed-alias ]; then
+      ln -s "$POOL_DIR" "$CASE_DIR/held-alias"
+      recorded="$CASE_DIR/held-alias/"
+      printf 'task=%s\nhome=%s\n' "$held" "$HOME_DIR" > "$SLOT_CLAIM"
+    fi
+    # The worker has exited, so the pool may offer this slot again. Its task
+    # record still owns the copy, even when no slot-owner claim was written.
+    cat > "$HOME_DIR/state/$held.meta" <<EOF
+window=firstmate:fm-$held
+worktree=$recorded
+project=$PROJECT_DIR
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+backend=tmux
+EOF
+    printf 'done: awaiting review\n' > "$HOME_DIR/state/$held.status"
+    before_meta=$(cat "$HOME_DIR/state/$held.meta")
+    before_claim=$(cat "$SLOT_CLAIM" 2>/dev/null || true)
+    before_head=$(git -C "$POOL_DIR" rev-parse HEAD)
+    before_reflog=$(git -C "$POOL_DIR" reflog)
+
+    out=$(FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" FM_FAKE_NEW_TASK="$id" \
+      FM_FAKE_LAUNCH_LOG="$CASE_DIR/launch.log" run_spawn "$id" --mode no-mistakes --yolo off)
+    status=$?
+    [ "$status" -ne 0 ] || fail "spawn reused a slot still named by task $held"$'\n'"$out"
+    assert_contains "$out" "$id" "refusal did not name the attempted task"
+    assert_contains "$out" "$held" "refusal did not name the holding task"
+    assert_contains "$out" "$POOL_DIR" "refusal did not name the held slot"
+    [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published task metadata"
+    [ ! -e "$CASE_DIR/new-endpoint" ] || fail "refused spawn left its allocation endpoint open"
+    [ ! -e "$HOME_DIR/state/$id.git-hooks" ] || fail "refused spawn installed task hooks"
+    [ ! -s "$CASE_DIR/launch.log" ] || fail "refused spawn launched a worker"
+    [ "$(cat "$HOME_DIR/state/$held.meta")" = "$before_meta" ] || fail "spawn changed the holding task record"
+    [ "$(cat "$SLOT_CLAIM" 2>/dev/null || true)" = "$before_claim" ] || fail "spawn changed the held slot claim"
+    [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$before_head" ] || fail "spawn refreshed the held slot"
+    [ "$(git -C "$POOL_DIR" reflog)" = "$before_reflog" ] || fail "spawn touched the held slot reflog"
+    [ ! -e "$PROJECT_DIR/.git/FETCH_HEAD" ] || fail "spawn fetched before refusing the held slot"
+
+    # Remove only the competing fixture record. The same slot and any old
+    # claim must then follow the ordinary successful spawn path.
+    rm "$HOME_DIR/state/$held.meta"
+    out=$(FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" FM_FAKE_NEW_TASK="$id" \
+      run_spawn "$id" --mode no-mistakes --yolo off)
+    status=$?
+    expect_code 0 "$status" "spawn should accept the slot once no other task records it"$'\n'"$out"
+    assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "ordinary spawn did not record its slot"
+    assert_grep "task=$id" "$SLOT_CLAIM" "ordinary spawn did not claim its slot"
+    [ -e "$CASE_DIR/new-endpoint" ] || fail "ordinary spawn closed its allocation endpoint"
+    pass "the $variant slot is refused while another task records it and launches after that record is removed"
+  done
+}
+
+test_pool_slot_still_recorded_by_another_task_refuses
 test_remote_seeded_home_spawns_from_treehouse_pool
 test_pool_slot_claim_follows_the_spawn_outcome
 test_linked_spawning_home_rejects_primary_before_refresh
