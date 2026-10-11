@@ -1208,7 +1208,7 @@ The file lives in the machine's root Firstmate home, so every local secondmate h
 my-project 2
 ```
 
-The name is the project's registered name, which is its clone directory name and may contain spaces, and the number, the last field on the line, is a positive integer.
+The name is the project's registered name, which is its clone directory name and may contain spaces, and the number, the last field on the line, is a positive integer of at most six digits.
 A line that is only `#`, or that begins with `#` followed by whitespace, is a comment, as is a `#` line whose last field is not an integer.
 A project name may begin with `#` when that `#` is written immediately against the rest of the name and the line ends with the project's capacity.
 A name that is `#`, or that begins with `#` and a space, cannot be declared, because that line is a comment.

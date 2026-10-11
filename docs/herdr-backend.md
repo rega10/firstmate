@@ -528,7 +528,9 @@ Ordinary cleanup and control keep refusing unbound records implicitly; nothing r
 
 ### Named server and session routing
 
-The adapter starts and polls a named server before workspace, tab, pane, or agent calls.
+The adapter starts and polls a named server for operations that require `fm_backend_herdr_target_ready` or container setup.
+Composer inspection instead requires the recorded session's server to be running and never starts it; an inactive or unreadable session yields `unknown` for composer state.
+[`tests/fm-backend-herdr.test.sh`](../tests/fm-backend-herdr.test.sh) covers inactive-session composer inspection without server startup.
 Every Herdr invocation goes through `fm_backend_herdr_cli`, which sets the environment and passes an explicit trailing `--session <name>`.
 An environment variable alone is not reliable when another Herdr server is running.
 
