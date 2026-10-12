@@ -1559,6 +1559,12 @@ fm_treehouse_project_lock_path() {  # <project-dir>
   printf '%s/.treehouse-project-%s.lock\n' "$root/state" "$hash"
 }
 
+fm_treehouse_require_jq() {
+  command -v jq >/dev/null 2>&1 && return 0
+  echo "error: jq is required for Treehouse lease acquisition and retirement" >&2
+  return 1
+}
+
 # A Treehouse slot has the managed pool's fixed <pool>/<slot>/<repo> layout.
 # Require both its pool state and the same Git common directory as the recorded
 # project; an ordinary linked worktree is not evidence that Treehouse owns it.

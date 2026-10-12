@@ -80,6 +80,9 @@ fi
 if [ "${1:-}" = return ] && [ "${2:-}" = --help ] && [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-0}" != 0 ] && [ "$FM_FAKE_TREEHOUSE_LEASE_HELP" != 3 ]; then
   printf '%s\n' 'Usage: treehouse return [--if-lease-id <id>]'
 fi
+if [ "${1:-}" = status ] && [ "${2:-}" = --help ] && [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-0}" != 0 ] && [ "$FM_FAKE_TREEHOUSE_LEASE_HELP" != 4 ]; then
+  printf '%s\n' 'Usage: treehouse status [--json]'
+fi
 exit 0
 SH
   chmod +x "$fakebin/treehouse"
@@ -668,9 +671,8 @@ test_unknown_backend_reports_invalid_configuration() {
   pass "bootstrap: unknown resolved backends fail closed with an actionable diagnostic"
 }
 
-test_json_backends_require_jq_not_tmux() {
+test_treehouse_backends_require_jq() {
   local backend case_dir fakebin bash_env out
-  # herdr/zellij/cmux parse their backend's JSON output, so jq is a genuine dep.
   # jq lives in a system BASE_PATH dir on many hosts, so force it missing with a
   # command()/jq() override (the same technique the git-required case uses) to keep
   # the assertion host-independent.
@@ -680,9 +682,8 @@ test_json_backends_require_jq_not_tmux() {
     mkdir -p "$case_dir/home/config"
     printf '%s\n' manual > "$case_dir/home/config/backlog-backend"
     printf '%s\n' "$backend" > "$case_dir/home/config/backend"
-    # Session CLI present, tmux absent, jq deliberately NOT stubbed and masked below.
     fakebin=$(make_fake_toolchain "$case_dir")
-    rm -f "$fakebin/tmux"
+    [ "$backend" = tmux ] || rm -f "$fakebin/tmux"
     fm_fake_exit0 "$fakebin" "$backend"
     bash_env="$case_dir/no-jq.bash"
     cat > "$bash_env" <<'SH'
@@ -699,17 +700,18 @@ SH
     out=$(PATH="$fakebin:$BASE_PATH" BASH_ENV="$bash_env" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
       FM_FAKE_TREEHOUSE_LEASE_HELP=1 "$ROOT/bin/fm-bootstrap.sh")
     assert_contains "$out" "MISSING: jq" "backend=$backend must fail closed on missing jq"
-    assert_not_contains "$out" "MISSING: tmux" "backend=$backend must not demand tmux when jq is missing"
+    assert_not_contains "$out" "MISSING: tmux" "backend=$backend must not demand an absent or already available tmux"
   done <<'ROWS'
+tmux
 herdr
 zellij
 cmux
 ROWS
-  pass "bootstrap: JSON-emitting backends require jq (their genuine dep), never tmux"
+  pass "bootstrap: every Treehouse backend requires jq without demanding inactive tools"
 }
 
 test_treehouse_lease_check_follows_resolved_backend() {
-  local case_dir fakebin out
+  local case_dir fakebin out capability
   # A treehouse that lacks durable --lease support is only a problem for a backend
   # that actually uses treehouse. Orca owns its own worktrees, so an old treehouse
   # must NOT trip MISSING: treehouse under backend=orca...
@@ -736,6 +738,14 @@ test_treehouse_lease_check_follows_resolved_backend() {
     "$ROOT/bin/fm-bootstrap.sh")
   assert_contains "$out" "MISSING: treehouse" "backend=herdr must still require treehouse with durable lease support"
   assert_not_contains "$out" "MISSING: tmux" "backend=herdr must not demand tmux even when treehouse is too old"
+  for capability in 2 3 4; do
+    out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
+      FM_FAKE_TREEHOUSE_LEASE_HELP="$capability" "$ROOT/bin/fm-bootstrap.sh")
+    assert_contains "$out" "MISSING: treehouse" "bootstrap accepted a missing lease JSON, conditional return, or status JSON interface"
+  done
+  out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
+    FM_FAKE_TREEHOUSE_LEASE_HELP=1 "$ROOT/bin/fm-bootstrap.sh")
+  [ -z "$out" ] || fail "bootstrap refused the complete lease interfaces: $out"
   pass "bootstrap: the treehouse lease check follows the resolved backend's worktree provider"
 }
 
@@ -1253,6 +1263,12 @@ ROWS
   pass "bootstrap gates resolver fields and additive harnesses on the typed key"
 }
 
+if [ "${1:-}" = --lease-dependencies ]; then
+  test_treehouse_backends_require_jq
+  test_treehouse_lease_check_follows_resolved_backend
+  exit 0
+fi
+
 test_bootstrap_reporting
 test_no_mistakes_min_version
 test_gh_axi_min_version
@@ -1266,7 +1282,7 @@ test_session_provider_backends_gate_own_cli_not_tmux
 test_herdr_install_requires_manual_action
 test_cmux_bundled_cli_satisfies_dependency
 test_unknown_backend_reports_invalid_configuration
-test_json_backends_require_jq_not_tmux
+test_treehouse_backends_require_jq
 test_treehouse_lease_check_follows_resolved_backend
 test_fleet_sync_timeout_scales_with_origin_backed_project_count
 test_fleet_sync_timeout_floor_preserves_small_fleets

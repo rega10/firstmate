@@ -4702,6 +4702,44 @@ test_retained_sources_still_reach_the_ordinary_refusal() {
   pass "present required sources still reach the ordinary teardown refusal"
 }
 
+test_missing_jq_preserves_lease_records() {
+  local phase case_dir out rc before_meta
+  for phase in active pending; do
+    case_dir=$(make_case "missing-jq-$phase")
+    fm_write_meta "$case_dir/state/task-x1.meta" \
+      'window=firstmate:fm-task-x1' 'endpoint_task_id=task-x1' \
+      "project=$case_dir/project" 'kind=ship' 'mode=local-only' \
+      'spawn_gen=missing-jq-test' 'treehouse_lease_id=retained-lease'
+    if [ "$phase" = active ]; then
+      printf 'worktree=%s\n' "$case_dir/wt" >> "$case_dir/state/task-x1.meta"
+    else
+      printf 'worktree=\ntreehouse_retiring_worktree=%s\n' "$case_dir/wt" >> "$case_dir/state/task-x1.meta"
+    fi
+    before_meta=$(cat "$case_dir/state/task-x1.meta")
+    cat > "$case_dir/no-jq.bash" <<'SH'
+command() {
+  if [ "${1:-}" = -v ] && [ "${2:-}" = jq ]; then return 1; fi
+  builtin command "$@"
+}
+jq() { return 127; }
+SH
+    cat > "$case_dir/fakebin/treehouse" <<'SH'
+#!/usr/bin/env bash
+touch "$FM_RETURN_LOG"
+printf '[]\n'
+SH
+    chmod +x "$case_dir/fakebin/treehouse"
+    out=$(FM_HOME="$case_dir" HOME="$case_dir/user-home" BASH_ENV="$case_dir/no-jq.bash" \
+      FM_RETURN_LOG="$case_dir/returned" run_teardown "$case_dir" --force 2>&1)
+    rc=$?
+    [ "$rc" -ne 0 ] || fail "missing jq did not refuse lease retirement"
+    [ "$(cat "$case_dir/state/task-x1.meta")" = "$before_meta" ] || fail "missing jq changed the $phase lease record"
+    [ ! -e "$case_dir/returned" ] || fail "missing jq reached Treehouse retirement"
+    assert_contains "$out" 'jq is required' "missing jq retirement refusal did not identify the dependency"
+    pass "missing jq preserves the $phase lease record before retirement"
+  done
+}
+
 # Kill only the exact test-owned teardown process at the return boundary.
 # The real allocator validates the receipt in both normal and retry paths.
 test_real_lease_teardown_recovers_interruption() {
@@ -4818,7 +4856,7 @@ SH
 }
 
 test_descendant_lease_return_is_recoverable() {
-  local case_dir home treehouse_bin receipt path lease_id out rc current
+  local case_dir home treehouse_bin receipt path lease_id out rc current before_child before_parent
   treehouse_bin=$(command -v treehouse) || fail "treehouse is required for descendant lease verification"
   case_dir=$(make_case leased-descendant)
   write_meta "$case_dir" local-only secondmate
@@ -4849,6 +4887,26 @@ fi
 exec "$FM_REAL_TREEHOUSE" "$@"
 SH
   chmod +x "$case_dir/fakebin/treehouse" "$case_dir/fakebin/ps"
+  before_child=$(cat "$home/state/child-a.meta")
+  before_parent=$(cat "$case_dir/state/task-x1.meta")
+  cat > "$case_dir/no-jq.bash" <<'SH'
+command() {
+  if [ "${1:-}" = -v ] && [ "${2:-}" = jq ]; then return 1; fi
+  builtin command "$@"
+}
+jq() { return 127; }
+SH
+  out=$(FM_HOME="$case_dir/supervisor-home" HOME="$case_dir/user-home" FM_REAL_TREEHOUSE="$treehouse_bin" \
+    BASH_ENV="$case_dir/no-jq.bash" FM_LEASE_TEST_DIR="$case_dir" FM_ROOT_OVERRIDE="$case_dir/code-root" \
+    FM_STATE_OVERRIDE="$case_dir/state" FM_DATA_OVERRIDE="$case_dir/data" \
+    FM_CONFIG_OVERRIDE="$case_dir/config" PATH="$case_dir/fakebin:$PATH" \
+    "$TEARDOWN" task-x1 --force 2>&1)
+  rc=$?
+  [ "$rc" -ne 0 ] || fail "missing jq did not refuse descendant lease retirement"
+  assert_contains "$out" 'jq is required' "descendant refusal did not identify missing jq"
+  [ "$(cat "$home/state/child-a.meta")" = "$before_child" ] || fail "missing jq changed the child receipt"
+  [ "$(cat "$case_dir/state/task-x1.meta")" = "$before_parent" ] || fail "missing jq changed the parent record"
+  [ ! -e "$case_dir/returns" ] || fail "missing jq reached descendant conditional return"
   out=$(FM_HOME="$case_dir/supervisor-home" HOME="$case_dir/user-home" FM_REAL_TREEHOUSE="$treehouse_bin" \
     FM_LEASE_TEST_DIR="$case_dir" FM_ROOT_OVERRIDE="$case_dir/code-root" \
     FM_STATE_OVERRIDE="$case_dir/state" FM_DATA_OVERRIDE="$case_dir/data" \
@@ -4873,12 +4931,19 @@ SH
   pass "descendant teardown retains the exact lease receipt until its conditional return succeeds"
 }
 
+if [ "${1:-}" = --missing-jq ]; then
+  test_missing_jq_preserves_lease_records
+  exit 0
+fi
+
 if [ "${1:-}" = --lease ]; then
+  test_missing_jq_preserves_lease_records
   test_real_lease_teardown_recovers_interruption
   test_descendant_lease_return_is_recoverable
   exit 0
 fi
 
+test_missing_jq_preserves_lease_records
 test_real_lease_teardown_recovers_interruption
 test_descendant_lease_return_is_recoverable
 test_empty_worktree_refuses_with_recovery_action

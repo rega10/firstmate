@@ -876,6 +876,51 @@ test_scout_base_branch_refused_on_gerrit_forge() {
   pass "a based scout on a forge=gerrit project is refused at spawn"
 }
 
+test_missing_jq_refuses_before_lease_allocation() {
+  local kind rec id out status before_meta
+  for kind in ship scout; do
+    id="pool-missing-jq-$kind"
+    rec=$(make_case "$id" "$id")
+    read_case_record "$rec"
+    printf 'worktree=%s\nkind=ship\n' "$CASE_DIR/unrelated-copy" > "$HOME_DIR/state/existing.meta"
+    before_meta=$(cat "$HOME_DIR/state/existing.meta")
+    cat > "$CASE_DIR/no-jq.bash" <<'SH'
+command() {
+  if [ "${1:-}" = -v ] && [ "${2:-}" = jq ]; then return 1; fi
+  builtin command "$@"
+}
+jq() { return 127; }
+SH
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = get ]; then
+  holder=
+  while [ "$#" -gt 0 ]; do
+    case "$1" in --lease-holder) shift; holder=$1 ;; esac
+    shift
+  done
+  touch "$FM_ALLOCATION_LOG"
+  printf '{"path":"%s","lease_id":"missing-jq-lease","lease_holder":"%s"}\n' "$FM_FAKE_PANE_PATH" "$holder"
+fi
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    if [ "$kind" = ship ]; then
+      out=$(BASH_ENV="$CASE_DIR/no-jq.bash" FM_ALLOCATION_LOG="$CASE_DIR/allocated" \
+        run_spawn "$id" --mode no-mistakes --yolo off)
+    else
+      out=$(BASH_ENV="$CASE_DIR/no-jq.bash" FM_ALLOCATION_LOG="$CASE_DIR/allocated" \
+        run_spawn "$id" --scout)
+    fi
+    status=$?
+    [ "$status" -ne 0 ] || fail "missing jq did not refuse the $kind spawn"
+    [ ! -e "$CASE_DIR/allocated" ] || fail "missing jq allowed a Treehouse lease allocation"
+    assert_contains "$out" 'jq is required' "missing jq refusal did not identify the dependency"
+    [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "missing jq published a task record"
+    [ "$(cat "$HOME_DIR/state/existing.meta")" = "$before_meta" ] || fail "missing jq changed an existing record"
+    pass "missing jq refuses $kind before lease allocation or task record mutation"
+  done
+}
+
 test_legacy_other_pool_does_not_block() {
   local treehouse_bin variant rec id receipt held held_id held_pool before_state before_head before_meta out status
   treehouse_bin=$(command -v treehouse) || fail "treehouse is required for pool identity verification"
@@ -1245,12 +1290,18 @@ SH
   done
 }
 
+if [ "${1:-}" = --missing-jq ]; then
+  test_missing_jq_refuses_before_lease_allocation
+  exit 0
+fi
+
 if [ "${1:-}" = --pool-identity ]; then
   test_legacy_other_pool_does_not_block "${2:-same-origin}"
   exit 0
 fi
 
 if [ "${1:-}" = --lease ]; then
+  test_missing_jq_refuses_before_lease_allocation
   test_legacy_other_pool_does_not_block same-origin different-root
   test_free_pool_slot_launches_while_another_slot_is_recorded
   test_real_lease_survives_exit_and_failed_publication
@@ -1259,6 +1310,7 @@ if [ "${1:-}" = --lease ]; then
   exit 0
 fi
 
+test_missing_jq_refuses_before_lease_allocation
 test_legacy_other_pool_does_not_block same-origin different-root
 test_real_lease_survives_exit_and_failed_publication
 

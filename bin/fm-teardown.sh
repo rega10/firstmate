@@ -537,6 +537,9 @@ fm_backlog_record_present "$META" "task record" "$STATE" || {
   echo "error: teardown refused after locking: $FM_BACKLOG_TRANSITION_ERROR" >&2
   exit 1
 }
+if [ -n "$(fm_meta_get "$META" treehouse_lease_id)" ]; then
+  fm_treehouse_require_jq || exit 1
+fi
 TEARDOWN_META_KIND=$(fm_meta_get "$META" kind)
 [ -n "$TEARDOWN_META_KIND" ] || TEARDOWN_META_KIND=ship
 if [ "$TEARDOWN_META_KIND" != secondmate ] \
@@ -1775,6 +1778,7 @@ report_worktree_dirt() {
 teardown_retire_treehouse_record() { # <meta> <project> <label> [<post-cleanup-check>]
   local meta=$1 project=$2 label=$3 post_cleanup_check=${4:-}
   local worktree lease_id pending tmp current pool pool_root WT
+  fm_treehouse_require_jq || return 1
   worktree=$(fm_meta_get "$meta" worktree)
   pending=$(fm_meta_get "$meta" treehouse_retiring_worktree)
   lease_id=$(fm_meta_get "$meta" treehouse_lease_id)
@@ -2858,6 +2862,9 @@ preflight_descendant_treehouse_slots() {
     project=$(meta_value "$meta" project)
     if [ "$kind" = secondmate ] || [ "$backend" = orca ]; then
       continue
+    fi
+    if [ -n "$(meta_value "$meta" treehouse_lease_id)" ]; then
+      fm_treehouse_require_jq || return 1
     fi
     if ! fm_treehouse_pool_slot "$project" "$worktree"; then
       continue

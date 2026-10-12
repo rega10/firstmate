@@ -1776,6 +1776,9 @@ if [ "$RELAUNCH" -eq 0 ]; then
     BACKEND=$(fm_backend_name)
   fi
   fm_backend_validate_spawn "$BACKEND" || exit 1
+  if [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
+    fm_treehouse_require_jq || exit 1
+  fi
   fm_backend_source "$BACKEND" || exit 1
   if [ "$BACKEND" = orca ] && [ "$KIND" = secondmate ]; then
     echo "error: backend=orca does not support --secondmate spawns yet" >&2
