@@ -315,9 +315,9 @@ test_bootstrap_reporting() {
     esac
   done <<'ROWS'
 treehouse --lease support is accepted silently^1^0.2.6^1^manual^empty^^
-treehouse without JSON receipts reports an upgrade^2^0.2.6^1^manual^grep^MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^
-treehouse without conditional release reports an upgrade^3^0.2.6^1^manual^grep^MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^
-treehouse without --lease reports an upgrade, gh auth is fine^0^0.2.6^1^-^grep^MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^NEEDS_GH_AUTH
+treehouse without JSON receipts reports an upgrade^2^0.2.6^1^manual^grep^CAPABILITY_UNAVAILABLE: treehouse (requires JSON lease acquisition, JSON status, and conditional return; upgrade: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^
+treehouse without conditional release reports an upgrade^3^0.2.6^1^manual^grep^CAPABILITY_UNAVAILABLE: treehouse (requires JSON lease acquisition, JSON status, and conditional return; upgrade: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^
+treehouse without --lease reports an upgrade, gh auth is fine^0^0.2.6^1^-^grep^CAPABILITY_UNAVAILABLE: treehouse (requires JSON lease acquisition, JSON status, and conditional return; upgrade: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^NEEDS_GH_AUTH
 compatible tasks-axi is silent by default^1^0.2.6^1^-^empty^^
 missing tasks-axi is required by default^1^-^1^-^exact^MISSING: tasks-axi (install: npm install -g tasks-axi)^
 incompatible tasks-axi is required by default^1^0.1.0^1^-^exact^MISSING: tasks-axi (install: npm install -g tasks-axi)^
@@ -736,12 +736,13 @@ test_treehouse_lease_check_follows_resolved_backend() {
   fakebin=$(make_fake_toolchain_no_tmux "$case_dir" herdr)
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
     "$ROOT/bin/fm-bootstrap.sh")
-  assert_contains "$out" "MISSING: treehouse" "backend=herdr must still require treehouse with durable lease support"
+  assert_contains "$out" "CAPABILITY_UNAVAILABLE: treehouse" "backend=herdr must still require treehouse with durable lease support"
   assert_not_contains "$out" "MISSING: tmux" "backend=herdr must not demand tmux even when treehouse is too old"
   for capability in 2 3 4; do
     out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
       FM_FAKE_TREEHOUSE_LEASE_HELP="$capability" "$ROOT/bin/fm-bootstrap.sh")
-    assert_contains "$out" "MISSING: treehouse" "bootstrap accepted a missing lease JSON, conditional return, or status JSON interface"
+    assert_contains "$out" "CAPABILITY_UNAVAILABLE: treehouse" "bootstrap accepted a missing lease JSON, conditional return, or status JSON interface"
+    assert_not_contains "$out" "MISSING: treehouse" "an installed provider with missing capabilities is not a missing binary"
   done
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
     FM_FAKE_TREEHOUSE_LEASE_HELP=1 "$ROOT/bin/fm-bootstrap.sh")

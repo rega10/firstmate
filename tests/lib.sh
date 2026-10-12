@@ -450,13 +450,51 @@ fm_test_fake_treehouse_lease() { # <fakebin> [<path> ...]
     for path in "$@"; do printf ' %q' "$path"; done
     printf ' )\n'
     cat <<'SH'
+case "${1:-}:${2:-}" in
+  get:--help)
+    printf '%s\n' 'Usage: treehouse get [--lease] [--json] [--lease-holder <holder>]'
+    exit 0 ;;
+  return:--help)
+    printf '%s\n' 'Usage: treehouse return [path] [--force] [--if-lease-id <id>]'
+    exit 0 ;;
+  status:--help)
+    printf '%s\n' 'Usage: treehouse status [--json]'
+    exit 0 ;;
+esac
 path=${FM_FAKE_PANE_PATH:-${fixture_paths[0]:-}}
+lease_dir="$(dirname "$0")/.treehouse-leases"
 if [ "${1:-}" = status ]; then
-  if [ "${#fixture_paths[@]}" -gt 1 ]; then
-    printf '%s\n' "${fixture_paths[@]}"
-  else
-    printf '%s\n' "$path"
-  fi | jq -Rn '[inputs | select(length > 0) | {path:.,lease_id:""}]'
+  {
+    if [ "${#fixture_paths[@]}" -gt 1 ]; then
+      printf '%s\n' "${fixture_paths[@]}"
+    else
+      printf '%s\n' "$path"
+    fi | jq -Rn 'inputs | select(length > 0) | {path:.,lease_id:"",lease_holder:""}'
+    for receipt in "$lease_dir"/*.json; do
+      [ ! -f "$receipt" ] || cat "$receipt"
+    done
+  } | jq -s 'group_by(.path) | map(.[-1])'
+  exit
+fi
+if [ "${1:-}" = return ]; then
+  expected=
+  shift
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --if-lease-id) shift; expected=$1 ;;
+      --force) ;;
+      *) path=$1 ;;
+    esac
+    shift
+  done
+  for receipt in "$lease_dir"/*.json; do
+    [ -f "$receipt" ] || continue
+    [ "$(jq -r .path "$receipt")" = "$path" ] || continue
+    [ -z "$expected" ] || [ "$(jq -r .lease_id "$receipt")" = "$expected" ] || exit 1
+    rm -f "$receipt"
+    exit 0
+  done
+  [ -z "$expected" ]
   exit
 fi
 if [ "${1:-}" = get ]; then
@@ -468,17 +506,18 @@ if [ "${1:-}" = get ]; then
     esac
     shift
   done
-  if [ "$json" = 1 ]; then
-    if [ "${#fixture_paths[@]}" -gt 1 ]; then
-      counter="$(dirname "$0")/.treehouse-next-slot"
-      index=$(cat "$counter" 2>/dev/null || printf '0')
-      path=${fixture_paths[$index]:-}
-      [ -n "$path" ] || exit 1
-      printf '%s\n' "$((index + 1))" > "$counter"
-    fi
-    jq -n --arg path "$path" --arg holder "$holder" --arg id "fixture-lease-$$" \
-      '{path:$path,lease_id:$id,lease_holder:$holder}'
+  if [ "${#fixture_paths[@]}" -gt 1 ]; then
+    counter="$(dirname "$0")/.treehouse-next-slot"
+    index=$(cat "$counter" 2>/dev/null || printf '0')
+    path=${fixture_paths[$index]:-}
+    [ -n "$path" ] || exit 1
+    printf '%s\n' "$((index + 1))" > "$counter"
   fi
+  mkdir -p "$lease_dir"
+  receipt="$lease_dir/fixture-lease-$$.json"
+  jq -n --arg path "$path" --arg holder "$holder" --arg id "fixture-lease-$$" \
+    '{path:$path,lease_id:$id,lease_holder:$holder}' > "$receipt"
+  if [ "$json" = 1 ]; then cat "$receipt"; else printf '%s\n' "$path"; fi
 fi
 SH
   } > "$fakebin/treehouse"

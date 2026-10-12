@@ -390,6 +390,39 @@ SH
   pass "shared helpers and runner keep fixture Git off an inherited repository location"
 )
 
+test_treehouse_lease_fixture() {
+  local dir="$TMP_ROOT/treehouse-lease" fakebin first second id
+  mkdir -p "$dir/slot-1" "$dir/slot-2"
+  fakebin=$(fm_fakebin "$dir")
+  fm_test_fake_treehouse_lease "$fakebin" "$dir/slot-1" "$dir/slot-2"
+  "$fakebin/treehouse" get --help >/dev/null || fail "lease help failed"
+  "$fakebin/treehouse" return --help >/dev/null || fail "return help failed"
+  "$fakebin/treehouse" status --help >/dev/null || fail "status help failed"
+  first=$("$fakebin/treehouse" get --lease --json --lease-holder first) || fail "first fixture acquisition failed"
+  second=$("$fakebin/treehouse" get --lease --json --lease-holder second) || fail "second fixture acquisition failed"
+  printf '%s' "$first" | jq -e --arg path "$dir/slot-1" '.path == $path and .lease_holder == "first" and (.lease_id | length > 0)' >/dev/null \
+    || fail "first receipt did not name its own slot and holder"
+  printf '%s' "$second" | jq -e --arg path "$dir/slot-2" '.path == $path and .lease_holder == "second"' >/dev/null \
+    || fail "second receipt did not name the distinct shared-pool slot"
+  id=$(printf '%s' "$first" | jq -r .lease_id)
+  [ "$id" != "$(printf '%s' "$second" | jq -r .lease_id)" ] || fail "fixture reused a lease identity"
+  if "$fakebin/treehouse" return --force --if-lease-id stale "$dir/slot-1"; then
+    fail "conditional fixture return accepted a stale identity"
+  fi
+  "$fakebin/treehouse" status --json | jq -e --arg id "$id" 'any(.[]; .lease_id == $id)' >/dev/null \
+    || fail "stale return removed the live lease"
+  "$fakebin/treehouse" return --force --if-lease-id "$id" "$dir/slot-1" || fail "matching conditional fixture return failed"
+  "$fakebin/treehouse" status --json | jq -e --arg path "$dir/slot-1" 'any(.[]; .path == $path and .lease_id == "")' >/dev/null \
+    || fail "matching return did not clear the fixture lease"
+  pass "Treehouse fixture exposes distinct JSON receipts and preserves leases on a stale conditional return"
+}
+
+if [ "${1:-}" = --treehouse-lease ]; then
+  test_treehouse_lease_fixture
+  exit 0
+fi
+test_treehouse_lease_fixture
+
 test_git_config_isolation || fail "Git fixture config isolation"
 test_inherited_git_location_isolation || fail "Git fixture location isolation"
 test_agent_standin_survives_a_multicall_sleep || fail "agent stand-in multicall case"

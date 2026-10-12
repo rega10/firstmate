@@ -1359,7 +1359,9 @@ spawn_abort_cleanup() {
       fi
     fi
   fi
-  if [ "$HERDR_PROJECTION_ABORT_CLEANUP" = 1 ] &&
+  if [ -n "$HERDR_PROJECTION_ABORT_SESSION" ] &&
+    { [ "$HERDR_PROJECTION_ABORT_CLEANUP" = 1 ] ||
+      { [ "$SPAWN_TREEHOUSE_LEASE_ACQUIRED" = 1 ] && [ "$SPAWN_FRESH_COMMIT_PENDING" = 1 ]; }; } &&
     [ "$HERDR_PRESENTATION_ORDER_LOCK_HELD" != 1 ]; then
     if ! spawn_herdr_presentation_order_lock_acquire "${HERDR_PROJECTION_ABORT_SESSION:-}"; then
       echo "warning: herdr presentation focus lock unavailable; retaining the projection journal and refusing concurrent abort cleanup" >&2
@@ -1372,10 +1374,6 @@ spawn_abort_cleanup() {
       "$HERDR_PROJECTION_ABORT_SESSION" \
       "$HERDR_PROJECTION_ABORT_TASK_PANE" \
       "$HERDR_PROJECTION_ABORT_SEEDED_PANE" || true
-  fi
-  if [ "$HERDR_PRESENTATION_ORDER_LOCK_HELD" = 1 ]; then
-    HERDR_PRESENTATION_ORDER_LOCK_HELD=0
-    fm_lock_release "$HERDR_PRESENTATION_ORDER_LOCK" || true
   fi
   if [ "$ORCA_ABORT_CLEANUP" = 1 ]; then
     ORCA_ABORT_CLEANUP=0
@@ -1441,13 +1439,18 @@ spawn_abort_cleanup() {
         echo "warning: could not lock the pool to release unpublished lease $TREEHOUSE_LEASE_ID" >&2
       fi
     fi
-    if [ "$SPAWN_TREEHOUSE_PROJECT_LOCK_HELD" = 1 ] && (cd "$PROJ_ABS" && treehouse return --force --if-lease-id "$TREEHOUSE_LEASE_ID" "$WT"); then
+    if { [ -z "$HERDR_PROJECTION_ABORT_SESSION" ] || [ "$HERDR_PRESENTATION_ORDER_LOCK_HELD" = 1 ]; } &&
+      [ "$SPAWN_TREEHOUSE_PROJECT_LOCK_HELD" = 1 ] && (cd "$PROJ_ABS" && treehouse return --force --if-lease-id "$TREEHOUSE_LEASE_ID" "$WT"); then
       if [ "$SPAWN_SLOT_CLAIMED" = 1 ]; then
         fm_treehouse_slot_owner_release "$WT" "$ID" || true
       fi
     else
       echo "warning: could not release unpublished Treehouse lease $TREEHOUSE_LEASE_ID for task $ID at $WT" >&2
     fi
+  fi
+  if [ "$HERDR_PRESENTATION_ORDER_LOCK_HELD" = 1 ]; then
+    HERDR_PRESENTATION_ORDER_LOCK_HELD=0
+    fm_lock_release "$HERDR_PRESENTATION_ORDER_LOCK" || true
   fi
   if [ "$SPAWN_TREEHOUSE_PROJECT_LOCK_HELD" = 1 ]; then
     SPAWN_TREEHOUSE_PROJECT_LOCK_HELD=0
@@ -4642,7 +4645,9 @@ elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
     fi
     SPAWN_SLOT_CLAIMED=1
   fi
-  if [ -z "$SPAWN_PROJECT_CAPACITY_ANY" ]; then
+  # Projected abort cleanup returns its lease before releasing presentation.
+  # Keep the existing pool-before-presentation lock order through delivery.
+  if [ -z "$SPAWN_PROJECT_CAPACITY_ANY" ] && [ "$HERDR_PRESENTATION_ORDER_LOCK_HELD" != 1 ]; then
     fm_lock_release "$SPAWN_TREEHOUSE_PROJECT_LOCK"
     SPAWN_TREEHOUSE_PROJECT_LOCK_HELD=0
   fi
@@ -5453,7 +5458,7 @@ fi
 # still being delivered, cannot observe or complete a fresh provisional record
 # between its state check and `tasks-axi start`, and a delivery failure cannot
 # follow a committed In-flight transition.
-if [ "$SPAWN_TREEHOUSE_PROJECT_LOCK_HELD" = 1 ]; then
+if [ "$SPAWN_TREEHOUSE_PROJECT_LOCK_HELD" = 1 ] && [ "$HERDR_PRESENTATION_ORDER_LOCK_HELD" != 1 ]; then
   SPAWN_TREEHOUSE_PROJECT_LOCK_HELD=0
   fm_lock_release "$SPAWN_TREEHOUSE_PROJECT_LOCK"
 fi
