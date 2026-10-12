@@ -1475,7 +1475,7 @@ The per-backend delta is required only for the backend resolved from `FM_BACKEND
 
 | Resolved backend | Additional tools |
 | --- | --- |
-| `tmux` | `tmux`, `treehouse` |
+| `tmux` | `tmux`, `jq`, `treehouse` |
 | `herdr` | `herdr`, `jq`, `treehouse` |
 | `zellij` | `zellij`, `jq`, `treehouse` |
 | `orca` | `orca` |
@@ -1483,12 +1483,13 @@ The per-backend delta is required only for the backend resolved from `FM_BACKEND
 
 The JSON-emitting adapters (`herdr`, `zellij`, `cmux`) need `jq` because their spawn and liveness paths parse backend JSON.
 Every session-provider-only backend (`tmux`, `herdr`, `zellij`, `cmux`) uses `treehouse` for worktrees.
+These backends also require `jq` to parse Treehouse lease receipts and retirement status.
 
 Backend tool availability uses the adapter's own executable resolver, so bootstrap and spawn agree on supported non-`PATH` locations such as cmux's bundled CLI.
 An unknown resolved backend emits `BACKEND_INVALID` and blocks dispatch instead of silently dropping its dependency delta or falling back to tmux.
 
 Orca provides both the task worktree and terminal endpoint (see "Runtime backend" above), so `backend=orca` requires only `orca` on top of the universal toolchain and skips both `treehouse` and every other backend's session CLI.
-A herdr, zellij, or cmux home is therefore never told `tmux` is missing, and the `treehouse` durable-lease upgrade check runs only for the backends that actually use treehouse.
+A herdr, zellij, or cmux home is therefore never told `tmux` is missing, and the Treehouse compatibility probe owned by the [`fm-bootstrap.sh` header](../bin/fm-bootstrap.sh) runs only for the backends that actually use Treehouse.
 
 **Feature-specific requirements**
 

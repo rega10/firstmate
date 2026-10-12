@@ -66,12 +66,22 @@ SH
   cat > "$fakebin/treehouse" <<'SH'
 #!/usr/bin/env bash
 if [ "${1:-}" = get ] && [ "${2:-}" = --help ]; then
-  if [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-}" = 1 ]; then
-    printf '%s\n' 'Usage: treehouse get [--lease] [--lease-holder <holder>]'
+  if [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-0}" != 0 ]; then
+    if [ "$FM_FAKE_TREEHOUSE_LEASE_HELP" = 2 ]; then
+      printf '%s\n' 'Usage: treehouse get [--lease] [--lease-holder <holder>]'
+      exit 0
+    fi
+    printf '%s\n' 'Usage: treehouse get [--lease] [--json] [--lease-holder <holder>]'
   else
     printf '%s\n' 'Usage: treehouse get'
   fi
   exit 0
+fi
+if [ "${1:-}" = return ] && [ "${2:-}" = --help ] && [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-0}" != 0 ] && [ "$FM_FAKE_TREEHOUSE_LEASE_HELP" != 3 ]; then
+  printf '%s\n' 'Usage: treehouse return [--if-lease-id <id>]'
+fi
+if [ "${1:-}" = status ] && [ "${2:-}" = --help ] && [ "${FM_FAKE_TREEHOUSE_LEASE_HELP:-0}" != 0 ] && [ "$FM_FAKE_TREEHOUSE_LEASE_HELP" != 4 ]; then
+  printf '%s\n' 'Usage: treehouse status [--json]'
 fi
 exit 0
 SH
@@ -305,7 +315,9 @@ test_bootstrap_reporting() {
     esac
   done <<'ROWS'
 treehouse --lease support is accepted silently^1^0.2.6^1^manual^empty^^
-treehouse without --lease reports an upgrade, gh auth is fine^0^0.2.6^1^-^grep^MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^NEEDS_GH_AUTH
+treehouse without JSON receipts reports an upgrade^2^0.2.6^1^manual^grep^CAPABILITY_UNAVAILABLE: treehouse (requires JSON lease acquisition, JSON status, and conditional return; upgrade: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^
+treehouse without conditional release reports an upgrade^3^0.2.6^1^manual^grep^CAPABILITY_UNAVAILABLE: treehouse (requires JSON lease acquisition, JSON status, and conditional return; upgrade: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^
+treehouse without --lease reports an upgrade, gh auth is fine^0^0.2.6^1^-^grep^CAPABILITY_UNAVAILABLE: treehouse (requires JSON lease acquisition, JSON status, and conditional return; upgrade: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)^NEEDS_GH_AUTH
 compatible tasks-axi is silent by default^1^0.2.6^1^-^empty^^
 missing tasks-axi is required by default^1^-^1^-^exact^MISSING: tasks-axi (install: npm install -g tasks-axi)^
 incompatible tasks-axi is required by default^1^0.1.0^1^-^exact^MISSING: tasks-axi (install: npm install -g tasks-axi)^
@@ -659,9 +671,8 @@ test_unknown_backend_reports_invalid_configuration() {
   pass "bootstrap: unknown resolved backends fail closed with an actionable diagnostic"
 }
 
-test_json_backends_require_jq_not_tmux() {
+test_treehouse_backends_require_jq() {
   local backend case_dir fakebin bash_env out
-  # herdr/zellij/cmux parse their backend's JSON output, so jq is a genuine dep.
   # jq lives in a system BASE_PATH dir on many hosts, so force it missing with a
   # command()/jq() override (the same technique the git-required case uses) to keep
   # the assertion host-independent.
@@ -671,9 +682,8 @@ test_json_backends_require_jq_not_tmux() {
     mkdir -p "$case_dir/home/config"
     printf '%s\n' manual > "$case_dir/home/config/backlog-backend"
     printf '%s\n' "$backend" > "$case_dir/home/config/backend"
-    # Session CLI present, tmux absent, jq deliberately NOT stubbed and masked below.
     fakebin=$(make_fake_toolchain "$case_dir")
-    rm -f "$fakebin/tmux"
+    [ "$backend" = tmux ] || rm -f "$fakebin/tmux"
     fm_fake_exit0 "$fakebin" "$backend"
     bash_env="$case_dir/no-jq.bash"
     cat > "$bash_env" <<'SH'
@@ -690,17 +700,18 @@ SH
     out=$(PATH="$fakebin:$BASE_PATH" BASH_ENV="$bash_env" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
       FM_FAKE_TREEHOUSE_LEASE_HELP=1 "$ROOT/bin/fm-bootstrap.sh")
     assert_contains "$out" "MISSING: jq" "backend=$backend must fail closed on missing jq"
-    assert_not_contains "$out" "MISSING: tmux" "backend=$backend must not demand tmux when jq is missing"
+    assert_not_contains "$out" "MISSING: tmux" "backend=$backend must not demand an absent or already available tmux"
   done <<'ROWS'
+tmux
 herdr
 zellij
 cmux
 ROWS
-  pass "bootstrap: JSON-emitting backends require jq (their genuine dep), never tmux"
+  pass "bootstrap: every Treehouse backend requires jq without demanding inactive tools"
 }
 
 test_treehouse_lease_check_follows_resolved_backend() {
-  local case_dir fakebin out
+  local case_dir fakebin out capability
   # A treehouse that lacks durable --lease support is only a problem for a backend
   # that actually uses treehouse. Orca owns its own worktrees, so an old treehouse
   # must NOT trip MISSING: treehouse under backend=orca...
@@ -725,8 +736,17 @@ test_treehouse_lease_check_follows_resolved_backend() {
   fakebin=$(make_fake_toolchain_no_tmux "$case_dir" herdr)
   out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
     "$ROOT/bin/fm-bootstrap.sh")
-  assert_contains "$out" "MISSING: treehouse" "backend=herdr must still require treehouse with durable lease support"
+  assert_contains "$out" "CAPABILITY_UNAVAILABLE: treehouse" "backend=herdr must still require treehouse with durable lease support"
   assert_not_contains "$out" "MISSING: tmux" "backend=herdr must not demand tmux even when treehouse is too old"
+  for capability in 2 3 4; do
+    out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
+      FM_FAKE_TREEHOUSE_LEASE_HELP="$capability" "$ROOT/bin/fm-bootstrap.sh")
+    assert_contains "$out" "CAPABILITY_UNAVAILABLE: treehouse" "bootstrap accepted a missing lease JSON, conditional return, or status JSON interface"
+    assert_not_contains "$out" "MISSING: treehouse" "an installed provider with missing capabilities is not a missing binary"
+  done
+  out=$(PATH="$fakebin:$BASE_PATH" FM_HOME="$case_dir/home" FM_ROOT_OVERRIDE="$case_dir/home" \
+    FM_FAKE_TREEHOUSE_LEASE_HELP=1 "$ROOT/bin/fm-bootstrap.sh")
+  [ -z "$out" ] || fail "bootstrap refused the complete lease interfaces: $out"
   pass "bootstrap: the treehouse lease check follows the resolved backend's worktree provider"
 }
 
@@ -1244,6 +1264,12 @@ ROWS
   pass "bootstrap gates resolver fields and additive harnesses on the typed key"
 }
 
+if [ "${1:-}" = --lease-dependencies ]; then
+  test_treehouse_backends_require_jq
+  test_treehouse_lease_check_follows_resolved_backend
+  exit 0
+fi
+
 test_bootstrap_reporting
 test_no_mistakes_min_version
 test_gh_axi_min_version
@@ -1257,7 +1283,7 @@ test_session_provider_backends_gate_own_cli_not_tmux
 test_herdr_install_requires_manual_action
 test_cmux_bundled_cli_satisfies_dependency
 test_unknown_backend_reports_invalid_configuration
-test_json_backends_require_jq_not_tmux
+test_treehouse_backends_require_jq
 test_treehouse_lease_check_follows_resolved_backend
 test_fleet_sync_timeout_scales_with_origin_backed_project_count
 test_fleet_sync_timeout_floor_preserves_small_fleets

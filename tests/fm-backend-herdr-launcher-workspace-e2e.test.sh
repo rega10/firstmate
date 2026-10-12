@@ -207,7 +207,8 @@ done
 mkdir -p "$PRIMARY_HOME/data/$SM2_ID"
 printf 'trivial secondmate charter brief: nothing to do.\n' > "$PRIMARY_HOME/data/$SM2_ID/brief.md"
 
-PROJ="$TMP_ROOT/scratch-project"; make_scratch_project "$PROJ"
+PROJ="$TMP_ROOT/scratch-project"
+make_scratch_project "$PROJ"
 
 # One unrelated workspace, kept FOCUSED throughout, so every placement result
 # below is also evidence that the globally focused workspace is never the target.
@@ -248,6 +249,12 @@ spawn_from_launcher "$LAUNCH_PRIMARY_PANE" "$PRIMARY_HOME" uniqB "$PROJ" --mode 
 [ "$SPAWN_RC" -eq 0 ] || fail "a primary spawn from a launcher pane failed"$'\n'"$(cat "$SPAWN_ERR")"
 UNIQB_META="$PRIMARY_HOME/state/uniqB.meta"
 record_worktree "$UNIQB_META"
+[ "$(sed -n 's/^project=//p' "$UNIQA_META")" = "$PROJ" ] &&
+  [ "$(sed -n 's/^project=//p' "$UNIQB_META")" = "$PROJ" ] || fail "placement workers did not share the fixture project"
+[ "$(sed -n 's/^worktree=//p' "$UNIQA_META")" != "$(sed -n 's/^worktree=//p' "$UNIQB_META")" ] \
+  || fail "placement workers reused the same leased slot"
+[ "$(sed -n 's/^treehouse_lease_id=//p' "$UNIQA_META")" != "$(sed -n 's/^treehouse_lease_id=//p' "$UNIQB_META")" ] \
+  || fail "placement workers did not receive distinct leases"
 UNIQB_PANE=$(grep '^herdr_pane_id=' "$UNIQB_META" | cut -d= -f2-)
 [ "$(workspace_of_pane "$UNIQB_PANE")" = "$WS_PRIMARY" ] \
   || fail "a crewmate launched from the 'firstmate' workspace must stay in it"

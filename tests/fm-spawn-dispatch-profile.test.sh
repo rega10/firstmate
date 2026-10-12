@@ -140,6 +140,24 @@ $1
 EOF
 }
 
+prepare_second_batch_slot() {  # <second-task-id>
+  git -C "$PROJ_DIR" worktree add --quiet -b "$1" "$CASE_DIR/wt2" || fail "could not create the second batch slot"
+  fm_test_fake_treehouse_lease "$FAKEBIN_DIR" "$WT_DIR" "$CASE_DIR/wt2"
+  mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux-single"
+  cat > "$FAKEBIN_DIR/tmux" <<SH
+#!/usr/bin/env bash
+case "\$*" in
+  *"#{pane_current_path}"*)
+    case "\$*" in
+      *"fm-$1"*) printf '%s\\n' '$CASE_DIR/wt2'; exit 0 ;;
+    esac
+    ;;
+esac
+exec '$FAKEBIN_DIR/tmux-single' "\$@"
+SH
+  chmod +x "$FAKEBIN_DIR/tmux"
+}
+
 assert_meta_profile() {
   local meta=$1 harness=$2 model=$3 effort=$4
   assert_grep "harness=$harness" "$meta" "meta missing harness=$harness"
@@ -319,6 +337,8 @@ test_home_defaults_preserve_absolute_or_resolve_relative_paths() {
   assert_contains "$launch" "< '$home_real/data/$relative_id/launch-brief.md'" \
     "relative FM_HOME leaked into the default cross-process brief path"
 
+  # Retire the first fake worker before offering its slot through the home alias.
+  rm "$HOME_DIR/state/$relative_id.meta"
   linked_home="$CASE_DIR/home-link"
   ln -s "$HOME_DIR" "$linked_home"
   : > "$LAUNCH_LOG"
@@ -1026,12 +1046,18 @@ test_batch_preserves_native_ultra() {
   local rec id1=ultra-batch-a id2=ultra-batch-b out launch
   rec=$(make_spawn_case ultra-batch pi "$id1" "$id2")
   read_case_record "$rec"
+  prepare_second_batch_slot "$id2"
   enable_dispatch_profile "$HOME_DIR"
   out=$(run_ship_spawn "$HOME_DIR" "$WT_DIR" "$FAKEBIN_DIR" "$LAUNCH_LOG" \
     "$id1=$PROJ_DIR" "$id2=$PROJ_DIR" --harness pi --model codex-native/gpt-6-astra --effort ultra)
   expect_code 0 "$?" "native Ultra batch failed: $out"
   assert_meta_profile "$HOME_DIR/state/$id1.meta" pi codex-native/gpt-6-astra ultra
   assert_meta_profile "$HOME_DIR/state/$id2.meta" pi codex-native/gpt-6-astra ultra
+  assert_grep "worktree=$WT_DIR" "$HOME_DIR/state/$id1.meta" "first batch task lost its slot"
+  assert_grep "worktree=$CASE_DIR/wt2" "$HOME_DIR/state/$id2.meta" "second batch task lost its independent slot"
+  assert_grep "project=$PROJ_DIR" "$HOME_DIR/state/$id2.meta" "batch workers did not share the project"
+  [ "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id1.meta")" != "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id2.meta")" ] \
+    || fail "batch workers did not receive distinct leases"
   launch=$(cat "$LAUNCH_LOG")
   assert_contains "$launch" "--codex-effort 'ultra'" "batch dropped native effort"
   assert_not_contains "$launch" "--thinking 'ultra'" "batch passed an invalid Pi level"
@@ -1568,6 +1594,7 @@ test_batch_forwards_shared_profile_flags() {
   id2=profile-batch-b-z10
   rec=$(make_spawn_case profile-batch claude "$id1" "$id2")
   read_case_record "$rec"
+  prepare_second_batch_slot "$id2"
   enable_dispatch_profile "$HOME_DIR"
 
   out=$(run_ship_spawn "$HOME_DIR" "$WT_DIR" "$FAKEBIN_DIR" "$LAUNCH_LOG" \
@@ -1578,6 +1605,11 @@ test_batch_forwards_shared_profile_flags() {
   assert_contains "$out" "spawned $id2 harness=codex" "second batch task did not use shared harness"
   assert_meta_profile "$HOME_DIR/state/$id1.meta" codex gpt-5 high
   assert_meta_profile "$HOME_DIR/state/$id2.meta" codex gpt-5 high
+  assert_grep "worktree=$WT_DIR" "$HOME_DIR/state/$id1.meta" "first batch task lost its slot"
+  assert_grep "worktree=$CASE_DIR/wt2" "$HOME_DIR/state/$id2.meta" "second batch task lost its independent slot"
+  assert_grep "project=$PROJ_DIR" "$HOME_DIR/state/$id2.meta" "batch workers did not share the project"
+  [ "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id1.meta")" != "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id2.meta")" ] \
+    || fail "batch workers did not receive distinct leases"
   pass "batch dispatch forwards shared --harness, --model, and --effort to every pair"
 }
 
@@ -2071,6 +2103,12 @@ SH
     pass "$route inheritance preserves the allowlist on source errors and mirrors proven absence"
   done
 }
+
+if [ "${1:-}" = --batch ]; then
+  test_batch_preserves_native_ultra
+  test_batch_forwards_shared_profile_flags
+  exit 0
+fi
 
 test_launch_environment_allowlist
 test_launch_environment_invalid_config_refuses

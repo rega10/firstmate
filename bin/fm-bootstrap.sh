@@ -53,8 +53,8 @@
 #          A TANGLE line means the firstmate primary checkout (FM_ROOT) is stranded
 #          on a feature branch instead of its default branch - a crewmate's work
 #          landed in the primary instead of its own worktree; restore it per the line.
-#          treehouse is also MISSING when its installed version lacks
-#          "treehouse get --lease" support.
+#          CAPABILITY_UNAVAILABLE names an installed treehouse that lacks
+#          JSON lease acquisition, JSON status, and conditional-return support.
 #          no-mistakes is also MISSING when its installed version is older than
 #          1.46.0 (structured pipeline attestation floor; see CONTRIBUTING.md).
 #          The AXI-family floor policy is owned beside GH_AXI_MIN and
@@ -859,7 +859,15 @@ LAVISH_AXI_MIN=0.1.80
 LAVISH_AXI_BOARD_MIN=0.1.77
 
 treehouse_supports_lease() {
-  treehouse get --help 2>&1 | grep -Eq '(^|[^[:alnum:]_-])--lease([^[:alnum:]_-]|$)'
+  local get_help return_help status_help flag
+  get_help=$(treehouse get --help 2>&1) || return 1
+  return_help=$(treehouse return --help 2>&1) || return 1
+  status_help=$(treehouse status --help 2>&1) || return 1
+  for flag in lease json lease-holder; do
+    printf '%s\n' "$get_help" | grep -Eq "(^|[^[:alnum:]_-])--$flag([^[:alnum:]_-]|$)" || return 1
+  done
+  printf '%s\n' "$return_help" | grep -Eq '(^|[^[:alnum:]_-])--if-lease-id([^[:alnum:]_-]|$)' || return 1
+  printf '%s\n' "$status_help" | grep -Eq '(^|[^[:alnum:]_-])--json([^[:alnum:]_-]|$)'
 }
 
 # Shared semantic-version floor for the tool gates below. A version string that
@@ -1438,7 +1446,7 @@ detect_local_tools() {
   # own worktrees); an orca home must not be told to upgrade a provider it never uses.
   if fm_backend_list_contains "$TOOLS" treehouse \
     && command -v treehouse >/dev/null 2>&1 && ! treehouse_supports_lease; then
-    echo "MISSING: treehouse (install: $(install_cmd treehouse))"
+    echo "CAPABILITY_UNAVAILABLE: treehouse (requires JSON lease acquisition, JSON status, and conditional return; upgrade: $(install_cmd treehouse))"
   fi
   if command -v no-mistakes >/dev/null 2>&1 && ! tool_version_at_least no-mistakes "$NO_MISTAKES_MIN"; then
     echo "MISSING: no-mistakes (install: $(install_cmd no-mistakes))"

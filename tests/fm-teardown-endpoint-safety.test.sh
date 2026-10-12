@@ -31,7 +31,13 @@ printf ' <%s>' "$@" >> "${FM_RUNTIME_LOG:?}"
 printf '\n' >> "${FM_RUNTIME_LOG:?}"
 exit 0
 SH
-  chmod +x "$TMP_ROOT/$dir/fakebin/tmux" "$TMP_ROOT/$dir/fakebin/treehouse"
+  cat > "$TMP_ROOT/$dir/fakebin/ps" <<'SH'
+#!/usr/bin/env bash
+# Fixture teardown must never reap account-wide remote workers.
+[ "${1:-}" != -u ] || exit 0
+exec /bin/ps "$@"
+SH
+  chmod +x "$TMP_ROOT/$dir/fakebin/tmux" "$TMP_ROOT/$dir/fakebin/treehouse" "$TMP_ROOT/$dir/fakebin/ps"
   printf '%s\n' "$TMP_ROOT/$dir"
 }
 
@@ -287,6 +293,24 @@ test_supported_backend_endpoint_records_validate() {
     "window=workspace-1:surface-2" "endpoint_task_id=$id" "worktree=$dir/worktree" "project=$dir/project" \
     "backend=cmux" "cmux_workspace_id=workspace-1" "cmux_surface_id=surface-2"
   fm_backend_validate_task_endpoint "$dir/home/state/$id.meta" "$id" || fail "valid cmux endpoint refused"
+
+  for backend in tmux herdr zellij orca cmux; do
+    id="$backend-task"
+    awk -F= '$1 == "worktree" { print "worktree="; next } { print }' \
+      "$dir/home/state/$id.meta" > "$dir/pending"
+    printf 'kind=ship\ntreehouse_retiring_worktree=%s\ntreehouse_lease_id=receipt-id\n' "$dir/worktree" >> "$dir/pending"
+    if [ "$backend" = orca ]; then
+      if fm_backend_validate_task_endpoint "$dir/pending" "$id" 2>/dev/null; then
+        fail "Orca accepted a Treehouse retirement record"
+      fi
+    else
+      fm_backend_validate_task_endpoint "$dir/pending" "$id" || fail "$backend rejected a pending lease receipt"
+      awk -F= '$1 != "treehouse_lease_id"' "$dir/pending" > "$dir/missing-receipt"
+      if fm_backend_validate_task_endpoint "$dir/missing-receipt" "$id" 2>/dev/null; then
+        fail "$backend accepted an empty active worktree without a lease receipt"
+      fi
+    fi
+  done
 
   for backend in tmux herdr zellij orca cmux; do
     set +e

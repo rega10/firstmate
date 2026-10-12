@@ -297,9 +297,8 @@ fm_backend_validate_spawn() {  # <name>
 # single owner of the per-backend dependency delta, so bootstrap follows the
 # RESOLVED backend instead of demanding an inactive backend's tools. Each set is:
 #   - the session-provider CLI itself (tmux/herdr/zellij/orca/cmux);
-#   - jq, for the JSON-emitting adapters (herdr, zellij, cmux) whose spawn/liveness
-#     paths parse the backend's JSON output (see each adapter's
-#     tool check, e.g. fm_backend_herdr_tool_check);
+#   - jq, for Treehouse lease JSON (tmux, herdr, zellij, cmux) and JSON-emitting
+#     adapters whose spawn/liveness paths parse the backend's JSON output;
 #   - the treehouse worktree provider for every session-provider-only backend
 #     (tmux, herdr, zellij, cmux); orca owns its own task worktree and terminal,
 #     so it drops both treehouse and any other backend's session CLI.
@@ -307,7 +306,7 @@ fm_backend_validate_spawn() {  # <name>
 # 1 and prints nothing for an unknown backend.
 fm_backend_required_tools() {  # <backend>
   case "$1" in
-    tmux)   printf '%s' 'tmux treehouse' ;;
+    tmux)   printf '%s' 'tmux jq treehouse' ;;
     herdr)  printf '%s' 'herdr jq treehouse' ;;
     zellij) printf '%s' 'zellij jq treehouse' ;;
     cmux)   printf '%s' 'cmux jq treehouse' ;;
@@ -421,9 +420,20 @@ fm_backend_validate_task_endpoint() {  # <meta-file> <task-id>
     echo "REFUSED: task $id has a missing, empty, or ambiguous window endpoint; preserving task state." >&2
     return 1
   }
+  # A pending leased return retains endpoint identity but withdraws its active
+  # worktree claim. Only teardown may publish this receipt state.
   worktree=$(fm_backend_meta_exact_value "$meta" worktree) || {
-    echo "REFUSED: task $id has a missing, empty, or ambiguous worktree identity; preserving task state." >&2
-    return 1
+    if [ "$(grep -c '^worktree=' "$meta" 2>/dev/null)" = 1 ] &&
+      [ -z "$(fm_meta_get "$meta" worktree)" ] &&
+      [ -n "$(fm_backend_meta_exact_value "$meta" treehouse_lease_id)" ] &&
+      [ "$(fm_meta_get "$meta" backend)" != orca ] &&
+      { [ "$(fm_meta_get "$meta" kind)" = ship ] || [ "$(fm_meta_get "$meta" kind)" = scout ]; }; then
+      worktree=$(fm_backend_meta_exact_value "$meta" treehouse_retiring_worktree) || worktree=
+    fi
+    [ -n "$worktree" ] || {
+      echo "REFUSED: task $id has a missing, empty, or ambiguous worktree identity; preserving task state." >&2
+      return 1
+    }
   }
   project=$(fm_backend_meta_exact_value "$meta" project) || {
     echo "REFUSED: task $id has a missing, empty, or ambiguous project identity; preserving task state." >&2

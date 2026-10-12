@@ -392,6 +392,32 @@ fm_remote_job_ensure_worker "$REMOTE_ROOT" "$ACCOUNT_HOME" || fail "$FM_REMOTE_J
 NEW_WORKER_PID=$(cat "$STATE_ROOT/worker.pid")
 pass "worker identity binds the canonical configured code root"
 
+# Readiness is a process contract, not just a heartbeat and code digest.
+# Freeze those files at valid values while worker.pid names an unrelated process.
+# Remove poll delays so this negative case exercises the full bounded waiter.
+(
+  readiness_state="$TMP_ROOT/readiness-state"
+  readiness_bin="$TMP_ROOT/readiness-bin"
+  mkdir -p "$readiness_bin"
+  cat > "$readiness_bin/sleep" <<'SH'
+#!/bin/bash
+exit 0
+SH
+  chmod +x "$readiness_bin/sleep"
+  export FM_REMOTE_JOB_STATE_ROOT="$readiness_state"
+  fm_remote_job_prepare_state "$ACCOUNT_HOME" || fail "could not prepare the readiness fixture"
+  mkdir -p "$readiness_state/worker.lock"
+  printf '%s\n' "$$" > "$readiness_state/worker.pid"
+  printf '%s\n' "$$" > "$readiness_state/worker.lock/pid"
+  fm_remote_job_code_identity "$REMOTE_ROOT" "$ACCOUNT_HOME" > "$readiness_state/worker.identity"
+  : > "$readiness_state/worker.ready"
+  # shellcheck disable=SC2031 # Cadence fixture PATH changes stayed in their subshells.
+  if PATH="$readiness_bin:$PATH" fm_remote_job_wait_for_probe "$REMOTE_ROOT" "$ACCOUNT_HOME"; then
+    fail "fresh heartbeat and current code adopted a pid the worker did not record"
+  fi
+) || exit 1
+pass "worker readiness refuses an unrelated pid despite fresh heartbeat and current code"
+
 CRASHED_WORKER_PID=$NEW_WORKER_PID
 kill -KILL "$CRASHED_WORKER_PID"
 wait "$CRASHED_WORKER_PID" 2>/dev/null || true

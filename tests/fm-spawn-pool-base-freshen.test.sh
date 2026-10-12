@@ -5,7 +5,9 @@
 # advanced after the worktree was allocated.
 # These tests drive the real spawn path with a fake terminal, then prove it
 # starts the worker from the fetched origin tip, launches a clean origin-less
-# pool as-is, or stops when a configured origin is unusable.
+# pool as-is, or stops when a configured origin is unusable or another task
+# record still holds the returned slot. Real Treehouse cases also prove that
+# leases preserve an exited owner's checkout while another slot launches.
 set -u
 
 # shellcheck source=tests/fixtures.sh
@@ -144,14 +146,10 @@ test_linked_spawning_home_rejects_primary_before_refresh() {
         || fail "spawn did not refresh the genuine scout copy"
     else
       [ "$status" -ne 0 ] || fail "linked spawning home accepted $returned as a disposable copy"
-      # None of these is an isolated copy, so the worktree poll never adopts one
-      # and the wait runs out instead: the spawning directory fails the poll's
-      # own project comparison, and the repository primary (named directly or
-      # through a symlink) fails the isolation screen the poll shares with the
-      # guard. The refusal names the last path the pane reported.
-      assert_contains "$out" "did not enter an isolated worktree" \
+      # The receipt's isolation screen rejects the spawning directory and
+      # the repository primary, including a symlink to the primary.
+      assert_contains "$out" "did not yield an isolated worktree" \
         "spawn did not explain its isolation refusal"
-      assert_contains "$out" "last seen" "refusal did not name the path the pane reported"
       [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published task metadata"
       [ ! -e "$primary/.git/FETCH_HEAD" ] || fail "refused spawn fetched before proving isolation"
     fi
@@ -183,6 +181,8 @@ test_stale_pool_base_refreshes_before_branching() {
       "$branch_head" "$current" "$(cat "$POOL_DIR/advanced-main.txt")"
   fi
 
+  # The prior fixture task has been retired before its slot is offered again.
+  rm "$HOME_DIR/state/$id.meta"
   id='pool-current-base-repeat-r1'
   fm_test_spawn_brief "$HOME_DIR" "$id"
   out=$(run_spawn "$id" --mode no-mistakes --yolo off)
@@ -522,12 +522,14 @@ strand_submodule_pin_via_spawn() {  # <seed-id>
   fm_test_spawn_brief "$HOME_DIR" "$id"
   out=$(run_spawn "$id" --mode no-mistakes --yolo off)
   status=$?
-  expect_code 0 "$status" "the spawn that moves the submodule pin should succeed"
+  expect_code 0 "$status" "the spawn that moves the submodule pin should succeed"$'\n'"$out"
   assert_contains "$out" "spawned $id" "the spawn that moves the submodule pin did not report success"
   [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$ADVANCED_SHA" ] \
     || fail "the first spawn did not move the pooled base across the moved submodule pin"
   [ "$(git -C "$POOL_DIR/ui" rev-parse HEAD)" = "$SUBPIN1" ] \
     || fail "the first spawn did not strand the submodule on the pin the old base recorded"
+  # Retire the seed fixture task before the next task takes its stale slot.
+  rm "$HOME_DIR/state/$id.meta"
 }
 
 test_stale_submodule_pin_explains_itself() {
@@ -874,6 +876,448 @@ test_scout_base_branch_refused_on_gerrit_forge() {
   pass "a based scout on a forge=gerrit project is refused at spawn"
 }
 
+test_missing_jq_refuses_before_lease_allocation() {
+  local kind rec id out status before_meta
+  for kind in ship scout; do
+    id="pool-missing-jq-$kind"
+    rec=$(make_case "$id" "$id")
+    read_case_record "$rec"
+    printf 'worktree=%s\nkind=ship\n' "$CASE_DIR/unrelated-copy" > "$HOME_DIR/state/existing.meta"
+    before_meta=$(cat "$HOME_DIR/state/existing.meta")
+    cat > "$CASE_DIR/no-jq.bash" <<'SH'
+command() {
+  if [ "${1:-}" = -v ] && [ "${2:-}" = jq ]; then return 1; fi
+  builtin command "$@"
+}
+jq() { return 127; }
+SH
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = get ]; then
+  holder=
+  while [ "$#" -gt 0 ]; do
+    case "$1" in --lease-holder) shift; holder=$1 ;; esac
+    shift
+  done
+  touch "$FM_ALLOCATION_LOG"
+  printf '{"path":"%s","lease_id":"missing-jq-lease","lease_holder":"%s"}\n' "$FM_FAKE_PANE_PATH" "$holder"
+fi
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    if [ "$kind" = ship ]; then
+      out=$(BASH_ENV="$CASE_DIR/no-jq.bash" FM_ALLOCATION_LOG="$CASE_DIR/allocated" \
+        run_spawn "$id" --mode no-mistakes --yolo off)
+    else
+      out=$(BASH_ENV="$CASE_DIR/no-jq.bash" FM_ALLOCATION_LOG="$CASE_DIR/allocated" \
+        run_spawn "$id" --scout)
+    fi
+    status=$?
+    [ "$status" -ne 0 ] || fail "missing jq did not refuse the $kind spawn"
+    [ ! -e "$CASE_DIR/allocated" ] || fail "missing jq allowed a Treehouse lease allocation"
+    assert_contains "$out" 'jq is required' "missing jq refusal did not identify the dependency"
+    [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "missing jq published a task record"
+    [ "$(cat "$HOME_DIR/state/existing.meta")" = "$before_meta" ] || fail "missing jq changed an existing record"
+    pass "missing jq refuses $kind before lease allocation or task record mutation"
+  done
+}
+
+test_legacy_other_pool_does_not_block() {
+  local treehouse_bin variant rec id receipt held held_id held_pool before_state before_head before_meta out status
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for pool identity verification"
+  for variant in "$@"; do
+    id="pool-identity-$variant"
+    rec=$(make_case "$id" "$id")
+    read_case_record "$rec"
+    export TREEHOUSE_ROOT="$CASE_DIR/held-root"
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+      || fail "could not prepare the legacy pool"
+    held=$(printf '%s\n' "$receipt" | jq -r .path)
+    held_id=$(printf '%s\n' "$receipt" | jq -r .lease_id)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force --if-lease-id "$held_id" "$held") \
+      || fail "could not release the legacy slot"
+    printf 'worktree=%s\nproject=%s\nkind=ship\n' "$held" "$PROJECT_DIR" > "$HOME_DIR/state/legacy.meta"
+    held_pool=$(dirname "$(dirname "$held")")
+    before_state=$(cat "$held_pool/treehouse-state.json")
+    before_head=$(git -C "$held" rev-parse HEAD)
+    before_meta=$(cat "$HOME_DIR/state/legacy.meta")
+    if [ "$variant" = same-origin ]; then
+      git clone --quiet "file://$CASE_DIR/origin.git" "$CASE_DIR/project-b" || fail "could not clone the second project"
+      PROJECT_DIR="$CASE_DIR/project-b"
+    else
+      TREEHOUSE_ROOT="$CASE_DIR/free-root"
+    fi
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+      || fail "could not prepare the free pool"
+    POOL_DIR=$(printf '%s\n' "$receipt" | jq -r .path)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force --if-lease-id "$(printf '%s\n' "$receipt" | jq -r .lease_id)" "$POOL_DIR") \
+      || fail "could not release the free slot"
+    [ "$(dirname "$(dirname "$POOL_DIR")")" != "$held_pool" ] || fail "the fixture did not select a different allocator pool"
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" run_spawn "$id" --scout)
+    status=$?
+    expect_code 0 "$status" "a legacy record in a different $variant pool should not refuse spawn"$'\n'"$out"
+    assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn recorded the wrong allocator slot"
+    [ -n "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id.meta")" ] || fail "spawn did not persist its lease"
+    [ "$(cat "$held_pool/treehouse-state.json")" = "$before_state" ] || fail "spawn changed the legacy pool"
+    [ "$(git -C "$held" rev-parse HEAD)" = "$before_head" ] || fail "spawn refreshed the legacy slot"
+    [ "$(cat "$HOME_DIR/state/legacy.meta")" = "$before_meta" ] || fail "spawn changed the legacy record"
+    unset TREEHOUSE_ROOT
+    pass "a legacy record in a different $variant allocator pool does not block spawn"
+  done
+}
+
+test_free_pool_slot_launches_while_another_slot_is_recorded() {
+  local rec id held_slot held_meta before_meta before_claim before_head before_reflog out status
+  id='pool-free-slot'
+  rec=$(make_case free-slot "$id")
+  read_case_record "$rec"
+  lay_out_as_pool_slot
+  held_slot=$POOL_DIR
+  held_meta="$HOME_DIR/state/held-other-slot.meta"
+  printf 'worktree=%s\nkind=ship\nbackend=tmux\ntreehouse_lease_id=held-lease\n' "$held_slot" > "$held_meta"
+  printf 'task=held-other-slot\nhome=%s\n' "$HOME_DIR" > "$SLOT_CLAIM"
+  before_meta=$(cat "$held_meta")
+  before_claim=$(cat "$SLOT_CLAIM")
+  before_head=$(git -C "$held_slot" rev-parse HEAD)
+  before_reflog=$(git -C "$held_slot" reflog)
+
+  POOL_DIR="$CASE_DIR/slots/2/project"
+  git -C "$PROJECT_DIR" worktree add --quiet --detach "$POOL_DIR" "$INITIAL_SHA" \
+    || fail "could not create the free slot in the fixture repository"
+  printf '{"worktrees":[{"name":"1","path":"%s"},{"name":"2","path":"%s"}]}\n' \
+    "$held_slot" "$POOL_DIR" > "$CASE_DIR/slots/treehouse-state.json"
+  out=$(FM_FAKE_LAUNCH_LOG="$CASE_DIR/launch.log" run_spawn "$id" --mode no-mistakes --yolo off)
+  status=$?
+  expect_code 0 "$status" "spawn should accept free slot 2 while another task records slot 1"$'\n'"$out"
+  assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn did not record free slot 2"
+  assert_grep "task=$id" "$CASE_DIR/slots/2/.fm-slot-owner" "spawn did not claim free slot 2"
+  [ -s "$CASE_DIR/launch.log" ] || fail "spawn did not launch the worker in free slot 2"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse HEAD)" ] \
+    || fail "spawn did not refresh free slot 2"
+  [ "$(cat "$held_meta")" = "$before_meta" ] || fail "spawn changed the record for slot 1"
+  [ "$(cat "$SLOT_CLAIM")" = "$before_claim" ] || fail "spawn changed the claim for slot 1"
+  [ "$(git -C "$held_slot" rev-parse HEAD)" = "$before_head" ] || fail "spawn refreshed slot 1"
+  [ "$(git -C "$held_slot" reflog)" = "$before_reflog" ] || fail "spawn changed the reflog for slot 1"
+  pass "free slot 2 launches while another task still records slot 1 in the same pool"
+}
+
+test_pool_slot_still_recorded_by_another_task_refuses() {
+  local variant rec id held out status recorded before_meta before_claim before_head before_reflog
+  local owner_home root_home child sibling sibling_parent
+  for variant in unclaimed claimed-alias parent child sibling nested same-id; do
+    id="pool-record-conflict-$variant"
+    held="held-$variant"
+    rec=$(make_case "record-conflict-$variant" "$id")
+    read_case_record "$rec"
+    lay_out_as_pool_slot
+    root_home=$HOME_DIR
+    owner_home=$HOME_DIR
+    case "$variant" in
+      parent|child|sibling|nested|same-id)
+        child="$CASE_DIR/child-home"
+        mkdir -p "$child/state" "$child/data" "$child/config" "$child/projects"
+        printf 'codex\n' > "$child/config/crew-harness"
+        touch "$child/state/.last-watcher-beat"
+        printf 'schema=fm-secondmate-parent.v1\nroute=local\nparent_home=%s\n' "$root_home" \
+          > "$child/.fm-secondmate-parent"
+        printf '%s\n' "- child - fixture (home: $child; scope: test; projects: ; added 2026-01-01)" \
+          > "$root_home/data/secondmates.md"
+        if [ "$variant" = parent ]; then
+          HOME_DIR=$child
+          fm_test_spawn_brief "$HOME_DIR" "$id"
+        else
+          owner_home=$child
+        fi
+        if [ "$variant" = sibling ] || [ "$variant" = nested ]; then
+          sibling="$CASE_DIR/other-home"
+          sibling_parent=$root_home
+          mkdir -p "$sibling/state" "$sibling/data"
+          if [ "$variant" = nested ]; then
+            sibling_parent=$child
+            printf '%s\n' "- other - fixture (home: $sibling; scope: test; projects: ; added 2026-01-01)" \
+              > "$child/data/secondmates.md"
+          else
+            printf '%s\n' "- other - fixture (home: $sibling; scope: test; projects: ; added 2026-01-01)" \
+              >> "$root_home/data/secondmates.md"
+            HOME_DIR=$child
+            fm_test_spawn_brief "$HOME_DIR" "$id"
+          fi
+          printf 'schema=fm-secondmate-parent.v1\nroute=local\nparent_home=%s\n' \
+            "$sibling_parent" \
+            > "$sibling/.fm-secondmate-parent"
+          owner_home=$sibling
+        fi
+        [ "$variant" != same-id ] || held=$id
+        printf '%s\n' "- remote - fixture (host: unavailable; root: /unavailable; home: /unavailable; scope: test; projects: ; added 2026-01-01)" \
+          >> "$root_home/data/secondmates.md"
+        ;;
+    esac
+    # Track the new allocation endpoint independently from the held task.
+    mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux-base"
+    cat > "$FAKEBIN_DIR/tmux" <<'SH'
+#!/usr/bin/env bash
+case "${1:-}" in
+  new-window) touch "$FM_FAKE_NEW_ENDPOINT" ;;
+  kill-window)
+    [ "$*" = "kill-window -t =firstmate:=fm-$FM_FAKE_NEW_TASK" ] || exit 1
+    rm "$FM_FAKE_NEW_ENDPOINT"
+    ;;
+esac
+exec "$(dirname "$0")/tmux-base" "$@"
+SH
+    chmod +x "$FAKEBIN_DIR/tmux"
+    recorded=$POOL_DIR
+    if [ "$variant" != unclaimed ]; then
+      ln -s "$POOL_DIR" "$CASE_DIR/held-alias"
+      recorded="$CASE_DIR/held-alias/"
+      printf 'task=%s\nhome=%s\n' "$held" "$owner_home" > "$SLOT_CLAIM"
+    fi
+    # The worker has exited, so the pool may offer this slot again. Its task
+    # record still owns the copy, even when no slot-owner claim was written.
+    cat > "$owner_home/state/$held.meta" <<EOF
+window=firstmate:fm-$held
+worktree=$recorded
+project=$PROJECT_DIR
+harness=codex
+kind=ship
+mode=no-mistakes
+yolo=off
+backend=tmux
+EOF
+    printf 'done: awaiting review\n' > "$owner_home/state/$held.status"
+    mkdir "$CASE_DIR/unrelated-copy"
+    printf 'worktree=%s\nkind=scout\n' "$CASE_DIR/unrelated-copy" \
+      > "$owner_home/state/unrelated.meta"
+    before_meta=$(cat "$owner_home/state/$held.meta")
+    before_claim=$(cat "$SLOT_CLAIM" 2>/dev/null || true)
+    before_head=$(git -C "$POOL_DIR" rev-parse HEAD)
+    before_reflog=$(git -C "$POOL_DIR" reflog)
+
+    out=$(FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" FM_FAKE_NEW_TASK="$id" \
+      FM_FAKE_LAUNCH_LOG="$CASE_DIR/launch.log" run_spawn "$id" --mode no-mistakes --yolo off)
+    status=$?
+    [ "$status" -ne 0 ] || fail "spawn reused a slot still named by task $held"$'\n'"$out"
+    assert_contains "$out" "$id" "refusal did not name the attempted task"
+    assert_contains "$out" "$held" "refusal did not name the holding task"
+    assert_contains "$out" "$POOL_DIR" "refusal did not name the held slot"
+    [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published task metadata"
+    [ ! -e "$CASE_DIR/new-endpoint" ] || fail "refused spawn left its allocation endpoint open"
+    [ ! -e "$HOME_DIR/state/$id.git-hooks" ] || fail "refused spawn installed task hooks"
+    [ ! -s "$CASE_DIR/launch.log" ] || fail "refused spawn launched a worker"
+    [ "$(cat "$owner_home/state/$held.meta")" = "$before_meta" ] || fail "spawn changed the holding task record"
+    [ "$(cat "$SLOT_CLAIM" 2>/dev/null || true)" = "$before_claim" ] || fail "spawn changed the held slot claim"
+    [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$before_head" ] || fail "spawn refreshed the held slot"
+    [ "$(git -C "$POOL_DIR" reflog)" = "$before_reflog" ] || fail "spawn touched the held slot reflog"
+    [ ! -e "$PROJECT_DIR/.git/FETCH_HEAD" ] || fail "spawn fetched before refusing the held slot"
+
+    # Remove only the competing fixture record. The same slot and any old
+    # claim must then follow the ordinary successful spawn path.
+    rm "$owner_home/state/$held.meta"
+    out=$(FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" FM_FAKE_NEW_TASK="$id" \
+      run_spawn "$id" --mode no-mistakes --yolo off)
+    status=$?
+    expect_code 0 "$status" "spawn should accept the slot once no other task records it"$'\n'"$out"
+    assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "ordinary spawn did not record its slot"
+    assert_grep "task=$id" "$SLOT_CLAIM" "ordinary spawn did not claim its slot"
+    [ -e "$CASE_DIR/new-endpoint" ] || fail "ordinary spawn closed its allocation endpoint"
+    pass "the $variant slot is refused while another task records it and launches after that record is removed"
+  done
+}
+
+# Real Treehouse acquisition refreshes an idle slot even with --no-fetch.
+# Keep the terminal simulated, but execute the allocator instead of assuming
+# that it leaves the returned checkout unchanged.
+test_real_treehouse_preserves_a_recorded_stale_slot() {
+  local treehouse_bin rec id out status before_head before_reflog before_state before_claim held_meta source_project project
+  treehouse_bin=$(command -v treehouse) || {
+    printf 'ok - skip: treehouse not found for recorded stale-slot regression\n'
+    return 0
+  }
+  id='pool-real-recorded-stale'
+  rec=$(make_case real-recorded-stale "$id")
+  read_case_record "$rec"
+  # Allocate from the initial local refs. make_case already advanced origin,
+  # so the next acquisition would reset this idle checkout to that newer tip.
+  export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+  POOL_DIR=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" \
+    "$treehouse_bin" get --lease --no-fetch) || fail "real Treehouse setup failed"
+  case "$POOL_DIR" in
+    "$CASE_DIR/"*) ;;
+    *) fail "Treehouse allocated outside the fixture: $POOL_DIR" ;;
+  esac
+  (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return "$POOL_DIR") \
+    || fail "could not retire the fixture lease"
+  SLOT_CLAIM="$(dirname "$POOL_DIR")/.fm-slot-owner"
+  printf 'task=held-real\nhome=%s\n' "$HOME_DIR" > "$SLOT_CLAIM"
+  held_meta="$HOME_DIR/state/held-real.meta"
+  printf 'worktree=%s\nkind=ship\nbackend=tmux\n' "$POOL_DIR" > "$held_meta"
+  before_head=$(git -C "$POOL_DIR" rev-parse HEAD)
+  before_reflog=$(git -C "$POOL_DIR" reflog)
+  before_claim=$(cat "$SLOT_CLAIM")
+  before_state=$(cat "$(dirname "$(dirname "$POOL_DIR")")/treehouse-state.json")
+  [ "$before_head" = "$INITIAL_SHA" ] || fail "fixture slot is not stale"
+  cp "$held_meta" "$CASE_DIR/held.before"
+
+  # Forward Treehouse commands to the real executable under the isolated root.
+  cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = get ]; then
+  "$FM_REAL_TREEHOUSE" "$@" | tee "$FM_REAL_ACQUIRE_LOG"
+else
+  exec "$FM_REAL_TREEHOUSE" "$@"
+fi
+SH
+  mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux-base"
+  cat > "$FAKEBIN_DIR/tmux" <<'SH'
+#!/usr/bin/env bash
+case "${1:-}" in
+  new-window) touch "$FM_FAKE_NEW_ENDPOINT" ;;
+  kill-window) rm -f "$FM_FAKE_NEW_ENDPOINT" ;;
+
+esac
+exec "$(dirname "$0")/tmux-base" "$@"
+SH
+  chmod +x "$FAKEBIN_DIR/treehouse" "$FAKEBIN_DIR/tmux"
+  source_project=$PROJECT_DIR
+  git clone --quiet "file://$CASE_DIR/origin.git" "$CASE_DIR/another/project" \
+    || fail "could not create the second source clone"
+  # Same-name clones of one origin resolve to the same Treehouse pool, but
+  # have different common Git directories. Both must preserve the held copy.
+  for project in "$source_project" "$CASE_DIR/another/project"; do
+    PROJECT_DIR=$project
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" FM_REAL_PROJECT="$PROJECT_DIR" \
+      FM_REAL_ACQUIRE_LOG="$CASE_DIR/acquire.log" FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" \
+      FM_FAKE_LAUNCH_LOG="$CASE_DIR/launch.log" run_spawn "$id" --mode no-mistakes --yolo off)
+    status=$?
+    [ "$status" -ne 0 ] || fail "spawn accepted the real recorded slot: $out"
+    assert_contains "$out" 'is still recorded by task held-real' "spawn missed the held record"
+    [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$before_head" ] \
+      || fail "real Treehouse refreshed the held checkout before spawn refused it"
+    [ "$(git -C "$POOL_DIR" reflog)" = "$before_reflog" ] || fail "spawn changed the held reflog"
+    [ "$(cat "$(dirname "$(dirname "$POOL_DIR")")/treehouse-state.json")" = "$before_state" ] \
+      || fail "spawn changed the held Treehouse state"
+    [ "$(cat "$SLOT_CLAIM")" = "$before_claim" ] || fail "spawn replaced the held claim"
+    cmp -s "$held_meta" "$CASE_DIR/held.before" || fail "spawn changed the held task record"
+    [ ! -e "$CASE_DIR/new-endpoint" ] || fail "refused spawn left its new endpoint"
+    [ ! -s "$CASE_DIR/launch.log" ] || fail "refused spawn launched a worker"
+    [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published metadata"
+    [ ! -e "$POOL_DIR/advanced-main.txt" ] || fail "spawn changed held checkout files"
+    [ ! -e "$CASE_DIR/acquire.log" ] || fail "spawn acquired the held slot before refusing it"
+  done
+  PROJECT_DIR=$source_project
+
+  # Retiring the record permits acquisition, including Treehouse's refresh.
+  rm "$held_meta"
+  out=$(FM_REAL_TREEHOUSE="$treehouse_bin" FM_REAL_PROJECT="$PROJECT_DIR" \
+    FM_REAL_ACQUIRE_LOG="$CASE_DIR/acquire.log" FM_FAKE_NEW_ENDPOINT="$CASE_DIR/new-endpoint" \
+    run_spawn "$id" --mode no-mistakes --yolo off)
+  status=$?
+  expect_code 0 "$status" "retired record should permit real Treehouse acquisition"$'\n'"$out"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse HEAD)" ] \
+    || fail "released slot did not refresh to the advanced origin"
+  assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn did not reuse the released slot"
+  assert_grep "task=$id" "$SLOT_CLAIM" "spawn did not claim the released slot"
+  unset TREEHOUSE_ROOT
+  pass "real Treehouse preserves a recorded stale slot and refreshes it after retirement"
+}
+
+# Execute real durable allocation with only the terminal and harness simulated.
+# Every allocation and receipt lives in this case's private Treehouse root.
+test_real_lease_survives_exit_and_failed_publication() {
+  local treehouse_bin rec id receipt held held_id held_before free_receipt out status lease_id phase
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for the lease regression"
+  for phase in success publication-failure; do
+    id="pool-lease-$phase"
+    rec=$(make_case "lease-$phase" "$id")
+    read_case_record "$rec"
+    export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch --lease-holder "$HOME_DIR:held") || fail "could not lease the held slot"
+    held=$(printf '%s\n' "$receipt" | jq -r .path)
+    held_id=$(printf '%s\n' "$receipt" | jq -r .lease_id)
+    held_before=$(git -C "$held" rev-parse HEAD)
+    printf 'worktree=%s\ntreehouse_lease_id=%s\ntreehouse_lease_holder=%s:held\nkind=ship\n' "$held" "$held_id" "$HOME_DIR" > "$HOME_DIR/state/held.meta"
+    # The acquisition process has exited. Reserve and return a second slot so
+    # its path is known to the terminal simulator before the tested spawn.
+    free_receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) || fail "could not prepare the free slot"
+    POOL_DIR=$(printf '%s\n' "$free_receipt" | jq -r .path)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force --if-lease-id "$(printf '%s\n' "$free_receipt" | jq -r .lease_id)" "$POOL_DIR") || fail "could not return the free slot"
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+set -o pipefail
+printf '%s\n' "$*" >> "$FM_LEASE_CALL_LOG"
+if [ "${1:-}" = get ]; then
+  "$FM_REAL_TREEHOUSE" "$@" | tee "$FM_LEASE_RECEIPT"
+else
+  exec "$FM_REAL_TREEHOUSE" "$@"
+fi
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    if [ "$phase" = publication-failure ]; then
+      cat > "$FAKEBIN_DIR/mv" <<'SH'
+#!/usr/bin/env bash
+for arg in "$@"; do
+  [ "$arg" != "$FM_FAIL_META" ] || exit 1
+done
+exec /bin/mv "$@"
+SH
+      chmod +x "$FAKEBIN_DIR/mv"
+    fi
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" FM_LEASE_CALL_LOG="$CASE_DIR/lease-calls" \
+      FM_LEASE_RECEIPT="$CASE_DIR/receipt" FM_FAIL_META="$HOME_DIR/state/$id.meta" run_spawn "$id" --scout)
+    status=$?
+    lease_id=$(jq -r .lease_id "$CASE_DIR/receipt")
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" status --json) || fail "status failed"
+    printf '%s\n' "$receipt" | jq -e --arg held "$held_id" '.[] | select(.lease_id == $held and .status == "leased")' >/dev/null || fail "the exited owner's lease was lost"
+    [ "$(git -C "$held" rev-parse HEAD)" = "$held_before" ] || fail "spawn refreshed the held slot"
+    if [ "$phase" = success ]; then
+      expect_code 0 "$status" "a real leased pool should spawn into its free slot"$'\n'"$out"
+      assert_grep "treehouse_lease_id=$lease_id" "$HOME_DIR/state/$id.meta" "spawn lost the lease identity"
+      assert_grep "treehouse_lease_holder=$HOME_DIR:$id" "$HOME_DIR/state/$id.meta" "spawn lost the lease holder"
+      assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn recorded the wrong receipt path"
+      printf '%s\n' "$receipt" | jq -e --arg id "$lease_id" '.[] | select(.lease_id == $id)' >/dev/null || fail "spawn lease was not durable"
+    else
+      [ "$status" -ne 0 ] || fail "spawn succeeded despite failed record publication"
+      [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "failed publication left an active record"
+      assert_grep "return --force --if-lease-id $lease_id $POOL_DIR" "$CASE_DIR/lease-calls" "rollback did not return the exact receipt"
+      printf '%s\n' "$receipt" | jq -e --arg id "$lease_id" 'all(.[]; .lease_id != $id)' >/dev/null || fail "failed publication leaked its lease"
+    fi
+    unset TREEHOUSE_ROOT
+    pass "real Treehouse lease: $phase preserves the exited owner's allocation"
+  done
+}
+
+if [ "${1:-}" = --missing-jq ]; then
+  test_missing_jq_refuses_before_lease_allocation
+  exit 0
+fi
+
+if [ "${1:-}" = --pool-identity ]; then
+  test_legacy_other_pool_does_not_block "${2:-same-origin}"
+  exit 0
+fi
+
+if [ "${1:-}" = --lease ]; then
+  test_missing_jq_refuses_before_lease_allocation
+  test_legacy_other_pool_does_not_block same-origin different-root
+  test_free_pool_slot_launches_while_another_slot_is_recorded
+  test_real_lease_survives_exit_and_failed_publication
+  test_real_treehouse_preserves_a_recorded_stale_slot
+  test_pool_slot_still_recorded_by_another_task_refuses
+  exit 0
+fi
+
+test_missing_jq_refuses_before_lease_allocation
+test_legacy_other_pool_does_not_block same-origin different-root
+test_real_lease_survives_exit_and_failed_publication
+
+test_free_pool_slot_launches_while_another_slot_is_recorded
+test_real_treehouse_preserves_a_recorded_stale_slot
+
+test_pool_slot_still_recorded_by_another_task_refuses
 test_remote_seeded_home_spawns_from_treehouse_pool
 test_pool_slot_claim_follows_the_spawn_outcome
 test_linked_spawning_home_rejects_primary_before_refresh
