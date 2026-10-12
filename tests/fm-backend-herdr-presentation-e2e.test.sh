@@ -413,11 +413,8 @@ EOF
 }
 
 spawn_task() {  # <id> <home> <project> [extra fm-spawn args...]; SPAWN_DEADLINE_SECONDS bounds the run
-  local id=$1 home=$2 project="$3-$1"
+  local id=$1 home=$2 project=$3
   shift 3
-  # Simultaneous workers need separate pools while their task records exist.
-  # Repeated spawns of the same task keep the same project for recovery.
-  [ -d "$project" ] || make_project "$project" || return 1
   local -a deadline_cmd=()
   [ -z "${SPAWN_DEADLINE_SECONDS:-}" ] || deadline_cmd=(fm_run_timed "$SPAWN_DEADLINE_SECONDS")
   FM_GATE_REFUSE_BYPASS=1 FM_SPAWN_NO_GUARD=1 FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
@@ -793,6 +790,12 @@ ORDER_A_META="$HOME_DIR/state/order-a.meta"
 ORDER_B_META="$HOME_DIR/state/order-b.meta"
 remember_meta_worktree "$ORDER_A_META" >/dev/null
 remember_meta_worktree "$ORDER_B_META" >/dev/null
+[ "$(sed -n 's/^project=//p' "$ORDER_A_META")" = "$PROJECT_DIR" ] &&
+  [ "$(sed -n 's/^project=//p' "$ORDER_B_META")" = "$PROJECT_DIR" ] || fail "concurrent workers did not share the fixture project"
+[ "$(sed -n 's/^worktree=//p' "$ORDER_A_META")" != "$(sed -n 's/^worktree=//p' "$ORDER_B_META")" ] \
+  || fail "concurrent workers reused the same leased slot"
+[ "$(sed -n 's/^treehouse_lease_id=//p' "$ORDER_A_META")" != "$(sed -n 's/^treehouse_lease_id=//p' "$ORDER_B_META")" ] \
+  || fail "concurrent workers did not receive distinct leases"
 
 ORDER_LIST=$(lab workspace list) || fail "could not inspect concurrent presentation ordering"
 CREATED_LABELS=$(projection_labels_from_log "$PROJECTION_ORDER_START")

@@ -127,8 +127,6 @@ SPAWN_OUT=; SPAWN_ERR=; SPAWN_RC=
 spawn_from_launcher() {
   local pane=$1 home=$2 id=$3 proj=$4
   shift 4
-  # Keep simultaneous placement fixtures in independent Treehouse pools.
-  [ "$proj" != "$PROJ" ] || proj="$TMP_ROOT/$id/scratch-project"
   SPAWN_OUT="$TMP_ROOT/$id.out"; SPAWN_ERR="$TMP_ROOT/$id.err"
   if [ -n "$pane" ]; then
     env HERDR_ENV=1 HERDR_PANE_ID="$pane" HERDR_SESSION="$HERDR_LAB_SESSION" \
@@ -210,9 +208,7 @@ mkdir -p "$PRIMARY_HOME/data/$SM2_ID"
 printf 'trivial secondmate charter brief: nothing to do.\n' > "$PRIMARY_HOME/data/$SM2_ID/brief.md"
 
 PROJ="$TMP_ROOT/scratch-project"
-for id in uniqA uniqB dupC dupD staleF smE presU presD; do
-  make_scratch_project "$TMP_ROOT/$id/scratch-project"
-done
+make_scratch_project "$PROJ"
 
 # One unrelated workspace, kept FOCUSED throughout, so every placement result
 # below is also evidence that the globally focused workspace is never the target.
@@ -253,6 +249,12 @@ spawn_from_launcher "$LAUNCH_PRIMARY_PANE" "$PRIMARY_HOME" uniqB "$PROJ" --mode 
 [ "$SPAWN_RC" -eq 0 ] || fail "a primary spawn from a launcher pane failed"$'\n'"$(cat "$SPAWN_ERR")"
 UNIQB_META="$PRIMARY_HOME/state/uniqB.meta"
 record_worktree "$UNIQB_META"
+[ "$(sed -n 's/^project=//p' "$UNIQA_META")" = "$PROJ" ] &&
+  [ "$(sed -n 's/^project=//p' "$UNIQB_META")" = "$PROJ" ] || fail "placement workers did not share the fixture project"
+[ "$(sed -n 's/^worktree=//p' "$UNIQA_META")" != "$(sed -n 's/^worktree=//p' "$UNIQB_META")" ] \
+  || fail "placement workers reused the same leased slot"
+[ "$(sed -n 's/^treehouse_lease_id=//p' "$UNIQA_META")" != "$(sed -n 's/^treehouse_lease_id=//p' "$UNIQB_META")" ] \
+  || fail "placement workers did not receive distinct leases"
 UNIQB_PANE=$(grep '^herdr_pane_id=' "$UNIQB_META" | cut -d= -f2-)
 [ "$(workspace_of_pane "$UNIQB_PANE")" = "$WS_PRIMARY" ] \
   || fail "a crewmate launched from the 'firstmate' workspace must stay in it"
@@ -301,7 +303,7 @@ cat > "$TMP_ROOT/spawn-in-pane.sh" <<SPAWN
 #!/usr/bin/env bash
 set -u
 FM_SPAWN_NO_GUARD=1 FM_HOME="$PRIMARY_HOME" FM_ROOT_OVERRIDE="$ROOT" \\
-  "$ROOT/bin/fm-spawn.sh" dupC "$TMP_ROOT/dupC/scratch-project" "sh -c 'echo launcher-ws-ok'" --mode no-mistakes --yolo off --backend herdr \\
+  "$ROOT/bin/fm-spawn.sh" dupC "$PROJ" "sh -c 'echo launcher-ws-ok'" --mode no-mistakes --yolo off --backend herdr \\
   > "$TMP_ROOT/dupC.out" 2> "$TMP_ROOT/dupC.err"
 echo \$? > "$TMP_ROOT/dupC.rc"
 SPAWN

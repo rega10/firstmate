@@ -1774,7 +1774,7 @@ report_worktree_dirt() {
 # A retry never touches a slot whose lease has since changed.
 teardown_retire_treehouse_record() { # <meta> <project> <label> [<post-cleanup-check>]
   local meta=$1 project=$2 label=$3 post_cleanup_check=${4:-}
-  local worktree lease_id pending tmp current WT
+  local worktree lease_id pending tmp current pool pool_root WT
   worktree=$(fm_meta_get "$meta" worktree)
   pending=$(fm_meta_get "$meta" treehouse_retiring_worktree)
   lease_id=$(fm_meta_get "$meta" treehouse_lease_id)
@@ -1792,11 +1792,13 @@ teardown_retire_treehouse_record() { # <meta> <project> <label> [<post-cleanup-c
   fi
   WT=$worktree
   if [ -n "$pending" ]; then
-    current=$(cd "$project" && treehouse status --json) || return 1
+    pool=$(dirname "$(dirname "$worktree")")
+    pool_root=$(dirname "$(dirname "$pool")")
+    current=$(cd "$project" && treehouse status --json --root "$pool_root") || return 1
     current=$(printf '%s\n' "$current" | jq -er --arg path "$worktree" '
       if type != "array" then error("invalid Treehouse status") else
         [.[] | select(.path == $path)] |
-        if length == 0 then "" elif length == 1 then (.[0].lease_id // "")
+        if length == 0 then error("Treehouse allocation status is unknown") elif length == 1 then (.[0].lease_id // "")
         else error("duplicate Treehouse path") end end') || return 1
     if [ "$current" != "$lease_id" ]; then
       echo "teardown: $label lease $lease_id is already released; leaving the current allocation untouched" >&2

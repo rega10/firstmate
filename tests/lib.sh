@@ -442,11 +442,23 @@ fm_fakebin() {
 
 # The JSON receipt is the spawn allocator's executable interface. Keep custom
 # terminal fixtures on the same contract, with an optional fixed worktree path.
-fm_test_fake_treehouse_lease() { # <fakebin> [<path>]
-  local fakebin=$1 path=${2:-}
+fm_test_fake_treehouse_lease() { # <fakebin> [<path> ...]
+  local fakebin=$1 path
+  shift
   {
-    printf '#!/usr/bin/env bash\nfixture_path=%q\n' "$path"
+    printf '#!/usr/bin/env bash\nfixture_paths=('
+    for path in "$@"; do printf ' %q' "$path"; done
+    printf ' )\n'
     cat <<'SH'
+path=${FM_FAKE_PANE_PATH:-${fixture_paths[0]:-}}
+if [ "${1:-}" = status ]; then
+  if [ "${#fixture_paths[@]}" -gt 1 ]; then
+    printf '%s\n' "${fixture_paths[@]}"
+  else
+    printf '%s\n' "$path"
+  fi | jq -Rn '[inputs | select(length > 0) | {path:.,lease_id:""}]'
+  exit
+fi
 if [ "${1:-}" = get ]; then
   holder= json=0
   while [ "$#" -gt 0 ]; do
@@ -457,8 +469,15 @@ if [ "${1:-}" = get ]; then
     shift
   done
   if [ "$json" = 1 ]; then
-    jq -n --arg path "${FM_FAKE_PANE_PATH:-$fixture_path}" --arg holder "$holder" \
-      '{path:$path,lease_id:"fixture-lease",lease_holder:$holder}'
+    if [ "${#fixture_paths[@]}" -gt 1 ]; then
+      counter="$(dirname "$0")/.treehouse-next-slot"
+      index=$(cat "$counter" 2>/dev/null || printf '0')
+      path=${fixture_paths[$index]:-}
+      [ -n "$path" ] || exit 1
+      printf '%s\n' "$((index + 1))" > "$counter"
+    fi
+    jq -n --arg path "$path" --arg holder "$holder" --arg id "fixture-lease-$$" \
+      '{path:$path,lease_id:$id,lease_holder:$holder}'
   fi
 fi
 SH

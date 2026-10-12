@@ -876,6 +876,55 @@ test_scout_base_branch_refused_on_gerrit_forge() {
   pass "a based scout on a forge=gerrit project is refused at spawn"
 }
 
+test_legacy_other_pool_does_not_block() {
+  local treehouse_bin variant rec id receipt held held_id held_pool before_state before_head before_meta out status
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for pool identity verification"
+  for variant in "$@"; do
+    id="pool-identity-$variant"
+    rec=$(make_case "$id" "$id")
+    read_case_record "$rec"
+    export TREEHOUSE_ROOT="$CASE_DIR/held-root"
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+      || fail "could not prepare the legacy pool"
+    held=$(printf '%s\n' "$receipt" | jq -r .path)
+    held_id=$(printf '%s\n' "$receipt" | jq -r .lease_id)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force --if-lease-id "$held_id" "$held") \
+      || fail "could not release the legacy slot"
+    printf 'worktree=%s\nproject=%s\nkind=ship\n' "$held" "$PROJECT_DIR" > "$HOME_DIR/state/legacy.meta"
+    held_pool=$(dirname "$(dirname "$held")")
+    before_state=$(cat "$held_pool/treehouse-state.json")
+    before_head=$(git -C "$held" rev-parse HEAD)
+    before_meta=$(cat "$HOME_DIR/state/legacy.meta")
+    if [ "$variant" = same-origin ]; then
+      git clone --quiet "file://$CASE_DIR/origin.git" "$CASE_DIR/project-b" || fail "could not clone the second project"
+      PROJECT_DIR="$CASE_DIR/project-b"
+    else
+      TREEHOUSE_ROOT="$CASE_DIR/free-root"
+    fi
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+      || fail "could not prepare the free pool"
+    POOL_DIR=$(printf '%s\n' "$receipt" | jq -r .path)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force --if-lease-id "$(printf '%s\n' "$receipt" | jq -r .lease_id)" "$POOL_DIR") \
+      || fail "could not release the free slot"
+    [ "$(dirname "$(dirname "$POOL_DIR")")" != "$held_pool" ] || fail "the fixture did not select a different allocator pool"
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" run_spawn "$id" --scout)
+    status=$?
+    expect_code 0 "$status" "a legacy record in a different $variant pool should not refuse spawn"$'\n'"$out"
+    assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn recorded the wrong allocator slot"
+    [ -n "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id.meta")" ] || fail "spawn did not persist its lease"
+    [ "$(cat "$held_pool/treehouse-state.json")" = "$before_state" ] || fail "spawn changed the legacy pool"
+    [ "$(git -C "$held" rev-parse HEAD)" = "$before_head" ] || fail "spawn refreshed the legacy slot"
+    [ "$(cat "$HOME_DIR/state/legacy.meta")" = "$before_meta" ] || fail "spawn changed the legacy record"
+    unset TREEHOUSE_ROOT
+    pass "a legacy record in a different $variant allocator pool does not block spawn"
+  done
+}
+
 test_free_pool_slot_launches_while_another_slot_is_recorded() {
   local rec id held_slot held_meta before_meta before_claim before_head before_reflog out status
   id='pool-free-slot'
@@ -1196,7 +1245,13 @@ SH
   done
 }
 
+if [ "${1:-}" = --pool-identity ]; then
+  test_legacy_other_pool_does_not_block "${2:-same-origin}"
+  exit 0
+fi
+
 if [ "${1:-}" = --lease ]; then
+  test_legacy_other_pool_does_not_block same-origin different-root
   test_free_pool_slot_launches_while_another_slot_is_recorded
   test_real_lease_survives_exit_and_failed_publication
   test_real_treehouse_preserves_a_recorded_stale_slot
@@ -1204,6 +1259,7 @@ if [ "${1:-}" = --lease ]; then
   exit 0
 fi
 
+test_legacy_other_pool_does_not_block same-origin different-root
 test_real_lease_survives_exit_and_failed_publication
 
 test_free_pool_slot_launches_while_another_slot_is_recorded

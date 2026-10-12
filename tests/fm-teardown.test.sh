@@ -4734,6 +4734,10 @@ SH
 #!/usr/bin/env bash
 set -eu
 printf '%s\n' "$*" >> "$FM_LEASE_TEST_DIR/returns"
+if [ "$1" = status ] && [ "${FM_LEASE_STATUS_EMPTY:-}" = 1 ]; then
+  printf '[]\n'
+  exit 0
+fi
 if [ "$1" = return ] && [ -n "${FM_LEASE_INTERRUPT:-}" ]; then
   if [ "$FM_LEASE_INTERRUPT" = after-return ]; then
     "$FM_REAL_TREEHOUSE" "$@"
@@ -4764,6 +4768,13 @@ SH
     [ "$(sed -n 's/^worktree=//p' "$case_dir/state/task-x1.meta")" = '' ] || fail "interruption retained an active worktree claim"
     assert_grep "treehouse_retiring_worktree=$path" "$case_dir/state/task-x1.meta" "interruption lost the retirement path"
     assert_grep "treehouse_lease_id=$lease_id" "$case_dir/state/task-x1.meta" "interruption lost the immutable receipt"
+    if [ "$phase" = before-return ]; then
+      out=$(FM_HOME="$case_dir" HOME="$case_dir/user-home" FM_REAL_TREEHOUSE="$treehouse_bin" \
+        FM_LEASE_TEST_DIR="$case_dir" FM_LEASE_STATUS_EMPTY=1 run_teardown "$case_dir" --force)
+      rc=$?
+      [ "$rc" -ne 0 ] || fail "empty allocator status retired a still-reserved lease"
+      assert_grep "treehouse_lease_id=$lease_id" "$case_dir/state/task-x1.meta" "empty status discarded the receipt"
+    fi
     current=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json)
     if [ "$phase" = before-return ]; then
       printf '%s\n' "$current" | jq -e --arg id "$lease_id" 'any(.[]; .lease_id == $id)' >/dev/null || fail "interruption released a lease before return"
@@ -4773,6 +4784,7 @@ SH
       [ "$(printf '%s\n' "$replacement" | jq -r .path)" = "$path" ] || fail "the replacement did not reuse the slot"
       printf 'replacement work\n' > "$path/replacement.txt"
     fi
+    TREEHOUSE_ROOT="$case_dir/changed-root"
     if [ "$phase" = before-return ]; then
       printf 'retained work\n' > "$path/retained.txt"
       out=$(FM_HOME="$case_dir" HOME="$case_dir/user-home" FM_REAL_TREEHOUSE="$treehouse_bin" \
@@ -4791,10 +4803,13 @@ SH
     assert_grep "return --force --if-lease-id $lease_id $path" "$case_dir/returns" "teardown did not use conditional release"
     if [ "$phase" = before-return ]; then
       [ "$(grep -Fc "return --force --if-lease-id $lease_id $path" "$case_dir/returns")" -eq 3 ] || fail "a retry lost or changed the conditional lease identity"
+      current=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json --root "$case_dir/treehouse-root")
+      printf '%s\n' "$current" | jq -e --arg id "$lease_id" 'all(.[]; .lease_id != $id)' >/dev/null \
+        || fail "the changed-root retry retired its receipt without releasing the original lease"
     fi
     if [ "$phase" = after-return ]; then
       assert_grep 'replacement work' "$path/replacement.txt" "retry reset the replacement allocation"
-      current=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json)
+      current=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json --root "$case_dir/treehouse-root")
       printf '%s\n' "$current" | jq -e --arg id "$(printf '%s\n' "$replacement" | jq -r .lease_id)" 'any(.[]; .lease_id == $id)' >/dev/null || fail "retry released the replacement lease"
     fi
     unset TREEHOUSE_ROOT

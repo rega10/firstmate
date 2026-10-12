@@ -141,15 +141,15 @@ EOF
 }
 
 prepare_second_batch_slot() {  # <second-task-id>
-  # Both batch records stay live, so each project needs its own fixture slot.
-  fm_git_worktree "$CASE_DIR/project2" "$CASE_DIR/wt2" "$1"
+  git -C "$PROJ_DIR" worktree add --quiet -b "$1" "$CASE_DIR/wt2" || fail "could not create the second batch slot"
+  fm_test_fake_treehouse_lease "$FAKEBIN_DIR" "$WT_DIR" "$CASE_DIR/wt2"
   mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux-single"
   cat > "$FAKEBIN_DIR/tmux" <<SH
 #!/usr/bin/env bash
 case "\$*" in
   *"#{pane_current_path}"*)
     case "\$*" in
-      *"firstmate:fm-$1"*) printf '%s\\n' '$CASE_DIR/wt2'; exit 0 ;;
+      *"fm-$1"*) printf '%s\\n' '$CASE_DIR/wt2'; exit 0 ;;
     esac
     ;;
 esac
@@ -1049,12 +1049,15 @@ test_batch_preserves_native_ultra() {
   prepare_second_batch_slot "$id2"
   enable_dispatch_profile "$HOME_DIR"
   out=$(run_ship_spawn "$HOME_DIR" "$WT_DIR" "$FAKEBIN_DIR" "$LAUNCH_LOG" \
-    "$id1=$PROJ_DIR" "$id2=$CASE_DIR/project2" --harness pi --model codex-native/gpt-6-astra --effort ultra)
+    "$id1=$PROJ_DIR" "$id2=$PROJ_DIR" --harness pi --model codex-native/gpt-6-astra --effort ultra)
   expect_code 0 "$?" "native Ultra batch failed: $out"
   assert_meta_profile "$HOME_DIR/state/$id1.meta" pi codex-native/gpt-6-astra ultra
   assert_meta_profile "$HOME_DIR/state/$id2.meta" pi codex-native/gpt-6-astra ultra
   assert_grep "worktree=$WT_DIR" "$HOME_DIR/state/$id1.meta" "first batch task lost its slot"
   assert_grep "worktree=$CASE_DIR/wt2" "$HOME_DIR/state/$id2.meta" "second batch task lost its independent slot"
+  assert_grep "project=$PROJ_DIR" "$HOME_DIR/state/$id2.meta" "batch workers did not share the project"
+  [ "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id1.meta")" != "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id2.meta")" ] \
+    || fail "batch workers did not receive distinct leases"
   launch=$(cat "$LAUNCH_LOG")
   assert_contains "$launch" "--codex-effort 'ultra'" "batch dropped native effort"
   assert_not_contains "$launch" "--thinking 'ultra'" "batch passed an invalid Pi level"
@@ -1595,7 +1598,7 @@ test_batch_forwards_shared_profile_flags() {
   enable_dispatch_profile "$HOME_DIR"
 
   out=$(run_ship_spawn "$HOME_DIR" "$WT_DIR" "$FAKEBIN_DIR" "$LAUNCH_LOG" \
-    "$id1=$PROJ_DIR" "$id2=$CASE_DIR/project2" --harness codex --model gpt-5 --effort high)
+    "$id1=$PROJ_DIR" "$id2=$PROJ_DIR" --harness codex --model gpt-5 --effort high)
   status=$?
   expect_code 0 "$status" "batch spawn with shared profile flags should succeed"
   assert_contains "$out" "spawned $id1 harness=codex" "first batch task did not use shared harness"
@@ -1604,6 +1607,9 @@ test_batch_forwards_shared_profile_flags() {
   assert_meta_profile "$HOME_DIR/state/$id2.meta" codex gpt-5 high
   assert_grep "worktree=$WT_DIR" "$HOME_DIR/state/$id1.meta" "first batch task lost its slot"
   assert_grep "worktree=$CASE_DIR/wt2" "$HOME_DIR/state/$id2.meta" "second batch task lost its independent slot"
+  assert_grep "project=$PROJ_DIR" "$HOME_DIR/state/$id2.meta" "batch workers did not share the project"
+  [ "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id1.meta")" != "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id2.meta")" ] \
+    || fail "batch workers did not receive distinct leases"
   pass "batch dispatch forwards shared --harness, --model, and --effort to every pair"
 }
 
@@ -2097,6 +2103,12 @@ SH
     pass "$route inheritance preserves the allowlist on source errors and mirrors proven absence"
   done
 }
+
+if [ "${1:-}" = --batch ]; then
+  test_batch_preserves_native_ultra
+  test_batch_forwards_shared_profile_flags
+  exit 0
+fi
 
 test_launch_environment_allowlist
 test_launch_environment_invalid_config_refuses

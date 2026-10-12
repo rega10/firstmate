@@ -3592,7 +3592,7 @@ validate_spawn_worktree() { # <source> <inspect-target>
 }
 
 refuse_recorded_spawn_worktree() { # [<returned-worktree>]; absent checks the pool before acquisition
-  local worktree=${1:-} state_dir meta other_id other_worktree other_lock legacy_reason=
+  local worktree=${1:-} state_dir meta other_id other_worktree pool_paths pool_worktree legacy_reason=
   [ -n "$worktree" ] || legacy_reason=" (legacy unleased record blocks this pool)"
   fm_local_firstmate_state_dirs "$STATE" || {
     echo "REFUSED: $FM_LOCAL_FIRSTMATE_ERROR; nothing was changed" >&2
@@ -3610,13 +3610,16 @@ refuse_recorded_spawn_worktree() { # [<returned-worktree>]; absent checks the po
         [ "$other_worktree" -ef "$worktree" ] || continue
       else
         [ -z "$(fm_meta_get "$meta" treehouse_lease_id)" ] || continue
-        # Separate clones of the same origin share the allocation lock and can
-        # share a pool, even though their Git common directories differ.
-        if ! fm_treehouse_pool_slot "$PROJ_ABS" "$other_worktree"; then
-          fm_treehouse_pool_slot "$other_worktree" "$other_worktree" || continue
-          other_lock=$(fm_treehouse_project_lock_path "$other_worktree") || return 1
-          [ "$other_lock" = "$SPAWN_TREEHOUSE_PROJECT_LOCK" ] || continue
-        fi
+        fm_treehouse_pool_slot "$other_worktree" "$other_worktree" || continue
+        pool_paths=$(cd "$PROJ_ABS" && treehouse status --json) || return 1
+        pool_paths=$(printf '%s\n' "$pool_paths" | jq -r '
+          if type != "array" then error("invalid Treehouse status") else .[].path end') || return 1
+        while IFS= read -r pool_worktree; do
+          [ -n "$pool_worktree" ] && [ "$other_worktree" -ef "$pool_worktree" ] && break
+        done <<EOF
+$pool_paths
+EOF
+        [ -n "$pool_worktree" ] && [ "$other_worktree" -ef "$pool_worktree" ] || continue
       fi
       echo "error: refusing to spawn task $ID: worktree '$(real_path_or_raw "$other_worktree")' is still recorded by task $other_id in $meta${legacy_reason:-}; reconcile that task before reusing its slot" >&2
       return 1
