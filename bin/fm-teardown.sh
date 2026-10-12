@@ -76,7 +76,7 @@
 # teardown refuses rather than risk discarding unlanded work.
 # Uncommitted changes are never landed; dirty refusals distinguish untracked-only
 # leftovers from tracked edits and list at most ten non-exempt untracked paths.
-# An ordinary task record with an empty worktree= entry cannot identify its
+# Outside the leased-retirement state above, an empty worktree= cannot identify
 # local work or prove it landed. Teardown refuses with the record path and the
 # recovery action before endpoint validation, even with --force. Restore the
 # verified original worktree path and retry without --force so the existing
@@ -134,16 +134,15 @@
 # task's: whatever unlanded work it had in that slot was already destroyed when
 # the pool handed the slot on. Refusing instead would strand the record, because
 # bin/fm-backend.sh's endpoint validation refuses an empty or missing worktree=
-# unconditionally, so there is no line an operator could clear to get past it.
+# outside the leased-retirement state, so clearing that line cannot authorize it.
 # A claim that cannot be read proves nothing either way and refuses; inspect or
 # repair the claim file at the printed path and re-run - never remove it, since
 # an absent claim proceeds and would return a slot that may be another task's. An
 # absent claim - a slot taken before claims existed, or already returned - keeps
 # exactly the record-scan protection it had before, because refusing it would
 # strand every task in flight across that change on no evidence at all.
-# Why Treehouse's own state cannot answer this for crewmate slots, and why the
-# claim file sits on top of it, is owned by bin/fm-wake-lib.sh's slot-owner
-# claim comment.
+# The retained claim's role alongside durable leases and legacy unleased records
+# is owned by bin/fm-wake-lib.sh's slot-owner claim comment.
 # The recorded endpoint's exact task identity and the record's spawn incarnation
 # are validated separately
 # before cleanup. Its current working directory is only incidental process
