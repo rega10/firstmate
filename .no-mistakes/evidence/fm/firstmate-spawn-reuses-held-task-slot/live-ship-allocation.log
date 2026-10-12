@@ -1,0 +1,67 @@
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/1/project' to release it.
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/2/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/2/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+
+real Treehouse lease: success preserves the exited owner's allocation
+Firstmate output:
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/home/data/pool-lease-ship-live-success/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-lease-ship-live-success
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/home/data/pool-lease-ship-live-success/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/2/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/2/project' to release it.
+spawned pool-lease-ship-live-success harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-lease-ship-live-success worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/2/project
+Allocator status:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/1/project","status":"leased","flavor":"git","lease_id":"d04a061a6e65e9dc339fe490735ec26f","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/home:held","leased_at":"2026-10-11T19:54:47.058633-05:00","processes":[]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/2/project","status":"leased","flavor":"git","lease_id":"694efcec8d9b49eb6a50573cf7e2a59e","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/home:pool-lease-ship-live-success","leased_at":"2026-10-11T19:54:48.441456-05:00","processes":[]}]
+Allocation calls:
+get --lease --json --lease-holder /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/home:pool-lease-ship-live-success
+Published allocation identity:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/treehouse-root/.treehouse/project-1b3c32/2/project
+treehouse_lease_id=694efcec8d9b49eb6a50573cf7e2a59e
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-success/home:pool-lease-ship-live-success
+Held lease remains: d04a061a6e65e9dc339fe490735ec26f
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/2/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/2/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+
+real Treehouse lease: publication-failure preserves the exited owner's allocation
+Firstmate output:
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/home/data/pool-lease-ship-live-publication-failure/launch-brief.md records no ship branch; defaulting to legacy branch fm/pool-lease-ship-live-publication-failure
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/home/data/pool-lease-ship-live-publication-failure/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/2/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/2/project' to release it.
+error: task record for pool-lease-ship-live-publication-failure could not be published (task record publication failed at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/home/state/pool-lease-ship-live-publication-failure.meta)
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+Allocator status:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/1/project","status":"leased","flavor":"git","lease_id":"d3ad728abc9ded62b8c48d36b811919f","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/home:held","leased_at":"2026-10-11T19:54:50.697739-05:00","processes":[]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/2/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]
+Allocation calls:
+get --lease --json --lease-holder /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/home:pool-lease-ship-live-publication-failure
+return --force --if-lease-id facb15489a3019eda5ab6d2bed9763f8 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/lease-publication-failure/treehouse-root/.treehouse/project-825349/2/project
+Task record absent after failed publication.
+Held lease remains: d3ad728abc9ded62b8c48d36b811919f

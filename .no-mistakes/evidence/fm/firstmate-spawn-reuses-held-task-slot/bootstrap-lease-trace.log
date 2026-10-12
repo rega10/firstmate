@@ -1,0 +1,635 @@
++ set -u
+++ dirname tests/fm-bootstrap.test.sh
++ . tests/lib.sh
+++ '[' -n '' ']'
+++ FM_TEST_LIB_SOURCED=1
+++ umask 022
++++ dirname tests/lib.sh
+++ . tests/git-config-helpers.sh
++++ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
++++ GIT_CONFIG_GLOBAL=/dev/null
++++ GIT_CONFIG_NOSYSTEM=1
++++ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR
+++ export FM_GATE_REFUSE_BYPASS=1
+++ FM_GATE_REFUSE_BYPASS=1
+++ export FM_TEST_SEAM=1
+++ FM_TEST_SEAM=1
+++ unset FM_TASK_ID
+++ unset TASKS_AXI_FILE TASKS_AXI_BACKEND
+++++ dirname tests/lib.sh
++++ cd tests/..
++++ pwd
+++ ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD
++++ fm_test_tmpdir
++++ local base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp physical
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp ']'
++++ case "$base" in
+++++ CDPATH=
+++++ cd -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++++ pwd -P
++++ physical=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.git ']'
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++ FM_TEST_TMPDIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++ FM_TEST_CLEANUP_DIRS=()
++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-cleanup.55908.XXXXXX
+++ FM_TEST_CLEANUP_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-cleanup.55908.g5ZNE2
++++ fm_test_pid_identity 55908
++++ local pid=55908
++++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ bash -c '. "$1"; fm_pid_identity "$2"' _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-wake-lib.sh 55908
+++ FM_TEST_OWNER_IDENTITY='Sun Oct 11 19:54:48 2026     bash -x tests/fm-bootstrap.test.sh --lease-dependencies'
++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-procevent.55908.XXXXXX
+++ FM_TEST_PROCEVENT_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-procevent.55908.k9QN46
++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-watcher.55908.XXXXXX
+++ FM_TEST_WATCHER_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-watcher.55908.JTsurO
+++ FM_TEST_STUB_MAX_BLOCK_SECONDS=120
+++ export FM_TEST_STUB_MAX_BLOCK_SECONDS
+++ trap fm_test_cleanup EXIT
+++ trap 'fm_test_cleanup; exit 130' INT
+++ trap 'fm_test_cleanup; exit 143' TERM
+++ trap 'fm_test_cleanup; exit 129' HUP
+++ trap 'fm_test_cleanup; exit 131' QUIT
+++ FM_TEST_ORPHAN_MAX_AGE_SECONDS=3600
+++ '[' 0 '!=' 1 ']'
+++ fm_test_reap_orphans
+++ local marker dir mtime now owner_pid owner_identity current_identity
++++ date +%s
+++ now=1791766488
+++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
+++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/.fm-test-fixture ']'
++++ sed -n 1p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/.fm-test-fixture
+++ owner_pid=55089
++++ sed -n '2,$p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/.fm-test-fixture
+++ owner_identity='Sun Oct 11 19:54:47 2026     bash tests/.nm-live-relaunch.sh'
+++ case "$owner_pid" in
++++ fm_test_pid_identity 55089
+++ current_identity='Sun Oct 11 19:54:47 2026     bash tests/.nm-live-relaunch.sh'
+++ '[' -n 'Sun Oct 11 19:54:47 2026     bash tests/.nm-live-relaunch.sh' ']'
+++ '[' 'Sun Oct 11 19:54:47 2026     bash tests/.nm-live-relaunch.sh' = 'Sun Oct 11 19:54:47 2026     bash tests/.nm-live-relaunch.sh' ']'
+++ continue
+++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
+++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/.fm-test-fixture ']'
++++ sed -n 1p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/.fm-test-fixture
+++ owner_pid=54690
++++ sed -n '2,$p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.BP4ahD/.fm-test-fixture
+++ owner_identity='Sun Oct 11 19:54:46 2026     bash tests/.nm-live-ship.sh'
+++ case "$owner_pid" in
++++ fm_test_pid_identity 54690
+++ current_identity='Sun Oct 11 19:54:46 2026     bash tests/.nm-live-ship.sh'
+++ '[' -n 'Sun Oct 11 19:54:46 2026     bash tests/.nm-live-ship.sh' ']'
+++ '[' 'Sun Oct 11 19:54:46 2026     bash tests/.nm-live-ship.sh' = 'Sun Oct 11 19:54:46 2026     bash tests/.nm-live-ship.sh' ']'
+++ continue
++ BASE_PATH=/usr/bin:/bin:/usr/sbin:/sbin
+++ fm_test_tmproot fm-bootstrap-tests
+++ local prefix=fm-bootstrap-tests root tmp_base
++++ fm_test_tmpdir
++++ local base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp physical
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp ']'
++++ case "$base" in
+++++ CDPATH=
+++++ cd -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++++ pwd -P
++++ physical=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.git ']'
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ mktemp -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.XXXXXX
+++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
++++ cd -P -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
++++ pwd -P
+++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
+++ printf '%s\n%s\n' 55908 'Sun Oct 11 19:54:48 2026     bash -x tests/fm-bootstrap.test.sh --lease-dependencies'
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
++ TMP_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
++ export FM_BACKEND_CMUX_BUNDLE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/no-bundled-cmux
++ FM_BACKEND_CMUX_BUNDLE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/no-bundled-cmux
++ unset TMUX TMUX_PANE HERDR_ENV HERDR_PANE_ID HERDR_SESSION HERDR_SOCKET_PATH CMUX_WORKSPACE_ID CMUX_SURFACE_ID CMUX_SOCKET_PATH CMUX_TAB_ID CMUX_PANEL_ID
++ '[' --lease-dependencies = --lease-dependencies ']'
++ test_treehouse_backends_require_jq
++ local backend case_dir fakebin bash_env out
++ IFS='^'
++ read -r backend
++ '[' -n tmux ']'
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/home/config
++ printf '%s\n' manual
++ printf '%s\n' tmux
+++ make_fake_toolchain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq
+++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq fakebin
++++ fm_fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq
++++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin
++++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin
+++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin tmux node chrome-devtools-axi
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin tool
+++ shift
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/tmux
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/node
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/chrome-devtools-axi
+++ fm_fake_version_tool /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin lavish-axi FM_FAKE_LAVISH_AXI_VERSION 0.1.80
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin tool=lavish-axi override=FM_FAKE_LAVISH_AXI_VERSION default=0.1.80
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/lavish-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/gh-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/gh
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/treehouse
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/no-mistakes
+++ add_tasks_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin 0.2.6
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin version=0.2.6 archive_body=yes multi_id=yes archive_line mv_usage
+++ archive_line=
+++ '[' yes = yes ']'
+++ archive_line='  --archive-body'
+++ mv_usage='usage: tasks-axi mv <id> [<id>...] --to <path-or-dir>'
+++ '[' yes = yes ']'
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/tasks-axi
+++ add_quota_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/quota-axi
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin
++ '[' tmux = tmux ']'
++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin tmux
++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin tool
++ shift
++ for tool in "$@"
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin/tmux
++ bash_env=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/no-jq.bash
++ cat
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ BASH_ENV=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/no-jq.bash
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/tmux-missing-jq/home
+++ FM_FAKE_TREEHOUSE_LEASE_HELP=1
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out='MISSING: jq (install: brew install jq  # or the platform'\''s package manager)'
++ assert_contains 'MISSING: jq (install: brew install jq  # or the platform'\''s package manager)' 'MISSING: jq' 'backend=tmux must fail closed on missing jq'
++ case "$1" in
++ :
++ assert_not_contains 'MISSING: jq (install: brew install jq  # or the platform'\''s package manager)' 'MISSING: tmux' 'backend=tmux must not demand an absent or already available tmux'
++ case "$1" in
++ :
++ IFS='^'
++ read -r backend
++ '[' -n herdr ']'
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/home/config
++ printf '%s\n' manual
++ printf '%s\n' herdr
+++ make_fake_toolchain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq
+++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq fakebin
++++ fm_fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq
++++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin
++++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin
+++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin tmux node chrome-devtools-axi
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin tool
+++ shift
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/tmux
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/node
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/chrome-devtools-axi
+++ fm_fake_version_tool /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin lavish-axi FM_FAKE_LAVISH_AXI_VERSION 0.1.80
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin tool=lavish-axi override=FM_FAKE_LAVISH_AXI_VERSION default=0.1.80
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/lavish-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/gh-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/gh
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/treehouse
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/no-mistakes
+++ add_tasks_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin 0.2.6
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin version=0.2.6 archive_body=yes multi_id=yes archive_line mv_usage
+++ archive_line=
+++ '[' yes = yes ']'
+++ archive_line='  --archive-body'
+++ mv_usage='usage: tasks-axi mv <id> [<id>...] --to <path-or-dir>'
+++ '[' yes = yes ']'
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/tasks-axi
+++ add_quota_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/quota-axi
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin
++ '[' herdr = tmux ']'
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/tmux
++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin herdr
++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin tool
++ shift
++ for tool in "$@"
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin/herdr
++ bash_env=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/no-jq.bash
++ cat
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ BASH_ENV=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/no-jq.bash
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-missing-jq/home
+++ FM_FAKE_TREEHOUSE_LEASE_HELP=1
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out='MISSING: jq (install: brew install jq  # or the platform'\''s package manager)'
++ assert_contains 'MISSING: jq (install: brew install jq  # or the platform'\''s package manager)' 'MISSING: jq' 'backend=herdr must fail closed on missing jq'
++ case "$1" in
++ :
++ assert_not_contains 'MISSING: jq (install: brew install jq  # or the platform'\''s package manager)' 'MISSING: tmux' 'backend=herdr must not demand an absent or already available tmux'
++ case "$1" in
++ :
++ IFS='^'
++ read -r backend
++ '[' -n zellij ']'
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/home/config
++ printf '%s\n' manual
++ printf '%s\n' zellij
+++ make_fake_toolchain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq
+++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq fakebin
++++ fm_fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq
++++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin
++++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin
+++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin tmux node chrome-devtools-axi
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin tool
+++ shift
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/tmux
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/node
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/chrome-devtools-axi
+++ fm_fake_version_tool /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin lavish-axi FM_FAKE_LAVISH_AXI_VERSION 0.1.80
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin tool=lavish-axi override=FM_FAKE_LAVISH_AXI_VERSION default=0.1.80
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/lavish-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/gh-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/gh
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/treehouse
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/no-mistakes
+++ add_tasks_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin 0.2.6
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin version=0.2.6 archive_body=yes multi_id=yes archive_line mv_usage
+++ archive_line=
+++ '[' yes = yes ']'
+++ archive_line='  --archive-body'
+++ mv_usage='usage: tasks-axi mv <id> [<id>...] --to <path-or-dir>'
+++ '[' yes = yes ']'
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/tasks-axi
+++ add_quota_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/quota-axi
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin
++ '[' zellij = tmux ']'
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/tmux
++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin zellij
++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin tool
++ shift
++ for tool in "$@"
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin/zellij
++ bash_env=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/no-jq.bash
++ cat
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ BASH_ENV=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/no-jq.bash
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/zellij-missing-jq/home
+++ FM_FAKE_TREEHOUSE_LEASE_HELP=1
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out='MISSING: jq (install: brew install jq  # or the platform'\''s package manager)'
++ assert_contains 'MISSING: jq (install: brew install jq  # or the platform'\''s package manager)' 'MISSING: jq' 'backend=zellij must fail closed on missing jq'
++ case "$1" in
++ :
++ assert_not_contains 'MISSING: jq (install: brew install jq  # or the platform'\''s package manager)' 'MISSING: tmux' 'backend=zellij must not demand an absent or already available tmux'
++ case "$1" in
++ :
++ IFS='^'
++ read -r backend
++ '[' -n cmux ']'
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/home/config
++ printf '%s\n' manual
++ printf '%s\n' cmux
+++ make_fake_toolchain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq
+++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq fakebin
++++ fm_fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq
++++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin
++++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin
+++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin tmux node chrome-devtools-axi
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin tool
+++ shift
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/tmux
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/node
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/chrome-devtools-axi
+++ fm_fake_version_tool /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin lavish-axi FM_FAKE_LAVISH_AXI_VERSION 0.1.80
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin tool=lavish-axi override=FM_FAKE_LAVISH_AXI_VERSION default=0.1.80
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/lavish-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/gh-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/gh
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/treehouse
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/no-mistakes
+++ add_tasks_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin 0.2.6
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin version=0.2.6 archive_body=yes multi_id=yes archive_line mv_usage
+++ archive_line=
+++ '[' yes = yes ']'
+++ archive_line='  --archive-body'
+++ mv_usage='usage: tasks-axi mv <id> [<id>...] --to <path-or-dir>'
+++ '[' yes = yes ']'
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/tasks-axi
+++ add_quota_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/quota-axi
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin
++ '[' cmux = tmux ']'
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/tmux
++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin cmux
++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin tool
++ shift
++ for tool in "$@"
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin/cmux
++ bash_env=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/no-jq.bash
++ cat
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ BASH_ENV=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/no-jq.bash
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/cmux-missing-jq/home
+++ FM_FAKE_TREEHOUSE_LEASE_HELP=1
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out='MISSING: jq (install: brew install jq  # or the platform'\''s package manager)'
++ assert_contains 'MISSING: jq (install: brew install jq  # or the platform'\''s package manager)' 'MISSING: jq' 'backend=cmux must fail closed on missing jq'
++ case "$1" in
++ :
++ assert_not_contains 'MISSING: jq (install: brew install jq  # or the platform'\''s package manager)' 'MISSING: tmux' 'backend=cmux must not demand an absent or already available tmux'
++ case "$1" in
++ :
++ IFS='^'
++ read -r backend
++ pass 'bootstrap: every Treehouse backend requires jq without demanding inactive tools'
++ printf 'ok - %s\n' 'bootstrap: every Treehouse backend requires jq without demanding inactive tools'
+ok - bootstrap: every Treehouse backend requires jq without demanding inactive tools
++ test_treehouse_lease_check_follows_resolved_backend
++ local case_dir fakebin out capability
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/home/config
++ printf '%s\n' manual
++ printf '%s\n' orca
+++ make_fake_toolchain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse
+++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse fakebin
++++ fm_fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse
++++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin
++++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin
+++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin tmux node chrome-devtools-axi
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin tool
+++ shift
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/tmux
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/node
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/chrome-devtools-axi
+++ fm_fake_version_tool /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin lavish-axi FM_FAKE_LAVISH_AXI_VERSION 0.1.80
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin tool=lavish-axi override=FM_FAKE_LAVISH_AXI_VERSION default=0.1.80
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/lavish-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/gh-axi
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/gh
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/treehouse
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/no-mistakes
+++ add_tasks_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin 0.2.6
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin version=0.2.6 archive_body=yes multi_id=yes archive_line mv_usage
+++ archive_line=
+++ '[' yes = yes ']'
+++ archive_line='  --archive-body'
+++ mv_usage='usage: tasks-axi mv <id> [<id>...] --to <path-or-dir>'
+++ '[' yes = yes ']'
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/tasks-axi
+++ add_quota_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/quota-axi
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/tmux
++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin orca
++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin tool
++ shift
++ for tool in "$@"
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin/orca
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/orca-old-treehouse/home
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out=
++ '[' -z '' ']'
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home/config
++ printf '%s\n' manual
++ printf '%s\n' herdr
+++ make_fake_toolchain_no_tmux /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse herdr
+++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse fakebin
+++ shift
++++ make_fake_toolchain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse
++++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse fakebin
+++++ fm_fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse
+++++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
+++++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
+++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
++++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
++++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin tmux node chrome-devtools-axi
++++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin tool
++++ shift
++++ for tool in "$@"
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/tmux
++++ for tool in "$@"
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/node
++++ for tool in "$@"
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/chrome-devtools-axi
++++ fm_fake_version_tool /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin lavish-axi FM_FAKE_LAVISH_AXI_VERSION 0.1.80
++++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin tool=lavish-axi override=FM_FAKE_LAVISH_AXI_VERSION default=0.1.80
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/lavish-axi
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/gh-axi
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/gh
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/treehouse
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/no-mistakes
++++ add_tasks_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin 0.2.6
++++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin version=0.2.6 archive_body=yes multi_id=yes archive_line mv_usage
++++ archive_line=
++++ '[' yes = yes ']'
++++ archive_line='  --archive-body'
++++ mv_usage='usage: tasks-axi mv <id> [<id>...] --to <path-or-dir>'
++++ '[' yes = yes ']'
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/tasks-axi
++++ add_quota_axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
++++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
++++ cat
++++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/quota-axi
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
+++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/tmux
+++ fm_fake_exit0 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin jq herdr
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin tool
+++ shift
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/jq
+++ for tool in "$@"
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin/herdr
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out='MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)'
++ assert_contains 'MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)' 'MISSING: treehouse' 'backend=herdr must still require treehouse with durable lease support'
++ case "$1" in
++ :
++ assert_not_contains 'MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)' 'MISSING: tmux' 'backend=herdr must not demand tmux even when treehouse is too old'
++ case "$1" in
++ :
++ for capability in 2 3 4
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_FAKE_TREEHOUSE_LEASE_HELP=2
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out='MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)'
++ assert_contains 'MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)' 'MISSING: treehouse' 'bootstrap accepted a missing lease JSON, conditional return, or status JSON interface'
++ case "$1" in
++ :
++ for capability in 2 3 4
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_FAKE_TREEHOUSE_LEASE_HELP=3
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out='MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)'
++ assert_contains 'MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)' 'MISSING: treehouse' 'bootstrap accepted a missing lease JSON, conditional return, or status JSON interface'
++ case "$1" in
++ :
++ for capability in 2 3 4
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_FAKE_TREEHOUSE_LEASE_HELP=4
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out='MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)'
++ assert_contains 'MISSING: treehouse (install: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh)' 'MISSING: treehouse' 'bootstrap accepted a missing lease JSON, conditional return, or status JSON interface'
++ case "$1" in
++ :
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/fakebin:/usr/bin:/bin:/usr/sbin:/sbin
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L/herdr-old-treehouse/home
+++ FM_FAKE_TREEHOUSE_LEASE_HELP=1
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-bootstrap.sh
++ out=
++ '[' -z '' ']'
++ pass 'bootstrap: the treehouse lease check follows the resolved backend'\''s worktree provider'
++ printf 'ok - %s\n' 'bootstrap: the treehouse lease check follows the resolved backend'\''s worktree provider'
+ok - bootstrap: the treehouse lease check follows the resolved backend's worktree provider
++ exit 0
++ fm_test_cleanup
++ local d
++ fm_test_reap_watchers
++ local state lock_home $'seen=\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-watcher.55908.JTsurO ']'
++ IFS=
++ read -r state
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-watcher.55908.JTsurO
++ fm_test_reap_procevent_homes
++ local home claim_root $'seen=\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-procevent.55908.k9QN46 ']'
++ IFS=$'\t'
++ read -r home claim_root
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-procevent.55908.k9QN46
++ for d in "${FM_TEST_CLEANUP_DIRS[@]:-}"
++ '[' -n '' ']'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-cleanup.55908.g5ZNE2 ']'
++ IFS=
++ read -r d
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L ']'
++ fm_test_remove_tree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
++ '[' -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L ']'
++ '[' '!' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L ']'
++ find /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L -type d -exec chmod u+rwx '{}' +
++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-bootstrap-tests.VGNi6L
++ IFS=
++ read -r d
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-cleanup.55908.g5ZNE2

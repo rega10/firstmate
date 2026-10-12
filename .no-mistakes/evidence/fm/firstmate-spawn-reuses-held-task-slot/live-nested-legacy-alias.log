@@ -1,0 +1,36 @@
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/treehouse-root/.treehouse/project-be1b01/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/treehouse-root/.treehouse/project-be1b01/1/project' to release it.
+🌳 Worktree returned to pool.
+Nested legacy holding record:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/alias/
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/project
+kind=ship
+Spawn output:
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/home/data/legacy-nested-alias-live/launch-brief.md records no ship branch; defaulting to legacy branch fm/legacy-nested-alias-live
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/home/data/legacy-nested-alias-live/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+error: refusing to spawn task legacy-nested-alias-live: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/treehouse-root/.treehouse/project-be1b01/1/project' is still recorded by task legacy-nested-alias-live in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/nested-owner/state/legacy-nested-alias-live.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+exit=1
+HEAD before=3171b27bd31c2d770abfc42f08a195670b3a2f3b
+HEAD after=3171b27bd31c2d770abfc42f08a195670b3a2f3b
+Acquisition calls before refusal: none. Read-only status inspection is permitted.
+Record and reflog unchanged.
+Spawn after record retirement:
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/home/data/legacy-nested-alias-live/launch-brief.md records no ship branch; defaulting to legacy branch fm/legacy-nested-alias-live
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/home/data/legacy-nested-alias-live/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/treehouse-root/.treehouse/project-be1b01/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/treehouse-root/.treehouse/project-be1b01/1/project' to release it.
+spawned legacy-nested-alias-live harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-legacy-nested-alias-live worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/treehouse-root/.treehouse/project-be1b01/1/project
+Published identity:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/treehouse-root/.treehouse/project-be1b01/1/project
+treehouse_lease_id=b5f800e179ad2ff4c37147a8d19a7951
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/home:legacy-nested-alias-live
+Refreshed HEAD=a9be21ee0c97655c3ca661d780f6d01b42699422
+Allocator calls after retirement:
+status --json
+get --lease --json --lease-holder /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.PnDRZh/legacy-nested-alias-live/home:legacy-nested-alias-live

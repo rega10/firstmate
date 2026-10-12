@@ -1,0 +1,20 @@
+Target: 3c100155399f2dd72757bec4aeb0164525a00b9e
+Real interfaces: fm-spawn, fm-control, fm-teardown, fm-bootstrap, installed Treehouse JSON acquisition/status/conditional return.
+Fixture repositories, homes, and Treehouse roots stayed inside .no-mistakes/local-test-tmp in the assigned worktree. Fixtures and transient drivers were removed.
+Terminal and harness launches were simulated as authorized. No live Herdr session or real worker launched. CLI evidence proves allocation and lifecycle behavior, not worker UI readiness.
+
+Baseline commands, all exited 0:
+TMPDIR="$PWD/.no-mistakes/local-test-tmp" FM_TEST_EVIDENCE=1 bash -x tests/fm-spawn-pool-base-freshen.test.sh --lease
+TMPDIR="$PWD/.no-mistakes/local-test-tmp" bash -x tests/fm-teardown.test.sh --lease
+TMPDIR="$PWD/.no-mistakes/local-test-tmp" bash -x tests/fm-control-relaunch.test.sh --lease
+TMPDIR="$PWD/.no-mistakes/local-test-tmp" bash -x tests/fm-bootstrap.test.sh --lease-dependencies
+
+Manual probes reused existing fixture functions in disposable scripts, all final probes exited 0:
+tests/.nm-live-ship.sh: real ship lease allocation and failed-publication rollback beside an exited owner's lease.
+tests/.nm-live-relaunch.sh: a real lease survives fm-control relaunch without allocator calls.
+tests/.nm-live-bootstrap.sh: bootstrap accepts the real allocator and queries all three capability interfaces.
+tests/.nm-live-legacy.sh: a nested same-name legacy record with an alias path and missing owner claim blocks real stale-slot acquisition; retirement permits refresh and acquisition.
+The first nested legacy probe incorrectly prohibited read-only status inspection. The corrected probe prohibits acquisition and passed. No product fix was required.
+
+Full traces retain commands and assertions. Transcript excerpts decode product output and JSON state. Dependency-negative and related-home matrix tests use simulated dependencies as supplemental checks.
+No complete suite, lint, formatter, static analysis, pipeline-control, publication, or CI commands ran.

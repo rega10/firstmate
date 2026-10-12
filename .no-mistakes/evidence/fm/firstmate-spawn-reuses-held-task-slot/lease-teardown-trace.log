@@ -1,0 +1,867 @@
++ set -u
+++ dirname tests/fm-teardown.test.sh
++ . tests/lib.sh
+++ '[' -n '' ']'
+++ FM_TEST_LIB_SOURCED=1
+++ umask 022
++++ dirname tests/lib.sh
+++ . tests/git-config-helpers.sh
++++ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
++++ GIT_CONFIG_GLOBAL=/dev/null
++++ GIT_CONFIG_NOSYSTEM=1
++++ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR
+++ export FM_GATE_REFUSE_BYPASS=1
+++ FM_GATE_REFUSE_BYPASS=1
+++ export FM_TEST_SEAM=1
+++ FM_TEST_SEAM=1
+++ unset FM_TASK_ID
+++ unset TASKS_AXI_FILE TASKS_AXI_BACKEND
+++++ dirname tests/lib.sh
++++ cd tests/..
++++ pwd
+++ ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD
++++ fm_test_tmpdir
++++ local base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp physical
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp ']'
++++ case "$base" in
+++++ CDPATH=
+++++ cd -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++++ pwd -P
++++ physical=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.git ']'
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++ FM_TEST_TMPDIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++ FM_TEST_CLEANUP_DIRS=()
++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-cleanup.99039.XXXXXX
+++ FM_TEST_CLEANUP_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-cleanup.99039.eUvRi2
++++ fm_test_pid_identity 99039
++++ local pid=99039
++++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ bash -c '. "$1"; fm_pid_identity "$2"' _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-wake-lib.sh 99039
+++ FM_TEST_OWNER_IDENTITY='Sun Oct 11 19:52:51 2026     bash -x tests/fm-teardown.test.sh --lease'
++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-procevent.99039.XXXXXX
+++ FM_TEST_PROCEVENT_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-procevent.99039.It4Qhs
++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-watcher.99039.XXXXXX
+++ FM_TEST_WATCHER_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-watcher.99039.LauhAR
+++ FM_TEST_STUB_MAX_BLOCK_SECONDS=120
+++ export FM_TEST_STUB_MAX_BLOCK_SECONDS
+++ trap fm_test_cleanup EXIT
+++ trap 'fm_test_cleanup; exit 130' INT
+++ trap 'fm_test_cleanup; exit 143' TERM
+++ trap 'fm_test_cleanup; exit 129' HUP
+++ trap 'fm_test_cleanup; exit 131' QUIT
+++ FM_TEST_ORPHAN_MAX_AGE_SECONDS=3600
+++ '[' 0 '!=' 1 ']'
+++ fm_test_reap_orphans
+++ local marker dir mtime now owner_pid owner_identity current_identity
++++ date +%s
+++ now=1791766371
+++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
+++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.Cx4nzO/.fm-test-fixture ']'
++++ sed -n 1p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.Cx4nzO/.fm-test-fixture
+++ owner_pid=98626
++++ sed -n '2,$p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-spawn-pool-base-freshen.Cx4nzO/.fm-test-fixture
+++ owner_identity='Sun Oct 11 19:52:50 2026     bash -x tests/fm-spawn-pool-base-freshen.test.sh --lease'
+++ case "$owner_pid" in
++++ fm_test_pid_identity 98626
+++ current_identity='Sun Oct 11 19:52:50 2026     bash -x tests/fm-spawn-pool-base-freshen.test.sh --lease'
+++ '[' -n 'Sun Oct 11 19:52:50 2026     bash -x tests/fm-spawn-pool-base-freshen.test.sh --lease' ']'
+++ '[' 'Sun Oct 11 19:52:50 2026     bash -x tests/fm-spawn-pool-base-freshen.test.sh --lease' = 'Sun Oct 11 19:52:50 2026     bash -x tests/fm-spawn-pool-base-freshen.test.sh --lease' ']'
+++ continue
++ fm_git_identity fmtest fmtest@example.invalid
++ export GIT_AUTHOR_NAME=fmtest GIT_AUTHOR_EMAIL=fmtest@example.invalid
++ GIT_AUTHOR_NAME=fmtest
++ GIT_AUTHOR_EMAIL=fmtest@example.invalid
++ export GIT_COMMITTER_NAME=fmtest GIT_COMMITTER_EMAIL=fmtest@example.invalid
++ GIT_COMMITTER_NAME=fmtest
++ GIT_COMMITTER_EMAIL=fmtest@example.invalid
++ TEARDOWN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh
++ PR_CHECK=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-pr-check.sh
+++ fm_test_tmproot fm-teardown-tests
+++ local prefix=fm-teardown-tests root tmp_base
++++ fm_test_tmpdir
++++ local base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp physical
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp ']'
++++ case "$base" in
+++++ CDPATH=
+++++ cd -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++++ pwd -P
++++ physical=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.git ']'
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
+++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp
++++ mktemp -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.XXXXXX
+++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
++++ cd -P -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
++++ pwd -P
+++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
+++ printf '%s\n%s\n' 99039 'Sun Oct 11 19:52:51 2026     bash -x tests/fm-teardown.test.sh --lease'
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
++ TMP_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
+++ command -v git
++ REAL_GIT_FOR_TEST=/usr/bin/git
++ export REAL_GIT_FOR_TEST
+++ command -v ps
++ REAL_PS_FOR_TEST=/bin/ps
++ export REAL_PS_FOR_TEST
+++ command -v lsof
++ REAL_LSOF_FOR_TEST=/usr/sbin/lsof
++ export REAL_LSOF_FOR_TEST
++ '[' --lease = --missing-jq ']'
++ '[' --lease = --lease ']'
++ test_missing_jq_preserves_lease_records
++ local phase case_dir out rc before_meta
++ for phase in active pending
+++ make_case missing-jq-active
+++ local name=missing-jq-active case_dir fakebin
+++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/config /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/data /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin
+++ cat
+++ cat
+++ cat
+++ cat
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin/treehouse /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin/tmux /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin/gh-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin/gh /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin/no-mistakes
+++ git init -q --bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/origin.git
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/origin.git symbolic-ref HEAD refs/heads/main
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/_seed
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/_seed -c user.email=t@t -c user.name=t commit -q --allow-empty -m 'origin baseline'
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/_seed push -q origin main
+++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/_seed
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/project
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/project remote set-head origin main
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/project worktree add -q -b fm/task-x1 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/wt main
+++ touch /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/state/.last-watcher-beat
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active
++ fm_write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/state/task-x1.meta window=firstmate:fm-task-x1 endpoint_task_id=task-x1 project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/project kind=ship mode=local-only spawn_gen=missing-jq-test treehouse_lease_id=retained-lease
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/state/task-x1.meta kv
++ shift
++ :
++ for kv in "$@"
++ printf '%s\n' window=firstmate:fm-task-x1
++ for kv in "$@"
++ printf '%s\n' endpoint_task_id=task-x1
++ for kv in "$@"
++ printf '%s\n' project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/project
++ for kv in "$@"
++ printf '%s\n' kind=ship
++ for kv in "$@"
++ printf '%s\n' mode=local-only
++ for kv in "$@"
++ printf '%s\n' spawn_gen=missing-jq-test
++ for kv in "$@"
++ printf '%s\n' treehouse_lease_id=retained-lease
++ '[' active = active ']'
++ printf 'worktree=%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/wt
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/state/task-x1.meta
++ before_meta=$'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/project\nkind=ship\nmode=local-only\nspawn_gen=missing-jq-test\ntreehouse_lease_id=retained-lease\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/wt'
++ cat
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin/treehouse
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/user-home
+++ BASH_ENV=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/no-jq.bash
+++ FM_RETURN_LOG=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/returned
+++ run_teardown /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active --force
++ out=$'++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active\n++ shift\n++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD\n++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/state\n++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/data\n++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/config\n++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin\n++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force\nerror: jq is required for Treehouse lease acquisition and retirement'
++ rc=1
++ '[' 1 -ne 0 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/state/task-x1.meta
++ '[' $'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/project\nkind=ship\nmode=local-only\nspawn_gen=missing-jq-test\ntreehouse_lease_id=retained-lease\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/wt' = $'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/project\nkind=ship\nmode=local-only\nspawn_gen=missing-jq-test\ntreehouse_lease_id=retained-lease\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/wt' ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/returned ']'
++ assert_contains $'++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active\n++ shift\n++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD\n++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/state\n++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/data\n++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/config\n++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-active/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin\n++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force\nerror: jq is required for Treehouse lease acquisition and retirement' 'jq is required' 'missing jq retirement refusal did not identify the dependency'
++ case "$1" in
++ :
++ pass 'missing jq preserves the active lease record before retirement'
++ printf 'ok - %s\n' 'missing jq preserves the active lease record before retirement'
+ok - missing jq preserves the active lease record before retirement
++ for phase in active pending
+++ make_case missing-jq-pending
+++ local name=missing-jq-pending case_dir fakebin
+++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/config /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/data /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin
+++ cat
+++ cat
+++ cat
+++ cat
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin/treehouse /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin/tmux /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin/gh-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin/gh /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin/no-mistakes
+++ git init -q --bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/origin.git
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/origin.git symbolic-ref HEAD refs/heads/main
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/_seed
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/_seed -c user.email=t@t -c user.name=t commit -q --allow-empty -m 'origin baseline'
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/_seed push -q origin main
+++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/_seed
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/project
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/project remote set-head origin main
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/project worktree add -q -b fm/task-x1 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/wt main
+++ touch /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/state/.last-watcher-beat
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending
++ fm_write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/state/task-x1.meta window=firstmate:fm-task-x1 endpoint_task_id=task-x1 project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/project kind=ship mode=local-only spawn_gen=missing-jq-test treehouse_lease_id=retained-lease
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/state/task-x1.meta kv
++ shift
++ :
++ for kv in "$@"
++ printf '%s\n' window=firstmate:fm-task-x1
++ for kv in "$@"
++ printf '%s\n' endpoint_task_id=task-x1
++ for kv in "$@"
++ printf '%s\n' project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/project
++ for kv in "$@"
++ printf '%s\n' kind=ship
++ for kv in "$@"
++ printf '%s\n' mode=local-only
++ for kv in "$@"
++ printf '%s\n' spawn_gen=missing-jq-test
++ for kv in "$@"
++ printf '%s\n' treehouse_lease_id=retained-lease
++ '[' pending = active ']'
++ printf 'worktree=\ntreehouse_retiring_worktree=%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/wt
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/state/task-x1.meta
++ before_meta=$'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/project\nkind=ship\nmode=local-only\nspawn_gen=missing-jq-test\ntreehouse_lease_id=retained-lease\nworktree=\ntreehouse_retiring_worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/wt'
++ cat
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin/treehouse
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/user-home
+++ BASH_ENV=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/no-jq.bash
+++ FM_RETURN_LOG=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/returned
+++ run_teardown /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending --force
++ out=$'++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending\n++ shift\n++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD\n++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/state\n++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/data\n++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/config\n++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin\n++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force\nerror: jq is required for Treehouse lease acquisition and retirement'
++ rc=1
++ '[' 1 -ne 0 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/state/task-x1.meta
++ '[' $'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/project\nkind=ship\nmode=local-only\nspawn_gen=missing-jq-test\ntreehouse_lease_id=retained-lease\nworktree=\ntreehouse_retiring_worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/wt' = $'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/project\nkind=ship\nmode=local-only\nspawn_gen=missing-jq-test\ntreehouse_lease_id=retained-lease\nworktree=\ntreehouse_retiring_worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/wt' ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/returned ']'
++ assert_contains $'++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending\n++ shift\n++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD\n++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/state\n++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/data\n++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/config\n++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/missing-jq-pending/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin\n++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force\nerror: jq is required for Treehouse lease acquisition and retirement' 'jq is required' 'missing jq retirement refusal did not identify the dependency'
++ case "$1" in
++ :
++ pass 'missing jq preserves the pending lease record before retirement'
++ printf 'ok - %s\n' 'missing jq preserves the pending lease record before retirement'
+ok - missing jq preserves the pending lease record before retirement
++ test_real_lease_teardown_recovers_interruption
++ local case_dir treehouse_bin receipt path lease_id out rc phase pid current replacement
+++ command -v treehouse
++ treehouse_bin=/opt/homebrew/bin/treehouse
++ for phase in before-return after-return
+++ make_case lease-before-return
+++ local name=lease-before-return case_dir fakebin
+++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/config /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin
+++ cat
+++ cat
+++ cat
+++ cat
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin/treehouse /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin/tmux /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin/gh-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin/gh /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin/no-mistakes
+++ git init -q --bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/origin.git
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/origin.git symbolic-ref HEAD refs/heads/main
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/_seed
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/_seed -c user.email=t@t -c user.name=t commit -q --allow-empty -m 'origin baseline'
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/_seed push -q origin main
+++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/_seed
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project remote set-head origin main
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project worktree add -q -b fm/task-x1 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/wt main
+++ touch /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/.last-watcher-beat
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
++ export TREEHOUSE_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root
++ TREEHOUSE_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/user-home
+++ /opt/homebrew/bin/treehouse get --lease --json --lease-holder /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project' to release it.
++ receipt='{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","lease_id":"7aec59ba7ddb1ff1d2441fa7402f3f2b","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1","leased_at":"2026-10-11T19:52:52.810378-05:00"}'
+++ printf '%s\n' '{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","lease_id":"7aec59ba7ddb1ff1d2441fa7402f3f2b","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1","leased_at":"2026-10-11T19:52:52.810378-05:00"}'
+++ jq -r .path
++ path=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project
+++ printf '%s\n' '{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","lease_id":"7aec59ba7ddb1ff1d2441fa7402f3f2b","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1","leased_at":"2026-10-11T19:52:52.810378-05:00"}'
+++ jq -r .lease_id
++ lease_id=7aec59ba7ddb1ff1d2441fa7402f3f2b
++ fm_write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta window=firstmate:fm-task-x1 endpoint_task_id=task-x1 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project kind=ship mode=local-only spawn_gen=teardown-lease-test treehouse_lease_id=7aec59ba7ddb1ff1d2441fa7402f3f2b treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta kv
++ shift
++ :
++ for kv in "$@"
++ printf '%s\n' window=firstmate:fm-task-x1
++ for kv in "$@"
++ printf '%s\n' endpoint_task_id=task-x1
++ for kv in "$@"
++ printf '%s\n' worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project
++ for kv in "$@"
++ printf '%s\n' project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project
++ for kv in "$@"
++ printf '%s\n' kind=ship
++ for kv in "$@"
++ printf '%s\n' mode=local-only
++ for kv in "$@"
++ printf '%s\n' spawn_gen=teardown-lease-test
++ for kv in "$@"
++ printf '%s\n' treehouse_lease_id=7aec59ba7ddb1ff1d2441fa7402f3f2b
++ for kv in "$@"
++ printf '%s\n' treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1
++ seed_backlog_in_flight /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return kind=ship
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data
++ printf '%s\n' '# Backlog' '' '## In flight' '' '## Queued' '' '## Done'
++ tasks-axi add task-x1 'teardown fixture task' --kind ship --file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data/backlog.md
++ tasks-axi start task-x1 --file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data/backlog.md
++ rc=1
++ '[' 1 -ne 0 ']'
++ cat
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin/treehouse /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin/ps
++ pid=140
++ printf '%s\n' 140
++ wait 140
++ rc=137
++ '[' 137 -ne 0 ']'
++ assert_present /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta 'interruption lost the recovery receipt'
++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta ']'
+++ sed -n 's/^worktree=//p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta
++ '[' '' = '' ']'
++ assert_grep treehouse_retiring_worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta 'interruption lost the retirement path'
++ grep -F -- treehouse_retiring_worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta
++ assert_grep treehouse_lease_id=7aec59ba7ddb1ff1d2441fa7402f3f2b /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta 'interruption lost the immutable receipt'
++ grep -F -- treehouse_lease_id=7aec59ba7ddb1ff1d2441fa7402f3f2b /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta
++ '[' before-return = before-return ']'
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/user-home
+++ FM_REAL_TREEHOUSE=/opt/homebrew/bin/treehouse
+++ FM_LEASE_TEST_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ FM_LEASE_STATUS_EMPTY=1
+++ run_teardown /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return --force
+++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ shift
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD
+++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state
+++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data
+++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/config
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force
+WARNING: watcher still down (same stale episode; last beat: 4s ago, grace 300s) - full banner already printed this episode.
+jq: error (at <stdin>:1): Treehouse allocation status is unknown
+error: Treehouse return is incomplete for task task-x1; retry teardown with its retained receipt
++ out=
++ rc=1
++ '[' 1 -ne 0 ']'
++ assert_grep treehouse_lease_id=7aec59ba7ddb1ff1d2441fa7402f3f2b /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta 'empty status discarded the receipt'
++ grep -F -- treehouse_lease_id=7aec59ba7ddb1ff1d2441fa7402f3f2b /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/user-home
+++ /opt/homebrew/bin/treehouse status --json
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
++ current='[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","status":"leased","flavor":"git","lease_id":"7aec59ba7ddb1ff1d2441fa7402f3f2b","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1","leased_at":"2026-10-11T19:52:52.810378-05:00","processes":[]}]'
++ '[' before-return = before-return ']'
++ printf '%s\n' '[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","status":"leased","flavor":"git","lease_id":"7aec59ba7ddb1ff1d2441fa7402f3f2b","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1","leased_at":"2026-10-11T19:52:52.810378-05:00","processes":[]}]'
++ jq -e --arg id 7aec59ba7ddb1ff1d2441fa7402f3f2b 'any(.[]; .lease_id == $id)'
++ TREEHOUSE_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/changed-root
++ '[' before-return = before-return ']'
++ printf 'retained work\n'
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/user-home
+++ FM_REAL_TREEHOUSE=/opt/homebrew/bin/treehouse
+++ FM_LEASE_TEST_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ run_teardown /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ shift
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD
+++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state
+++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data
+++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/config
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1
+WARNING: watcher still down (same stale episode; last beat: 5s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+REFUSED: worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project has uncommitted changes.
+uncommitted changes present (untracked-only leftovers)
+untracked paths (up to 10):
+  retained.txt
+Commit them (or get the captain's explicit OK to discard, then --force).
+error: Treehouse return is incomplete for task task-x1; retry teardown with its retained receipt
++ out=
++ rc=1
++ '[' 1 -ne 0 ']'
++ assert_grep 'retained work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project/retained.txt 'a pending return lost unlanded work'
++ grep -F -- 'retained work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project/retained.txt
++ assert_present /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta 'a refused pending return lost its receipt'
++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta ']'
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/user-home
+++ FM_REAL_TREEHOUSE=/opt/homebrew/bin/treehouse
+++ FM_LEASE_TEST_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ FM_LEASE_RETRY=1
+++ FM_TREEHOUSE_RETURN_LOCK_RETRY_WAIT_SECS=0.01
+++ run_teardown /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return --force
+++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ shift
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD
+++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state
+++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data
+++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/config
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force
+WARNING: watcher still down (same stale episode; last beat: 7s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+Unable to create '.git/index.lock': File exists
+teardown: worktree return failed with transient git lock (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project/.git/worktrees/project/index.lock); waiting 0.01s and retrying (1/3)
+teardown: worktree return succeeded on retry; lock cleared on its own
++ out=$'A new version of treehouse is available: v2.3.0 → v3.1.2\nRun "treehouse update" to update\n\n🌳 Worktree returned to pool.\nteardown task-x1 complete (window firstmate:fm-task-x1, worktree )\nBacklog: task-x1 is closed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.'
++ rc=0
++ expect_code 0 0 $'retry should complete the exact pending return\nA new version of treehouse is available: v2.3.0 → v3.1.2\nRun "treehouse update" to update\n\n🌳 Worktree returned to pool.\nteardown task-x1 complete (window firstmate:fm-task-x1, worktree )\nBacklog: task-x1 is closed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.'
++ local expected=0 actual=0 $'label=retry should complete the exact pending return\nA new version of treehouse is available: v2.3.0 → v3.1.2\nRun "treehouse update" to update\n\n🌳 Worktree returned to pool.\nteardown task-x1 complete (window firstmate:fm-task-x1, worktree )\nBacklog: task-x1 is closed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.'
++ '[' 0 = 0 ']'
++ assert_absent /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta 'retry did not retire the receipt'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/state/task-x1.meta ']'
+++ backlog_row_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return
+++ tasks-axi show task-x1 --file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data/backlog.md
+++ sed -n 's/^  state: *//p'
+++ head -1
++ '[' done = done ']'
++ assert_grep 'return --force --if-lease-id 7aec59ba7ddb1ff1d2441fa7402f3f2b /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/returns 'teardown did not use conditional release'
++ grep -F -- 'return --force --if-lease-id 7aec59ba7ddb1ff1d2441fa7402f3f2b /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/returns
++ '[' before-return = before-return ']'
+++ grep -Fc 'return --force --if-lease-id 7aec59ba7ddb1ff1d2441fa7402f3f2b /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/returns
++ '[' 3 -eq 3 ']'
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/user-home
+++ /opt/homebrew/bin/treehouse status --json --root /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
++ current='[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]'
++ printf '%s\n' '[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]'
++ jq -e --arg id 7aec59ba7ddb1ff1d2441fa7402f3f2b 'all(.[]; .lease_id != $id)'
++ '[' before-return = after-return ']'
++ unset TREEHOUSE_ROOT
++ pass 'durable lease teardown recovers interruption before-return without touching a successor'
++ printf 'ok - %s\n' 'durable lease teardown recovers interruption before-return without touching a successor'
+ok - durable lease teardown recovers interruption before-return without touching a successor
++ for phase in before-return after-return
+++ make_case lease-after-return
+++ local name=lease-after-return case_dir fakebin
+++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/config /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin
+++ cat
+++ cat
+++ cat
+++ cat
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin/treehouse /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin/tmux /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin/gh-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin/gh /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin/no-mistakes
+++ git init -q --bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/origin.git
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/origin.git symbolic-ref HEAD refs/heads/main
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/_seed
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/_seed -c user.email=t@t -c user.name=t commit -q --allow-empty -m 'origin baseline'
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/_seed push -q origin main
+++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/_seed
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project remote set-head origin main
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project worktree add -q -b fm/task-x1 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/wt main
+++ touch /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/.last-watcher-beat
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
++ export TREEHOUSE_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root
++ TREEHOUSE_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/user-home
+++ /opt/homebrew/bin/treehouse get --lease --json --lease-holder /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return:task-x1
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project' to release it.
++ receipt='{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","lease_id":"3b2274515c67d2a776b57ab19fdf27a4","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return:task-x1","leased_at":"2026-10-11T19:53:01.280181-05:00"}'
+++ printf '%s\n' '{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","lease_id":"3b2274515c67d2a776b57ab19fdf27a4","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return:task-x1","leased_at":"2026-10-11T19:53:01.280181-05:00"}'
+++ jq -r .path
++ path=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project
+++ printf '%s\n' '{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","lease_id":"3b2274515c67d2a776b57ab19fdf27a4","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return:task-x1","leased_at":"2026-10-11T19:53:01.280181-05:00"}'
+++ jq -r .lease_id
++ lease_id=3b2274515c67d2a776b57ab19fdf27a4
++ fm_write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta window=firstmate:fm-task-x1 endpoint_task_id=task-x1 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project kind=ship mode=local-only spawn_gen=teardown-lease-test treehouse_lease_id=3b2274515c67d2a776b57ab19fdf27a4 treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return:task-x1
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta kv
++ shift
++ :
++ for kv in "$@"
++ printf '%s\n' window=firstmate:fm-task-x1
++ for kv in "$@"
++ printf '%s\n' endpoint_task_id=task-x1
++ for kv in "$@"
++ printf '%s\n' worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project
++ for kv in "$@"
++ printf '%s\n' project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project
++ for kv in "$@"
++ printf '%s\n' kind=ship
++ for kv in "$@"
++ printf '%s\n' mode=local-only
++ for kv in "$@"
++ printf '%s\n' spawn_gen=teardown-lease-test
++ for kv in "$@"
++ printf '%s\n' treehouse_lease_id=3b2274515c67d2a776b57ab19fdf27a4
++ for kv in "$@"
++ printf '%s\n' treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return:task-x1
++ seed_backlog_in_flight /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return kind=ship
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data
++ printf '%s\n' '# Backlog' '' '## In flight' '' '## Queued' '' '## Done'
++ tasks-axi add task-x1 'teardown fixture task' --kind ship --file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data/backlog.md
++ tasks-axi start task-x1 --file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data/backlog.md
++ rc=1
++ '[' 1 -ne 0 ']'
++ cat
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin/treehouse /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin/ps
++ pid=13828
++ printf '%s\n' 13828
++ wait 13828
++ rc=137
++ '[' 137 -ne 0 ']'
++ assert_present /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta 'interruption lost the recovery receipt'
++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta ']'
+++ sed -n 's/^worktree=//p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta
++ '[' '' = '' ']'
++ assert_grep treehouse_retiring_worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta 'interruption lost the retirement path'
++ grep -F -- treehouse_retiring_worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta
++ assert_grep treehouse_lease_id=3b2274515c67d2a776b57ab19fdf27a4 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta 'interruption lost the immutable receipt'
++ grep -F -- treehouse_lease_id=3b2274515c67d2a776b57ab19fdf27a4 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta
++ '[' after-return = before-return ']'
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/user-home
+++ /opt/homebrew/bin/treehouse status --json
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
++ current='[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]'
++ '[' after-return = before-return ']'
++ printf '%s\n' '[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]'
++ jq -e --arg id 3b2274515c67d2a776b57ab19fdf27a4 'all(.[]; .lease_id != $id)'
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/user-home
+++ /opt/homebrew/bin/treehouse get --lease --json --lease-holder replacement
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project' to release it.
++ replacement='{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","lease_id":"9c3debbeeb0996b941db5248882e2fff","lease_holder":"replacement","leased_at":"2026-10-11T19:53:04.208863-05:00"}'
+++ printf '%s\n' '{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","lease_id":"9c3debbeeb0996b941db5248882e2fff","lease_holder":"replacement","leased_at":"2026-10-11T19:53:04.208863-05:00"}'
+++ jq -r .path
++ '[' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project = /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project ']'
++ printf 'replacement work\n'
++ TREEHOUSE_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/changed-root
++ '[' after-return = before-return ']'
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/user-home
+++ FM_REAL_TREEHOUSE=/opt/homebrew/bin/treehouse
+++ FM_LEASE_TEST_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
+++ FM_LEASE_RETRY=1
+++ FM_TREEHOUSE_RETURN_LOCK_RETRY_WAIT_SECS=0.01
+++ run_teardown /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return --force
+++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
+++ shift
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD
+++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state
+++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data
+++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/config
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force
+WARNING: watcher still down (same stale episode; last beat: 5s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+teardown: worktree lease 3b2274515c67d2a776b57ab19fdf27a4 is already released; leaving the current allocation untouched
++ out=$'teardown task-x1 complete (window firstmate:fm-task-x1, worktree )\nBacklog: task-x1 is closed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.'
++ rc=0
++ expect_code 0 0 $'retry should complete the exact pending return\nteardown task-x1 complete (window firstmate:fm-task-x1, worktree )\nBacklog: task-x1 is closed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.'
++ local expected=0 actual=0 $'label=retry should complete the exact pending return\nteardown task-x1 complete (window firstmate:fm-task-x1, worktree )\nBacklog: task-x1 is closed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.'
++ '[' 0 = 0 ']'
++ assert_absent /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta 'retry did not retire the receipt'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/state/task-x1.meta ']'
+++ backlog_row_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
+++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return
+++ tasks-axi show task-x1 --file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data/backlog.md
+++ sed -n 's/^  state: *//p'
+++ head -1
++ '[' done = done ']'
++ assert_grep 'return --force --if-lease-id 3b2274515c67d2a776b57ab19fdf27a4 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/returns 'teardown did not use conditional release'
++ grep -F -- 'return --force --if-lease-id 3b2274515c67d2a776b57ab19fdf27a4 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/returns
++ '[' after-return = before-return ']'
++ '[' after-return = after-return ']'
++ assert_grep 'replacement work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project/replacement.txt 'retry reset the replacement allocation'
++ grep -F -- 'replacement work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project/replacement.txt
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/user-home
+++ /opt/homebrew/bin/treehouse status --json --root /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
++ current='[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","status":"leased","flavor":"git","lease_id":"9c3debbeeb0996b941db5248882e2fff","lease_holder":"replacement","leased_at":"2026-10-11T19:53:04.208863-05:00","processes":[]}]'
++ printf '%s\n' '[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","status":"leased","flavor":"git","lease_id":"9c3debbeeb0996b941db5248882e2fff","lease_holder":"replacement","leased_at":"2026-10-11T19:53:04.208863-05:00","processes":[]}]'
+++ printf '%s\n' '{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","lease_id":"9c3debbeeb0996b941db5248882e2fff","lease_holder":"replacement","leased_at":"2026-10-11T19:53:04.208863-05:00"}'
+++ jq -r .lease_id
++ jq -e --arg id 9c3debbeeb0996b941db5248882e2fff 'any(.[]; .lease_id == $id)'
++ unset TREEHOUSE_ROOT
++ pass 'durable lease teardown recovers interruption after-return without touching a successor'
++ printf 'ok - %s\n' 'durable lease teardown recovers interruption after-return without touching a successor'
+ok - durable lease teardown recovers interruption after-return without touching a successor
++ test_descendant_lease_return_is_recoverable
++ local case_dir home treehouse_bin receipt path lease_id out rc current before_child before_parent
+++ command -v treehouse
++ treehouse_bin=/opt/homebrew/bin/treehouse
+++ make_case leased-descendant
+++ local name=leased-descendant case_dir fakebin
+++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/config /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/data /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin
+++ cat
+++ cat
+++ cat
+++ cat
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin/treehouse /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin/tmux /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin/gh-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin/gh /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin/no-mistakes
+++ git init -q --bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/origin.git
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/origin.git symbolic-ref HEAD refs/heads/main
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/_seed
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/_seed -c user.email=t@t -c user.name=t commit -q --allow-empty -m 'origin baseline'
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/_seed push -q origin main
+++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/_seed
+++ git clone -q /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/origin.git /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project remote set-head origin main
+++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project worktree add -q -b fm/task-x1 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt main
+++ touch /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state/.last-watcher-beat
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant
++ case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant
++ write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant local-only secondmate
++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant mode=local-only kind=secondmate
++ fm_write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state/task-x1.meta window=firstmate:fm-task-x1 endpoint_task_id=task-x1 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project kind=secondmate mode=local-only spawn_gen=teardown-test-task-x1
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state/task-x1.meta kv
++ shift
++ :
++ for kv in "$@"
++ printf '%s\n' window=firstmate:fm-task-x1
++ for kv in "$@"
++ printf '%s\n' endpoint_task_id=task-x1
++ for kv in "$@"
++ printf '%s\n' worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt
++ for kv in "$@"
++ printf '%s\n' project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project
++ for kv in "$@"
++ printf '%s\n' kind=secondmate
++ for kv in "$@"
++ printf '%s\n' mode=local-only
++ for kv in "$@"
++ printf '%s\n' spawn_gen=teardown-test-task-x1
++ configure_secondmate_with_tmux_children /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant
++ local case_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home child child_wt
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/data /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/config /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/projects
++ printf '%s\n' task-x1
++ printf '%s\n' home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home
++ for child in child-a child-b
++ child_wt=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/child-a-wt
++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project worktree add -q -b fm/child-a /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/child-a-wt main
++ fm_write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta window=firstmate:fm-child-a endpoint_task_id=child-a worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/child-a-wt project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project kind=ship mode=local-only
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta kv
++ shift
++ :
++ for kv in "$@"
++ printf '%s\n' window=firstmate:fm-child-a
++ for kv in "$@"
++ printf '%s\n' endpoint_task_id=child-a
++ for kv in "$@"
++ printf '%s\n' worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/child-a-wt
++ for kv in "$@"
++ printf '%s\n' project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project
++ for kv in "$@"
++ printf '%s\n' kind=ship
++ for kv in "$@"
++ printf '%s\n' mode=local-only
++ :
++ for child in child-a child-b
++ child_wt=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/child-b-wt
++ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project worktree add -q -b fm/child-b /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/child-b-wt main
++ fm_write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-b.meta window=firstmate:fm-child-b endpoint_task_id=child-b worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/child-b-wt project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project kind=ship mode=local-only
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-b.meta kv
++ shift
++ :
++ for kv in "$@"
++ printf '%s\n' window=firstmate:fm-child-b
++ for kv in "$@"
++ printf '%s\n' endpoint_task_id=child-b
++ for kv in "$@"
++ printf '%s\n' worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/child-b-wt
++ for kv in "$@"
++ printf '%s\n' project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project
++ for kv in "$@"
++ printf '%s\n' kind=ship
++ for kv in "$@"
++ printf '%s\n' mode=local-only
++ :
++ home=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home
++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/supervisor-home/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/code-root
++ ln -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/code-root/bin
++ rm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-b.meta
++ export TREEHOUSE_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root
++ TREEHOUSE_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/user-home
+++ /opt/homebrew/bin/treehouse get --lease --json --lease-holder /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project' to release it.
++ receipt='{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project","lease_id":"012254fe2c0490a18c52ca42da3c6179","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a","leased_at":"2026-10-11T19:53:06.803061-05:00"}'
+++ printf '%s\n' '{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project","lease_id":"012254fe2c0490a18c52ca42da3c6179","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a","leased_at":"2026-10-11T19:53:06.803061-05:00"}'
+++ jq -r .path
++ path=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project
+++ printf '%s\n' '{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project","lease_id":"012254fe2c0490a18c52ca42da3c6179","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a","leased_at":"2026-10-11T19:53:06.803061-05:00"}'
+++ jq -r .lease_id
++ lease_id=012254fe2c0490a18c52ca42da3c6179
++ fm_write_meta /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta window=firstmate:fm-child-a endpoint_task_id=child-a worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project kind=ship mode=local-only treehouse_lease_id=012254fe2c0490a18c52ca42da3c6179 treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta kv
++ shift
++ :
++ for kv in "$@"
++ printf '%s\n' window=firstmate:fm-child-a
++ for kv in "$@"
++ printf '%s\n' endpoint_task_id=child-a
++ for kv in "$@"
++ printf '%s\n' worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project
++ for kv in "$@"
++ printf '%s\n' project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project
++ for kv in "$@"
++ printf '%s\n' kind=ship
++ for kv in "$@"
++ printf '%s\n' mode=local-only
++ for kv in "$@"
++ printf '%s\n' treehouse_lease_id=012254fe2c0490a18c52ca42da3c6179
++ for kv in "$@"
++ printf '%s\n' treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a
++ cat
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin/treehouse /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin/ps
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta
++ before_child=$'window=firstmate:fm-child-a\nendpoint_task_id=child-a\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project\nkind=ship\nmode=local-only\ntreehouse_lease_id=012254fe2c0490a18c52ca42da3c6179\ntreehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state/task-x1.meta
++ before_parent=$'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project\nkind=secondmate\nmode=local-only\nspawn_gen=teardown-test-task-x1\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home'
++ cat
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/supervisor-home
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/user-home
+++ FM_REAL_TREEHOUSE=/opt/homebrew/bin/treehouse
+++ BASH_ENV=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/no-jq.bash
+++ FM_LEASE_TEST_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/code-root
+++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state
+++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/data
+++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/config
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force
++ out=$'●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n●  WATCHER DOWN - SUPERVISION IS OFF\n●  1 task(s) in flight, but no live watcher process holds this home lock (last beat: 1s ago).\n●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.\n●  This is a supervision warning only; the guarded operation WILL still run.\n●  repair missing watcher supervision according to the session-start block for this harness; do not use shell &.\n●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nerror: jq is required for Treehouse lease acquisition and retirement'
++ rc=1
++ '[' 1 -ne 0 ']'
++ assert_contains $'●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n●  WATCHER DOWN - SUPERVISION IS OFF\n●  1 task(s) in flight, but no live watcher process holds this home lock (last beat: 1s ago).\n●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.\n●  This is a supervision warning only; the guarded operation WILL still run.\n●  repair missing watcher supervision according to the session-start block for this harness; do not use shell &.\n●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nerror: jq is required for Treehouse lease acquisition and retirement' 'jq is required' 'descendant refusal did not identify missing jq'
++ case "$1" in
++ :
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta
++ '[' $'window=firstmate:fm-child-a\nendpoint_task_id=child-a\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project\nkind=ship\nmode=local-only\ntreehouse_lease_id=012254fe2c0490a18c52ca42da3c6179\ntreehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a' = $'window=firstmate:fm-child-a\nendpoint_task_id=child-a\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project\nkind=ship\nmode=local-only\ntreehouse_lease_id=012254fe2c0490a18c52ca42da3c6179\ntreehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a' ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state/task-x1.meta
++ '[' $'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project\nkind=secondmate\nmode=local-only\nspawn_gen=teardown-test-task-x1\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home' = $'window=firstmate:fm-task-x1\nendpoint_task_id=task-x1\nworktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt\nproject=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project\nkind=secondmate\nmode=local-only\nspawn_gen=teardown-test-task-x1\nhome=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home' ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/returns ']'
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/supervisor-home
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/user-home
+++ FM_REAL_TREEHOUSE=/opt/homebrew/bin/treehouse
+++ FM_LEASE_TEST_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/code-root
+++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state
+++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/data
+++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/config
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force
+WARNING: watcher still down (same stale episode; last beat: 2s ago, grace 300s) - full banner already printed this episode.
++ out=
++ rc=1
++ '[' 1 -ne 0 ']'
++ assert_present /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta 'failed child return lost its receipt'
++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta ']'
+++ sed -n 's/^worktree=//p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home/state/child-a.meta
++ '[' '' = '' ']'
+++ FM_HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/supervisor-home
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/user-home
+++ FM_REAL_TREEHOUSE=/opt/homebrew/bin/treehouse
+++ FM_LEASE_TEST_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/code-root
+++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/state
+++ FM_DATA_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/data
+++ FM_CONFIG_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/config
+++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg00ew4Sz:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
+++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/bin/fm-teardown.sh task-x1 --force
+WARNING: watcher still down (same stale episode; last beat: 3s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
++ out=$'A new version of treehouse is available: v2.3.0 → v3.1.2\nRun "treehouse update" to update\n\n🌳 Worktree returned to pool.\nteardown task-x1 complete (window firstmate:fm-task-x1, worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt)'
++ rc=0
++ expect_code 0 0 $'descendant return retry should complete\nA new version of treehouse is available: v2.3.0 → v3.1.2\nRun "treehouse update" to update\n\n🌳 Worktree returned to pool.\nteardown task-x1 complete (window firstmate:fm-task-x1, worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt)'
++ local expected=0 actual=0 $'label=descendant return retry should complete\nA new version of treehouse is available: v2.3.0 → v3.1.2\nRun "treehouse update" to update\n\n🌳 Worktree returned to pool.\nteardown task-x1 complete (window firstmate:fm-task-x1, worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt)'
++ '[' 0 = 0 ']'
++ assert_absent /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home 'successful descendant retirement left its home'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home ']'
++ assert_grep 'return --force --if-lease-id 012254fe2c0490a18c52ca42da3c6179 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/returns 'descendant return lost its receipt'
++ grep -F -- 'return --force --if-lease-id 012254fe2c0490a18c52ca42da3c6179 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/returns
+++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/project
+++ HOME=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/user-home
+++ /opt/homebrew/bin/treehouse status --json
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
++ current='[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]'
++ printf '%s\n' '[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]'
++ jq -e --arg id 012254fe2c0490a18c52ca42da3c6179 'all(.[]; .lease_id != $id)'
++ unset TREEHOUSE_ROOT
++ pass 'descendant teardown retains the exact lease receipt until its conditional return succeeds'
++ printf 'ok - %s\n' 'descendant teardown retains the exact lease receipt until its conditional return succeeds'
+ok - descendant teardown retains the exact lease receipt until its conditional return succeeds
++ exit 0
++ fm_test_cleanup
++ local d
++ fm_test_reap_watchers
++ local state lock_home $'seen=\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-watcher.99039.LauhAR ']'
++ IFS=
++ read -r state
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-watcher.99039.LauhAR
++ fm_test_reap_procevent_homes
++ local home claim_root $'seen=\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-procevent.99039.It4Qhs ']'
++ IFS=$'\t'
++ read -r home claim_root
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-procevent.99039.It4Qhs
++ for d in "${FM_TEST_CLEANUP_DIRS[@]:-}"
++ '[' -n '' ']'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-cleanup.99039.eUvRi2 ']'
++ IFS=
++ read -r d
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP ']'
++ fm_test_remove_tree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
++ '[' -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP ']'
++ '[' '!' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP ']'
++ find /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP -type d -exec chmod u+rwx '{}' +
++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP
++ IFS=
++ read -r d
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/.fm-test-cleanup.99039.eUvRi2

@@ -1,0 +1,23 @@
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/treehouse-root/.treehouse/proj-848e22/1/proj. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/treehouse-root/.treehouse/proj-848e22/1/proj' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+Initial lease receipt:
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/treehouse-root/.treehouse/proj-848e22/1/proj","lease_id":"ef05aac56e0a6a2679e9a56787236895","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/home:lease-relaunch-live","leased_at":"2026-10-11T19:54:48.100057-05:00"}
+Firstmate relaunch output:
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/home/data/lease-relaunch-live/launch-brief.md records no ship branch; defaulting to legacy branch fm/lease-relaunch-live
+warning: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/home/data/lease-relaunch-live/launch-brief.md records no delivery contract line (scaffolded before ship briefs recorded one); launching on the explicit --mode no-mistakes - confirm its definition of done matches
+relaunched lease-relaunch-live harness=claude from=claude model=default effort=default backend=tmux endpoint=fmses:fm-lease-relaunch-live worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/treehouse-root/.treehouse/proj-848e22/1/proj
+Status before:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/treehouse-root/.treehouse/proj-848e22/1/proj","status":"leased","flavor":"git","lease_id":"ef05aac56e0a6a2679e9a56787236895","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/home:lease-relaunch-live","leased_at":"2026-10-11T19:54:48.100057-05:00","processes":[]}]
+Status after:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/treehouse-root/.treehouse/proj-848e22/1/proj","status":"leased","flavor":"git","lease_id":"ef05aac56e0a6a2679e9a56787236895","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/home:lease-relaunch-live","leased_at":"2026-10-11T19:54:48.100057-05:00","processes":[]}]
+Published identity:
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/treehouse-root/.treehouse/proj-848e22/1/proj
+treehouse_lease_id=ef05aac56e0a6a2679e9a56787236895
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-control-relaunch.jQjXFv/durable-real-28874/home:lease-relaunch-live
+Allocator calls during relaunch: none.

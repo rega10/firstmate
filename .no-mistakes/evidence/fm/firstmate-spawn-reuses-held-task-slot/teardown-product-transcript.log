@@ -1,0 +1,69 @@
+Product output and persisted allocation state extracted from lease-teardown-trace.log.
+Firstmate and Treehouse are real. Terminal and harness launches are simulated.
+Original trace retains commands and executable assertions.
+
+[test_real_lease_teardown_recovers_interruption] receipt:
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","lease_id":"7aec59ba7ddb1ff1d2441fa7402f3f2b","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1","leased_at":"2026-10-11T19:52:52.810378-05:00"}
+
+[test_real_lease_teardown_recovers_interruption] lease_id:
+7aec59ba7ddb1ff1d2441fa7402f3f2b
+
+[test_real_lease_teardown_recovers_interruption] current:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","status":"leased","flavor":"git","lease_id":"7aec59ba7ddb1ff1d2441fa7402f3f2b","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return:task-x1","leased_at":"2026-10-11T19:52:52.810378-05:00","processes":[]}]
+
+[test_real_lease_teardown_recovers_interruption] out:
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+teardown task-x1 complete (window firstmate:fm-task-x1, worktree )
+Backlog: task-x1 is closed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.
+
+[test_real_lease_teardown_recovers_interruption] current:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-before-return/treehouse-root/.treehouse/project-21be36/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]
+
+[test_real_lease_teardown_recovers_interruption] receipt:
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","lease_id":"3b2274515c67d2a776b57ab19fdf27a4","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return:task-x1","leased_at":"2026-10-11T19:53:01.280181-05:00"}
+
+[test_real_lease_teardown_recovers_interruption] lease_id:
+3b2274515c67d2a776b57ab19fdf27a4
+
+[test_real_lease_teardown_recovers_interruption] current:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]
+
+[test_real_lease_teardown_recovers_interruption] replacement:
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","lease_id":"9c3debbeeb0996b941db5248882e2fff","lease_holder":"replacement","leased_at":"2026-10-11T19:53:04.208863-05:00"}
+
+[test_real_lease_teardown_recovers_interruption] out:
+teardown task-x1 complete (window firstmate:fm-task-x1, worktree )
+Backlog: task-x1 is closed in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/data/backlog.md. Run bin/fm-tasks-axi.sh ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.
+
+[test_real_lease_teardown_recovers_interruption] current:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/lease-after-return/treehouse-root/.treehouse/project-cda8ef/1/project","status":"leased","flavor":"git","lease_id":"9c3debbeeb0996b941db5248882e2fff","lease_holder":"replacement","leased_at":"2026-10-11T19:53:04.208863-05:00","processes":[]}]
+
+[test_descendant_lease_return_is_recoverable] receipt:
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project","lease_id":"012254fe2c0490a18c52ca42da3c6179","lease_holder":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/secondmate-home:child-a","leased_at":"2026-10-11T19:53:06.803061-05:00"}
+
+[test_descendant_lease_return_is_recoverable] lease_id:
+012254fe2c0490a18c52ca42da3c6179
+
+[test_descendant_lease_return_is_recoverable] out:
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no live watcher process holds this home lock (last beat: 1s ago).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision according to the session-start block for this harness; do not use shell &.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+error: jq is required for Treehouse lease acquisition and retirement
+
+[test_descendant_lease_return_is_recoverable] out:
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+teardown task-x1 complete (window firstmate:fm-task-x1, worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/wt)
+
+[test_descendant_lease_return_is_recoverable] current:
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4ME09EZQSXMS2XFEBXR2HBD/.no-mistakes/local-test-tmp/fm-teardown-tests.A6FpEP/leased-descendant/treehouse-root/.treehouse/project-bde08b/1/project","status":"available","flavor":"git","lease_id":"","lease_holder":"","leased_at":null,"processes":[]}]
+
