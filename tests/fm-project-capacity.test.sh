@@ -100,6 +100,13 @@ SH
   cat > "$fakebin/treehouse" <<'SH'
 #!/usr/bin/env bash
 printf 'treehouse %s\n' "$*" >> "$FM_FAKE_CALL_LOG"
+if [ "${1:-}" = get ]; then
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = --lease-holder ]; then holder=$2; break; fi
+    shift
+  done
+  printf '{"path":"%s","lease_id":"fixture-lease","lease_holder":"%s"}\n' "$FM_FAKE_PANE_PATH" "$holder"
+fi
 exit 0
 SH
   chmod +x "$fakebin/tmux" "$fakebin/treehouse"

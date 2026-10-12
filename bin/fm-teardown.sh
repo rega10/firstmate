@@ -541,7 +541,9 @@ TEARDOWN_META_KIND=$(fm_meta_get "$META" kind)
 [ -n "$TEARDOWN_META_KIND" ] || TEARDOWN_META_KIND=ship
 if [ "$TEARDOWN_META_KIND" != secondmate ] \
    && [ "$(LC_ALL=C grep -c '^worktree=' "$META" || true)" = 1 ] \
-   && LC_ALL=C grep -qx 'worktree=' "$META"; then
+   && LC_ALL=C grep -qx 'worktree=' "$META" \
+   && { [ -z "$(fm_meta_get "$META" treehouse_lease_id)" ] ||
+        [ -z "$(fm_meta_get "$META" treehouse_retiring_worktree)" ]; }; then
   echo "REFUSED: task $ID has an empty worktree= entry, so its local work cannot be identified or proven landed. Restore the verified original worktree path in $META, then retry teardown without --force; preserving task state." >&2
   exit 1
 fi
