@@ -52,8 +52,8 @@
 # installs packages, creates a login session, writes an auto-login password,
 # changes FileVault, stores an account password, or replaces a non-Firstmate
 # wrapper; those remain reported gaps.
-# A running server with inherited Claude variables is a human gap: report the
-# affected session's panes and the restart need without restarting that server.
+# A running server with inherited Claude session markers is a human gap: report
+# the affected session's panes and restart need without restarting that server.
 set -eu
 
 # Resolve this script's directory with builtins only: a host missing a required
