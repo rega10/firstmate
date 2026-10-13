@@ -1008,9 +1008,10 @@ test_turnend_auth_paths_are_owned_by_the_control_adapter() {
 }
 
 test_secondmate_relaunch_picks_up_the_configured_harness_pin() {
-  local dir home out rc
+  local dir home smhome out rc
   dir=$(new_case smpin sm3)
   home="$dir/home"
+  smhome="$dir/slots/1/proj"
   mkdir -p "$home/config"
   printf 'codex some-model high\n' > "$home/config/secondmate-harness"
   mkdir -p "$dir/user-home/.codex"
@@ -1018,25 +1019,40 @@ test_secondmate_relaunch_picks_up_the_configured_harness_pin() {
     > "$dir/user-home/.codex/models_cache.json"
   mkdir -p "$home/data/sm3"
   printf '# secondmate brief\n' > "$home/data/sm3/brief.md"
-  fm_git_worktree "$dir/proj" "$dir/smhome" sm-branch
-  mkdir -p "$dir/smhome/state" "$dir/smhome/data" "$dir/smhome/bin"
-  printf 'sm3\n' > "$dir/smhome/.fm-secondmate-home"
-  printf '# agents\n' > "$dir/smhome/AGENTS.md"
+  fm_git_worktree "$dir/proj" "$smhome" sm-branch
+  mkdir -p "$smhome/state" "$smhome/data" "$smhome/bin"
+  printf '{"worktrees":[{"path":"%s"}]}\n' "$smhome" > "$dir/slots/treehouse-state.json"
+  printf 'sm3\n' > "$smhome/.fm-secondmate-home"
+  printf '# agents\n' > "$smhome/AGENTS.md"
+  : > "$dir/fake/treehouse-calls"
+  cat > "$dir/fakebin/treehouse" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_FAKE_DIR/treehouse-calls"
+if [ "${1:-}" = status ]; then
+  jq -n --arg path "$(cat "$FM_FAKE_DIR/cwd")" \
+    '[{path:$path,status:"leased",lease_id:"secondmate-lease",lease_holder:"sm3"}]'
+else
+  exit 1
+fi
+SH
+  chmod +x "$dir/fakebin/treehouse"
   {
     echo "window=fmses:fm-sm3"
     echo "endpoint_task_id=sm3"
-    echo "worktree=$dir/smhome"
-    echo "project=$dir/smhome"
+    echo "worktree=$smhome"
+    echo "project=$smhome"
     echo "harness=claude"
     echo "kind=secondmate"
     echo "mode=secondmate"
     echo "yolo=off"
     echo "model=default"
     echo "effort=default"
-    echo "home=$dir/smhome"
+    echo "home=$smhome"
+    echo "treehouse_lease_id=secondmate-lease"
+    echo "treehouse_lease_holder=sm3"
   } > "$home/state/sm3.meta"
   printf '%s\n' "fm-sm3" > "$dir/fake/windows"
-  printf '%s' "$dir/smhome" > "$dir/fake/cwd"
+  printf '%s' "$smhome" > "$dir/fake/cwd"
   printf 'codex' > "$dir/fake/becomes"
   out=$(CODEX_HOME='' run_control "$dir" sm3 relaunch); rc=$?
   expect_code 0 "$rc" "a configured secondmate harness should relaunch"$'\n'"$out"
@@ -1051,6 +1067,12 @@ test_secondmate_relaunch_picks_up_the_configured_harness_pin() {
   assert_contains "$(cat "$dir/fake/literal")" 'model_reasoning_effort="high"' \
     "the replacement launch should use the catalog-supported effort"
   assert_not_contains "$out" "not a verified harness" "codex is a verified harness"
+  [ "$(grep -c '^treehouse_lease_id=' "$home/state/sm3.meta")" = 1 ] || fail "secondmate relaunch duplicated its lease identity"
+  [ "$(grep -c '^treehouse_lease_holder=' "$home/state/sm3.meta")" = 1 ] || fail "secondmate relaunch duplicated its holder"
+  [ "$(meta_field "$dir" sm3 treehouse_lease_id)" = secondmate-lease ] || fail "secondmate relaunch changed its receipt"
+  [ "$(meta_field "$dir" sm3 treehouse_lease_holder)" = sm3 ] || fail "secondmate relaunch changed its holder"
+  assert_no_grep '^get --lease' "$dir/fake/treehouse-calls" "secondmate relaunch allocated another home"
+  assert_no_grep '^status ' "$dir/fake/treehouse-calls" "secondmate relaunch reacquired its recorded receipt"
   pass "fm-control relaunch: a secondmate relaunch re-resolves its durable configured harness pin"
 }
 
@@ -2597,6 +2619,11 @@ SH
     || fail "the dialog file must be gone when the control lock is released, got: $(cat "$trace" 2>/dev/null)"
   pass "fm-control exit removes the dialog file before it releases the control lock"
 }
+
+if [ "${1:-}" = --secondmate-lease ]; then
+  test_secondmate_relaunch_picks_up_the_configured_harness_pin
+  exit 0
+fi
 
 test_exit_and_relaunch_remove_the_dialog_file
 test_exit_removes_the_dialog_file_before_releasing_the_lock

@@ -25,11 +25,16 @@
 # data/backlog.md; those cases print the manual follow-up. A configured
 # non-markdown adapter remains active without a markdown file; any active
 # automatic backend without compatible tasks-axi refuses before cleanup.
-# A leased ship/scout return first atomically replaces worktree= with an empty
+# A leased ship/scout/secondmate return first atomically replaces worktree= with an empty
 # value and treehouse_retiring_worktree= with the former path, retaining
 # treehouse_lease_id= and treehouse_lease_holder= in the same task record.
 # Only then does it return that exact lease with --if-lease-id, including retries.
-# A teardown retry uses the retained receipt and skips a successor's allocation.
+# A ship/scout retry uses the retained receipt and skips a successor's allocation.
+# A secondmate receipt mismatch always refuses: home cleanup cannot safely run
+# after another allocation has taken that home, including a retirement retry.
+# Before cleanup, an identity mismatch on a still-leased slot refuses, naming
+# both lease identities and the repair. An empty legacy pool identity cannot
+# certify release of a record-only identity, even on a retirement retry.
 # Endpoint checks and final reporting precede this transition; the backlog-close
 # marker follows successful release so session replay cannot erase its receipt.
 # None of this loosens the landed-work gates below: the transition runs only on
@@ -441,15 +446,12 @@ TREEHOUSE_PROJECT_LOCK=
 TREEHOUSE_PROJECT_LOCK_HELD=0
 TREEHOUSE_SLOT_LOCK_REQUIRED=0
 if [ -f "$META" ] && [ ! -L "$META" ]; then
-  TEARDOWN_LOCK_KIND=$(fm_meta_get "$META" kind)
-  [ -n "$TEARDOWN_LOCK_KIND" ] || TEARDOWN_LOCK_KIND=ship
   TEARDOWN_LOCK_BACKEND=$(fm_meta_get "$META" backend)
   [ -n "$TEARDOWN_LOCK_BACKEND" ] || TEARDOWN_LOCK_BACKEND=tmux
   TEARDOWN_LOCK_WT=$(fm_meta_get "$META" worktree)
   [ -n "$TEARDOWN_LOCK_WT" ] || TEARDOWN_LOCK_WT=$(fm_meta_get "$META" treehouse_retiring_worktree)
   TEARDOWN_LOCK_PROJECT=$(fm_meta_get "$META" project)
-  if [ "$TEARDOWN_LOCK_KIND" != secondmate ] \
-     && [ "$TEARDOWN_LOCK_BACKEND" != orca ] \
+  if [ "$TEARDOWN_LOCK_BACKEND" != orca ] \
      && fm_treehouse_pool_slot "$TEARDOWN_LOCK_PROJECT" "$TEARDOWN_LOCK_WT"; then
     TREEHOUSE_SLOT_LOCK_REQUIRED=1
     TREEHOUSE_PROJECT_LOCK=$(fm_treehouse_project_lock_path "$TEARDOWN_LOCK_PROJECT") || {
@@ -1174,7 +1176,7 @@ CLEANUP_RECOVERY=$TEARDOWN_CLEANUP_RECOVERY
 
 KIND=$TEARDOWN_META_KIND
 EXPECTED_TREEHOUSE_PROJECT_LOCK=
-if [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ] \
+if [ "$BACKEND" != orca ] \
    && { fm_treehouse_pool_slot "$PROJ" "$WT" ||
         fm_treehouse_pool_slot "$PROJ" "$(fm_meta_get "$META" treehouse_retiring_worktree)"; }; then
   EXPECTED_TREEHOUSE_PROJECT_LOCK=$(fm_treehouse_project_lock_path "$PROJ") || {
@@ -1771,16 +1773,59 @@ report_worktree_dirt() {
   ' >&2
 }
 
+# Check the receipt before any cleanup, including a retirement retry. An empty
+# identity on a still-leased legacy slot is not evidence of an earlier return.
+teardown_validate_treehouse_lease_record() { # <meta> <project>
+  local meta=$1 project=$2 worktree pending lease_id holder task_id record_home pool_state
+  lease_id=$(fm_meta_get "$meta" treehouse_lease_id)
+  [ -n "$lease_id" ] || return 0
+  worktree=$(fm_meta_get "$meta" worktree)
+  pending=$(fm_meta_get "$meta" treehouse_retiring_worktree)
+  [ -n "$worktree" ] || worktree=$pending
+  [ -n "$worktree" ] || return 0
+  holder=$(fm_meta_get "$meta" treehouse_lease_holder)
+  task_id=$(basename "$meta" .meta)
+  fm_treehouse_slot_lease_status "$project" "$worktree" || {
+    echo "REFUSED: cannot read Treehouse status for $task_id's recorded lease_id '$lease_id' at $worktree; preserve the record and restore authoritative pool status before retrying" >&2
+    return 1
+  }
+  [ "$FM_TREEHOUSE_SLOT_LEASE_ID" != "$lease_id" ] || return 0
+  record_home=$(CDPATH='' cd -- "$(dirname "$(dirname "$meta")")" && pwd -P) || return 1
+  if [ -n "$pending" ] && [ "$(fm_meta_get "$meta" kind)" != secondmate ]; then
+    if [ "$FM_TREEHOUSE_SLOT_STATUS" = available ] && [ -z "$FM_TREEHOUSE_SLOT_LEASE_ID" ]; then
+      return 0
+    fi
+    if [ -n "$FM_TREEHOUSE_SLOT_LEASE_ID" ] &&
+      ! fm_treehouse_lease_holder_matches "$FM_TREEHOUSE_SLOT_LEASE_HOLDER" "$task_id" "$record_home"; then
+      return 0
+    fi
+  fi
+  pool_state="$(dirname "$(dirname "$worktree")")/treehouse-state.json"
+  echo "REFUSED: Treehouse lease identity mismatch for $task_id at $worktree: record lease_id='$lease_id' holder='$holder'; pool lease_id='${FM_TREEHOUSE_SLOT_LEASE_ID:-<empty>}' holder='$FM_TREEHOUSE_SLOT_LEASE_HOLDER' status='$FM_TREEHOUSE_SLOT_STATUS'; preserving the slot and task record" >&2
+  if [ "$FM_TREEHOUSE_SLOT_STATUS" = leased ] && [ -z "$FM_TREEHOUSE_SLOT_LEASE_ID" ] &&
+    fm_treehouse_lease_holder_matches "$FM_TREEHOUSE_SLOT_LEASE_HOLDER" "$task_id" "$record_home"; then
+    echo "Repair while the allocator is idle: keep this live legacy slot leased; set lease_id='$lease_id' on the worktrees entry for path '$worktree' in $pool_state, and set treehouse_lease_holder='$FM_TREEHOUSE_SLOT_LEASE_HOLDER' in $meta (retain treehouse_lease_id='$lease_id'); then retry. Never return/reacquire the home or remove the record." >&2
+  else
+    echo "Repair: verify the actual slot owner in $pool_state before restoring the matching treehouse_lease_id and treehouse_lease_holder receipt in $meta; if another task holds it, preserve both records and reconcile ownership. Never substitute another task's lease identity." >&2
+  fi
+  return 1
+}
+
 # Atomically withdraw the active claim before release. The receipt stays in
 # the same record so a failed or interrupted return can be retried by teardown.
 # A retry never touches a slot whose lease has since changed.
 teardown_retire_treehouse_record() { # <meta> <project> <label> [<post-cleanup-check>]
   local meta=$1 project=$2 label=$3 post_cleanup_check=${4:-}
-  local worktree lease_id pending tmp current pool pool_root WT
+  local worktree lease_id pending tmp WT
   fm_treehouse_require_jq || return 1
   worktree=$(fm_meta_get "$meta" worktree)
   pending=$(fm_meta_get "$meta" treehouse_retiring_worktree)
   lease_id=$(fm_meta_get "$meta" treehouse_lease_id)
+  teardown_validate_treehouse_lease_record "$meta" "$project" || return 1
+  if [ -n "$pending" ] && [ "$FM_TREEHOUSE_SLOT_LEASE_ID" != "$lease_id" ]; then
+    echo "teardown: $label lease $lease_id is already released; leaving the current allocation untouched" >&2
+    return 0
+  fi
   if [ -n "$worktree" ]; then
     tmp=$(mktemp "$meta.retiring.XXXXXX") || return 1
     if ! awk -F= '$1 != "worktree" && $1 != "treehouse_retiring_worktree"' "$meta" > "$tmp" ||
@@ -1795,18 +1840,6 @@ teardown_retire_treehouse_record() { # <meta> <project> <label> [<post-cleanup-c
   fi
   WT=$worktree
   if [ -n "$pending" ]; then
-    pool=$(dirname "$(dirname "$worktree")")
-    pool_root=$(dirname "$(dirname "$pool")")
-    current=$(cd "$project" && treehouse status --json --root "$pool_root") || return 1
-    current=$(printf '%s\n' "$current" | jq -er --arg path "$worktree" '
-      if type != "array" then error("invalid Treehouse status") else
-        [.[] | select(.path == $path)] |
-        if length == 0 then error("Treehouse allocation status is unknown") elif length == 1 then (.[0].lease_id // "")
-        else error("duplicate Treehouse path") end end') || return 1
-    if [ "$current" != "$lease_id" ]; then
-      echo "teardown: $label lease $lease_id is already released; leaving the current allocation untouched" >&2
-      return 0
-    fi
     if [ -n "$post_cleanup_check" ]; then
       "$post_cleanup_check" || return 1
     fi
@@ -2567,7 +2600,7 @@ EOF
 }
 
 remove_firstmate_home() {
-  local home=$1 label=$2 expected_id=${3:-} abs_home_path process_event_backup
+  local home=$1 label=$2 expected_id=${3:-} lease_meta=${4:-} abs_home_path process_event_backup
   [ -n "$home" ] || return 0
   [ -e "$home" ] || return 0
   abs_home_path=$(validate_firstmate_home_for_removal "$home" "$label" "$expected_id") || return 1
@@ -2586,7 +2619,11 @@ remove_firstmate_home() {
       restore_firstmate_home_process_events "$abs_home_path" "$label" "$process_event_backup" || return $?
       return 1
     }
-    teardown_treehouse_return "$abs_home_path" "$FM_ROOT" "$label" || {
+    if [ -n "$lease_meta" ] && [ -n "$(fm_meta_get "$lease_meta" treehouse_lease_id)" ]; then
+      teardown_retire_treehouse_record "$lease_meta" "$abs_home_path" "$label"
+    else
+      teardown_treehouse_return "$abs_home_path" "$FM_ROOT" "$label"
+    fi || {
       echo "error: treehouse return failed for $label $abs_home_path; lease may still be held" >&2
       restore_firstmate_home_process_events "$abs_home_path" "$label" "$process_event_backup" || return $?
       return 1
@@ -2848,18 +2885,16 @@ preflight_descendant_task_locks() {
 }
 
 preflight_descendant_treehouse_slots() {
-  local i state task_id meta kind backend target worktree project lock_path held owner_rc
+  local i state task_id meta backend target worktree project lock_path held owner_rc
   for ((i=0; i < ${#DESCENDANT_TASK_IDS[@]}; i++)); do
     state=${DESCENDANT_TASK_STATES[$i]}
     task_id=${DESCENDANT_TASK_IDS[$i]}
     meta="$state/$task_id.meta"
-    kind=$(meta_value "$meta" kind)
-    [ -n "$kind" ] || kind=ship
     backend=$(fm_backend_of_meta "$meta")
     worktree=$(meta_value "$meta" worktree)
     [ -n "$worktree" ] || worktree=$(meta_value "$meta" treehouse_retiring_worktree)
     project=$(meta_value "$meta" project)
-    if [ "$kind" = secondmate ] || [ "$backend" = orca ]; then
+    if [ "$backend" = orca ]; then
       continue
     fi
     if [ -n "$(meta_value "$meta" treehouse_lease_id)" ]; then
@@ -2890,18 +2925,18 @@ preflight_descendant_treehouse_slots() {
     state=${DESCENDANT_TASK_STATES[$i]}
     task_id=${DESCENDANT_TASK_IDS[$i]}
     meta="$state/$task_id.meta"
-    kind=$(meta_value "$meta" kind)
-    [ -n "$kind" ] || kind=ship
     backend=$(fm_backend_of_meta "$meta")
     worktree=$(meta_value "$meta" worktree)
+    [ -n "$worktree" ] || worktree=$(meta_value "$meta" treehouse_retiring_worktree)
     project=$(meta_value "$meta" project)
-    if [ "$kind" = secondmate ] || [ "$backend" = orca ]; then
+    if [ "$backend" = orca ]; then
       continue
     fi
     if ! fm_treehouse_pool_slot "$project" "$worktree"; then
       continue
     fi
     fm_backend_validate_task_endpoint "$meta" "$task_id" || return 1
+    teardown_validate_treehouse_lease_record "$meta" "$project" || return 1
     require_exclusive_worktree_slot_record "$meta" "$task_id" "$state" "$worktree" || return 1
     owner_rc=0
     require_owned_worktree_slot_record "$task_id" "$worktree" || owner_rc=$?
@@ -3172,7 +3207,7 @@ cleanup_firstmate_home_children() {
       [ -n "$child_home" ] || child_home=$child_wt
       if [ -n "$child_home" ] && [ -d "$child_home" ]; then
         cleanup_firstmate_home_children "$child_home" || return $?
-        remove_firstmate_home "$child_home" "child firstmate home" "$child_id" || return $?
+        remove_firstmate_home "$child_home" "child firstmate home" "$child_id" "$child_meta" || return $?
       fi
     elif [ "$child_backend" = orca ]; then
       if [ -n "$child_wt" ] && [ -d "$child_wt" ]; then
@@ -3269,6 +3304,10 @@ require_exclusive_task_worktree_slot || exit 1
 require_owned_task_worktree_slot || exit 1
 
 validate_pr_poll_cleanup "$STATE" "$ID" || exit 1
+
+if [ "$BACKEND" != orca ]; then
+  teardown_validate_treehouse_lease_record "$META" "$PROJ" || exit 1
+fi
 
 if [ "$KIND" = secondmate ]; then
   LOCAL_REGISTRY_LOCK=$(secondmate_registry_lock_path "$STATE")
@@ -3664,7 +3703,7 @@ if [ "$KIND" = secondmate ]; then
     || { echo "error: receiver wake cleanup could not be staged; preserving the secondmate home and route" >&2; exit 1; }
   pending_replies_recovery_validate recheck \
     || { echo "error: local pending-reply recovery paths changed; preserving the secondmate home and route" >&2; exit 1; }
-  if remove_firstmate_home "$HOME_PATH" "secondmate home" "$ID"; then
+  if remove_firstmate_home "$HOME_PATH" "secondmate home" "$ID" "$META"; then
     :
   else
     rc=$?

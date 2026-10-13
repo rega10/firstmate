@@ -427,7 +427,9 @@ fm_backend_validate_task_endpoint() {  # <meta-file> <task-id>
       [ -z "$(fm_meta_get "$meta" worktree)" ] &&
       [ -n "$(fm_backend_meta_exact_value "$meta" treehouse_lease_id)" ] &&
       [ "$(fm_meta_get "$meta" backend)" != orca ] &&
-      { [ "$(fm_meta_get "$meta" kind)" = ship ] || [ "$(fm_meta_get "$meta" kind)" = scout ]; }; then
+      { [ "$(fm_meta_get "$meta" kind)" = ship ] || [ "$(fm_meta_get "$meta" kind)" = scout ] ||
+        { [ "$(fm_meta_get "$meta" kind)" = secondmate ] &&
+          [ "$(fm_meta_get "$meta" home)" = "$(fm_meta_get "$meta" treehouse_retiring_worktree)" ]; }; }; then
       worktree=$(fm_backend_meta_exact_value "$meta" treehouse_retiring_worktree) || worktree=
     fi
     [ -n "$worktree" ] || {

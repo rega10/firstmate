@@ -774,8 +774,23 @@ It cannot be combined with a project list, and omitting both still fails loudly.
 A project-less seed requires no existing project clones or `data/projects.md` entries in the home, so it refuses a populated-home conversion without changing that home.
 A preexisting project-bearing charter is also refused until it is re-scaffolded with `--no-projects` or removed.
 
-The lease is held under the secondmate id until explicit retirement or seed rollback returns it, so normal restarts do not free or recycle the home.
-Teardown of a leased home fails closed if `treehouse return` cannot release the lease; plain-clone homes with no treehouse pool slot are removed directly.
+The seeded lease is held under the secondmate id until explicit retirement or seed rollback returns it, so normal restarts do not free or recycle the home.
+A new `fm-spawn.sh --secondmate` record reads that home's existing lease from Treehouse status and records its identity and actual holder, without allocating another home.
+Explicit relaunch and automatic endpoint recovery preserve an existing record's lease fields without querying the pool; a legacy record without those fields still recovers as before.
+Teardown of a leased home conditionally returns that recorded identity and fails closed if the receipt disagrees with the pool; plain-clone homes with no Treehouse pool slot are removed directly.
+
+A live legacy home can remain leased without a lease identity in Treehouse 2.3.0.
+A legacy task record without `treehouse_lease_id` permits another slot to spawn when this pool's status reports its slot as `leased` to the task's bare id or `<physical-record-home>:<task-id>`.
+An unleased slot or a different holder still blocks the pool, and the allocator's returned slot still cannot overlap any recorded worktree.
+
+To repair a legacy receipt, keep the home leased and make the allocator idle before reconciling the exact slot's entry in `treehouse-state.json` and its owning `state/<task-id>.meta`.
+If the pool already has a nonempty `lease_id`, record that same value as `treehouse_lease_id` and its actual `lease_holder` as `treehouse_lease_holder`.
+If the pool's identity is empty, assign one unique identity to that slot's `lease_id` and record the same identity and actual holder in the task record.
+A previously hand-added record-only identity can be retained only after confirming that it is unique and the slot is still leased to that same task.
+Treehouse 2.3.0 has no command to assign an identity to an existing lease in place, so this repair requires an explicit coordinated state edit.
+Never repair a live home by returning and reacquiring it, clearing its lease, or deleting its task record.
+Normal spawns do not rewrite legacy records or pool state; a secondmate launch with an empty pool identity refuses with the repair instead of publishing an unusable receipt.
+The [`fm-spawn.sh` header](../bin/fm-spawn.sh) owns the exact admission mechanics, and the [`fm-teardown.sh` header](../bin/fm-teardown.sh) owns conditional release and recoverable retirement.
 
 ### Project modes and backlog handoff
 

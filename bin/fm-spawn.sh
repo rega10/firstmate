@@ -176,13 +176,25 @@
 #   it; relaunch is exempt because the existing task's control lock covers it.
 #   A fresh Treehouse-backed spawn takes the shared project lock for the
 #   legacy-record scan, JSON lease acquisition, and slot-owner claim.
-#   Ships and scouts acquire `treehouse get --lease --json --lease-holder`,
-#   explicitly enter the receipt's path, and publish treehouse_lease_id= and
-#   treehouse_lease_holder= (physical home identity plus task name).
-#   Relaunch preserves these fields without acquiring another allocation.
+#   Ships and scouts acquire `treehouse get --lease --json --lease-holder`.
+#   Secondmates retain their seeded home's existing durable lease from status,
+#   requiring a nonempty identity and a holder matching the task, rather than
+#   allocating another home. Both publish treehouse_lease_id= and the actual
+#   treehouse_lease_holder= (new workers use physical home plus task name).
+#   Relaunch and automatic secondmate recovery preserve these fields without
+#   querying the pool or acquiring another allocation. Existing legacy
+#   secondmate records remain without lease fields on recovery.
 #   Leases outlive all worker processes and protect fully leased pools while
-#   other tasks spawn. Only legacy unleased records trigger pool-wide refusal
-#   across the local home tree enumerated by fm_local_firstmate_state_dirs.
+#   other tasks spawn. A legacy record without a lease identity is safe when
+#   this allocator reports its slot leased to that task's bare id or physical
+#   record-home:<id>; an unleased slot or different holder still refuses across
+#   the local home tree enumerated by fm_local_firstmate_state_dirs.
+#   Treehouse 2.3.0 cannot assign an identity to an existing lease in place.
+#   For an empty legacy pool identity, keep the home leased and reconcile one
+#   unique lease_id in its pool entry with treehouse_lease_id= in the record,
+#   plus treehouse_lease_holder= matching the pool, while the allocator is idle.
+#   Do not invent a record-only identity or return/reacquire a live home.
+#   docs/configuration.md's local-home section owns the operator repair guidance.
 #   The returned path is also checked for a conflicting record before launch.
 #   Failed publication conditionally returns only the acquired lease identity.
 #   bin/fm-teardown.sh owns conditional release and recoverable retirement;
@@ -3177,6 +3189,52 @@ if [ "$KIND" = secondmate ]; then
     SECONDMATE_PROJECTS=$SECONDMATE_REGISTRY_MATCH_PROJECTS
   fi
   WT="$PROJ_ABS"
+  if [ "$RELAUNCH" -eq 0 ] && [ -f "$STATE/$ID.meta" ] && [ ! -L "$STATE/$ID.meta" ]; then
+    # Automatic recovery also uses --secondmate without --relaunch. Preserve
+    # its existing receipt, including an absent legacy receipt, without an
+    # allocator lookup or a new pool lock on that path.
+    TREEHOUSE_LEASE_ID=$(fm_meta_get "$STATE/$ID.meta" treehouse_lease_id)
+    TREEHOUSE_LEASE_HOLDER=$(fm_meta_get "$STATE/$ID.meta" treehouse_lease_holder)
+    if [ -n "$TREEHOUSE_LEASE_ID" ]; then
+      sm_recorded_worktree=$(fm_meta_get "$STATE/$ID.meta" worktree)
+      if [ -n "$(fm_meta_get "$STATE/$ID.meta" treehouse_retiring_worktree)" ] ||
+        ! [ "$sm_recorded_worktree" -ef "$WT" ]; then
+        echo "error: secondmate $ID's existing Treehouse receipt is retiring or bound to a different home; preserve its record and finish retirement or reconcile the recorded home before retrying" >&2
+        exit 1
+      fi
+    fi
+  elif [ "$RELAUNCH" -eq 0 ] && fm_treehouse_pool_slot "$PROJ_ABS" "$WT"; then
+    SPAWN_TREEHOUSE_PROJECT_LOCK=$(fm_treehouse_project_lock_path "$PROJ_ABS") || exit 1
+    fm_lock_acquire_wait "$SPAWN_TREEHOUSE_PROJECT_LOCK" || {
+      echo "error: another Treehouse allocation or return holds secondmate $ID's pool lock" >&2
+      exit 1
+    }
+    SPAWN_TREEHOUSE_PROJECT_LOCK_HELD=1
+    fm_treehouse_slot_lease_status "$PROJ_ABS" "$WT" || {
+      echo "error: cannot prove secondmate $ID's seeded Treehouse lease; preserve its home and repair the pool status" >&2
+      exit 1
+    }
+    if [ "$FM_TREEHOUSE_SLOT_STATUS" != leased ] ||
+      ! fm_treehouse_lease_holder_matches "$FM_TREEHOUSE_SLOT_LEASE_HOLDER" "$ID" "$(real_path_or_raw "$FM_HOME")"; then
+      echo "error: secondmate $ID's Treehouse home is not leased to this task (status '$FM_TREEHOUSE_SLOT_STATUS', holder '$FM_TREEHOUSE_SLOT_LEASE_HOLDER'); preserve its home and reconcile the owner" >&2
+      exit 1
+    fi
+    TREEHOUSE_LEASE_ID=$FM_TREEHOUSE_SLOT_LEASE_ID
+    TREEHOUSE_LEASE_HOLDER=$FM_TREEHOUSE_SLOT_LEASE_HOLDER
+    if [ -z "$TREEHOUSE_LEASE_ID" ]; then
+      echo "error: secondmate $ID has a live legacy lease with an empty pool lease_id; keep its home leased, assign one unique lease_id to its entry in $(dirname "$(dirname "$WT")")/treehouse-state.json and record the same treehouse_lease_id and treehouse_lease_holder=$TREEHOUSE_LEASE_HOLDER in $STATE/$ID.meta before retrying; never return/reacquire the home" >&2
+      exit 1
+    fi
+    sm_recorded_lease=$(fm_meta_get "$STATE/$ID.meta" treehouse_lease_id)
+    if [ -n "$sm_recorded_lease" ] && [ "$sm_recorded_lease" != "$TREEHOUSE_LEASE_ID" ]; then
+      echo "error: secondmate $ID's record lease_id '$sm_recorded_lease' differs from pool lease_id '$TREEHOUSE_LEASE_ID'; preserve the home and reconcile its receipt before retrying" >&2
+      exit 1
+    fi
+    fm_treehouse_slot_owner_claim "$WT" "$ID" "$FM_HOME" || {
+      echo "error: could not claim secondmate $ID's seeded Treehouse slot" >&2
+      exit 1
+    }
+  fi
   # Local-HEAD sync: before launch, fast-forward this secondmate's worktree to the
   # PRIMARY checkout's current default-branch commit, so a freshly spawned or
   # recovery-respawned secondmate always runs the primary's version (AGENTS.md
@@ -3583,7 +3641,7 @@ validate_spawn_worktree() { # <source> <inspect-target>
 }
 
 refuse_recorded_spawn_worktree() { # [<returned-worktree>]; absent checks the pool before acquisition
-  local worktree=${1:-} state_dir meta other_id other_worktree pool_paths pool_worktree legacy_reason=
+  local worktree=${1:-} state_dir meta other_id other_worktree pool_status slot_rc record_home legacy_reason=
   [ -n "$worktree" ] || legacy_reason=" (legacy unleased record blocks this pool)"
   fm_local_firstmate_state_dirs "$STATE" || {
     echo "REFUSED: $FM_LOCAL_FIRSTMATE_ERROR; nothing was changed" >&2
@@ -3602,15 +3660,16 @@ refuse_recorded_spawn_worktree() { # [<returned-worktree>]; absent checks the po
       else
         [ -z "$(fm_meta_get "$meta" treehouse_lease_id)" ] || continue
         fm_treehouse_pool_slot "$other_worktree" "$other_worktree" || continue
-        pool_paths=$(cd "$PROJ_ABS" && treehouse status --json) || return 1
-        pool_paths=$(printf '%s\n' "$pool_paths" | jq -r '
-          if type != "array" then error("invalid Treehouse status") else .[].path end') || return 1
-        while IFS= read -r pool_worktree; do
-          [ -n "$pool_worktree" ] && [ "$other_worktree" -ef "$pool_worktree" ] && break
-        done <<EOF
-$pool_paths
-EOF
-        [ -n "$pool_worktree" ] && [ "$other_worktree" -ef "$pool_worktree" ] || continue
+        pool_status=$(cd "$PROJ_ABS" && treehouse status --json) || return 1
+        slot_rc=0
+        fm_treehouse_slot_lease_status "$PROJ_ABS" "$other_worktree" "$pool_status" || slot_rc=$?
+        [ "$slot_rc" -ne 1 ] || continue
+        [ "$slot_rc" -eq 0 ] || return 1
+        record_home=$(real_path_or_raw "$(dirname "$state_dir")")
+        if [ "$FM_TREEHOUSE_SLOT_STATUS" = leased ] &&
+          fm_treehouse_lease_holder_matches "$FM_TREEHOUSE_SLOT_LEASE_HOLDER" "$other_id" "$record_home"; then
+          continue
+        fi
       fi
       echo "error: refusing to spawn task $ID: worktree '$(real_path_or_raw "$other_worktree")' is still recorded by task $other_id in $meta${legacy_reason:-}; reconcile that task before reusing its slot" >&2
       return 1

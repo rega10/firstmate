@@ -4740,6 +4740,111 @@ SH
   done
 }
 
+test_pending_secondmate_preserves_successor() {
+  local phase case_dir path meta out rc before_meta
+  for phase in leased available; do
+    case_dir=$(make_case "secondmate-successor-$phase")
+    path="$case_dir/slots/1/project"
+    mkdir -p "$case_dir/slots/1"
+    git -C "$case_dir/project" worktree move "$case_dir/wt" "$path" || fail "could not prepare secondmate pool slot"
+    printf '{"worktrees":[{"path":"%s"}]}\n' "$path" > "$case_dir/slots/treehouse-state.json"
+    mkdir -p "$path/bin" "$path/data" "$path/state" "$path/config" "$path/projects"
+    mkdir -p "$case_dir/parent/state" "$case_dir/parent/data"
+    printf '# Firstmate\n' > "$path/AGENTS.md"
+    printf 'task-x1\n' > "$path/.fm-secondmate-home"
+    printf 'preserve the current home\n' > "$path/data/sentinel"
+    meta="$case_dir/state/task-x1.meta"
+    fm_write_meta "$meta" 'window=firstmate:fm-task-x1' 'endpoint_task_id=task-x1' \
+      "project=$case_dir/project" 'kind=secondmate' 'mode=secondmate' \
+      "home=$path" 'spawn_gen=secondmate-successor-test' 'worktree=' \
+      "treehouse_retiring_worktree=$path" 'treehouse_lease_id=old-lease' \
+      "treehouse_lease_holder=$case_dir:task-x1"
+    before_meta=$(cat "$meta")
+    cat > "$case_dir/fakebin/treehouse" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_RETURN_LOG"
+if [ "${1:-}" = status ]; then
+  jq -n --arg path "$FM_POOL_PATH" --arg status "$FM_POOL_STATUS" \
+    '[{path:$path,status:$status,
+       lease_id:(if $status == "leased" then "successor-lease" else "" end),
+       lease_holder:(if $status == "leased" then "replacement-task" else "" end)}]'
+fi
+SH
+    cat > "$case_dir/fakebin/tmux" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_ENDPOINT_LOG"
+SH
+    chmod +x "$case_dir/fakebin/treehouse" "$case_dir/fakebin/tmux"
+    : > "$case_dir/endpoint-calls"
+    out=$(FM_HOME="$case_dir/parent" HOME="$case_dir/user-home" FM_RETURN_LOG="$case_dir/calls" \
+      FM_ENDPOINT_LOG="$case_dir/endpoint-calls" FM_POOL_PATH="$path" FM_POOL_STATUS="$phase" \
+      run_teardown "$case_dir" --force 2>&1)
+    rc=$?
+    [ "$rc" -ne 0 ] || fail "a pending secondmate receipt allowed cleanup of a $phase slot"
+    assert_contains "$out" 'Treehouse lease identity mismatch' "the pending secondmate did not refuse the mismatch"
+    [ "$(cat "$meta")" = "$before_meta" ] || fail "pending secondmate cleanup altered its record"
+    assert_grep 'preserve the current home' "$path/data/sentinel" "pending secondmate cleanup touched the current home"
+    assert_no_grep '^return ' "$case_dir/calls" "pending secondmate cleanup returned a successor slot"
+    assert_no_grep '^kill-' "$case_dir/endpoint-calls" "pending secondmate cleanup closed an endpoint"
+    pass "pending secondmate preserves the $phase successor slot, home, and receipt"
+  done
+}
+
+test_unknown_pool_lease_refuses_before_cleanup() {
+  local kind phase case_dir path meta before_meta before_head out rc pool_id
+  for kind in ship secondmate; do
+    for phase in active pending; do
+      case_dir=$(make_case "unknown-pool-lease-$kind-$phase")
+      path="$case_dir/slots/1/project"
+      mkdir -p "$case_dir/slots/1"
+      git -C "$case_dir/project" worktree move "$case_dir/wt" "$path" || fail "could not prepare pool slot"
+      printf '{"worktrees":[{"path":"%s"}]}\n' "$path" > "$case_dir/slots/treehouse-state.json"
+      meta="$case_dir/state/task-x1.meta"
+      fm_write_meta "$meta" 'window=firstmate:fm-task-x1' 'endpoint_task_id=task-x1' \
+        "project=$case_dir/project" "kind=$kind" 'mode=local-only' \
+        'spawn_gen=unknown-lease-test' 'treehouse_lease_id=hand-added-lease' \
+        "treehouse_lease_holder=$case_dir:task-x1"
+      if [ "$phase" = active ]; then
+        printf 'worktree=%s\n' "$path" >> "$meta"
+      else
+        printf 'worktree=\ntreehouse_retiring_worktree=%s\n' "$path" >> "$meta"
+      fi
+      if [ "$kind" = secondmate ]; then
+        printf 'home=%s\n' "$path" >> "$meta"
+      fi
+      before_meta=$(cat "$meta")
+      before_head=$(git -C "$path" rev-parse HEAD)
+      cat > "$case_dir/fakebin/treehouse" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_RETURN_LOG"
+if [ "${1:-}" = status ]; then
+  jq -n --arg path "$FM_POOL_PATH" --arg id "$FM_POOL_ID" \
+    '[{path:$path,status:"leased",lease_id:$id,lease_holder:"task-x1"}]'
+fi
+SH
+      chmod +x "$case_dir/fakebin/treehouse"
+      for pool_id in '' different-lease; do
+        out=$(FM_HOME="$case_dir" HOME="$case_dir/user-home" FM_RETURN_LOG="$case_dir/calls" \
+          FM_POOL_PATH="$path" FM_POOL_ID="$pool_id" run_teardown "$case_dir" --force 2>&1)
+        rc=$?
+        [ "$rc" -ne 0 ] || fail "an unknown pool lease permitted $kind $phase teardown"
+        assert_contains "$out" 'record lease_id=' "refusal did not name the recorded identity"
+        assert_contains "$out" "pool lease_id='${pool_id:-<empty>}'" "refusal did not name the pool identity"
+        assert_contains "$out" 'Repair' "refusal did not explain repair"
+        if [ -z "$pool_id" ]; then
+          assert_contains "$out" "set lease_id='hand-added-lease'" "refusal omitted the exact pool repair"
+          assert_contains "$out" "$case_dir/slots/treehouse-state.json" "refusal omitted the repair path"
+          assert_contains "$out" "treehouse_lease_holder='task-x1'" "refusal omitted the holder repair"
+        fi
+        [ "$(cat "$meta")" = "$before_meta" ] || fail "refusal altered or deleted the task record"
+        [ "$(git -C "$path" rev-parse HEAD)" = "$before_head" ] || fail "refusal changed the checkout"
+        assert_no_grep '^return ' "$case_dir/calls" "refusal returned the mismatched slot"
+        pass "unknown pool identity refuses $kind $phase teardown (pool id '${pool_id:-empty}')"
+      done
+    done
+  done
+}
+
 # Kill only the exact test-owned teardown process at the return boundary.
 # The real allocator validates the receipt in both normal and retry paths.
 test_real_lease_teardown_recovers_interruption() {
@@ -4937,12 +5042,22 @@ if [ "${1:-}" = --missing-jq ]; then
 fi
 
 if [ "${1:-}" = --lease ]; then
+  test_pending_secondmate_preserves_successor
+  test_unknown_pool_lease_refuses_before_cleanup
   test_missing_jq_preserves_lease_records
   test_real_lease_teardown_recovers_interruption
   test_descendant_lease_return_is_recoverable
   exit 0
 fi
 
+if [ "${1:-}" = --lease-mismatch ]; then
+  test_pending_secondmate_preserves_successor
+  test_unknown_pool_lease_refuses_before_cleanup
+  exit 0
+fi
+
+test_pending_secondmate_preserves_successor
+test_unknown_pool_lease_refuses_before_cleanup
 test_missing_jq_preserves_lease_records
 test_real_lease_teardown_recovers_interruption
 test_descendant_lease_return_is_recoverable
