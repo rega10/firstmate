@@ -538,11 +538,17 @@ When the selected named server is not running, the adapter launches it without t
 
 - Firstmate home and directory overrides.
 - Harness identity markers.
+- Every `CLAUDE_*` variable and `CLAUDECODE`.
 - The supervision-model override.
 
 Herdr passes its server startup environment to every later pane, so retaining those values could misroute panes for another Firstmate home or harness.
 An already-running server is reused without restart or environment changes.
 Explicit named-session routing and unrelated launch environment remain intact.
+The remote doctor's `herdr-server` check reports only inherited Claude session markers (`CLAUDE_CODE_CHILD_SESSION`, `CLAUDE_CODE_SESSION_ID`, `CLAUDE_PID`, and `CLAUDECODE`) when it can read the running server's socket-owner environment.
+It reports every pane in that session as affected and requires a server restart outside a Claude session followed by pane recreation.
+It never prints the variable values or restarts a contaminated server, including through launch-agent repair with `--fix`.
+Configuration variables such as `CLAUDE_CONFIG_DIR` and other `CLAUDE_*` variables alone do not trigger this restart requirement or block launch-agent repair.
+[`tests/fm-backend-herdr.test.sh`](../tests/fm-backend-herdr.test.sh) verifies startup cleanup; [`tests/fm-remote-doctor.test.sh`](../tests/fm-remote-doctor.test.sh) verifies the read-only diagnostic using real process environments.
 
 ### Sending text and keys
 

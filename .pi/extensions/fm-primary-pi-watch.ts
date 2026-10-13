@@ -1199,8 +1199,10 @@ export default function (pi: ExtensionAPI) {
     return result;
   }
 
-  pi.on?.("before_agent_start", (event) => {
-    consumeWake(generation, event.prompt);
+  pi.on?.("before_agent_start", (event: { prompt?: string; message?: { content: unknown } }) => {
+    // Pi 1.2 separates custom triggers from user prompts; older Pi only has prompt.
+    const prompt = typeof event.prompt === "string" ? event.prompt : userMessageText(event.message?.content);
+    consumeWake(generation, prompt);
   });
   pi.on?.("message_start", (event) => {
     if (event.message.role !== "user") return;

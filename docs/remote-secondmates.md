@@ -251,12 +251,13 @@ The script's own header owns the full line protocol.
 bin/fm-on.sh <secondmate-id|ssh-alias> fm-remote-doctor.sh --fix
 ```
 
-Over the plain SSH doctor bootstrap, it writes and reloads two Firstmate-owned launch agents on macOS:
+Over the plain SSH doctor bootstrap, it can write and reload two Firstmate-owned launch agents on macOS:
 
 - `dev.firstmate.remote-job`.
 - `dev.firstmate.herdr.fm-remote`.
 
 Both are scoped with `LimitLoadToSessionType=Aqua` and bootstrapped in `gui/<uid>`.
+The [Herdr startup and restart contract](herdr-backend.md#named-server-and-session-routing) owns the Claude session-marker exception to Herdr launch-agent reloads.
 
 ### How the Herdr launch agent starts its server
 
