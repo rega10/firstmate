@@ -1,0 +1,9 @@
+PI_EVENT {"type":"before_agent_start","messageType":"user","prompt":"USER_DIALOG_SENTINEL"}
+PI_EVENT {"type":"before_agent_start","messageType":"user","prompt":"USER_DIALOG_SENTINEL"}
+PI_EVENT {"type":"before_agent_start","messageType":"user","prompt":"USER_DIALOG_SENTINEL"}
+PI_EVENT {"type":"before_agent_start","messageType":"custom","message":{"role":"custom","customType":"extension-note","content":"CUSTOM_STRING_SENTINEL","display":false,"timestamp":1791872182864}}
+PI_EVENT {"type":"before_agent_start","messageType":"custom","message":{"role":"custom","customType":"extension-note","content":[{"type":"text","text":"CUSTOM_PARTS_SENTINEL"}],"display":false,"timestamp":1791872182967}}
+BRANCH_SETTLEMENT Error: supervision branch prompt settled but produced no durable outcome for its claimed wake rows
+BRANCH_MIRRORS ["[captain] USER_DIALOG_SENTINEL","[main] Local endpoint response.","[captain] USER_DIALOG_SENTINEL","[main] Local endpoint response.","[captain] USER_DIALOG_SENTINEL","[main] Local endpoint response.","[main] Local endpoint response.","[main] Local endpoint response."]
+USER_MIRROR_COPIES 3 EXPECTED 3
+VERIFIED custom string and text-parts events remain excluded from captain dialog.

@@ -1,0 +1,62 @@
+import {createServer} from 'node:http';
+import {spawnSync} from 'node:child_process';
+import {mkdirSync, writeFileSync, readFileSync, existsSync, copyFileSync} from 'node:fs';
+import {pathToFileURL} from 'node:url';
+const root=process.cwd(), lab=`${root}/.test-phase-temp/pi-sdk/lab${process.env.BASELINE ? '-baseline' : (process.env.USER_ONLY ? '-user-only' : '')}`, agentDir=`${lab}/agent`;
+mkdirSync(agentDir,{recursive:true});
+process.env.FM_HOME=lab;
+if(process.env.BASELINE)process.env.FM_ROOT_OVERRIDE=root;
+process.env.PI_CODING_AGENT_DIR=agentDir;
+process.env.PI_OFFLINE='1';
+const requests=[];
+const server=createServer(async(req,res)=>{
+ let data=''; for await(const chunk of req)data+=chunk;
+ requests.push(JSON.parse(data));
+ res.writeHead(200,{'Content-Type':'text/event-stream'});
+ const chunk={id:'local',object:'chat.completion.chunk',created:1,model:'local',choices:[{index:0,delta:{role:'assistant',content:'Local endpoint response.'},finish_reason:null}]};
+ res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+ res.write(`data: ${JSON.stringify({...chunk,choices:[{index:0,delta:{},finish_reason:'stop'}]})}\n\n`);
+ res.end('data: [DONE]\n\n');
+});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const port=server.address().port;
+writeFileSync(`${agentDir}/models.json`,JSON.stringify({providers:{'isolated-endpoint':{baseUrl:`http://127.0.0.1:${port}/v1`,api:'openai-completions',apiKey:'local-fixture',models:[{id:'local',contextWindow:128000,maxTokens:1024}]}}}));
+writeFileSync(`${agentDir}/settings.json`,JSON.stringify({defaultProvider:'isolated-endpoint',defaultModel:'local'}));
+writeFileSync(`${lab}/state/.lock`,`${process.pid}\n`);
+const packageRoot=`${root}/.test-phase-temp/pi-runtime/node_modules/@earendil-works/pi-coding-agent`;
+const {createAgentSession,DefaultResourceLoader,SessionManager,ModelRuntime}=await import(pathToFileURL(`${packageRoot}/dist/index.js`));
+const events=[], errors=[]; let extensionApi;
+const loader=new DefaultResourceLoader({cwd:lab,agentDir,noExtensions:true,noSkills:true,noPromptTemplates:true,noThemes:true,noContextFiles:true,additionalExtensionPaths:[process.env.BASELINE ? `${root}/.test-phase-temp/baseline/.pi/extensions/fm-branch-supervision.ts` : `${root}/.pi/extensions/fm-branch-supervision.ts`],extensionFactories:[{name:'event-observer',factory:(pi)=>{extensionApi=pi; pi.on('before_agent_start',event=>{events.push(event);console.log('PI_EVENT',JSON.stringify({type:event.type,messageType:event.messageType,prompt:event.prompt,message:event.message}));});}}]});
+await loader.reload();
+const resourceErrors=loader.getExtensions().errors;
+if(resourceErrors.length) throw Error(JSON.stringify(resourceErrors));
+const runtime=await ModelRuntime.create({authPath:`${agentDir}/auth.json`,modelsPath:`${agentDir}/models.json`});
+const {session}=await createAgentSession({cwd:lab,agentDir,modelRuntime:runtime,resourceLoader:loader,sessionManager:SessionManager.create(lab,`${lab}/sessions`),tools:[]});
+session.extensionRunner.onError(error=>{errors.push(error);console.log('EXTENSION_ERROR',JSON.stringify(error));});
+await session.bindExtensions({mode:'rpc'});
+try{
+ await session.prompt('USER_DIALOG_SENTINEL');
+ for(const content of (process.env.USER_ONLY ? [] : ['CUSTOM_STRING_SENTINEL',[{type:'text',text:'CUSTOM_PARTS_SENTINEL'}]])){
+   await session.sendCustomMessage({customType:'extension-note',content,display:false},{triggerTurn:true});
+ }
+ const append=spawnSync('bash',['-c','. "$1/bin/fm-wake-lib.sh"; fm_wake_append heartbeat fleet "heartbeat: isolated mirror check"','_',root],{env:process.env,encoding:'utf8'});
+ if(append.status!==0)throw Error(append.stderr);
+ const offer={message:'heartbeat: isolated mirror check',eligible:true,heartbeat:true,accepted:false,accept(settlement){this.accepted=true;this.settlement=settlement;}};
+ extensionApi.events.emit('fm-branch-supervision:dispatch',offer);
+ if(!offer.accepted)throw Error('branch refused isolated heartbeat');
+ await offer.settlement.catch(e=>console.log('BRANCH_SETTLEMENT',String(e)));
+ const pointer=`${lab}/state/.branch-session`;
+ if(!existsSync(pointer))throw Error('branch pointer absent');
+ const rows=readFileSync(readFileSync(pointer,'utf8').trim(),'utf8').trim().split('\n').map(line=>JSON.parse(line));
+ const mirrors=rows.filter(row=>row.type==='custom_message' && row.customType==='fm-main-mirror').map(row=>row.content);
+ copyFileSync(readFileSync(pointer,'utf8').trim(),`${process.env.EVIDENCE_DIR}/pi-branch-session${process.env.BASELINE ? '-baseline' : (process.env.USER_ONLY ? '-user-only' : '')}.jsonl`);
+ copyFileSync(session.sessionFile,`${process.env.EVIDENCE_DIR}/pi-main-session${process.env.BASELINE ? '-baseline' : (process.env.USER_ONLY ? '-user-only' : '')}.jsonl`);
+ console.log('BRANCH_MIRRORS',JSON.stringify(mirrors));
+ const userCopies=mirrors.filter(text=>text==='[captain] USER_DIALOG_SENTINEL').length;
+ console.log('USER_MIRROR_COPIES',userCopies,'EXPECTED',1);
+ if(mirrors.some(text=>text.includes('CUSTOM_STRING_SENTINEL')||text.includes('CUSTOM_PARTS_SENTINEL')))throw Error('custom event entered captain dialog');
+ if(errors.length)throw Error('extension errors occurred');
+ if(!process.env.USER_ONLY && !events.some(event=>event.messageType==='custom' && event.prompt===undefined))throw Error('real Pi never generated a custom event');
+ console.log('VERIFIED custom string and text-parts events remain excluded from captain dialog.');
+ if(userCopies!==1)throw Error('user dialog did not mirror exactly once');
+}finally{session.dispose();server.close();}

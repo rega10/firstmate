@@ -1,0 +1,27 @@
+The ten required repetitions of test_own_work_wait_keeps_first_alert_then_long_cadence passed.
+One additional traced execution captured the real watcher and wake-drain acknowledgement path.
+One complete tests/fm-watch-triage.test.sh execution passed.
+Each targeted execution covered background-shell, pipeline-run, and foreground-command waits.
+The real watcher preserved the first alert, emitted no repeated alert or wedge during quiet rechecks, stopped at its poll sleep, and accepted one generation-bound acknowledgement per stopped cycle.
+Long-cadence expiry produced a pause recheck. The undeclared-idle control still alarmed.
+The existing test uses disposable tmux/current-state fixtures. The watcher and wake drain are real production subprocesses.
+
+The real Pi 1.2.0 SDK ran from a disposable installation inside the worktree.
+Public AgentSession interfaces, the real event dispatcher, tracked extensions, production scripts, and persisted session records supplied the evidence.
+A local HTTP endpoint supplied deterministic model responses. No production credentials or operator fleet records were used.
+Three identical user submissions produced three captain mirror entries.
+The base-commit extension produced four entries for the same three submissions, reproducing the prior finding.
+Custom string and text-parts events did not enter the captain dialog.
+A real watcher wake survived custom messages with identical content, crossed session replacement, and cleared after genuine user replay.
+A processing custom turn stopped when an away record appeared. The next unrelated custom turn reached the local endpoint.
+The mirror endpoint returned text without a branch report. The branch correctly rejected ownership after persisting the mirrors.
+
+Four existing branch-extension cases passed: requested/unsolicited outcome delivery, away-record processing reset, intervening-entry/repeated-prompt mirroring, and dialog filtering/cursor behavior.
+Five existing watch-extension selections passed: streaming follow-up replacement and successor-chain retention for legacy, user, custom-string, and custom-parts shapes.
+Temporary selectors retained the existing executable test definitions and called only those selected cases.
+
+The disposable runtime, marked lab homes, node_modules symlink, and temporary selector scripts were removed.
+The earlier .watch-validation/ and tests/.fm-watch-triage-baseline.sh scratch artifacts were absent at entry and remained absent.
+No source or permanent tests changed in this phase.
+Lint was not run because the assigned Test rules prohibit linters. The outer executor owns lint and all other phases.
+No rendered UI changed. API transcripts and persisted records document the hidden Pi events and watcher lifecycle.

@@ -1,0 +1,12 @@
+PI_EVENT {"messageType":"user","prompt":"Hold this response while the isolated watcher queues a wake."}
+ACTUAL_QUEUED_WAKE ⁣FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/pi-wake-lab/state/isolated.status
+
+Run bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.
+QUEUED_WAKE ⁣FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/pi-wake-lab/state/isolated.status
+
+Run bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.
+PI_EVENT {"messageType":"custom","message":{"role":"custom","customType":"extension-note","content":"⁣FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/pi-wake-lab/state/isolated.status\n\nRun bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.","display":false,"timestamp":1791871371535}}
+PI_EVENT {"messageType":"custom","message":{"role":"custom","customType":"extension-note","content":[{"type":"text","text":"⁣FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/pi-wake-lab/state/isolated.status\n\nRun bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned."}],"display":false,"timestamp":1791871371539}}
+REPLACEMENT_HANDOFF {"version":2,"pending":[{"version":1,"token":"13954-1791871371008-1","message":"signal: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/pi-wake-lab/state/isolated.status","predecessorArmPid":"14100"}]}
+PI_EVENT {"messageType":"user","prompt":"⁣FIRSTMATE_OP: v1 watcher: FIRSTMATE WATCHER WAKE: signal: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/pi-wake-lab/state/isolated.status\n\nRun bin/fm-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned."}
+VERIFIED real watcher wake survives identical custom events, rides session replacement, and clears after real user replay.

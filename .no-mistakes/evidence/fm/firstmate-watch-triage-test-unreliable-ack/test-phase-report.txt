@@ -1,0 +1,27 @@
+The test phase ran ten repetitions of the fixed watcher case and one complete watcher-triage suite.
+All watcher checks passed. The suite took 1089 seconds.
+Both Pi extension suites passed.
+
+Live Pi checks used Pi 1.2.0 installed inside the disposable worktree directory.
+The installed Pi 0.87.1 cannot emit the new custom before_agent_start shape.
+The local HTTP endpoint supplied model responses. Pi, its event dispatcher, both tracked extensions, and the watcher/drain scripts were real.
+No production credentials or operator fleet records were used.
+The tests used the public Pi SDK rather than a TUI, so they produced API transcripts and saved session records.
+
+Custom string and text-parts messages stayed outside the captain dialog.
+A real watcher wake survived custom messages containing identical text, crossed session replacement, and cleared after user replay.
+The lab adapter only removed extension-injected path overrides before calling the real watcher arm script against its marked lab home.
+It preserved the gate guard and did not enable FM_GATE_REFUSE_BYPASS.
+A processing custom turn aborted after an away-record file appeared. The next unrelated custom turn contacted the local endpoint.
+
+One ordinary user prompt produced two captain mirror entries instead of one.
+The same failure occurred without custom messages and with the base commit's branch extension.
+This is a pre-existing compatibility failure, not a regression introduced by the watcher test fix.
+The real session inserts a system-message entry before the user entry, invalidating the predicted index used to suppress the staged prompt.
+The portable tests use scripted session entries and did not expose this ordering.
+See pi-mirror-observation.json and the complete main/branch transcripts.
+
+Lint was not run because this assigned Test phase explicitly forbids linters.
+The outer executor owns lint and the remaining gate phases.
+The named scratch artifacts were already absent at entry.
+All disposable runtime files were removed before the final result.

@@ -1,0 +1,2237 @@
++ set -u
+++ dirname tests/fm-watch-triage.test.sh
++ . tests/wake-helpers.sh
++++ dirname tests/wake-helpers.sh
+++ . tests/lib.sh
++++ '[' -n '' ']'
++++ FM_TEST_LIB_SOURCED=1
++++ umask 022
+++++ dirname tests/lib.sh
++++ . tests/git-config-helpers.sh
+++++ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+++++ GIT_CONFIG_GLOBAL=/dev/null
+++++ GIT_CONFIG_NOSYSTEM=1
+++++ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR
++++ export FM_GATE_REFUSE_BYPASS=1
++++ FM_GATE_REFUSE_BYPASS=1
++++ export FM_TEST_SEAM=1
++++ FM_TEST_SEAM=1
++++ unset FM_TASK_ID
++++ unset TASKS_AXI_FILE TASKS_AXI_BACKEND
++++++ dirname tests/lib.sh
+++++ cd tests/..
+++++ pwd
++++ ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61
+++++ fm_test_tmpdir
+++++ local base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp physical
+++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp ']'
+++++ case "$base" in
++++++ CDPATH=
++++++ cd -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++++ pwd -P
+++++ physical=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.git ']'
+++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ FM_TEST_TMPDIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ FM_TEST_CLEANUP_DIRS=()
+++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-cleanup.23089.XXXXXX
++++ FM_TEST_CLEANUP_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-cleanup.23089.COoCS5
+++++ fm_test_pid_identity 23089
+++++ local pid=23089
+++++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ bash -c '. "$1"; fm_pid_identity "$2"' _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-lib.sh 23089
++++ FM_TEST_OWNER_IDENTITY='Tue Oct 13 00:48:15 2026     bash -x tests/fm-watch-triage.test.sh'
+++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-procevent.23089.XXXXXX
++++ FM_TEST_PROCEVENT_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-procevent.23089.kE3WPL
+++++ mktemp /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-watcher.23089.XXXXXX
++++ FM_TEST_WATCHER_REGISTRY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-watcher.23089.AFuulb
++++ FM_TEST_STUB_MAX_BLOCK_SECONDS=120
++++ export FM_TEST_STUB_MAX_BLOCK_SECONDS
++++ trap fm_test_cleanup EXIT
++++ trap 'fm_test_cleanup; exit 130' INT
++++ trap 'fm_test_cleanup; exit 143' TERM
++++ trap 'fm_test_cleanup; exit 129' HUP
++++ trap 'fm_test_cleanup; exit 131' QUIT
++++ FM_TEST_ORPHAN_MAX_AGE_SECONDS=3600
++++ '[' 0 '!=' 1 ']'
++++ fm_test_reap_orphans
++++ local marker dir mtime now owner_pid owner_identity current_identity
+++++ date +%s
++++ now=1791870495
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.nEAQCV/.fm-test-fixture ']'
+++++ sed -n 1p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.nEAQCV/.fm-test-fixture
++++ owner_pid=68673
+++++ sed -n '2,$p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.nEAQCV/.fm-test-fixture
++++ owner_identity='Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 68673
++++ current_identity='Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' = 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.aRcfFv/.fm-test-fixture ']'
+++++ sed -n 1p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.aRcfFv/.fm-test-fixture
++++ owner_pid=68673
+++++ sed -n '2,$p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.aRcfFv/.fm-test-fixture
++++ owner_identity='Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 68673
++++ current_identity='Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' = 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.ryhcrO/.fm-test-fixture ']'
+++++ sed -n 1p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.ryhcrO/.fm-test-fixture
++++ owner_pid=68673
+++++ sed -n '2,$p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.ryhcrO/.fm-test-fixture
++++ owner_identity='Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 68673
++++ current_identity='Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' = 'Tue Oct 13 00:44:29 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
+++ '[' -z '' ']'
++++ fm_test_tmproot fm-wake-tangle-root
++++ local prefix=fm-wake-tangle-root root tmp_base
+++++ fm_test_tmpdir
+++++ local base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp physical
+++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp ']'
+++++ case "$base" in
++++++ CDPATH=
++++++ cd -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++++ pwd -P
+++++ physical=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.git ']'
+++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ mktemp -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.XXXXXX
++++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
+++++ cd -P -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
+++++ pwd -P
++++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
++++ printf '%s\n%s\n' 23089 'Tue Oct 13 00:48:15 2026     bash -x tests/fm-watch-triage.test.sh'
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
+++ FM_ROOT_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
+++ export FM_ROOT_OVERRIDE
++++ fm_test_tmproot fm-wedge-rec
++++ local prefix=fm-wedge-rec root tmp_base
+++++ fm_test_tmpdir
+++++ local base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp physical
+++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp ']'
+++++ case "$base" in
++++++ CDPATH=
++++++ cd -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++++ pwd -P
+++++ physical=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.git ']'
+++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ mktemp -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.XXXXXX
++++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
+++++ cd -P -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
+++++ pwd -P
++++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
++++ printf '%s\n%s\n' 23089 'Tue Oct 13 00:48:15 2026     bash -x tests/fm-watch-triage.test.sh'
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
+++ _fm_wedge_rec_dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT/rec
+++ export FM_WEDGE_ALARM_EXEC=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT/rec
+++ FM_WEDGE_ALARM_EXEC=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT/rec
++ . /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-classify-lib.sh
++++ d=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin
++++ '[' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin '!=' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-classify-lib.sh ']'
++++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin
++++ pwd
+++ _FM_CLASSIFY_LIB_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin
++++ uname -s
+++ _FM_CLASSIFY_UNAME_S=Darwin
+++ FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-crew-state.sh
+++ case $- in
+++ _fm_classify_nounset=on
+++ . /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-timeout-lib.sh
++++ set -u
+++ '[' on = on ']'
+++ unset _fm_classify_nounset
+++ FM_CLASSIFY_CAPTAIN_RE_DEFAULT='done:|needs-decision:|blocked:|failed:|PR ready|checks green|ready in branch|merged'
+++ FM_CLASSIFY_PAUSED_VERB_DEFAULT=paused
+++ FM_PAUSE_RESURFACE_SECS_DEFAULT=14400
+++ FM_CLASSIFY_RESOLVE_VERB_DEFAULT=resolved
+++ FM_CLASSIFY_CAPTAIN_HELD_VERB_DEFAULT=captain-held
+++ FM_CLASSIFY_EVENT_WINDOW_LINES=200
+++ FM_CLASSIFY_RESERVED_KEY_PREFIXES_DEFAULT=pending-reply-
+++ FM_OPEN_DECISIONS_FOLD_VERSION=9
+++ FM_STATUS_SNAPSHOT_EVENT_LINE=
+++ FM_STATUS_SNAPSHOT_EVENT_MTIME=
+++ FM_STATUS_SNAPSHOT_EVENT_ENDPOINT=
+++ STATUS_PRESENTATION_REPORTED=
+++ STATUS_PRESENTATION_CLASSIFIED=
+++ _FM_CLASSIFY_KEYLESS_PHASE=$'\036default'
+++ FM_GATE_HUMAN_DECISION='ask-user: authority decision'
+++ FM_WORKTREE_WRITE_PRUNE='.git node_modules .venv venv __pycache__ .mypy_cache .pytest_cache .ruff_cache .tox target dist build .next .cache vendor'
+++ FM_WORKTREE_WRITE_MAXDEPTH=6
+++ FM_WORKTREE_WRITE_TIMEOUT=10
++ WATCH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ DRAIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ fm_test_tmproot fm-watch-triage-tests
+++ local prefix=fm-watch-triage-tests root tmp_base
++++ fm_test_tmpdir
++++ local base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp physical
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp ']'
++++ case "$base" in
+++++ CDPATH=
+++++ cd -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++++ pwd -P
++++ physical=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ '[' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.git ']'
++++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
+++ tmp_base=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp
++++ mktemp -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.XXXXXX
+++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
++++ cd -P -- /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
++++ pwd -P
+++ root=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
+++ printf '%s\n%s\n' 23089 'Tue Oct 13 00:48:15 2026     bash -x tests/fm-watch-triage.test.sh'
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
++ TMP_ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
++ HOLD_WATCH_PID=
++ '[' -n test_own_work_wait_keeps_first_alert_then_long_cadence ']'
++ test_own_work_wait_keeps_first_alert_then_long_cadence
++ local wait_kind dir state fakebin out capture_file statusf window key sig pid round poll_ready
++ for wait_kind in background-shell pipeline-run foreground-command
+++ make_case own-work-background-shell
+++ local name=own-work-background-shell dir fakebin
+++ dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin
+++ fm_test_track_watcher_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
+++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state ']'
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin/tmux
+++ make_fake_crew_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin/fm-crew-state.sh
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin/fm-crew-state.sh
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell
++ dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell
++ state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin
++ out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/watch.out
++ capture_file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/pane.txt
++ statusf=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++ window=test:fm-own-work
+++ printf %s test:fm-own-work
+++ tr :/. ___
++ key=test_fm-own-work
++ printf 'idle worker awaiting its own %s\n' background-shell
++ printf 'window=%s\nkind=scout\nharness=grok\nbackend=tmux\n' test:fm-own-work
++ printf 'paused: waiting for my %s to finish; resume on completion\n' background-shell
+++ date +%s
++ set_mtime 1791869995 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++ local epoch=1791869995 f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status stamp
+++ date -r 1791869995 +%Y%m%d%H%M.%S
++ stamp=202610130039.55
++ touch -t 202610130039.55 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++ seen_sig /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++ local reported size ident
+++ case "$1" in
++++ status_observed_signature /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status size= ident= path_state link_target=- access kind encoded
+++++ _status_observed_path_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %HT:%p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++++ path_state='Regular File:100644'
++++ '[' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status ']'
++++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status ']'
++++ '[' '!' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status ']'
++++ '[' -r /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status ']'
++++ kind=readable
++++ '[' -z '' ']'
+++++ _fm_status_file_size /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %z /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++++ size=72
++++ size=72
++++ case "$size" in
++++ '[' -z '' ']'
+++++ _fm_open_decisions_file_ident /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status epoch birth ident
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %d:%i /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++++ ident=16777232:97860899
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %B /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++++ epoch=1791869995
+++++ '[' 1791869995 '!=' 0 ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %FB /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
+++++ birth=1791869995.000000000
+++++ case "$ident$birth" in
+++++ '[' -n 1791869995.000000000 ']'
+++++ printf strong:%s:%s 16777232:97860899 1791869995.000000000
++++ ident=strong:16777232:97860899:1791869995.000000000
++++ '[' -n strong:16777232:97860899:1791869995.000000000 ']'
++++ '[' -r /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status ']'
++++ access=readable
+++++ printf '%s\0%s\0%s\0%s\0%s\0%s' 72 strong:16777232:97860899:1791869995.000000000 'Regular File:100644' - readable readable
+++++ LC_ALL=C
+++++ od -An -v -tx1
+++++ tr -d ' \n'
++++ encoded=3732007374726f6e673a31363737373233323a39373836303839393a313739313836393939352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ printf r1:%s 3732007374726f6e673a31363737373233323a39373836303839393a313739313836393939352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
+++ reported=r1:3732007374726f6e673a31363737373233323a39373836303839393a313739313836393939352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ size_of /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++++ LC_ALL=C
++++ wc -c
++++ tr -d '[:space:]'
+++ size=72
++++ _fm_open_decisions_file_ident /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status epoch birth ident
++++ '[' -n '' ']'
++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %d:%i /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++++ ident=16777232:97860899
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %B /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++++ epoch=1791869995
++++ '[' 1791869995 '!=' 0 ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %FB /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/own-work.status
++++ birth=1791869995.000000000
++++ case "$ident$birth" in
++++ '[' -n 1791869995.000000000 ']'
++++ printf strong:%s:%s 16777232:97860899 1791869995.000000000
+++ ident=strong:16777232:97860899:1791869995.000000000
+++ printf 'v2\t%s\t%s@%s' r1:3732007374726f6e673a31363737373233323a39373836303839393a313739313836393939352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65 72 strong:16777232:97860899:1791869995.000000000
++ sig=$'v2\tr1:3732007374726f6e673a31363737373233323a39373836303839393a313739313836393939352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t72@strong:16777232:97860899:1791869995.000000000'
++ printf %s $'v2\tr1:3732007374726f6e673a31363737373233323a39373836303839393a313739313836393939352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t72@strong:16777232:97860899:1791869995.000000000'
++++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/pane.txt
+++ hash_text 'idle worker awaiting its own background-shell'
+++ command -v md5
+++ printf %s 'idle worker awaiting its own background-shell'
+++ md5 -q
++ printf %s 9e0fd2c714a69ea8ac3422b0f068b61a
++ printf '1\n'
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/watch.out env FM_PAUSE_RESURFACE_SECS=999
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/watch.out
++ shift 3
++ pid=23942
++ wait_for_exit 23942 100
++ local pid=23942 limit=100 i=0
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_PAUSE_RESURFACE_SECS=999 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=8
++ '[' 8 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=9
++ '[' 9 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=10
++ '[' 10 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
+++ ps -p 23942 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=11
++ '[' 11 -lt 100 ']'
++ is_live_non_zombie 23942
++ local pid=23942 stat
++ kill -0 23942
++ return 1
++ wait 23942
++ return 0
++ grep -Fx 'stale: test:fm-own-work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/watch.out
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ sequence=1
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ generation=23942.1791870496.p5I5Hx
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ '[' -n 1 ']'
++ '[' -n 23942.1791870496.p5I5Hx ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 23942.1791870496.p5I5Hx
++ poll_ready=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
++ mkfifo /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready.fifo
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin/sleep
++ for round in 1 2
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ date +%s
++ printf '%s\n' 1791869998
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/recheck.out
++ shift 3
++ pid=31630
++ wait_numeric_file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready 300
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=7
++ '[' 7 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
++ value=31630
++ case "$value" in
++ return 0
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
++ '[' 31630 '!=' 31630 ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/recheck.out ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.wake-queue ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.wedge-escalations-test_fm-own-work ']'
++ reap 31630
++ local rc
++ kill 31630
++ wait_for_exit 31630 100
++ local pid=31630 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 31630
++ local pid=31630 stat
++ kill -0 31630
+++ ps -p 31630 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 31630
++ local pid=31630 stat
++ kill -0 31630
++ return 1
++ wait 31630
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ generation=31630.1791870499.MXORnH
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 31630.1791870499.MXORnH ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 31630.1791870499.MXORnH
++ for round in 1 2
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ date +%s
++ printf '%s\n' 1791870000
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/recheck.out
++ shift 3
++ pid=37808
++ wait_numeric_file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready 300
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
++ value=37808
++ case "$value" in
++ return 0
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/poll-ready
++ '[' 37808 '!=' 37808 ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/recheck.out ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.wake-queue ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.wedge-escalations-test_fm-own-work ']'
++ reap 37808
++ local rc
++ kill 37808
++ wait_for_exit 37808 100
++ local pid=37808 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 37808
++ local pid=37808 stat
++ kill -0 37808
+++ ps -p 37808 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 37808
++ local pid=37808 stat
++ kill -0 37808
++ return 1
++ wait 37808
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ generation=37808.1791870501.kqG1j4
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 37808.1791870501.kqG1j4 ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 37808.1791870501.kqG1j4
+++ date +%s
++ set_mtime 1791870002 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.paused-resurfaced-test_fm-own-work
++ local epoch=1791870002 f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.paused-resurfaced-test_fm-own-work stamp
+++ date -r 1791870002 +%Y%m%d%H%M.%S
++ stamp=202610130040.02
++ touch -t 202610130040.02 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.paused-resurfaced-test_fm-own-work
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/long-cadence.out env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/long-cadence.out
++ shift 3
++ pid=43351
++ wait_for_exit 43351 100
++ local pid=43351 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 43351
++ local pid=43351 stat
++ kill -0 43351
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ ps -p 43351 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 43351
++ local pid=43351 stat
++ kill -0 43351
+++ ps -p 43351 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 43351
++ local pid=43351 stat
++ kill -0 43351
+++ ps -p 43351 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 43351
++ local pid=43351 stat
++ kill -0 43351
+++ ps -p 43351 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 43351
++ local pid=43351 stat
++ kill -0 43351
+++ ps -p 43351 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 43351
++ local pid=43351 stat
++ kill -0 43351
+++ ps -p 43351 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 43351
++ local pid=43351 stat
++ kill -0 43351
+++ ps -p 43351 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 43351
++ local pid=43351 stat
++ kill -0 43351
++ return 1
++ wait 43351
++ return 0
++ grep -F 'awaiting external' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/long-cadence.out
++ grep -F 'possible wedge' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/long-cadence.out
++ for wait_kind in background-shell pipeline-run foreground-command
+++ make_case own-work-pipeline-run
+++ local name=own-work-pipeline-run dir fakebin
+++ dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin
+++ fm_test_track_watcher_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
+++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state ']'
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin/tmux
+++ make_fake_crew_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin/fm-crew-state.sh
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin/fm-crew-state.sh
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run
++ dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run
++ state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin
++ out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/watch.out
++ capture_file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/pane.txt
++ statusf=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++ window=test:fm-own-work
+++ printf %s test:fm-own-work
+++ tr :/. ___
++ key=test_fm-own-work
++ printf 'idle worker awaiting its own %s\n' pipeline-run
++ printf 'window=%s\nkind=scout\nharness=grok\nbackend=tmux\n' test:fm-own-work
++ printf 'paused: waiting for my %s to finish; resume on completion\n' pipeline-run
+++ date +%s
++ set_mtime 1791870003 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++ local epoch=1791870003 f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status stamp
+++ date -r 1791870003 +%Y%m%d%H%M.%S
++ stamp=202610130040.03
++ touch -t 202610130040.03 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++ seen_sig /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++ local reported size ident
+++ case "$1" in
++++ status_observed_signature /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status size= ident= path_state link_target=- access kind encoded
+++++ _status_observed_path_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %HT:%p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++++ path_state='Regular File:100644'
++++ '[' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status ']'
++++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status ']'
++++ '[' '!' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status ']'
++++ '[' -r /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status ']'
++++ kind=readable
++++ '[' -z '' ']'
+++++ _fm_status_file_size /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %z /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++++ size=68
++++ size=68
++++ case "$size" in
++++ '[' -z '' ']'
+++++ _fm_open_decisions_file_ident /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status epoch birth ident
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %d:%i /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++++ ident=16777232:97862086
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %B /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++++ epoch=1791870003
+++++ '[' 1791870003 '!=' 0 ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %FB /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
+++++ birth=1791870003.000000000
+++++ case "$ident$birth" in
+++++ '[' -n 1791870003.000000000 ']'
+++++ printf strong:%s:%s 16777232:97862086 1791870003.000000000
++++ ident=strong:16777232:97862086:1791870003.000000000
++++ '[' -n strong:16777232:97862086:1791870003.000000000 ']'
++++ '[' -r /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status ']'
++++ access=readable
+++++ printf '%s\0%s\0%s\0%s\0%s\0%s' 68 strong:16777232:97862086:1791870003.000000000 'Regular File:100644' - readable readable
+++++ LC_ALL=C
+++++ od -An -v -tx1
+++++ tr -d ' \n'
++++ encoded=3638007374726f6e673a31363737373233323a39373836323038363a313739313837303030332e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ printf r1:%s 3638007374726f6e673a31363737373233323a39373836323038363a313739313837303030332e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
+++ reported=r1:3638007374726f6e673a31363737373233323a39373836323038363a313739313837303030332e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ size_of /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++++ LC_ALL=C
++++ wc -c
++++ tr -d '[:space:]'
+++ size=68
++++ _fm_open_decisions_file_ident /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status epoch birth ident
++++ '[' -n '' ']'
++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %d:%i /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++++ ident=16777232:97862086
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %B /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++++ epoch=1791870003
++++ '[' 1791870003 '!=' 0 ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %FB /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/own-work.status
++++ birth=1791870003.000000000
++++ case "$ident$birth" in
++++ '[' -n 1791870003.000000000 ']'
++++ printf strong:%s:%s 16777232:97862086 1791870003.000000000
+++ ident=strong:16777232:97862086:1791870003.000000000
+++ printf 'v2\t%s\t%s@%s' r1:3638007374726f6e673a31363737373233323a39373836323038363a313739313837303030332e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65 68 strong:16777232:97862086:1791870003.000000000
++ sig=$'v2\tr1:3638007374726f6e673a31363737373233323a39373836323038363a313739313837303030332e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t68@strong:16777232:97862086:1791870003.000000000'
++ printf %s $'v2\tr1:3638007374726f6e673a31363737373233323a39373836323038363a313739313837303030332e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t68@strong:16777232:97862086:1791870003.000000000'
++++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/pane.txt
+++ hash_text 'idle worker awaiting its own pipeline-run'
+++ command -v md5
+++ printf %s 'idle worker awaiting its own pipeline-run'
+++ md5 -q
++ printf %s 78eed4ea7d85f276e1be9d5b88d1f702
++ printf '1\n'
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/watch.out env FM_PAUSE_RESURFACE_SECS=999
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/watch.out
++ shift 3
++ pid=46187
++ wait_for_exit 46187 100
++ local pid=46187 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_PAUSE_RESURFACE_SECS=999 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ ps -p 46187 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
+++ ps -p 46187 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
+++ ps -p 46187 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
+++ ps -p 46187 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
+++ ps -p 46187 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
+++ ps -p 46187 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
+++ ps -p 46187 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
+++ ps -p 46187 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=8
++ '[' 8 -lt 100 ']'
++ is_live_non_zombie 46187
++ local pid=46187 stat
++ kill -0 46187
++ return 1
++ wait 46187
++ return 0
++ grep -Fx 'stale: test:fm-own-work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/watch.out
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ sequence=1
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ generation=46187.1791870504.UOvGcY
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ '[' -n 1 ']'
++ '[' -n 46187.1791870504.UOvGcY ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 46187.1791870504.UOvGcY
++ poll_ready=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
++ mkfifo /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready.fifo
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin/sleep
++ for round in 1 2
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ date +%s
++ printf '%s\n' 1791870005
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/recheck.out
++ shift 3
++ pid=51072
++ wait_numeric_file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready 300
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
++ value=51072
++ case "$value" in
++ return 0
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
++ '[' 51072 '!=' 51072 ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/recheck.out ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.wake-queue ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.wedge-escalations-test_fm-own-work ']'
++ reap 51072
++ local rc
++ kill 51072
++ wait_for_exit 51072 100
++ local pid=51072 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 51072
++ local pid=51072 stat
++ kill -0 51072
+++ ps -p 51072 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 51072
++ local pid=51072 stat
++ kill -0 51072
++ return 1
++ wait 51072
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ generation=51072.1791870506.fRhrqS
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 51072.1791870506.fRhrqS ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 51072.1791870506.fRhrqS
++ for round in 1 2
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ date +%s
++ printf '%s\n' 1791870007
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/recheck.out
++ shift 3
++ pid=56134
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ wait_numeric_file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready 300
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
++ value=56134
++ case "$value" in
++ return 0
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/poll-ready
++ '[' 56134 '!=' 56134 ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/recheck.out ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.wake-queue ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.wedge-escalations-test_fm-own-work ']'
++ reap 56134
++ local rc
++ kill 56134
++ wait_for_exit 56134 100
++ local pid=56134 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 56134
++ local pid=56134 stat
++ kill -0 56134
+++ ps -p 56134 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 56134
++ local pid=56134 stat
++ kill -0 56134
++ return 1
++ wait 56134
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ generation=56134.1791870508.plWYid
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 56134.1791870508.plWYid ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 56134.1791870508.plWYid
+++ date +%s
++ set_mtime 1791870009 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.paused-resurfaced-test_fm-own-work
++ local epoch=1791870009 f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.paused-resurfaced-test_fm-own-work stamp
+++ date -r 1791870009 +%Y%m%d%H%M.%S
++ stamp=202610130040.09
++ touch -t 202610130040.09 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.paused-resurfaced-test_fm-own-work
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/long-cadence.out env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/long-cadence.out
++ shift 3
++ pid=60817
++ wait_for_exit 60817 100
++ local pid=60817 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 60817
++ local pid=60817 stat
++ kill -0 60817
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ ps -p 60817 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 60817
++ local pid=60817 stat
++ kill -0 60817
+++ ps -p 60817 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 60817
++ local pid=60817 stat
++ kill -0 60817
+++ ps -p 60817 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 60817
++ local pid=60817 stat
++ kill -0 60817
+++ ps -p 60817 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 60817
++ local pid=60817 stat
++ kill -0 60817
+++ ps -p 60817 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 60817
++ local pid=60817 stat
++ kill -0 60817
+++ ps -p 60817 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 60817
++ local pid=60817 stat
++ kill -0 60817
+++ ps -p 60817 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 60817
++ local pid=60817 stat
++ kill -0 60817
++ return 1
++ wait 60817
++ return 0
++ grep -F 'awaiting external' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/long-cadence.out
++ grep -F 'possible wedge' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/long-cadence.out
++ for wait_kind in background-shell pipeline-run foreground-command
+++ make_case own-work-foreground-command
+++ local name=own-work-foreground-command dir fakebin
+++ dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin
+++ fm_test_track_watcher_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
+++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state ']'
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin/tmux
+++ make_fake_crew_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin/fm-crew-state.sh
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin/fm-crew-state.sh
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command
++ dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command
++ state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin
++ out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/watch.out
++ capture_file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/pane.txt
++ statusf=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++ window=test:fm-own-work
+++ printf %s test:fm-own-work
+++ tr :/. ___
++ key=test_fm-own-work
++ printf 'idle worker awaiting its own %s\n' foreground-command
++ printf 'window=%s\nkind=scout\nharness=grok\nbackend=tmux\n' test:fm-own-work
++ printf 'paused: waiting for my %s to finish; resume on completion\n' foreground-command
+++ date +%s
++ set_mtime 1791870010 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++ local epoch=1791870010 f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status stamp
+++ date -r 1791870010 +%Y%m%d%H%M.%S
++ stamp=202610130040.10
++ touch -t 202610130040.10 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++ seen_sig /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++ local reported size ident
+++ case "$1" in
++++ status_observed_signature /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status size= ident= path_state link_target=- access kind encoded
+++++ _status_observed_path_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %HT:%p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++++ path_state='Regular File:100644'
++++ '[' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status ']'
++++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status ']'
++++ '[' '!' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status ']'
++++ '[' -r /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status ']'
++++ kind=readable
++++ '[' -z '' ']'
+++++ _fm_status_file_size /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %z /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++++ size=74
++++ size=74
++++ case "$size" in
++++ '[' -z '' ']'
+++++ _fm_open_decisions_file_ident /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status epoch birth ident
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %d:%i /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++++ ident=16777232:97863154
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %B /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++++ epoch=1791870010
+++++ '[' 1791870010 '!=' 0 ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %FB /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
+++++ birth=1791870010.000000000
+++++ case "$ident$birth" in
+++++ '[' -n 1791870010.000000000 ']'
+++++ printf strong:%s:%s 16777232:97863154 1791870010.000000000
++++ ident=strong:16777232:97863154:1791870010.000000000
++++ '[' -n strong:16777232:97863154:1791870010.000000000 ']'
++++ '[' -r /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status ']'
++++ access=readable
+++++ printf '%s\0%s\0%s\0%s\0%s\0%s' 74 strong:16777232:97863154:1791870010.000000000 'Regular File:100644' - readable readable
+++++ LC_ALL=C
+++++ od -An -v -tx1
+++++ tr -d ' \n'
++++ encoded=3734007374726f6e673a31363737373233323a39373836333135343a313739313837303031302e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ printf r1:%s 3734007374726f6e673a31363737373233323a39373836333135343a313739313837303031302e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
+++ reported=r1:3734007374726f6e673a31363737373233323a39373836333135343a313739313837303031302e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ size_of /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++++ LC_ALL=C
++++ wc -c
++++ tr -d '[:space:]'
+++ size=74
++++ _fm_open_decisions_file_ident /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status epoch birth ident
++++ '[' -n '' ']'
++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %d:%i /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++++ ident=16777232:97863154
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %B /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++++ epoch=1791870010
++++ '[' 1791870010 '!=' 0 ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %FB /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/own-work.status
++++ birth=1791870010.000000000
++++ case "$ident$birth" in
++++ '[' -n 1791870010.000000000 ']'
++++ printf strong:%s:%s 16777232:97863154 1791870010.000000000
+++ ident=strong:16777232:97863154:1791870010.000000000
+++ printf 'v2\t%s\t%s@%s' r1:3734007374726f6e673a31363737373233323a39373836333135343a313739313837303031302e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65 74 strong:16777232:97863154:1791870010.000000000
++ sig=$'v2\tr1:3734007374726f6e673a31363737373233323a39373836333135343a313739313837303031302e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t74@strong:16777232:97863154:1791870010.000000000'
++ printf %s $'v2\tr1:3734007374726f6e673a31363737373233323a39373836333135343a313739313837303031302e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t74@strong:16777232:97863154:1791870010.000000000'
++++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/pane.txt
+++ hash_text 'idle worker awaiting its own foreground-command'
+++ command -v md5
+++ printf %s 'idle worker awaiting its own foreground-command'
+++ md5 -q
++ printf %s 4fee93c0ddd39d476ae1d8eea5043108
++ printf '1\n'
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/watch.out env FM_PAUSE_RESURFACE_SECS=999
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/watch.out
++ shift 3
++ pid=64166
++ wait_for_exit 64166 100
++ local pid=64166 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 64166
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/st+ local pid=64166 stat
+ate FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_PAUSE_RESURFACE_SECS=999 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='U   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=8
++ '[' 8 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
+++ ps -p 64166 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=9
++ '[' 9 -lt 100 ']'
++ is_live_non_zombie 64166
++ local pid=64166 stat
++ kill -0 64166
++ return 1
++ wait 64166
++ return 0
++ grep -Fx 'stale: test:fm-own-work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/watch.out
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ sequence=1
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ generation=64166.1791870511.K8xgZM
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ '[' -n 1 ']'
++ '[' -n 64166.1791870511.K8xgZM ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 64166.1791870511.K8xgZM
++ poll_ready=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
++ mkfifo /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready.fifo
++ cat
++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin/sleep
++ for round in 1 2
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ date +%s
++ printf '%s\n' 1791870013
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/recheck.out
++ shift 3
++ pid=72790
++ wait_numeric_file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready 300
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
++ value=72790
++ case "$value" in
++ return 0
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
++ '[' 72790 '!=' 72790 ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/recheck.out ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.wake-queue ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.wedge-escalations-test_fm-own-work ']'
++ reap 72790
++ local rc
++ kill 72790
++ wait_for_exit 72790 100
++ local pid=72790 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 72790
++ local pid=72790 stat
++ kill -0 72790
+++ ps -p 72790 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 72790
++ local pid=72790 stat
++ kill -0 72790
++ return 1
++ wait 72790
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ generation=72790.1791870514.jHHpVQ
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 72790.1791870514.jHHpVQ ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 72790.1791870514.jHHpVQ
++ for round in 1 2
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ date +%s
++ printf '%s\n' 1791870015
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/recheck.out
++ shift 3
++ pid=77748
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ wait_numeric_file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready 300
++ local file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=7
++ '[' 7 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=8
++ '[' 8 -lt 300 ']'
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
++ value=77748
++ case "$value" in
++ return 0
+++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/poll-ready
++ '[' 77748 '!=' 77748 ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/recheck.out ']'
++ '[' '!' -s /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.wake-queue ']'
++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.wedge-escalations-test_fm-own-work ']'
++ reap 77748
++ local rc
++ kill 77748
++ wait_for_exit 77748 100
++ local pid=77748 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 77748
++ local pid=77748 stat
++ kill -0 77748
+++ ps -p 77748 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 77748
++ local pid=77748 stat
++ kill -0 77748
++ return 1
++ wait 77748
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state err sequence generation
++ err=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ generation=77748.1791870516.MSqYDA
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 77748.1791870516.MSqYDA ']'
++ FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 77748.1791870516.MSqYDA
+++ date +%s
++ set_mtime 1791870017 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.paused-resurfaced-test_fm-own-work
++ local epoch=1791870017 f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.paused-resurfaced-test_fm-own-work stamp
+++ date -r 1791870017 +%Y%m%d%H%M.%S
++ stamp=202610130040.17
++ touch -t 202610130040.17 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.paused-resurfaced-test_fm-own-work
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/long-cadence.out env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/long-cadence.out
++ shift 3
++ pid=83118
++ wait_for_exit 83118 100
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/st+ local pid=83118 limit=100 i=0
+ate FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 83118
++ local pid=83118 stat
++ kill -0 83118
+++ ps -p 83118 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 83118
++ local pid=83118 stat
++ kill -0 83118
+++ ps -p 83118 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 83118
++ local pid=83118 stat
++ kill -0 83118
+++ ps -p 83118 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 83118
++ local pid=83118 stat
++ kill -0 83118
+++ ps -p 83118 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 83118
++ local pid=83118 stat
++ kill -0 83118
+++ ps -p 83118 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 83118
++ local pid=83118 stat
++ kill -0 83118
+++ ps -p 83118 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 83118
++ local pid=83118 stat
++ kill -0 83118
+++ ps -p 83118 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 83118
++ local pid=83118 stat
++ kill -0 83118
++ return 1
++ wait 83118
++ return 0
++ grep -F 'awaiting external' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/long-cadence.out
++ grep -F 'possible wedge' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/long-cadence.out
+++ make_case own-work-undeclared
+++ local name=own-work-undeclared dir fakebin
+++ dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared
+++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin
+++ mkdir -p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin
+++ fm_test_track_watcher_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state
+++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state ']'
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin/tmux
+++ make_fake_crew_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin
+++ local fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin
+++ cat
+++ chmod +x /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin/fm-crew-state.sh
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin/fm-crew-state.sh
+++ printf '%s\n' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared
++ dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared
++ state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state
++ fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin
++ out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/watch.out
++ capture_file=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/pane.txt
++ statusf=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++ printf 'idle worker without a declared wait\n'
++ printf 'window=%s\nkind=scout\nharness=grok\nbackend=tmux\n' test:fm-own-work
++ printf 'working: implementing\n'
+++ seen_sig /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
+++ local reported size ident
+++ case "$1" in
++++ status_observed_signature /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status size= ident= path_state link_target=- access kind encoded
+++++ _status_observed_path_state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %HT:%p /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++++ path_state='Regular File:100644'
++++ '[' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status ']'
++++ '[' '!' -e /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status ']'
++++ '[' '!' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status ']'
++++ '[' -r /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status ']'
++++ kind=readable
++++ '[' -z '' ']'
+++++ _fm_status_file_size /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
+++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %z /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++++ size=22
++++ size=22
++++ case "$size" in
++++ '[' -z '' ']'
+++++ _fm_open_decisions_file_ident /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
+++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status epoch birth ident
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %d:%i /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
+++++ ident=16777232:97864485
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %B /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
+++++ epoch=1791870518
+++++ '[' 1791870518 '!=' 0 ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %FB /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
+++++ birth=1791870518.902710709
+++++ case "$ident$birth" in
+++++ '[' -n 1791870518.902710709 ']'
+++++ printf strong:%s:%s 16777232:97864485 1791870518.902710709
++++ ident=strong:16777232:97864485:1791870518.902710709
++++ '[' -n strong:16777232:97864485:1791870518.902710709 ']'
++++ '[' -r /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status ']'
++++ access=readable
+++++ printf '%s\0%s\0%s\0%s\0%s\0%s' 22 strong:16777232:97864485:1791870518.902710709 'Regular File:100644' - readable readable
+++++ LC_ALL=C
+++++ od -An -v -tx1
+++++ tr -d ' \n'
++++ encoded=3232007374726f6e673a31363737373233323a39373836343438353a313739313837303531382e39303237313037303900526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ printf r1:%s 3232007374726f6e673a31363737373233323a39373836343438353a313739313837303531382e39303237313037303900526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
+++ reported=r1:3232007374726f6e673a31363737373233323a39373836343438353a313739313837303531382e39303237313037303900526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ size_of /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++++ LC_ALL=C
++++ wc -c
++++ tr -d '[:space:]'
+++ size=22
++++ _fm_open_decisions_file_ident /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++++ local f=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status epoch birth ident
++++ '[' -n '' ']'
++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %d:%i /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++++ ident=16777232:97864485
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %B /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++++ epoch=1791870518
++++ '[' 1791870518 '!=' 0 ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %FB /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/own-work.status
++++ birth=1791870518.902710709
++++ case "$ident$birth" in
++++ '[' -n 1791870518.902710709 ']'
++++ printf strong:%s:%s 16777232:97864485 1791870518.902710709
+++ ident=strong:16777232:97864485:1791870518.902710709
+++ printf 'v2\t%s\t%s@%s' r1:3232007374726f6e673a31363737373233323a39373836343438353a313739313837303531382e39303237313037303900526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65 22 strong:16777232:97864485:1791870518.902710709
++ sig=$'v2\tr1:3232007374726f6e673a31363737373233323a39373836343438353a313739313837303531382e39303237313037303900526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t22@strong:16777232:97864485:1791870518.902710709'
++ printf %s $'v2\tr1:3232007374726f6e673a31363737373233323a39373836343438353a313739313837303531382e39303237313037303900526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t22@strong:16777232:97864485:1791870518.902710709'
++++ cat /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/pane.txt
+++ hash_text 'idle worker without a declared wait'
+++ command -v md5
+++ printf %s 'idle worker without a declared wait'
+++ md5 -q
++ printf %s 4f4bddc8c2473c73f249e4a62f03d75d
++ printf '1\n'
++ PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: unknown · source: none · no current-state source available'
++ watch_bg /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/watch.out env FM_STALE_ESCALATE_SECS=999
++ local state=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state fakebin=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin out=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/watch.out
++ shift 3
++ pid=85648
++ env PATH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0iXsvJv:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=999 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ wait_for_exit 85648 100
++ local pid=85648 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=8
++ '[' 8 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
+++ ps -p 85648 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=9
++ '[' 9 -lt 100 ']'
++ is_live_non_zombie 85648
++ local pid=85648 stat
++ kill -0 85648
++ return 1
++ wait 85648
++ return 0
++ grep -Fx 'stale: test:fm-own-work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/watch.out
++ grep -F 'stale: test:fm-own-work' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/.wake-queue
++ pass 'own-work waits keep one first alert, then bounded rechecks without wedges; undeclared idle still alarms'
++ printf 'ok - %s\n' 'own-work waits keep one first alert, then bounded rechecks without wedges; undeclared idle still alarms'
+ok - own-work waits keep one first alert, then bounded rechecks without wedges; undeclared idle still alarms
++ exit 0
++ fm_test_cleanup
++ local d
++ fm_test_reap_watchers
++ local state lock_home $'seen=\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-watcher.23089.AFuulb ']'
++ IFS=
++ read -r state
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state ']'
++ case "$seen" in
++ seen+=$'/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-background-shell/state/.watch.lock/pid ']'
++ continue
++ IFS=
++ read -r state
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state ']'
++ case "$seen" in
++ seen+=$'/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-pipeline-run/state/.watch.lock/pid ']'
++ continue
++ IFS=
++ read -r state
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state ']'
++ case "$seen" in
++ seen+=$'/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-foreground-command/state/.watch.lock/pid ']'
++ continue
++ IFS=
++ read -r state
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state ']'
++ case "$seen" in
++ seen+=$'/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR/own-work-undeclared/state/.watch.lock/pid ']'
++ continue
++ IFS=
++ read -r state
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-watcher.23089.AFuulb
++ fm_test_reap_procevent_homes
++ local home claim_root $'seen=\n'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-procevent.23089.kE3WPL ']'
++ IFS=$'\t'
++ read -r home claim_root
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-procevent.23089.kE3WPL
++ for d in "${FM_TEST_CLEANUP_DIRS[@]:-}"
++ '[' -n '' ']'
++ '[' -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-cleanup.23089.COoCS5 ']'
++ IFS=
++ read -r d
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t ']'
++ fm_test_remove_tree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
++ '[' -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t ']'
++ '[' '!' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t ']'
++ find /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t -type d -exec chmod u+rwx '{}' +
++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wake-tangle-root.ZWU75t
++ IFS=
++ read -r d
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT ']'
++ fm_test_remove_tree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
++ '[' -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT ']'
++ '[' '!' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT ']'
++ find /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT -type d -exec chmod u+rwx '{}' +
++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-wedge-rec.nxICdT
++ IFS=
++ read -r d
++ '[' -n /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR ']'
++ fm_test_remove_tree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
++ local dir=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
++ '[' -d /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR ']'
++ '[' '!' -L /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR ']'
++ find /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR -type d -exec chmod u+rwx '{}' +
++ rm -rf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/fm-watch-triage-tests.iTXgzR
++ IFS=
++ read -r d
++ rm -f /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/.fm-test-cleanup.23089.COoCS5

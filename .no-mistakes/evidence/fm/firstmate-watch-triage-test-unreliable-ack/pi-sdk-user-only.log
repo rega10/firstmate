@@ -1,0 +1,14 @@
+PI_EVENT {"type":"before_agent_start","messageType":"user","prompt":"USER_DIALOG_SENTINEL"}
+BRANCH_SETTLEMENT Error: supervision branch prompt settled but produced no durable outcome for its claimed wake rows
+BRANCH_MIRRORS ["[captain] USER_DIALOG_SENTINEL","[captain] USER_DIALOG_SENTINEL","[main] Local endpoint response."]
+USER_MIRROR_COPIES 2 EXPECTED 1
+VERIFIED custom string and text-parts events remain excluded from captain dialog.
+file:///Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/pi-sdk/check.mjs:60
+ if(userCopies!==1)throw Error('user dialog did not mirror exactly once');
+                         ^
+
+Error: user dialog did not mirror exactly once
+    at file:///Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/.test-phase-temp/pi-sdk/check.mjs:60:26
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v24.20.0

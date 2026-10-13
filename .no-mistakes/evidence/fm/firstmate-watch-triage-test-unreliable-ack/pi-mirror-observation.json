@@ -1,0 +1,43 @@
+{
+  "runtime": "Pi 1.2.0",
+  "expected_copies": 1,
+  "main_user_entries": [
+    {
+      "type": "message",
+      "id": "1afe4f92",
+      "parentId": "f368aa4e",
+      "timestamp": "2026-10-13T06:00:26.787Z",
+      "message": {
+        "role": "user",
+        "content": [
+          {
+            "type": "text",
+            "text": "USER_DIALOG_SENTINEL"
+          }
+        ],
+        "timestamp": 1791871226785
+      }
+    }
+  ],
+  "branch_user_mirrors": [
+    {
+      "type": "custom_message",
+      "customType": "fm-main-mirror",
+      "content": "[captain] USER_DIALOG_SENTINEL",
+      "display": false,
+      "id": "63f743a7",
+      "parentId": "ad508bb3",
+      "timestamp": "2026-10-13T06:00:27.146Z"
+    },
+    {
+      "type": "custom_message",
+      "customType": "fm-main-mirror",
+      "content": "[captain] USER_DIALOG_SENTINEL",
+      "display": false,
+      "id": "0d5855f9",
+      "parentId": "63f743a7",
+      "timestamp": "2026-10-13T06:00:27.146Z"
+    }
+  ],
+  "actual_copies": 2
+}
