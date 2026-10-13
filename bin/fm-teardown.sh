@@ -29,12 +29,11 @@
 # value and treehouse_retiring_worktree= with the former path, retaining
 # treehouse_lease_id= and treehouse_lease_holder= in the same task record.
 # Only then does it return that exact lease with --if-lease-id, including retries.
-# A ship/scout retry uses the retained receipt and skips a successor's allocation.
-# A secondmate receipt mismatch always refuses: home cleanup cannot safely run
-# after another allocation has taken that home, including a retirement retry.
+# A retry uses the retained receipt and skips an allocation without a durable
+# lease once the recorded lease is released, including secondmate home cleanup.
 # Before cleanup, an identity mismatch on a still-leased slot refuses, naming
-# both lease identities and the repair. An empty legacy pool identity cannot
-# certify release of a record-only identity, even on a retirement retry.
+# both lease identities and the repair. An empty identity on a still-leased
+# legacy slot cannot certify release of a record-only identity.
 # Endpoint checks and final reporting precede this transition; the backlog-close
 # marker follows successful release so session replay cannot erase its receipt.
 # None of this loosens the landed-work gates below: the transition runs only on
@@ -1791,14 +1790,10 @@ teardown_validate_treehouse_lease_record() { # <meta> <project>
   }
   [ "$FM_TREEHOUSE_SLOT_LEASE_ID" != "$lease_id" ] || return 0
   record_home=$(CDPATH='' cd -- "$(dirname "$(dirname "$meta")")" && pwd -P) || return 1
-  if [ -n "$pending" ] && [ "$(fm_meta_get "$meta" kind)" != secondmate ]; then
-    if [ "$FM_TREEHOUSE_SLOT_STATUS" = available ] && [ -z "$FM_TREEHOUSE_SLOT_LEASE_ID" ]; then
-      return 0
-    fi
-    if [ -n "$FM_TREEHOUSE_SLOT_LEASE_ID" ] &&
-      ! fm_treehouse_lease_holder_matches "$FM_TREEHOUSE_SLOT_LEASE_HOLDER" "$task_id" "$record_home"; then
-      return 0
-    fi
+  if [ -n "$pending" ] && [ -z "$FM_TREEHOUSE_SLOT_LEASE_ID" ]; then
+    case "$FM_TREEHOUSE_SLOT_STATUS" in
+      available|dirty|in-use|"you're here"|damaged) return 0 ;;
+    esac
   fi
   pool_state="$(dirname "$(dirname "$worktree")")/treehouse-state.json"
   echo "REFUSED: Treehouse lease identity mismatch for $task_id at $worktree: record lease_id='$lease_id' holder='$holder'; pool lease_id='${FM_TREEHOUSE_SLOT_LEASE_ID:-<empty>}' holder='$FM_TREEHOUSE_SLOT_LEASE_HOLDER' status='$FM_TREEHOUSE_SLOT_STATUS'; preserving the slot and task record" >&2
@@ -1809,6 +1804,19 @@ teardown_validate_treehouse_lease_record() { # <meta> <project>
     echo "Repair: verify the actual slot owner in $pool_state before restoring the matching treehouse_lease_id and treehouse_lease_holder receipt in $meta; if another task holds it, preserve both records and reconcile ownership. Never substitute another task's lease identity." >&2
   fi
   return 1
+}
+
+teardown_recorded_firstmate_home() {
+  local meta=$1 home lease_id pending
+  lease_id=$(fm_meta_get "$meta" treehouse_lease_id)
+  pending=$(fm_meta_get "$meta" treehouse_retiring_worktree)
+  if [ -n "$lease_id" ] && [ -n "$pending" ]; then
+    teardown_validate_treehouse_lease_record "$meta" "$(fm_meta_get "$meta" project)" || return 1
+    [ "$FM_TREEHOUSE_SLOT_LEASE_ID" = "$lease_id" ] || return 0
+  fi
+  home=$(fm_meta_get "$meta" home)
+  [ -n "$home" ] || home=$(fm_meta_get "$meta" worktree)
+  printf '%s\n' "$home"
 }
 
 # Atomically withdraw the active claim before release. The receipt stays in
@@ -2601,6 +2609,9 @@ EOF
 
 remove_firstmate_home() {
   local home=$1 label=$2 expected_id=${3:-} lease_meta=${4:-} abs_home_path process_event_backup
+  if [ -n "$lease_meta" ]; then
+    home=$(teardown_recorded_firstmate_home "$lease_meta") || return 1
+  fi
   [ -n "$home" ] || return 0
   [ -e "$home" ] || return 0
   abs_home_path=$(validate_firstmate_home_for_removal "$home" "$label" "$expected_id") || return 1
@@ -2750,7 +2761,8 @@ preflight_firstmate_home_process_events() {
 }
 
 preflight_firstmate_home_process_event_tree() {
-  local home=$1 label=$2 sub_state child_meta child_kind child_home child_wt child_id
+  local home=$1 label=$2 sub_state child_meta child_kind child_home child_id
+  [ -n "$home" ] || return 0
   sub_state="$home/state"
   if [ -d "$sub_state" ]; then
     for child_meta in "$sub_state"/*.meta; do
@@ -2758,9 +2770,7 @@ preflight_firstmate_home_process_event_tree() {
       child_kind=$(meta_value "$child_meta" kind)
       [ "$child_kind" = secondmate ] || continue
       child_id=$(basename "$child_meta" .meta)
-      child_wt=$(meta_value "$child_meta" worktree)
-      child_home=$(meta_value "$child_meta" home)
-      [ -n "$child_home" ] || child_home=$child_wt
+      child_home=$(teardown_recorded_firstmate_home "$child_meta") || return 1
       preflight_firstmate_home_process_event_tree "$child_home" "child firstmate home for $child_id" || return 1
     done
   fi
@@ -2768,8 +2778,9 @@ preflight_firstmate_home_process_event_tree() {
 }
 
 collect_descendant_task_locks() {
-  local home=$1 sub_state child_meta child_id child_kind child_wt child_home task_set_lock
+  local home=$1 sub_state child_meta child_id child_kind child_home task_set_lock
   local -a child_ids
+  [ -n "$home" ] || return 0
   sub_state="$home/state"
   if [ -L "$sub_state" ]; then
     echo "REFUSED: secondmate home $home has a symbolic-link state path at $sub_state; forced teardown changed nothing" >&2
@@ -2814,9 +2825,7 @@ collect_descendant_task_locks() {
     [ -n "$child_kind" ] || child_kind=ship
     child_home=
     if [ "$child_kind" = secondmate ]; then
-      child_wt=$(meta_value "$child_meta" worktree)
-      child_home=$(meta_value "$child_meta" home)
-      [ -n "$child_home" ] || child_home=$child_wt
+      child_home=$(teardown_recorded_firstmate_home "$child_meta") || return 1
     fi
     DESCENDANT_TASK_STATES+=("$sub_state")
     DESCENDANT_TASK_IDS+=("$child_id")
@@ -2829,7 +2838,7 @@ collect_descendant_task_locks() {
 }
 
 preflight_descendant_task_locks() {
-  local home=$1 i state task_id meta control_lock meta_lock kind child_wt child_home
+  local home=$1 i state task_id meta control_lock meta_lock kind child_home
   DESCENDANT_TASK_STATES=()
   DESCENDANT_TASK_IDS=()
   DESCENDANT_TASK_KINDS=()
@@ -2873,9 +2882,7 @@ preflight_descendant_task_locks() {
       return 1
     }
     if [ "$kind" = secondmate ]; then
-      child_wt=$(meta_value "$meta" worktree)
-      child_home=$(meta_value "$meta" home)
-      [ -n "$child_home" ] || child_home=$child_wt
+      child_home=$(teardown_recorded_firstmate_home "$meta") || return 1
       [ "$child_home" = "${DESCENDANT_TASK_HOMES[$i]}" ] || {
         echo "REFUSED: descendant task $task_id changed home while forced teardown acquired its locks; forced teardown changed nothing" >&2
         return 1
@@ -2937,6 +2944,11 @@ preflight_descendant_treehouse_slots() {
     fi
     fm_backend_validate_task_endpoint "$meta" "$task_id" || return 1
     teardown_validate_treehouse_lease_record "$meta" "$project" || return 1
+    if [ -n "$(meta_value "$meta" treehouse_retiring_worktree)" ] &&
+      [ -n "$(meta_value "$meta" treehouse_lease_id)" ] &&
+      [ "$FM_TREEHOUSE_SLOT_LEASE_ID" != "$(meta_value "$meta" treehouse_lease_id)" ]; then
+      continue
+    fi
     require_exclusive_worktree_slot_record "$meta" "$task_id" "$state" "$worktree" || return 1
     owner_rc=0
     require_owned_worktree_slot_record "$task_id" "$worktree" || owner_rc=$?
@@ -2949,6 +2961,7 @@ preflight_descendant_treehouse_slots() {
 
 validate_firstmate_home_children_removal() {
   local home=$1 sub_state child_meta child_id child_wt child_proj child_kind child_home child_backend child_orca_worktree_id
+  [ -n "$home" ] || return 0
   sub_state="$home/state"
   [ -d "$sub_state" ] || return 0
   for child_meta in "$sub_state"/*.meta; do
@@ -2962,8 +2975,7 @@ validate_firstmate_home_children_removal() {
     child_backend=$(fm_backend_of_meta "$child_meta")
     teardown_require_backend_prerequisites "$child_backend" "$child_id" || return 1
     if [ "$child_kind" = secondmate ]; then
-      child_home=$(meta_value "$child_meta" home)
-      [ -n "$child_home" ] || child_home=$child_wt
+      child_home=$(teardown_recorded_firstmate_home "$child_meta") || return 1
       validate_firstmate_home_for_removal "$child_home" "child firstmate home" "$child_id" >/dev/null || return 1
       validate_firstmate_home_children_removal "$child_home" || return 1
     elif [ "$child_backend" = orca ]; then
@@ -3089,7 +3101,8 @@ $session	$lock_path"
 }
 
 preflight_firstmate_home_herdr_children() {  # <home>
-  local home=$1 sub_state child_meta child_id child_backend child_target child_kind child_home child_wt
+  local home=$1 sub_state child_meta child_id child_backend child_target child_kind child_home
+  [ -n "$home" ] || return 0
   sub_state="$home/state"
   [ -d "$sub_state" ] || return 0
   for child_meta in "$sub_state"/*.meta; do
@@ -3104,9 +3117,7 @@ preflight_firstmate_home_herdr_children() {  # <home>
     child_kind=$(meta_value "$child_meta" kind)
     [ -n "$child_kind" ] || child_kind=ship
     if [ "$child_kind" = secondmate ]; then
-      child_wt=$(meta_value "$child_meta" worktree)
-      child_home=$(meta_value "$child_meta" home)
-      [ -n "$child_home" ] || child_home=$child_wt
+      child_home=$(teardown_recorded_firstmate_home "$child_meta") || return 1
       preflight_firstmate_home_herdr_children "$child_home" || return 1
     fi
   done
@@ -3158,6 +3169,7 @@ endpoint_close_refusal() {  # <subject> <backend> <target> <honors-force>
 
 cleanup_firstmate_home_children() {
   local home=$1 sub_state child_meta child_id child_t child_wt child_proj child_kind child_home child_backend child_orca_worktree_id child_return_rc child_busy_gen child_owner_rc
+  [ -n "$home" ] || return 0
   sub_state="$home/state"
   [ -d "$sub_state" ] || return 0
   for child_meta in "$sub_state"/*.meta; do
@@ -3203,8 +3215,7 @@ cleanup_firstmate_home_children() {
       fi
     fi
     if [ "$child_kind" = secondmate ]; then
-      child_home=$(meta_value "$child_meta" home)
-      [ -n "$child_home" ] || child_home=$child_wt
+      child_home=$(teardown_recorded_firstmate_home "$child_meta") || return 1
       if [ -n "$child_home" ] && [ -d "$child_home" ]; then
         cleanup_firstmate_home_children "$child_home" || return $?
         remove_firstmate_home "$child_home" "child firstmate home" "$child_id" "$child_meta" || return $?
@@ -3314,7 +3325,7 @@ if [ "$KIND" = secondmate ]; then
   fm_lock_acquire_wait "$LOCAL_REGISTRY_LOCK" || exit 1
   LOCAL_HANDOFF_LOCK="$STATE/.backlog-handoff-$ID.lock"
   fm_lock_acquire_wait "$LOCAL_HANDOFF_LOCK" || exit 1
-  [ -n "$HOME_PATH" ] || HOME_PATH=$WT
+  HOME_PATH=$(teardown_recorded_firstmate_home "$META") || exit 1
   handoff_wake_retire_stage_recover "$HOME_PATH" || exit 1
   handoff_wake_retire_validate || exit 1
   pending_replies_recovery_validate initial || exit 1
@@ -3333,7 +3344,7 @@ fi
 
 if [ "$KIND" = secondmate ] && [ "$FORCE" != "--force" ]; then
   SUB_STATE="$HOME_PATH/state"
-  if [ -d "$SUB_STATE" ]; then
+  if [ -n "$HOME_PATH" ] && [ -d "$SUB_STATE" ]; then
     for child_meta in "$SUB_STATE"/*.meta; do
       [ -e "$child_meta" ] || continue
       echo "REFUSED: secondmate $ID still has in-flight work in $SUB_STATE." >&2

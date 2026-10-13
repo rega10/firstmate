@@ -777,7 +777,8 @@ A preexisting project-bearing charter is also refused until it is re-scaffolded 
 The seeded lease is held under the secondmate id until explicit retirement or seed rollback returns it, so normal restarts do not free or recycle the home.
 A new `fm-spawn.sh --secondmate` record reads that home's existing lease from Treehouse status and records its identity and actual holder, without allocating another home.
 Explicit relaunch and automatic endpoint recovery preserve an existing record's lease fields without querying the pool; a legacy record without those fields still recovers as before.
-Teardown of a leased home conditionally returns that recorded identity and fails closed if the receipt disagrees with the pool; plain-clone homes with no Treehouse pool slot are removed directly.
+Teardown of a leased home conditionally returns that recorded identity and fails closed if the receipt disagrees with a still-leased slot; plain-clone homes with no Treehouse pool slot are removed directly.
+After release, an interrupted retirement finishes stale-record cleanup without touching the released slot or a later allocation without a durable identity.
 
 A live legacy home can remain leased without a lease identity in Treehouse 2.3.0.
 A legacy task record without `treehouse_lease_id` permits another slot to spawn when this pool's status reports its slot as `leased` to the task's bare id or `<physical-record-home>:<task-id>`.

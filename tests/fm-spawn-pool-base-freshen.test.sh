@@ -1083,11 +1083,17 @@ if [ "${1:-}" = status ] && [ "${2:-}" = --json ]; then
   [ -z "${FM_SECOND_STATUS_LOG:-}" ] || printf '%s\n' "$*" >> "$FM_SECOND_STATUS_LOG"
   [ "${FM_SECOND_STATUS_FAIL:-0}" != 1 ] || exit 1
   jq -n --arg path "$FM_FAKE_PANE_PATH" --arg holder pool-secondmate-receipt \
-    '[{path:$path,status:"leased",lease_id:"seed-lease",lease_holder:$holder}]'
+    '[{path:$path,status:"leased",lease_id:"seed-lease",lease_holder:$holder}]' > "$FM_FAKE_PANE_PATH/../lease-status.json"
+  if [ -e "$FM_FAKE_PANE_PATH/../released" ]; then
+    jq '[.[] | .status="available" | .lease_id="" | .lease_holder=""]' "$FM_FAKE_PANE_PATH/../lease-status.json"
+  else
+    cat "$FM_FAKE_PANE_PATH/../lease-status.json"
+  fi
 elif [ "${1:-}" = return ]; then
   printf '%s\n' "$*" >> "$FM_SECOND_RETURN_LOG"
   [ "$*" = "return --force --if-lease-id seed-lease $FM_FAKE_PANE_PATH" ] || exit 1
-  [ "${FM_SECOND_RETURN_FAIL:-0}" != 1 ]
+  [ "${FM_SECOND_RETURN_FAIL:-0}" != 1 ] || exit 1
+  : > "$FM_FAKE_PANE_PATH/../released"
 else
   exec "$(dirname "$0")/treehouse-allocator" "$@"
 fi
@@ -1165,6 +1171,23 @@ SH
   [ "$(grep -Fc "return --force --if-lease-id seed-lease $POOL_DIR" "$CASE_DIR/returns")" = 2 ] \
     || fail "secondmate retry did not use the same lease identity"
   pass "secondmate conditional retirement preserves its receipt and recovers a failed return"
+
+  cp "$CASE_DIR/retiring.meta" "$HOME_DIR/state/$id.meta"
+  printf 'replacement-task\n' > "$POOL_DIR/.fm-secondmate-home"
+  printf 'successor state\n' > "$POOL_DIR/state/successor.meta"
+  out=$(FM_HOME="$HOME_DIR" HOME="$HOME_DIR/user-home" FM_ROOT_OVERRIDE="$PROJECT_DIR" \
+    FM_STATE_OVERRIDE="$HOME_DIR/state" FM_DATA_OVERRIDE="$HOME_DIR/data" \
+    FM_CONFIG_OVERRIDE="$HOME_DIR/config" FM_FAKE_PANE_PATH="$POOL_DIR" FM_SPAWN_NO_GUARD=1 \
+    FM_SECOND_RETURN_LOG="$CASE_DIR/returns" PATH="$FAKEBIN_DIR:$PATH" \
+    "$ROOT/bin/fm-teardown.sh" "$id" 2>&1)
+  status=$?
+  expect_code 0 "$status" "secondmate retry after successful release should finish cleanup"$'\n'"$out"
+  [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "retry after release retained the secondmate receipt"
+  assert_grep 'successor state' "$POOL_DIR/state/successor.meta" "retry after release changed successor state"
+  [ "$(cat "$POOL_DIR/.fm-secondmate-home")" = replacement-task ] || fail "retry after release changed the home marker"
+  [ "$(grep -Fc "return --force --if-lease-id seed-lease $POOL_DIR" "$CASE_DIR/returns")" = 2 ] \
+    || fail "retry after release returned the slot again"
+  pass "secondmate retry after successful release finishes cleanup without touching the current allocation"
 }
 
 test_pool_slot_still_recorded_by_another_task_refuses() {
