@@ -1066,7 +1066,7 @@ SH
 }
 
 test_secondmate_pool_lease_receipt() {
-  local rec id out status return_fail variant recorded
+  local rec id out status return_fail variant recorded holder
   id='pool-secondmate-receipt'
   rec=$(make_case "$id" "$id")
   read_case_record "$rec"
@@ -1082,7 +1082,7 @@ test_secondmate_pool_lease_receipt() {
 if [ "${1:-}" = status ] && [ "${2:-}" = --json ]; then
   [ -z "${FM_SECOND_STATUS_LOG:-}" ] || printf '%s\n' "$*" >> "$FM_SECOND_STATUS_LOG"
   [ "${FM_SECOND_STATUS_FAIL:-0}" != 1 ] || exit 1
-  jq -n --arg path "$FM_FAKE_PANE_PATH" --arg holder pool-secondmate-receipt \
+  jq -n --arg path "$FM_FAKE_PANE_PATH" --arg holder "${FM_SECOND_LEASE_HOLDER:-pool-secondmate-receipt}" \
     '[{path:$path,status:"leased",lease_id:"seed-lease",lease_holder:$holder}]' > "$FM_FAKE_PANE_PATH/../lease-status.json"
   if [ -e "$FM_FAKE_PANE_PATH/../released" ]; then
     jq '[.[] | .status="available" | .lease_id="" | .lease_holder=""]' "$FM_FAKE_PANE_PATH/../lease-status.json"
@@ -1099,14 +1099,26 @@ else
 fi
 SH
   chmod +x "$FAKEBIN_DIR/treehouse"
-  out=$(FM_SKIP_SECONDMATE_SYNC=1 FM_SKIP_SECONDMATE_INHERIT=1 \
-    fm_test_run_spawn "$HOME_DIR" "$POOL_DIR" "$FAKEBIN_DIR" "$id" "$POOL_DIR" --secondmate)
-  status=$?
-  expect_code 0 "$status" "a secondmate should retain its seeded lease receipt"$'\n'"$out"
-  assert_grep 'treehouse_lease_id=seed-lease' "$HOME_DIR/state/$id.meta" "secondmate did not publish its lease"
-  assert_grep "treehouse_lease_holder=$id" "$HOME_DIR/state/$id.meta" "secondmate did not publish the pool holder"
-  assert_grep "task=$id" "$SLOT_CLAIM" "secondmate did not claim its home slot"
-  pass "secondmate publishes its seeded lease identity and holder"
+  mkdir -p "$HOME_DIR/user-home"
+  for variant in qualified bare; do
+    holder=$id
+    [ "$variant" != qualified ] || holder="$HOME_DIR:$id"
+    out=$(FM_SKIP_SECONDMATE_SYNC=1 FM_SKIP_SECONDMATE_INHERIT=1 \
+      FM_ROOT_OVERRIDE='' FM_HOME="$HOME_DIR" HOME="$HOME_DIR/user-home" CLAUDE_CONFIG_DIR='' \
+      FM_STATE_OVERRIDE="$HOME_DIR/state" FM_DATA_OVERRIDE="$HOME_DIR/data" \
+      FM_PROJECTS_OVERRIDE="$HOME_DIR/projects" FM_CONFIG_OVERRIDE="$HOME_DIR/config" \
+      FM_SPAWN_NO_GUARD=1 FM_FAKE_PANE_PATH="$POOL_DIR" TMUX=fake,1,0 \
+      FM_SECOND_LEASE_HOLDER="$holder" PATH="$FAKEBIN_DIR:$PATH" \
+      "$ROOT/bin/fm-spawn.sh" "$id" "$POOL_DIR" --secondmate 2> "$CASE_DIR/launch.stderr")
+    status=$?
+    expect_code 0 "$status" "a secondmate should retain its $variant seeded lease receipt"$'\n'"$out"$'\n'"$(cat "$CASE_DIR/launch.stderr")"
+    [ ! -s "$CASE_DIR/launch.stderr" ] || fail "secondmate launch wrote stderr: $(cat "$CASE_DIR/launch.stderr")"
+    assert_grep 'treehouse_lease_id=seed-lease' "$HOME_DIR/state/$id.meta" "secondmate did not publish its lease"
+    assert_grep "treehouse_lease_holder=$holder" "$HOME_DIR/state/$id.meta" "secondmate did not publish the pool holder"
+    assert_grep "task=$id" "$SLOT_CLAIM" "secondmate did not claim its home slot"
+    pass "secondmate publishes its seeded lease identity and $variant holder with clean stderr"
+    [ "$variant" != qualified ] || rm "$HOME_DIR/state/$id.meta"
+  done
 
   # Automatic endpoint recovery uses --secondmate, not --relaunch. Existing
   # records retain their receipt without querying the allocator on that path.
