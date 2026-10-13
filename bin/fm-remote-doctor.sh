@@ -686,7 +686,7 @@ check_herdr_server() {
         # Reuse the proven socket owner and environment reader. Report names
         # only: a Claude variable can contain credentials or session content.
         claude_vars=$(fm_remote_herdr_process_env "${birth#* }" | awk -F= '
-          $1 == "CLAUDECODE" || $1 ~ /^CLAUDE_/ {
+          $1 == "CLAUDE_CODE_CHILD_SESSION" || $1 == "CLAUDE_CODE_SESSION_ID" || $1 == "CLAUDE_PID" || $1 == "CLAUDECODE" {
             printf "%s%s", separator, $1
             separator = ", "
           }
@@ -695,7 +695,7 @@ check_herdr_server() {
     esac
     if [ -n "$claude_vars" ]; then
       HERDR_SERVER_CLAUDE_CONTAMINATED=1
-      record herdr-server "human: session $HERDR_SESSION_NAME is served by pid ${birth#* } with inherited Claude variables ($claude_vars); all panes in session $HERDR_SESSION_NAME inherit them and Claude transcript saving can be disabled" \
+      record herdr-server "human: session $HERDR_SESSION_NAME is served by pid ${birth#* } with inherited Claude session markers ($claude_vars); all panes in session $HERDR_SESSION_NAME inherit them and Claude transcript saving can be disabled" \
         "restart the Herdr server for session $HERDR_SESSION_NAME outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server"
       return 0
     fi
@@ -806,7 +806,7 @@ reload_launch_agent() { # <check-to-report-under>
   # Other launch-agent gaps must not turn the read-only Claude diagnosis into
   # an implicit restart that closes every affected pane.
   if [ "${HERDR_SERVER_CLAUDE_CONTAMINATED:-0}" = 1 ]; then
-    fix_report "$report" failed "session $HERDR_SESSION_NAME has inherited Claude variables; restart its server outside a Claude session before reloading its launch agent"
+    fix_report "$report" failed "session $HERDR_SESSION_NAME has inherited Claude session markers; restart its server outside a Claude session before reloading its launch agent"
     return 1
   fi
   [ -f "$LAUNCH_AGENT_PLIST" ] || {

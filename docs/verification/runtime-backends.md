@@ -1313,7 +1313,8 @@ Verified 2026-10-13 UTC on macOS (Darwin 25.6.0, arm64) with GNU Bash 3.2.57 and
 The startup regression executes the real adapter against a fake Herdr executable that records its environment.
 It verifies removal of every `CLAUDE_*` variable and `CLAUDECODE`, including an unknown variable whose value contains a newline, while preserving the caller's identity, unrelated environment, and explicit session routing.
 The doctor regression reads real non-platform process environments through the existing socket-owner fixture and exercises both Darwin and Linux dispatch.
-It verifies variable-name reporting without values, the affected-session action, and refusal to restart the contaminated server even when `--fix` also finds a loaded-agent gap.
+It verifies each session marker's diagnostic, variable-name reporting without values, the affected-session action, and refusal to restart the contaminated server even when `--fix` also finds a loaded-agent gap.
+It also verifies that configuration-only environments remain ready on both platforms and permit Darwin launch-agent repair under the [restart contract](../herdr-backend.md#named-server-and-session-routing).
 These tests do not start or restart a live Herdr server or launch a Claude session.
 
 Refresh command:
@@ -1334,8 +1335,10 @@ The doctor's focused verification command was `bash bin/fm-test-run.sh tests/fm-
 
 ```text
 ok - Claude contamination names the affected panes and requires an explicit restart without exposing environment values
-ok - Linux diagnoses the whole CLAUDE_* pack without restarting the running server
-FM_TEST_SUMMARY total=1 failed=0 skipped_gate=0 duration_ms=33260
+ok - Darwin accepts Claude configuration and allows launch-agent repairs
+ok - Darwin diagnoses each Claude session marker without restarting the server
+ok - Linux accepts Claude configuration and allows launch-agent repairs
+ok - Linux diagnoses each Claude session marker without restarting the server
 ```
 
 ### fm-remote server birth and login-keychain access
