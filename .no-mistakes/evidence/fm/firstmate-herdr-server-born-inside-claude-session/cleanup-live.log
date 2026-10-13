@@ -1,0 +1,3 @@
+{"sessions":[{"default":true,"name":"default","running":true,"session_dir":".live-validation/.h/herdr","socket_path":".live-validation/.h/herdr/herdr.sock"}]}
+All named labs were removed. Every guarded teardown preserved the default-session tripwire.
+No lab viewer, lab server, or tripwire remains.

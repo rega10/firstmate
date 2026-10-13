@@ -1,0 +1,15 @@
+Reported-bug reproduction: lab=fm-lab-old-92762-10907 Claude session=b0151981-ed56-44e4-aaa5-50964ef805b4
+{"id":"cli:pane:wait-output","result":{"matched_line":"CLAUDE_CHILD_EXIT=0","pane_id":"w1:p1","read":{"format":"text","pane_id":"w1:p1","revision":0,"source":"recent_unwrapped","tab_id":"w1:t1","text":"\nThe default interactive shell is now zsh.\nTo update your account to use zsh, please run `chsh -s /bin/zsh`.\nFor more details, please visit https://support.apple.com/kb/HT208050.\nbash-3.2$ LIVE_ROOT='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R' LIVE_CLAUDE_ID='b0151981-ed56-44e4-aaa5-50964ef805b4' '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R/.live-validation/claude-child.sh'\nHERDR_CLAUDE_SAVING_OK\n\nCLAUDE_FIRST_EXIT=0\nHERDR_CLAUDE_SAVING_OK\n\nCLAUDE_RESUME_EXIT=0\nCLAUDE_CHILD_EXIT=0\nbash-3.2$","truncated":false,"workspace_id":"w1"},"revision":0,"type":"output_matched"}}
+
+The default interactive shell is now zsh.
+To update your account to use zsh, please run `chsh -s /bin/zsh`.
+For more details, please visit https://support.apple.com/kb/HT208050.
+bash-3.2$ LIVE_ROOT='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R' LIVE_CLAUDE_ID='b0151981-ed56-44e4-aaa5-50964ef805b4' '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R/.live-validation/claude-child.sh'
+HERDR_CLAUDE_SAVING_OK
+
+CLAUDE_FIRST_EXIT=0
+HERDR_CLAUDE_SAVING_OK
+
+CLAUDE_RESUME_EXIT=0
+CLAUDE_CHILD_EXIT=0
+bash-3.2$

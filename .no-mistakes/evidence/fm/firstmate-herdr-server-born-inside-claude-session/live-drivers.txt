@@ -1,0 +1,262 @@
+FILE .live-validation/claude-child-isolated.sh
+#!/usr/bin/env bash
+set -u
+cd "$LIVE_ROOT/.live-validation/claude-project" || exit 1
+export CLAUDE_CONFIG_DIR="$LIVE_ROOT/.live-validation/claude-config"
+claude --restricted --tools '' --strict-mcp-config --session-id "$LIVE_CLAUDE_ID" --model haiku -p 'Reply exactly HERDR_CLAUDE_SAVING_OK.'
+rc=$?
+printf '\nCLAUDE_CHILD_EXIT=%s\n' "$rc"
+
+FILE .live-validation/claude-child.sh
+#!/usr/bin/env bash
+set -u
+cd "$LIVE_ROOT/.live-validation/claude-project" || exit 1
+unset CLAUDE_CONFIG_DIR
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+claude --restricted --tools '' --strict-mcp-config --session-id "$LIVE_CLAUDE_ID" --model haiku -p 'Reply exactly HERDR_CLAUDE_SAVING_OK.'
+rc=$?
+printf '\nCLAUDE_FIRST_EXIT=%s\n' "$rc"
+claude --restricted --tools '' --strict-mcp-config --resume "$LIVE_CLAUDE_ID" --model haiku -p 'Reply with the exact uppercase token I requested in my previous message.'
+resume_rc=$?
+printf '\nCLAUDE_RESUME_EXIT=%s\nCLAUDE_CHILD_EXIT=%s\n' "$resume_rc" "$rc"
+
+FILE .live-validation/claude.sh
+#!/usr/bin/env bash
+set -eu
+export LIVE_ROOT="$PWD" LIVE_REAL_PATH="$PATH"
+export XDG_CONFIG_HOME=.live-validation/.h FM_HERDR_LAB_STATE_DIR="$PWD/.live-validation/tripwires"
+unset HERDR_ENV HERDR_PANE_ID HERDR_TAB_ID HERDR_WORKSPACE_ID HERDR_SOCKET_PATH HERDR_SESSION
+export LIVE_SESSION=$(bin/fm-herdr-lab.sh name claude)
+export LIVE_CLAUDE_ID=$(python3 -c "import uuid; print(uuid.uuid4())")
+cleanup() { PATH="$LIVE_REAL_PATH" bin/fm-herdr-lab.sh teardown "$LIVE_SESSION"; }
+trap cleanup EXIT
+export PATH="$PWD/.live-validation/router:$PATH"
+export CLAUDE_CODE_CHILD_SESSION=1 CLAUDE_CODE_SESSION_ID=private-parent CLAUDE_PID=12345 CLAUDECODE=1 CLAUDE_JOB_DIR=private-job CLAUDE_FUTURE_MARKER=$'private-future\nsecond-line' LIVE_SENTINEL=preserved
+. bin/backends/herdr.sh
+fm_backend_herdr_server_ensure "$LIVE_SESSION"
+[ "$CLAUDE_CODE_SESSION_ID" = private-parent ] && echo 'Caller Claude session markers remain unchanged.'
+status=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" status --json)
+printf '%s\n' "$status"
+socket=$(printf '%s' "$status" | jq -r '.server.socket')
+. bin/fm-remote-herdr-owner-lib.sh
+owner=$(fm_remote_herdr_socket_owner "$socket")
+[ -n "$owner" ]
+printf 'Real server pid=%s\n' "$owner"
+pack=$(fm_remote_herdr_process_env "$owner" | awk -F= '$1 ~ /^CLAUDE_/ || $1 == "CLAUDECODE" {print $1}')
+[ -z "$pack" ] || { printf 'FAIL retained: %s\n' "$pack"; exit 1; }
+echo 'Real server has no CLAUDE_* variables or CLAUDECODE.'
+fm_remote_herdr_process_env "$owner" | awk '$0 == "LIVE_SENTINEL=preserved" { found=1 } END {exit !found}'
+echo 'Real server preserved unrelated LIVE_SENTINEL.'
+ws=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" workspace create --cwd "$PWD" --label env-proof --no-focus)
+printf '%s\n' "$ws"
+pane=$(printf '%s' "$ws" | jq -r '.result.root_pane.pane_id')
+printf '%s' "$pane" > .live-validation/pane
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane run "$pane" "env | awk -F= '\$1 ~ /^CLAUDE_/ || \$1 == \"CLAUDECODE\" {print \$1}; END {print \"PANE_ENV_CHECK_DONE\"}'" 
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane wait-output "$pane" --match PANE_ENV_CHECK_DONE --timeout 10000
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane read "$pane" --source recent-unwrapped --lines 100
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane run "$pane" "LIVE_ROOT='$PWD' LIVE_CLAUDE_ID='$LIVE_CLAUDE_ID' '$PWD/.live-validation/claude-child.sh'"
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane wait-output "$pane" --match CLAUDE_CHILD_EXIT= --timeout 60000
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane read "$pane" --source recent-unwrapped --lines 160
+printf 'Claude session id=%s\n' "$LIVE_CLAUDE_ID"
+fm_backend_herdr_server_ensure "$LIVE_SESSION"
+[ "$(fm_remote_herdr_socket_owner "$socket")" = "$owner" ] && echo 'Second ensure call reused the same live server pid.'
+
+FILE .live-validation/contaminated-claude.sh
+#!/usr/bin/env bash
+set -eu
+export LIVE_ROOT="$PWD" LIVE_REAL_PATH="$PATH"
+export XDG_CONFIG_HOME=.live-validation/.h FM_HERDR_LAB_STATE_DIR="$PWD/.live-validation/tripwires"
+unset HERDR_ENV HERDR_PANE_ID HERDR_TAB_ID HERDR_WORKSPACE_ID HERDR_SOCKET_PATH HERDR_SESSION
+for v in "${!CLAUDE_@}"; do unset "$v"; done
+unset CLAUDECODE
+export LIVE_SESSION=$(bin/fm-herdr-lab.sh name old)
+export LIVE_CLAUDE_ID=$(python3 -c 'import uuid; print(uuid.uuid4())')
+trap 'bin/fm-herdr-lab.sh teardown "$LIVE_SESSION"' EXIT
+CLAUDE_CODE_CHILD_SESSION=1 CLAUDE_CODE_SESSION_ID=private-parent CLAUDE_PID=12345 bin/fm-herdr-lab.sh provision "$LIVE_SESSION"
+ws=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" workspace create --cwd "$PWD" --label contaminated --no-focus)
+pane=$(printf '%s' "$ws" | jq -r '.result.root_pane.pane_id')
+echo "Reported-bug reproduction: lab=$LIVE_SESSION Claude session=$LIVE_CLAUDE_ID"
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane run "$pane" "LIVE_ROOT='$PWD' LIVE_CLAUDE_ID='$LIVE_CLAUDE_ID' '$PWD/.live-validation/claude-child.sh'"
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane wait-output "$pane" --match CLAUDE_CHILD_EXIT= --timeout 60000
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane read "$pane" --source recent-unwrapped --lines 120
+
+FILE .live-validation/doctor.sh
+#!/usr/bin/env bash
+set -eu
+export LIVE_ROOT="$PWD" LIVE_REAL_PATH="$PATH"
+export XDG_CONFIG_HOME=.live-validation/.h FM_HERDR_LAB_STATE_DIR="$PWD/.live-validation/tripwires"
+unset HERDR_ENV HERDR_PANE_ID HERDR_TAB_ID HERDR_WORKSPACE_ID HERDR_SOCKET_PATH HERDR_SESSION
+for v in "${!CLAUDE_@}"; do unset "$v"; done
+unset CLAUDECODE
+. bin/fm-remote-herdr-owner-lib.sh
+export LIVE_SESSION=
+cleanup() { [ -z "$LIVE_SESSION" ] || bin/fm-herdr-lab.sh teardown "$LIVE_SESSION"; }
+trap cleanup EXIT
+for marker in CLAUDE_CODE_CHILD_SESSION CLAUDE_CODE_SESSION_ID CLAUDE_PID CLAUDECODE CLAUDE_CONFIG_DIR CLAUDE_FUTURE_SETTING; do
+  LIVE_SESSION=$(bin/fm-herdr-lab.sh name doc)
+  export LIVE_SESSION
+  env "$marker=private-value-do-not-print" bin/fm-herdr-lab.sh provision "$LIVE_SESSION"
+  status=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" status --json)
+  socket=$(printf '%s' "$status" | jq -r '.server.socket')
+  owner=$(fm_remote_herdr_socket_owner "$socket")
+  [ -n "$owner" ]
+  echo "Scenario variable=$marker lab=$LIVE_SESSION real_server_pid=$owner"
+  for platform in darwin linux; do
+    out=.live-validation/doctor-output
+    rc=0
+    HOME="$PWD/.live-validation/home" PATH="$PWD/.live-validation/router:$LIVE_REAL_PATH" FM_REMOTE_JOB_ACTIVE=1 FM_REMOTE_JOB_PLATFORM_OVERRIDE="$platform" bash bin/fm-remote-doctor.sh > "$out" 2>&1 || rc=$?
+    printf 'Doctor platform=%s exit=%s\n' "$platform" "$rc"
+    sed -n '/^check herdr-server=/p; /^action: herdr-server:/p' "$out"
+    if grep -q private-value-do-not-print "$out"; then echo 'FAIL exposed environment value'; exit 1; fi
+    case "$marker" in
+      CLAUDE_CODE_CHILD_SESSION|CLAUDE_CODE_SESSION_ID|CLAUDE_PID|CLAUDECODE)
+        grep -q "inherited Claude session markers ($marker)" "$out"
+        grep -q 'restart the Herdr server.*outside a Claude session, then recreate the affected panes' "$out"
+        ;;
+      *)
+        ! grep -q 'inherited Claude session markers' "$out"
+        [ "$platform" != linux ] || grep -q '^check herdr-server=ok:' "$out"
+        ;;
+    esac
+    [ "$(fm_remote_herdr_socket_owner "$socket")" = "$owner" ] || { echo 'FAIL doctor changed live server'; exit 1; }
+  done
+  echo 'Doctor preserved the same real server; no variable values appeared.'
+  bin/fm-herdr-lab.sh teardown "$LIVE_SESSION"
+  LIVE_SESSION=
+done
+
+FILE .live-validation/interactive.sh
+#!/usr/bin/env bash
+set -eu
+export LIVE_ROOT="$PWD" LIVE_REAL_PATH="$PATH"
+export XDG_CONFIG_HOME=.live-validation/.h FM_HERDR_LAB_STATE_DIR="$PWD/.live-validation/tripwires"
+unset HERDR_ENV HERDR_PANE_ID HERDR_TAB_ID HERDR_WORKSPACE_ID HERDR_SOCKET_PATH HERDR_SESSION
+for v in "${!CLAUDE_@}"; do unset "$v"; done
+unset CLAUDECODE
+export LIVE_SESSION=
+trap '[ -z "$LIVE_SESSION" ] || PATH="$LIVE_REAL_PATH" bin/fm-herdr-lab.sh teardown "$LIVE_SESSION"' EXIT
+for kind in contaminated clean; do
+  export LIVE_SESSION=$(bin/fm-herdr-lab.sh name tui)
+  if [ "$kind" = contaminated ]; then
+    CLAUDE_CODE_CHILD_SESSION=1 CLAUDE_CODE_SESSION_ID=private-parent CLAUDE_PID=12345 bin/fm-herdr-lab.sh provision "$LIVE_SESSION"
+  else
+    export PATH="$PWD/.live-validation/router:$LIVE_REAL_PATH"
+    export CLAUDE_CODE_CHILD_SESSION=1 CLAUDE_CODE_SESSION_ID=private-parent CLAUDE_PID=12345
+    . bin/backends/herdr.sh
+    fm_backend_herdr_server_ensure "$LIVE_SESSION"
+    for v in "${!CLAUDE_@}"; do unset "$v"; done
+    export PATH="$LIVE_REAL_PATH"
+  fi
+  ws=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" workspace create --cwd "$PWD/.live-validation/claude-project" --label "$kind" --no-focus)
+  pane=$(printf '%s' "$ws" | jq -r '.result.root_pane.pane_id')
+  printf '\nInteractive Claude scenario=%s lab=%s\n' "$kind" "$LIVE_SESSION"
+  bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane run "$pane" "env | cut -d= -f1 | grep '^CLAUDE'"
+  bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane run "$pane" "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 claude --restricted --tools '' --strict-mcp-config --model haiku"
+  sleep 4
+  bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane run "$pane" "/status"
+  sleep 2
+  bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane read "$pane" --source visible --format ansi > "/Users/rega1011/.no-mistakes/evidence/01M4SKD0C1VWQTKE3C5NNKGQ2R/claude-$kind-viewport.ansi"
+  bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane read "$pane" --source visible
+  bin/fm-herdr-lab.sh teardown "$LIVE_SESSION"
+  LIVE_SESSION=
+done
+
+FILE .live-validation/probe.sh
+#!/usr/bin/env bash
+set -u
+export XDG_CONFIG_HOME=.live-validation/.h FM_HERDR_LAB_STATE_DIR="$PWD/.live-validation/tripwires"
+unset HERDR_ENV HERDR_PANE_ID HERDR_TAB_ID HERDR_WORKSPACE_ID HERDR_SOCKET_PATH HERDR_SESSION
+session=$(bin/fm-herdr-lab.sh name probe)
+trap 'bin/fm-herdr-lab.sh teardown "$session"' EXIT
+bin/fm-herdr-lab.sh provision "$session" &
+provision_pid=$!
+sleep 2
+bin/fm-herdr-lab.sh run "$session" status --json
+rg --files --hidden .live-validation/.h
+for log in .live-validation/.h/herdr/sessions/"$session"/*.log; do [ ! -f "$log" ] || cat "$log"; done
+wait "$provision_pid"
+
+FILE .live-validation/reuse-fix.sh
+#!/usr/bin/env bash
+set -eu
+export LIVE_ROOT="$PWD" LIVE_REAL_PATH="$PATH"
+export XDG_CONFIG_HOME=.live-validation/.h FM_HERDR_LAB_STATE_DIR="$PWD/.live-validation/tripwires"
+unset HERDR_ENV HERDR_PANE_ID HERDR_TAB_ID HERDR_WORKSPACE_ID HERDR_SOCKET_PATH HERDR_SESSION
+for v in "${!CLAUDE_@}"; do unset "$v"; done
+unset CLAUDECODE
+export LIVE_SESSION=$(bin/fm-herdr-lab.sh name reuse)
+trap 'PATH="$LIVE_REAL_PATH" bin/fm-herdr-lab.sh teardown "$LIVE_SESSION"' EXIT
+CLAUDE_CODE_CHILD_SESSION=1 CLAUDE_CODE_SESSION_ID=private-parent CLAUDE_PID=12345 CLAUDECODE=1 bin/fm-herdr-lab.sh provision "$LIVE_SESSION"
+. bin/fm-remote-herdr-owner-lib.sh
+socket=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" status --json | jq -r '.server.socket')
+owner=$(fm_remote_herdr_socket_owner "$socket")
+echo "Contaminated lab=$LIVE_SESSION initial server pid=$owner"
+ws=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" workspace create --cwd "$PWD" --label retained --no-focus)
+pane=$(printf '%s' "$ws" | jq -r '.result.root_pane.pane_id')
+PATH="$PWD/.live-validation/router:$LIVE_REAL_PATH"
+export PATH
+. bin/backends/herdr.sh
+fm_backend_herdr_server_ensure "$LIVE_SESSION"
+[ "$(fm_remote_herdr_socket_owner "$socket")" = "$owner" ]
+fm_remote_herdr_process_env "$owner" | awk -F= '$1 == "CLAUDE_CODE_CHILD_SESSION" {found=1} END {exit !found}'
+echo 'Ensure reused the existing contaminated server without changing its environment.'
+rc=0
+HOME="$PWD/.live-validation/home" FM_REMOTE_JOB_ACTIVE=1 FM_REMOTE_JOB_PLATFORM_OVERRIDE=linux bash bin/fm-remote-doctor.sh --fix > .live-validation/fix-output 2>&1 || rc=$?
+[ "$rc" = 1 ]
+sed -n '/^fix /p; /^check herdr-server=/p; /^action: herdr-server:/p' .live-validation/fix-output
+grep -q 'inherited Claude session markers' .live-validation/fix-output
+! grep -q private-parent .live-validation/fix-output
+[ "$(fm_remote_herdr_socket_owner "$socket")" = "$owner" ]
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane get "$pane"
+echo 'Doctor --fix (Linux dispatch) preserved the same server pid and existing pane.'
+
+FILE .live-validation/startup.sh
+#!/usr/bin/env bash
+set -eu
+export LIVE_ROOT="$PWD" LIVE_REAL_PATH="$PATH"
+export XDG_CONFIG_HOME=.live-validation/.h FM_HERDR_LAB_STATE_DIR="$PWD/.live-validation/tripwires"
+unset HERDR_ENV HERDR_PANE_ID HERDR_TAB_ID HERDR_WORKSPACE_ID HERDR_SOCKET_PATH HERDR_SESSION
+export LIVE_SESSION=$(bin/fm-herdr-lab.sh name env)
+cleanup() { PATH="$LIVE_REAL_PATH" bin/fm-herdr-lab.sh teardown "$LIVE_SESSION"; }
+trap cleanup EXIT
+export PATH="$PWD/.live-validation/router:$PATH"
+export CLAUDE_CODE_CHILD_SESSION=1 CLAUDE_CODE_SESSION_ID=private-parent CLAUDE_PID=12345 CLAUDECODE=1 CLAUDE_JOB_DIR=private-job CLAUDE_FUTURE_MARKER=$'private-future\nsecond-line' LIVE_SENTINEL=preserved
+. bin/backends/herdr.sh
+fm_backend_herdr_server_ensure "$LIVE_SESSION"
+[ "$CLAUDE_CODE_SESSION_ID" = private-parent ] && echo 'Caller Claude session markers remain unchanged.'
+status=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" status --json)
+printf '%s\n' "$status"
+socket=$(printf '%s' "$status" | jq -r '.server.socket')
+. bin/fm-remote-herdr-owner-lib.sh
+owner=$(fm_remote_herdr_socket_owner "$socket")
+[ -n "$owner" ]
+printf 'Real server pid=%s\n' "$owner"
+pack=$(fm_remote_herdr_process_env "$owner" | awk -F= '$1 ~ /^CLAUDE_/ || $1 == "CLAUDECODE" {print $1}')
+[ -z "$pack" ] || { printf 'FAIL retained: %s\n' "$pack"; exit 1; }
+echo 'Real server has no CLAUDE_* variables or CLAUDECODE.'
+fm_remote_herdr_process_env "$owner" | awk '$0 == "LIVE_SENTINEL=preserved" { found=1 } END {exit !found}'
+echo 'Real server preserved unrelated LIVE_SENTINEL.'
+ws=$(bin/fm-herdr-lab.sh run "$LIVE_SESSION" workspace create --cwd "$PWD" --label env-proof --no-focus)
+printf '%s\n' "$ws"
+pane=$(printf '%s' "$ws" | jq -r '.result.root_pane.pane_id')
+printf '%s' "$pane" > .live-validation/pane
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane run "$pane" "env | awk -F= '\$1 ~ /^CLAUDE_/ || \$1 == \"CLAUDECODE\" {print \$1}; END {print \"PANE_ENV_CHECK_DONE\"}'" 
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane wait-output "$pane" --match PANE_ENV_CHECK_DONE --timeout 10000
+bin/fm-herdr-lab.sh run "$LIVE_SESSION" pane read "$pane" --source recent-unwrapped --lines 100
+fm_backend_herdr_server_ensure "$LIVE_SESSION"
+[ "$(fm_remote_herdr_socket_owner "$socket")" = "$owner" ] && echo 'Second ensure call reused the same live server pid.'
+
+FILE .live-validation/router/herdr
+#!/usr/bin/env bash
+set -eu
+session=
+args=()
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = --session ]; then session=$2; shift 2; else args+=("$1"); shift; fi
+done
+[ "$session" = "${LIVE_SESSION:?}" ] || [ "$session" = fm-remote ] || { echo "refused unexpected session: $session" >&2; exit 2; }
+export PATH="$LIVE_REAL_PATH"
+if [ "${args[0]}" = server ]; then
+  exec "$LIVE_ROOT/bin/fm-herdr-lab.sh" provision "$LIVE_SESSION"
+fi
+exec "$LIVE_ROOT/bin/fm-herdr-lab.sh" run "$LIVE_SESSION" "${args[@]}"

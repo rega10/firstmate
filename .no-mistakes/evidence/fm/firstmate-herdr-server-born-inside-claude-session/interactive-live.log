@@ -1,0 +1,32 @@
+
+Interactive Claude scenario=contaminated lab=fm-lab-tui-33137-28453
+
+The default interactive shell is now zsh.
+To update your account to use zsh, please run `chsh -s /bin/zsh`.
+For more details, please visit https://support.apple.com/kb/HT208050.
+bash-3.2$ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 claude --restricted --tools '' --strict-mcp-config --model haiku
+ ▐▛███▛█   Claude Code v2.1.296
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   ~/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R/.live-validation/claude-project
+
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← for agents                                              ◐ medium · /effort
+
+Interactive Claude scenario=clean lab=fm-lab-tui-35289-32639
+
+The default interactive shell is now zsh.
+To update your account to use zsh, please run `chsh -s /bin/zsh`.
+For more details, please visit https://support.apple.com/kb/HT208050.
+bash-3.2$ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 claude --restricted --tools '' --strict-mcp-config --model haiku
+ ▐▛███▛█   Claude Code v2.1.296
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   ~/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R/.live-validation/claude-project
+
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ⏵⏵ auto mode on (shift+tab to cycle) · ← for agents                                              ◐ medium · /effort

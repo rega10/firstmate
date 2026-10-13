@@ -1,0 +1,46 @@
+Scenario variable=CLAUDE_CODE_CHILD_SESSION lab=fm-lab-doc-9712-29743 real_server_pid=9791
+Doctor platform=darwin exit=1
+check herdr-server=human: session fm-remote is served by pid 9791 with inherited Claude session markers (CLAUDE_CODE_CHILD_SESSION); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+Doctor platform=linux exit=1
+check herdr-server=human: session fm-remote is served by pid 9791 with inherited Claude session markers (CLAUDE_CODE_CHILD_SESSION); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+Doctor preserved the same real server; no variable values appeared.
+Scenario variable=CLAUDE_CODE_SESSION_ID lab=fm-lab-doc-11339-5328 real_server_pid=11411
+Doctor platform=darwin exit=1
+check herdr-server=human: session fm-remote is served by pid 11411 with inherited Claude session markers (CLAUDE_CODE_SESSION_ID); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+Doctor platform=linux exit=1
+check herdr-server=human: session fm-remote is served by pid 11411 with inherited Claude session markers (CLAUDE_CODE_SESSION_ID); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+Doctor preserved the same real server; no variable values appeared.
+Scenario variable=CLAUDE_PID lab=fm-lab-doc-12699-24352 real_server_pid=12763
+Doctor platform=darwin exit=1
+check herdr-server=human: session fm-remote is served by pid 12763 with inherited Claude session markers (CLAUDE_PID); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+Doctor platform=linux exit=1
+check herdr-server=human: session fm-remote is served by pid 12763 with inherited Claude session markers (CLAUDE_PID); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+Doctor preserved the same real server; no variable values appeared.
+Scenario variable=CLAUDECODE lab=fm-lab-doc-13723-6638 real_server_pid=13760
+Doctor platform=darwin exit=1
+check herdr-server=human: session fm-remote is served by pid 13760 with inherited Claude session markers (CLAUDECODE); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+Doctor platform=linux exit=1
+check herdr-server=human: session fm-remote is served by pid 13760 with inherited Claude session markers (CLAUDECODE); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+Doctor preserved the same real server; no variable values appeared.
+Scenario variable=CLAUDE_CONFIG_DIR lab=fm-lab-doc-14350-8009 real_server_pid=14448
+Doctor platform=darwin exit=1
+check herdr-server=fixable: session fm-remote is served by pid 14448 born outside the Aqua login session (unknown), so its panes cannot reach the login keychain
+action: herdr-server: rerun this command with --fix so the launch agent takes the session over (its current panes close and the parent firstmate relaunches its mates)
+Doctor platform=linux exit=0
+check herdr-server=ok: session fm-remote is running
+Doctor preserved the same real server; no variable values appeared.
+Scenario variable=CLAUDE_FUTURE_SETTING lab=fm-lab-doc-19983-9413 real_server_pid=20128
+Doctor platform=darwin exit=1
+check herdr-server=fixable: session fm-remote is served by pid 20128 born outside the Aqua login session (unknown), so its panes cannot reach the login keychain
+action: herdr-server: rerun this command with --fix so the launch agent takes the session over (its current panes close and the parent firstmate relaunches its mates)
+Doctor platform=linux exit=0
+check herdr-server=ok: session fm-remote is running
+Doctor preserved the same real server; no variable values appeared.

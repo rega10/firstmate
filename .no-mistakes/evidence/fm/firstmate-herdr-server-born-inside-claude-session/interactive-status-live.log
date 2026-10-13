@@ -1,0 +1,54 @@
+
+Interactive Claude scenario=contaminated lab=fm-lab-tui-43921-30555
+ ▐▛███▛█   Claude Code v2.1.296
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   ~/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R/.live-validation/claude-project
+
+
+❯ /status
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Settings  Status   Config   Usage   Stats
+
+  Version:           2.1.296
+  Session name:      /rename to add a name
+  Session ID:        5c746612-9ea3-4513-b2b7-b3f361e749c7
+  Session kind:      interactive
+  cwd:               /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R/.live-validation/
+                     claude-project
+  Login method:      Claude Max account
+  Organization:      rega10@hotmail.com's Organization
+  Email:             rega10@hotmail.com
+
+  Model:             haiku (claude-haiku-5-5)
+  Setting sources:
+  Auto mode server:  Enabled
+
+  Esc to cancel
+
+Interactive Claude scenario=clean lab=fm-lab-tui-44291-6910
+ ▐▛███▛█   Claude Code v2.1.296
+▝▜██████▀  Haiku 5.5 · Claude Max
+ ▝▝   ▝▝   ~/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R/.live-validation/claude-project
+
+
+❯ /status
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Settings  Status   Config   Usage   Stats
+
+  Version:           2.1.296
+  Session name:      /rename to add a name
+  Session ID:        f272c70a-061d-4487-99ac-efbc1c3025f2
+  Session kind:      interactive
+  cwd:               /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R/.live-validation/
+                     claude-project
+  Login method:      Claude Max account
+  Organization:      rega10@hotmail.com's Organization
+  Email:             rega10@hotmail.com
+
+  Model:             haiku (claude-haiku-5-5)
+  Setting sources:
+  Auto mode server:  Enabled
+
+  Esc to cancel

@@ -1,0 +1,6 @@
+Contaminated lab=fm-lab-reuse-86905-170 initial server pid=86930
+Ensure reused the existing contaminated server without changing its environment.
+check herdr-server=human: session fm-remote is served by pid 86930 with inherited Claude session markers (CLAUDE_CODE_CHILD_SESSION, CLAUDE_CODE_SESSION_ID, CLAUDE_PID, CLAUDECODE); all panes in session fm-remote inherit them and Claude transcript saving can be disabled
+action: herdr-server: restart the Herdr server for session fm-remote outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server
+{"id":"cli:pane:get","result":{"pane":{"agent_status":"unknown","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R","focused":true,"foreground_cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SKD0C1VWQTKE3C5NNKGQ2R","pane_id":"w1:p1","revision":0,"scroll":{"max_offset_from_bottom":0,"offset_from_bottom":0,"viewport_rows":40},"tab_id":"w1:t1","terminal_id":"term_65db0690376001","workspace_id":"w1"},"type":"pane_info"}}
+Doctor --fix (Linux dispatch) preserved the same server pid and existing pane.
