@@ -1060,6 +1060,9 @@ const operational = spawnSync(
 );
 if (operational.status !== 0) throw new Error(`could not create operational input: ${operational.stderr}`);
 await fire("before_agent_start", { prompt: operational.stdout }, mainCtx);
+for (const content of [operational.stdout, [{ type: "text", text: operational.stdout }, { type: "image", data: "ignored", mimeType: "image/png" }]]) {
+  await fire("before_agent_start", { messageType: "custom", message: { role: "custom", content } }, mainCtx);
+}
 entries.push({ type: "message", message: { role: "user", content: operational.stdout } });
 const unsolicitedPrompt = "Please keep responses concise while monitoring the fleet.";
 await fire("before_agent_start", { prompt: unsolicitedPrompt }, mainCtx);
@@ -1095,7 +1098,7 @@ for (let index = 0; index < requestedPrompts.length; index += 1) {
   if (index < longRequests.length && content.length <= 4000) {
     throw new Error(`request fixture ${index} did not exceed the mirror bound`);
   }
-  await fire("before_agent_start", { prompt: content }, mainCtx);
+  await fire("before_agent_start", index < 2 ? { prompt: content } : { messageType: "user", prompt: content }, mainCtx);
   // Pi persists this only after every before_agent_start handler has returned.
   entries.push({ type: "message", message: { role: "user", content } });
   await fire("agent_start", {}, mainCtx);
@@ -2115,15 +2118,21 @@ if (stolen?.messages?.some((message) => message.customType === "fm-branch-proces
   throw new Error(`joined processing was not stripped from the captain-opened run: ${JSON.stringify(stolen)}`);
 }
 await fire("agent_end", {});
-aborted = false;
-await fire("before_agent_start", { prompt: pending.message.content }, abortCtx);
-await fire("agent_start", {}, defaultSessionCtx);
-const openedByRequest = await fire("context", { messages: [...history, processingMsg] }, abortCtx);
-if (!aborted) throw new Error("a dedicated processing turn with history was not aborted under the record");
-if (openedByRequest?.messages?.some((message) => message.customType === "fm-branch-process")) {
-  throw new Error(`dedicated processing with history was not stripped: ${JSON.stringify(openedByRequest)}`);
+for (const event of [
+  { prompt: pending.message.content },
+  { messageType: "custom", message: pending.message },
+  { messageType: "custom", message: { ...pending.message, content: [{ type: "text", text: pending.message.content }] } },
+]) {
+  aborted = false;
+  await fire("before_agent_start", event, abortCtx);
+  await fire("agent_start", {}, defaultSessionCtx);
+  const openedByRequest = await fire("context", { messages: [...history, processingMsg] }, abortCtx);
+  if (!aborted) throw new Error("a dedicated processing turn with history was not aborted under the record");
+  if (openedByRequest?.messages?.some((message) => message.customType === "fm-branch-process")) {
+    throw new Error(`dedicated processing with history was not stripped: ${JSON.stringify(openedByRequest)}`);
+  }
+  await fire("agent_end", {});
 }
-await fire("agent_end", {});
 await fire("agent_settled", {});
 if (requests().length !== 1) throw new Error("a request pending when the record appeared was re-presented to the parked main");
 if (JSON.stringify(unprocessedSeqs()) !== JSON.stringify([seq1])) throw new Error(`the record moved the processed marker: ${unprocessedSeqs()}`);

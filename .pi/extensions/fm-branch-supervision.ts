@@ -1669,7 +1669,7 @@ ${context.command}
   // here delays only Pi's own next step - it never stops the TUI the way the
   // synchronous read it replaces did. The generation is captured before that
   // await so a session replaced while it runs cannot be staged into.
-  pi.on?.("before_agent_start", async (event, ctx) => {
+  pi.on?.("before_agent_start", async (event: { prompt?: string; message?: { content: unknown } }, ctx) => {
     rememberMainModel(ctx);
     currentMainSession = ctx?.sessionManager ?? null;
     const promptGeneration = generation;
@@ -1681,7 +1681,8 @@ ${context.command}
     // getEntries() here loses the captain request that the next wake may answer.
     // Stage it verbatim and remember the future persisted index for turn_end's
     // duplicate suppression. Operational extension injections are not dialog.
-    const prompt = event.prompt;
+    // Pi 1.2 separates custom triggers from user prompts; older Pi only has prompt.
+    const prompt = typeof event.prompt === "string" ? event.prompt : textOfContent(event.message?.content);
     processingOpenedThisRun = queuedProcessingContent !== null && prompt === queuedProcessingContent;
     const trimmed = prompt.trim();
     if (!trimmed || isOperationalUserText(trimmed)) return;

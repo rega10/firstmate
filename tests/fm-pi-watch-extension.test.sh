@@ -3486,11 +3486,12 @@ EOF
 # close was dropped. Continuity must settle on Pi accepting the follow-up, while
 # consumption still decides what a replacement replays.
 test_pi_streaming_time_delivery_keeps_the_successor_chain() {
-  local repo home plugin log trigger out status
-  repo="$TMP_ROOT/pi-streaming-chain-root"
-  home="$TMP_ROOT/pi-streaming-chain-home"
-  log="$TMP_ROOT/pi-streaming-chain.log"
-  trigger="$TMP_ROOT/pi-streaming-chain.trigger"
+  local repo home plugin log trigger out status shape
+  shape=${1:-legacy}
+  repo="$TMP_ROOT/pi-streaming-chain-$shape-root"
+  home="$TMP_ROOT/pi-streaming-chain-$shape-home"
+  log="$TMP_ROOT/pi-streaming-chain-$shape.log"
+  trigger="$TMP_ROOT/pi-streaming-chain-$shape.trigger"
   mkdir -p "$repo/bin" "$home/state" "$home/config"
   install_pi_watch_extension_fixture "$repo"
   plugin="$repo/.pi/extensions/fm-primary-pi-watch.ts"
@@ -3509,7 +3510,7 @@ printf 'signal: streaming chain wake %s\n' "$count"
 exit 0
 SH
   chmod +x "$repo/bin/fm-watch-arm.sh"
-  out=$(PLUGIN="$plugin" FM_HOME="$home" FM_ROOT_OVERRIDE="$repo" FM_ARM_LOG="$log" FM_TRIGGER_FILE="$trigger" node --input-type=module 2>&1 <<'EOF'
+  out=$(FM_START_EVENT_SHAPE="$shape" PLUGIN="$plugin" FM_HOME="$home" FM_ROOT_OVERRIDE="$repo" FM_ARM_LOG="$log" FM_TRIGGER_FILE="$trigger" node --input-type=module 2>&1 <<'EOF'
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
@@ -3530,7 +3531,11 @@ const pi = {
     prompts.push(message);
     if (streaming) return;
     beforeAgentStarts += 1;
-    handlers.get("before_agent_start")?.({ prompt: message }, {});
+    const event = process.env.FM_START_EVENT_SHAPE === "legacy" ? { prompt: message }
+      : process.env.FM_START_EVENT_SHAPE === "user" ? { messageType: "user", prompt: message }
+      : { messageType: "custom", message: { role: "custom", content: process.env.FM_START_EVENT_SHAPE === "custom-string"
+        ? message : [{ type: "text", text: message }, { type: "image", data: "ignored", mimeType: "image/png" }] } };
+    handlers.get("before_agent_start")?.(event, {});
   },
   events: { on() {}, emit() {} },
 };
@@ -3591,7 +3596,7 @@ EOF
   status=$?
   expect_code 0 "$status" "Pi streaming-time wake delivery must keep the successor chain and replay only unconsumed wakes"
   [ -z "$out" ] || fail "Pi streaming-time delivery chain test printed output: $out"
-  pass "Pi streaming-time wake delivery keeps the successor chain and replays only unconsumed wakes"
+  pass "Pi streaming-time wake delivery keeps the successor chain and replays only unconsumed wakes ($shape)"
 }
 
 # A verified successor can die while the wake it was started for is still
@@ -5231,6 +5236,9 @@ test_pi_session_transition_generation_owner
 test_pi_session_replacement_carries_inflight_actionable_close
 test_pi_streaming_followup_is_replayed_after_replacement
 test_pi_streaming_time_delivery_keeps_the_successor_chain
+test_pi_streaming_time_delivery_keeps_the_successor_chain user
+test_pi_streaming_time_delivery_keeps_the_successor_chain custom-string
+test_pi_streaming_time_delivery_keeps_the_successor_chain custom-parts
 test_pi_successor_failure_during_delivery_is_retried_after_delivery
 test_pi_late_retiring_actionable_reaches_replacement
 test_pi_replacement_tokens_are_process_unique
