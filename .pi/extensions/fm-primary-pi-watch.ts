@@ -19,10 +19,11 @@
 // queued while main is streaming joins the running run without ever raising
 // before_agent_start, so waiting on that event stalls every later close.
 // Consumption is tracked only so a replacement can replay a follow-up Pi had
-// not consumed. An idle main consumes at before_agent_start; a streaming main
-// consumes at the user message_start carrying the exact wake text; either
-// event finishes the pending record, and a still-unconsumed record rides the
-// replacement handoff.
+// not consumed. An idle main consumes at before_agent_start only when its
+// prompt carries the exact wake text; a streaming main consumes at the user
+// message_start carrying that text. Custom events never prove consumption,
+// even with matching content. Either user event finishes the pending record,
+// and a still-unconsumed record rides the replacement handoff.
 //
 // Postures (stated once here; docs/pi-supervision-branch.md "Postures"):
 // the away-posture record state/.afk-contract is read as a file at every
@@ -649,8 +650,7 @@ export default function (pi: ExtensionAPI) {
     return generationIsLive(owner);
   }
 
-  // Pi consumed a main follow-up: an idle main at before_agent_start, a
-  // streaming main at the user message_start that joins the running run.
+  // Call only for the user events in the header's consumption contract.
   function consumeWake(owner: SessionGeneration, text: string): void {
     for (const [token, wake] of owner.unconsumedWakes) {
       if (wake.content !== text) continue;
@@ -1200,9 +1200,8 @@ export default function (pi: ExtensionAPI) {
   }
 
   pi.on?.("before_agent_start", (event: { prompt?: string; message?: { content: unknown } }) => {
-    // Pi 1.2 separates custom triggers from user prompts; older Pi only has prompt.
-    const prompt = typeof event.prompt === "string" ? event.prompt : userMessageText(event.message?.content);
-    consumeWake(generation, prompt);
+    if (event.prompt === undefined) return;
+    consumeWake(generation, event.prompt);
   });
   pi.on?.("message_start", (event) => {
     if (event.message.role !== "user") return;

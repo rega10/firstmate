@@ -519,7 +519,7 @@ type MirrorCollectionState = {
   // Pi emits before_agent_start before it appends that turn's user message to
   // SessionManager. The prompt is mirrored from the event immediately, then
   // this marker suppresses the same persisted entry when turn_end collects it.
-  stagedCaptain: { file: string; index: number; text: string } | null;
+  stagedCaptain: { file: string; text: string } | null;
   // Set at every main session start, where the branch conversation is
   // replaced too (createBranch). The durable cursor records what the PREVIOUS
   // branch conversation already received, so the first collection of a new
@@ -562,7 +562,6 @@ function collectMainDialog(sessionManager: ReadonlyEntries, collection: MirrorCo
     if (
       message.role === "user" &&
       staged?.file === file &&
-      staged.index === index &&
       staged.text === text
     ) {
       collection.stagedCaptain = null;
@@ -1676,20 +1675,22 @@ ${context.command}
     if (!(await enqueueDelivery(() => actingAsOwner(promptGeneration)))) return;
     if (promptGeneration !== generation || !currentMainSession || !collectCurrentMainDialog()) return;
 
-    // This event is Pi's authoritative complete current prompt. At this point
+    const content = event.prompt ?? textOfContent(event.message?.content);
+    processingOpenedThisRun = queuedProcessingContent !== null && content === queuedProcessingContent;
+    if (event.prompt === undefined) return;
+
+    // A user event is Pi's authoritative complete current prompt. At this point
     // SessionManager still contains only the preceding dialog, so relying on
     // getEntries() here loses the captain request that the next wake may answer.
-    // Stage it verbatim and remember the future persisted index for turn_end's
-    // duplicate suppression. Operational extension injections are not dialog.
-    // Pi 1.2 separates custom triggers from user prompts; older Pi only has prompt.
-    const prompt = typeof event.prompt === "string" ? event.prompt : textOfContent(event.message?.content);
-    processingOpenedThisRun = queuedProcessingContent !== null && prompt === queuedProcessingContent;
+    // Stage it verbatim and suppress its first matching persisted user entry.
+    // Pi may insert system or metadata entries before that user entry.
+    // Operational extension injections are not dialog.
+    const prompt = event.prompt;
     const trimmed = prompt.trim();
     if (!trimmed || isOperationalUserText(trimmed)) return;
     const file = currentMainSession.getSessionFile() ?? "";
-    const index = mirrorCollection.collectAnchor?.index ?? currentMainSession.getEntries().length;
     pendingMirror.push({ tag: "captain", text: trimmed });
-    mirrorCollection.stagedCaptain = { file, index, text: trimmed };
+    mirrorCollection.stagedCaptain = { file, text: trimmed };
   });
 
   pi.on?.("agent_start", () => {
