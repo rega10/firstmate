@@ -60,6 +60,10 @@ hold FM_REMOTE_JOB_ACTIVE=1
 WORKER_HOLDER_PID=$HOLDER_PID
 hold SSH_CONNECTION='100.102.217.78 51234 100.100.1.2 22' SSH_CLIENT='100.102.217.78 51234 22'
 SSH_HOLDER_PID=$HOLDER_PID
+hold CLAUDE_CODE_CHILD_SESSION=1 CLAUDE_CODE_SESSION_ID=secret-session CLAUDE_PID=12345 CLAUDE_JOB_DIR=/secret/job CLAUDECODE=1
+CLAUDE_HOLDER_PID=$HOLDER_PID
+hold CLAUDE_FUTURE_MARKER=secret-future-marker
+CLAUDE_FUTURE_HOLDER_PID=$HOLDER_PID
 
 # new_case <Darwin|Linux> [with-herdr] [gui] [login-shell]
 # Builds one isolated account fixture and points the module-level CASE_*
@@ -609,6 +613,35 @@ assert_contains "$DOCTOR_OUT" 'check herdr-server=ok:' "delayed launchd startup 
 assert_absent "$CASE_STATE/herdr-delay" "the readiness poll stopped before the delayed server became reachable"
 pass "launchd failures are reported and delayed server readiness is awaited"
 
+# --- Claude contamination is read-only, including during other repairs ------
+
+new_case Darwin with-herdr gui
+doctor --fix
+expect_code 0 "$DOCTOR_RC" "the clean-server fixture could not be initialized"
+printf '%s\n' "$CLAUDE_HOLDER_PID" > "$CASE_STATE/socket-owner"
+: > "$CASE_LAUNCHCTL_LOG"
+doctor
+expect_code 1 "$DOCTOR_RC" "a Claude-contaminated server was reported ready"
+assert_contains "$DOCTOR_OUT" "check herdr-server=human: session fm-remote is served by pid $CLAUDE_HOLDER_PID with inherited Claude variables" \
+  "the contaminated socket owner was not identified"
+for name in CLAUDE_CODE_CHILD_SESSION CLAUDE_CODE_SESSION_ID CLAUDE_PID CLAUDE_JOB_DIR CLAUDECODE; do
+  assert_contains "$DOCTOR_OUT" "$name" "the diagnostic did not name $name"
+done
+assert_contains "$DOCTOR_OUT" 'all panes in session fm-remote' "the diagnostic did not identify affected panes"
+assert_contains "$DOCTOR_OUT" 'restart the Herdr server for session fm-remote outside a Claude session' "the restart action was missing"
+assert_not_contains "$DOCTOR_OUT" 'secret-session' "the diagnostic exposed a session variable's value"
+assert_not_contains "$DOCTOR_OUT" '/secret/job' "the diagnostic exposed session content"
+assert_no_grep '^bootout\|^bootstrap\|^kickstart' "$CASE_LAUNCHCTL_LOG" "the read-only diagnosis restarted a launch agent"
+# A concurrent loaded-agent gap must also leave the contaminated server alone.
+rm -f "$CASE_STATE/loaded-$LABEL"
+doctor --fix
+expect_code 1 "$DOCTOR_RC" "--fix claimed to repair a contaminated running server"
+assert_contains "$DOCTOR_OUT" 'check herdr-server=human:' "--fix lost the restart diagnostic"
+assert_not_contains "$DOCTOR_OUT" 'fix herdr-server=applied:' "--fix claimed to restart a contaminated server"
+assert_no_grep '^bootout\|^bootstrap\|^kickstart' "$CASE_LAUNCHCTL_LOG" "--fix restarted the contaminated server while repairing its launch agent"
+[ "$(cat "$CASE_STATE/socket-owner")" = "$CLAUDE_HOLDER_PID" ] || fail "--fix replaced the contaminated socket owner"
+pass "Claude contamination names the affected panes and requires an explicit restart without exposing environment values"
+
 # --- a running session served outside the Aqua login session is not ready ---
 
 new_case Darwin with-herdr gui
@@ -778,6 +811,15 @@ assert_contains "$DOCTOR_OUT" 'fix herdr-server=applied:' "--fix did not report 
 assert_contains "$DOCTOR_OUT" 'check herdr-server=ok:' "the started server was not confirmed by the re-check"
 [ ! -s "$CASE_LAUNCHCTL_LOG" ] || fail "the linux path invoked launchctl"
 pass "a non-darwin host skips launch agents and starts its herdr server directly"
+
+printf '%s\n' "$CLAUDE_FUTURE_HOLDER_PID" > "$CASE_STATE/socket-owner"
+doctor --fix
+expect_code 1 "$DOCTOR_RC" "a Linux server with an unknown CLAUDE_* variable was reported ready"
+assert_contains "$DOCTOR_OUT" 'with inherited Claude variables (CLAUDE_FUTURE_MARKER)' "the Linux diagnosis missed an unknown CLAUDE_* variable"
+assert_not_contains "$DOCTOR_OUT" 'secret-future-marker' "the Linux diagnosis exposed an environment value"
+assert_not_contains "$DOCTOR_OUT" 'fix herdr-server=applied:' "the Linux diagnosis restarted the running server"
+[ "$(cat "$CASE_STATE/socket-owner")" = "$CLAUDE_FUTURE_HOLDER_PID" ] || fail "the Linux diagnosis replaced the socket owner"
+pass "Linux diagnoses the whole CLAUDE_* pack without restarting the running server"
 
 # --- --fix may add only owned wrappers for version-manager tools -------------
 

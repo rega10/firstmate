@@ -52,6 +52,8 @@
 # installs packages, creates a login session, writes an auto-login password,
 # changes FileVault, stores an account password, or replaces a non-Firstmate
 # wrapper; those remain reported gaps.
+# A running server with inherited Claude variables is a human gap: report the
+# affected session's panes and the restart need without restarting that server.
 set -eu
 
 # Resolve this script's directory with builtins only: a host missing a required
@@ -171,14 +173,20 @@ herdr_server_running() {
   [ "$running" = true ]
 }
 
+# PID of the process serving this session's socket, on either platform.
+herdr_server_owner() {
+  local socket
+  socket=$(herdr_server_status_json | jq -r '.server.socket // empty' 2>/dev/null) || socket=
+  fm_remote_herdr_socket_owner "$socket"
+}
+
 # Birth of the process serving the session, as the guard classifies it:
 # prints "<birth> <pid>" (launchd, worker, ssh, or unknown), "unproven" when
 # no herdr process can be shown to hold the socket, or "nolsof" when lsof does
 # not resolve. bin/fm-remote-herdr-owner-lib.sh owns the markers.
 herdr_server_birth() {
-  local socket owner rc birth
-  socket=$(herdr_server_status_json | jq -r '.server.socket // empty' 2>/dev/null) || socket=
-  owner=$(fm_remote_herdr_socket_owner "$socket"); rc=$?
+  local owner rc birth
+  owner=$(herdr_server_owner); rc=$?
   if [ "$rc" -eq 2 ]; then
     printf 'nolsof\n'
     return 0
@@ -658,18 +666,43 @@ check_launch_agent_loaded() { # <resolved-login-shell>
 }
 
 check_herdr_server() {
+  local birth owner claude_vars=
+  HERDR_SERVER_CLAUDE_CONTAMINATED=0
   if ! herdr_cli_available; then
     record herdr-server "human: herdr server status cannot be read without both herdr and jq on the runtime PATH" \
       "install the missing tool reported above, then rerun this command"
     return 0
   fi
   if herdr_server_running; then
+    if [ "$PLATFORM" = darwin ]; then
+      birth=$(herdr_server_birth)
+    else
+      owner=$(herdr_server_owner || true)
+      birth=unproven
+      [ -z "$owner" ] || birth="unknown $owner"
+    fi
+    case "$birth" in
+      *\ *)
+        # Reuse the proven socket owner and environment reader. Report names
+        # only: a Claude variable can contain credentials or session content.
+        claude_vars=$(fm_remote_herdr_process_env "${birth#* }" | awk -F= '
+          $1 == "CLAUDECODE" || $1 ~ /^CLAUDE_/ {
+            printf "%s%s", separator, $1
+            separator = ", "
+          }
+        ')
+        ;;
+    esac
+    if [ -n "$claude_vars" ]; then
+      HERDR_SERVER_CLAUDE_CONTAMINATED=1
+      record herdr-server "human: session $HERDR_SESSION_NAME is served by pid ${birth#* } with inherited Claude variables ($claude_vars); all panes in session $HERDR_SESSION_NAME inherit them and Claude transcript saving can be disabled" \
+        "restart the Herdr server for session $HERDR_SESSION_NAME outside a Claude session, then recreate the affected panes; this command does not restart a contaminated server"
+      return 0
+    fi
     if [ "$PLATFORM" != darwin ]; then
       record herdr-server "ok: session $HERDR_SESSION_NAME is running"
       return 0
     fi
-    local birth
-    birth=$(herdr_server_birth)
     case "$birth" in
       launchd\ *|worker\ *)
         record herdr-server "ok: session $HERDR_SESSION_NAME is running in the Aqua login session (pid ${birth#* }, ${birth%% *})"
@@ -770,6 +803,12 @@ write_launch_agent() { # <resolved-login-shell>
 # next login. Both are safe to repeat.
 reload_launch_agent() { # <check-to-report-under>
   local report=$1 out
+  # Other launch-agent gaps must not turn the read-only Claude diagnosis into
+  # an implicit restart that closes every affected pane.
+  if [ "${HERDR_SERVER_CLAUDE_CONTAMINATED:-0}" = 1 ]; then
+    fix_report "$report" failed "session $HERDR_SESSION_NAME has inherited Claude variables; restart its server outside a Claude session before reloading its launch agent"
+    return 1
+  fi
   [ -f "$LAUNCH_AGENT_PLIST" ] || {
     fix_report "$report" failed "there is no launch agent to load at $LAUNCH_AGENT_PLIST"
     return 1

@@ -1307,6 +1307,37 @@ This test simulates the reported tool-environment loss without launching Claude 
 The portable daemon tests also cover an empty session name, explicit named and default sessions, explicit supervisor targets, and nested tmux precedence.
 The discovery boundary is independent of the primary harness; unsupported supervisor backends still use the existing startup refusal.
 
+### Server startup environment and Claude diagnostics
+
+Verified 2026-10-13 UTC on macOS (Darwin 25.6.0, arm64) with GNU Bash 3.2.57 and jq 1.8.2.
+The startup regression executes the real adapter against a fake Herdr executable that records its environment.
+It verifies removal of every `CLAUDE_*` variable and `CLAUDECODE`, including an unknown variable whose value contains a newline, while preserving the caller's identity, unrelated environment, and explicit session routing.
+The doctor regression reads real non-platform process environments through the existing socket-owner fixture and exercises both Darwin and Linux dispatch.
+It verifies variable-name reporting without values, the affected-session action, and refusal to restart the contaminated server even when `--fix` also finds a loaded-agent gap.
+These tests do not start or restart a live Herdr server or launch a Claude session.
+
+Refresh command:
+
+```sh
+bash bin/fm-test-run.sh tests/fm-backend-herdr.test.sh tests/fm-remote-doctor.test.sh tests/fm-claude-session-env.test.sh
+```
+
+Successful per-script results:
+
+```text
+FM_TEST_END 2026-10-13T02:53:49Z tests/fm-backend-herdr.test.sh exit=0 duration_ms=91738 gate_skip=false
+FM_TEST_END 2026-10-13T02:55:51Z tests/fm-remote-doctor.test.sh exit=0 duration_ms=33153 gate_skip=false
+FM_TEST_END 2026-10-13T02:54:16Z tests/fm-claude-session-env.test.sh exit=0 duration_ms=419 gate_skip=false
+```
+
+The doctor's focused verification command was `bash bin/fm-test-run.sh tests/fm-remote-doctor.test.sh` and reported:
+
+```text
+ok - Claude contamination names the affected panes and requires an explicit restart without exposing environment values
+ok - Linux diagnoses the whole CLAUDE_* pack without restarting the running server
+FM_TEST_SUMMARY total=1 failed=0 skipped_gate=0 duration_ms=33260
+```
+
 ### fm-remote server birth and login-keychain access
 
 Measured 2026-09-09 on macOS 26 (Darwin 25.6.0) aarch64 with Claude Code 2.1.266 and Herdr 0.9.0, the guarantee behind `bin/fm-remote-herdr-guard.sh` and the doctor's `herdr-server` check: login-keychain access follows the audit session a process was born into, never the launch shape or the shell.
