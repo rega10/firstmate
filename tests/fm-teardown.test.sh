@@ -4765,7 +4765,7 @@ test_pending_lease_preserves_successor() {
         configure_secondmate_with_tmux_children "$case_dir"
         home="$case_dir/secondmate-home"
         rm "$home/state/child-a.meta" "$home/state/child-b.meta"
-        task_id=child-a
+        task_id="child-a"
       fi
       meta="$home/state/$task_id.meta"
       fm_write_meta "$meta" "window=firstmate:fm-$task_id" "endpoint_task_id=$task_id" \

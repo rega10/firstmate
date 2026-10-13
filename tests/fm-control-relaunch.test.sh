@@ -2310,10 +2310,11 @@ test_herdr_relaunch_resumes_only_the_registered_pi_session() {
     }
     dir=$HERDR_CASE_DIR
     rm -f "$dir/fake/herdr-stopped"
-    sed 's/^harness=claude$/harness=pi/' "$dir/home/state/resume-$registered.meta" \
+    if ! sed 's/^harness=claude$/harness=pi/' "$dir/home/state/resume-$registered.meta" \
       > "$dir/home/state/resume-$registered.meta.tmp" \
-      && mv "$dir/home/state/resume-$registered.meta.tmp" "$dir/home/state/resume-$registered.meta" \
-      || fail "could not record the Pi harness for the relaunch fixture"
+      || ! mv "$dir/home/state/resume-$registered.meta.tmp" "$dir/home/state/resume-$registered.meta"; then
+      fail "could not record the Pi harness for the relaunch fixture"
+    fi
     [ "$(meta_field "$dir" "resume-$registered" harness)" = pi ] \
       || fail "the relaunch fixture must record Pi before testing its session registration"
     # Keep the pane's status authority registered to an existing Pi session,
