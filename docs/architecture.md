@@ -279,7 +279,8 @@ Codex App support is recorded in `docs/codex-app-backend.md`; it is not selectab
 ## Worktrees, not branches in your checkout
 
 Crewmates never intentionally touch your project clone; [treehouse](https://github.com/kunchenguid/treehouse) pools clean worktrees for tmux, herdr, zellij, and cmux tasks, while Orca creates its own worktrees for `backend=orca`.
-The [`fm-spawn.sh` header](../bin/fm-spawn.sh) owns ship/scout worktree isolation, recorded-slot protection across local homes, and fresh-base refusal rules, including spawns from linked homes.
+The [`fm-spawn.sh` header](../bin/fm-spawn.sh) owns ship/scout worktree isolation, recorded-slot protection across local homes, secondmate lease publication, and fresh-base refusal rules, including spawns from linked homes.
+Live legacy leases and coordinated receipt repair are described in [Provision a local home](configuration.md#provision-a-local-home).
 Portable regressions live in [`tests/fm-spawn-pool-base-freshen.test.sh`](../tests/fm-spawn-pool-base-freshen.test.sh) for acquisition and publication, [`tests/fm-teardown.test.sh`](../tests/fm-teardown.test.sh) for conditional lease release and interrupted retirement, and [`tests/fm-control-relaunch.test.sh`](../tests/fm-control-relaunch.test.sh) for preserving the recorded copy and lease on relaunch.
 
 The firstmate repo has one extra exposure because it can dispatch crewmates to work on itself.

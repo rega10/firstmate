@@ -1582,9 +1582,54 @@ fm_treehouse_pool_slot() {  # <project-dir> <worktree>
   [ "$project_common" = "$slot_common" ]
 }
 
+# Read one slot from authoritative status, optionally using the allocator pool
+# snapshot already read by spawn. Return 1 for an absent path, 2 for unreadable
+# status. The default query uses the slot's original root even if configuration
+# now selects a different pool. Never read or rewrite Treehouse's state directly.
+fm_treehouse_slot_lease_status() {  # <project> <worktree> [<status-json>]
+  local project=$1 worktree=$2 snapshot=${3:-} paths path matched='' row pool
+  FM_TREEHOUSE_SLOT_STATUS=
+  FM_TREEHOUSE_SLOT_LEASE_ID=
+  FM_TREEHOUSE_SLOT_LEASE_HOLDER=
+  fm_treehouse_require_jq || return 2
+  if [ "$#" -lt 3 ]; then
+    pool=$(dirname "$(dirname "$worktree")")
+    snapshot=$(cd "$project" && treehouse status --json --root "$(dirname "$(dirname "$pool")")") || return 2
+  fi
+  paths=$(printf '%s\n' "$snapshot" | jq -er '
+    if type == "array" and all(.[]; type == "object" and
+      (.path | type == "string" and startswith("/") and (contains("\n") | not)))
+    then map(.path) | join("\n") else error("invalid Treehouse status") end') || return 2
+  while IFS= read -r path; do
+    if [ "$path" = "$worktree" ] || [ "$path" -ef "$worktree" ]; then
+      [ -z "$matched" ] || { echo "error: duplicate Treehouse slot $worktree" >&2; return 2; }
+      matched=$path
+    fi
+  done <<EOF
+$paths
+EOF
+  [ -n "$matched" ] || return 1
+  row=$(printf '%s\n' "$snapshot" | jq -ec --arg path "$matched" '.[] | select(.path == $path) |
+    if all([(.status // ""), (.lease_id // ""), (.lease_holder // "")][];
+      type == "string" and (contains("\n") | not))
+    then . else error("invalid Treehouse lease status") end') || return 2
+  # shellcheck disable=SC2034 # Output global, read by the sourcing caller.
+  FM_TREEHOUSE_SLOT_STATUS=$(printf '%s\n' "$row" | jq -r '.status // ""')
+  # shellcheck disable=SC2034 # Output global, read by the sourcing caller.
+  FM_TREEHOUSE_SLOT_LEASE_ID=$(printf '%s\n' "$row" | jq -r '.lease_id // ""')
+  # shellcheck disable=SC2034 # Output global, read by the sourcing caller.
+  FM_TREEHOUSE_SLOT_LEASE_HOLDER=$(printf '%s\n' "$row" | jq -r '.lease_holder // ""')
+}
+
+fm_treehouse_lease_holder_matches() {  # <holder> <task-id> <record-home>
+  local holder=$1 id=$2 record_home=$3
+  [ "$holder" = "$id" ] || [ "$holder" = "$record_home:$id" ]
+}
+
 # Slot-owner claim: which task a Treehouse pool slot currently belongs to.
 #
-# Ships and scouts reserve allocations with `treehouse get --lease --json`.
+# Ships and scouts reserve allocations with `treehouse get --lease --json`;
+# secondmates claim the durable allocation already acquired by home seeding.
 # Their task records retain the lease identity until conditional return; the
 # allocation survives every worker process exiting (bin/fm-spawn.sh).
 # The claim remains necessary for legacy unleased records and reassignment

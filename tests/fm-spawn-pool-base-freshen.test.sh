@@ -1005,6 +1005,203 @@ test_free_pool_slot_launches_while_another_slot_is_recorded() {
   pass "free slot 2 launches while another task still records slot 1 in the same pool"
 }
 
+test_live_legacy_pool_lease() {
+  local variant rec id held held_meta before_meta before_head out status holder lease_status
+  for variant in bare qualified other unleased; do
+    id="pool-live-legacy-$variant"
+    rec=$(make_case "$id" "$id")
+    read_case_record "$rec"
+    lay_out_as_pool_slot
+    held=$POOL_DIR
+    held_meta="$HOME_DIR/state/catalog-sm.meta"
+    printf 'worktree=%s\nhome=%s\nkind=secondmate\n' "$held" "$held" > "$held_meta"
+    before_meta=$(cat "$held_meta")
+    before_head=$(git -C "$held" rev-parse HEAD)
+    holder=catalog-sm
+    lease_status=leased
+    case "$variant" in
+      qualified) holder="$HOME_DIR:catalog-sm" ;;
+      other) holder=another-task ;;
+      unleased) lease_status=available ;;
+    esac
+    POOL_DIR="$CASE_DIR/slots/2/project"
+    git -C "$PROJECT_DIR" worktree add --quiet --detach "$POOL_DIR" "$INITIAL_SHA" \
+      || fail "could not prepare another slot"
+    jq -n --arg held "$held" --arg free "$POOL_DIR" --arg holder "$holder" --arg status "$lease_status" \
+      '[{path:$held,status:$status,lease_id:"",lease_holder:$holder},
+        {path:$free,status:"available",lease_id:"",lease_holder:""}]' > "$CASE_DIR/status.json"
+    mv "$FAKEBIN_DIR/treehouse" "$FAKEBIN_DIR/treehouse-allocator"
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_TREEHOUSE_CALLS"
+if [ "${1:-}" = status ] && [ "${2:-}" = --json ]; then
+  cat "$FM_TREEHOUSE_STATUS"
+else
+  exec "$(dirname "$0")/treehouse-allocator" "$@"
+fi
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    out=$(FM_TREEHOUSE_CALLS="$CASE_DIR/calls" FM_TREEHOUSE_STATUS="$CASE_DIR/status.json" \
+      run_spawn "$id" --scout)
+    status=$?
+    case "$variant" in
+      bare|qualified)
+        expect_code 0 "$status" "a legacy lease owned by the same task should permit another slot"$'\n'"$out"
+        assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn did not use the free slot"
+        [ -n "$(sed -n 's/^treehouse_lease_id=//p' "$HOME_DIR/state/$id.meta")" ] \
+          || fail "the new spawn lost its lease identity"
+        ;;
+      *)
+        [ "$status" -ne 0 ] || fail "an unsafe legacy lease permitted allocation"
+        assert_contains "$out" 'legacy unleased record blocks this pool' "legacy refusal changed"
+        assert_no_grep 'get --lease' "$CASE_DIR/calls" "refusal allocated a slot"
+        [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refusal published a task"
+        ;;
+    esac
+    [ "$(cat "$held_meta")" = "$before_meta" ] || fail "spawn changed the legacy record"
+    [ "$(git -C "$held" rev-parse HEAD)" = "$before_head" ] || fail "spawn refreshed the held slot"
+    if [ "${FM_TEST_EVIDENCE:-0}" = 1 ]; then printf 'legacy %s exit=%s\n%s\n' "$variant" "$status" "$out"; fi
+    pass "live legacy pool lease: $variant"
+  done
+}
+
+test_secondmate_pool_lease_receipt() {
+  local rec id out status return_fail variant recorded holder
+  id='pool-secondmate-receipt'
+  rec=$(make_case "$id" "$id")
+  read_case_record "$rec"
+  lay_out_as_pool_slot
+  mkdir -p "$POOL_DIR/bin" "$POOL_DIR/data" "$POOL_DIR/state" "$POOL_DIR/config" "$POOL_DIR/projects"
+  printf '# Firstmate\n' > "$POOL_DIR/AGENTS.md"
+  printf '%s\n' "$id" > "$POOL_DIR/.fm-secondmate-home"
+  printf 'charter\n' > "$POOL_DIR/data/charter.md"
+  printf 'codex\n' > "$HOME_DIR/config/secondmate-harness"
+  mv "$FAKEBIN_DIR/treehouse" "$FAKEBIN_DIR/treehouse-allocator"
+  cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = status ] && [ "${2:-}" = --json ]; then
+  [ -z "${FM_SECOND_STATUS_LOG:-}" ] || printf '%s\n' "$*" >> "$FM_SECOND_STATUS_LOG"
+  [ "${FM_SECOND_STATUS_FAIL:-0}" != 1 ] || exit 1
+  jq -n --arg path "$FM_FAKE_PANE_PATH" --arg holder "${FM_SECOND_LEASE_HOLDER:-pool-secondmate-receipt}" \
+    '[{path:$path,status:"leased",lease_id:"seed-lease",lease_holder:$holder}]' > "$FM_FAKE_PANE_PATH/../lease-status.json"
+  if [ -e "$FM_FAKE_PANE_PATH/../released" ]; then
+    jq '[.[] | .status="available" | .lease_id="" | .lease_holder=""]' "$FM_FAKE_PANE_PATH/../lease-status.json"
+  else
+    cat "$FM_FAKE_PANE_PATH/../lease-status.json"
+  fi
+elif [ "${1:-}" = return ]; then
+  printf '%s\n' "$*" >> "$FM_SECOND_RETURN_LOG"
+  [ "$*" = "return --force --if-lease-id seed-lease $FM_FAKE_PANE_PATH" ] || exit 1
+  [ "${FM_SECOND_RETURN_FAIL:-0}" != 1 ] || exit 1
+  : > "$FM_FAKE_PANE_PATH/../released"
+else
+  exec "$(dirname "$0")/treehouse-allocator" "$@"
+fi
+SH
+  chmod +x "$FAKEBIN_DIR/treehouse"
+  mkdir -p "$HOME_DIR/user-home"
+  for variant in qualified bare; do
+    holder=$id
+    [ "$variant" != qualified ] || holder="$HOME_DIR:$id"
+    out=$(FM_SKIP_SECONDMATE_SYNC=1 FM_SKIP_SECONDMATE_INHERIT=1 \
+      FM_ROOT_OVERRIDE='' FM_HOME="$HOME_DIR" HOME="$HOME_DIR/user-home" CLAUDE_CONFIG_DIR='' \
+      FM_STATE_OVERRIDE="$HOME_DIR/state" FM_DATA_OVERRIDE="$HOME_DIR/data" \
+      FM_PROJECTS_OVERRIDE="$HOME_DIR/projects" FM_CONFIG_OVERRIDE="$HOME_DIR/config" \
+      FM_SPAWN_NO_GUARD=1 FM_FAKE_PANE_PATH="$POOL_DIR" TMUX=fake,1,0 \
+      FM_SECOND_LEASE_HOLDER="$holder" PATH="$FAKEBIN_DIR:$PATH" \
+      "$ROOT/bin/fm-spawn.sh" "$id" "$POOL_DIR" --secondmate 2> "$CASE_DIR/launch.stderr")
+    status=$?
+    expect_code 0 "$status" "a secondmate should retain its $variant seeded lease receipt"$'\n'"$out"$'\n'"$(cat "$CASE_DIR/launch.stderr")"
+    [ ! -s "$CASE_DIR/launch.stderr" ] || fail "secondmate launch wrote stderr: $(cat "$CASE_DIR/launch.stderr")"
+    assert_grep 'treehouse_lease_id=seed-lease' "$HOME_DIR/state/$id.meta" "secondmate did not publish its lease"
+    assert_grep "treehouse_lease_holder=$holder" "$HOME_DIR/state/$id.meta" "secondmate did not publish the pool holder"
+    assert_grep "task=$id" "$SLOT_CLAIM" "secondmate did not claim its home slot"
+    pass "secondmate publishes its seeded lease identity and $variant holder with clean stderr"
+    [ "$variant" != qualified ] || rm "$HOME_DIR/state/$id.meta"
+  done
+
+  # Automatic endpoint recovery uses --secondmate, not --relaunch. Existing
+  # records retain their receipt without querying the allocator on that path.
+  recorded=$(cat "$HOME_DIR/state/$id.meta")
+  for variant in durable legacy; do
+    if [ "$variant" = legacy ]; then
+      awk -F= '$1 != "treehouse_lease_id" && $1 != "treehouse_lease_holder"' \
+        "$HOME_DIR/state/$id.meta" > "$CASE_DIR/legacy.meta"
+      mv "$CASE_DIR/legacy.meta" "$HOME_DIR/state/$id.meta"
+    fi
+    out=$(FM_SKIP_SECONDMATE_SYNC=1 FM_SKIP_SECONDMATE_INHERIT=1 \
+      FM_SECOND_STATUS_FAIL=1 FM_SECOND_STATUS_LOG="$CASE_DIR/recovery-status" \
+      fm_test_run_spawn "$HOME_DIR" "$POOL_DIR" "$FAKEBIN_DIR" "$id" "$POOL_DIR" --secondmate)
+    status=$?
+    expect_code 0 "$status" "a $variant secondmate record should recover without allocator access"$'\n'"$out"
+    [ ! -s "$CASE_DIR/recovery-status" ] || fail "secondmate recovery queried Treehouse status"
+    if [ "$variant" = durable ]; then
+      [ "$(grep -c '^treehouse_lease_id=seed-lease$' "$HOME_DIR/state/$id.meta")" = 1 ] \
+        || fail "automatic recovery lost or duplicated the secondmate's lease identity"
+      assert_grep "treehouse_lease_holder=$id" "$HOME_DIR/state/$id.meta" "automatic recovery changed the lease holder"
+    else
+      assert_no_grep '^treehouse_lease_' "$HOME_DIR/state/$id.meta" "legacy recovery invented a lease receipt"
+    fi
+    pass "automatic secondmate recovery preserves the $variant receipt without querying Treehouse"
+  done
+  printf '%s\n' "$recorded" > "$HOME_DIR/state/$id.meta"
+
+  awk -F= '$1 == "worktree" { print "worktree="; next } { print }' \
+    "$HOME_DIR/state/$id.meta" > "$CASE_DIR/retiring.meta"
+  printf 'treehouse_retiring_worktree=%s\n' "$POOL_DIR" >> "$CASE_DIR/retiring.meta"
+  cp "$CASE_DIR/retiring.meta" "$HOME_DIR/state/$id.meta"
+  out=$(FM_SKIP_SECONDMATE_SYNC=1 FM_SKIP_SECONDMATE_INHERIT=1 \
+    FM_SECOND_STATUS_FAIL=1 FM_SECOND_STATUS_LOG="$CASE_DIR/recovery-status" \
+    fm_test_run_spawn "$HOME_DIR" "$POOL_DIR" "$FAKEBIN_DIR" "$id" "$POOL_DIR" --secondmate)
+  status=$?
+  [ "$status" -ne 0 ] || fail "automatic recovery resurrected a retiring secondmate receipt"
+  assert_contains "$out" 'receipt is retiring or bound to a different home' "recovery did not name the retirement refusal"
+  cmp -s "$CASE_DIR/retiring.meta" "$HOME_DIR/state/$id.meta" || fail "refused recovery changed the retiring receipt"
+  [ ! -s "$CASE_DIR/recovery-status" ] || fail "refused recovery queried Treehouse status"
+  printf '%s\n' "$recorded" > "$HOME_DIR/state/$id.meta"
+  pass "automatic secondmate recovery preserves a pending retirement receipt"
+
+  # A return failure must retain the receipt, and the secondmate endpoint
+  # validator must accept that exact home-bound retirement on the next attempt.
+  fm_fake_exit0 "$FAKEBIN_DIR" no-mistakes
+  for return_fail in 1 0; do
+    out=$(FM_HOME="$HOME_DIR" HOME="$HOME_DIR/user-home" FM_ROOT_OVERRIDE="$PROJECT_DIR" \
+      FM_STATE_OVERRIDE="$HOME_DIR/state" FM_DATA_OVERRIDE="$HOME_DIR/data" \
+      FM_CONFIG_OVERRIDE="$HOME_DIR/config" FM_FAKE_PANE_PATH="$POOL_DIR" FM_SPAWN_NO_GUARD=1 \
+      FM_SECOND_RETURN_LOG="$CASE_DIR/returns" FM_SECOND_RETURN_FAIL="$return_fail" PATH="$FAKEBIN_DIR:$PATH" \
+      "$ROOT/bin/fm-teardown.sh" "$id" 2>&1)
+    status=$?
+    if [ "$return_fail" = 1 ]; then
+      [ "$status" -ne 0 ] || fail "secondmate ignored a failed conditional return"
+      assert_grep 'treehouse_lease_id=seed-lease' "$HOME_DIR/state/$id.meta" "failure lost the receipt"
+      assert_grep "treehouse_retiring_worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "failure lost the retirement path"
+    else
+      expect_code 0 "$status" "secondmate retirement should recover its failed return"$'\n'"$out"
+      [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "successful secondmate return retained the record"
+    fi
+  done
+  [ "$(grep -Fc "return --force --if-lease-id seed-lease $POOL_DIR" "$CASE_DIR/returns")" = 2 ] \
+    || fail "secondmate retry did not use the same lease identity"
+  pass "secondmate conditional retirement preserves its receipt and recovers a failed return"
+
+  cp "$CASE_DIR/retiring.meta" "$HOME_DIR/state/$id.meta"
+  printf 'replacement-task\n' > "$POOL_DIR/.fm-secondmate-home"
+  printf 'successor state\n' > "$POOL_DIR/state/successor.meta"
+  out=$(FM_HOME="$HOME_DIR" HOME="$HOME_DIR/user-home" FM_ROOT_OVERRIDE="$PROJECT_DIR" \
+    FM_STATE_OVERRIDE="$HOME_DIR/state" FM_DATA_OVERRIDE="$HOME_DIR/data" \
+    FM_CONFIG_OVERRIDE="$HOME_DIR/config" FM_FAKE_PANE_PATH="$POOL_DIR" FM_SPAWN_NO_GUARD=1 \
+    FM_SECOND_RETURN_LOG="$CASE_DIR/returns" PATH="$FAKEBIN_DIR:$PATH" \
+    "$ROOT/bin/fm-teardown.sh" "$id" 2>&1)
+  status=$?
+  expect_code 0 "$status" "secondmate retry after successful release should finish cleanup"$'\n'"$out"
+  [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "retry after release retained the secondmate receipt"
+  assert_grep 'successor state' "$POOL_DIR/state/successor.meta" "retry after release changed successor state"
+  [ "$(cat "$POOL_DIR/.fm-secondmate-home")" = replacement-task ] || fail "retry after release changed the home marker"
+  [ "$(grep -Fc "return --force --if-lease-id seed-lease $POOL_DIR" "$CASE_DIR/returns")" = 2 ] \
+    || fail "retry after release returned the slot again"
+  pass "secondmate retry after successful release finishes cleanup without touching the current allocation"
+}
+
 test_pool_slot_still_recorded_by_another_task_refuses() {
   local variant rec id held out status recorded before_meta before_claim before_head before_reflog
   local owner_home root_home child sibling sibling_parent
@@ -1300,7 +1497,15 @@ if [ "${1:-}" = --pool-identity ]; then
   exit 0
 fi
 
+if [ "${1:-}" = --live-legacy ]; then
+  test_live_legacy_pool_lease
+  test_secondmate_pool_lease_receipt
+  exit 0
+fi
+
 if [ "${1:-}" = --lease ]; then
+  test_live_legacy_pool_lease
+  test_secondmate_pool_lease_receipt
   test_missing_jq_refuses_before_lease_allocation
   test_legacy_other_pool_does_not_block same-origin different-root
   test_free_pool_slot_launches_while_another_slot_is_recorded
@@ -1310,6 +1515,8 @@ if [ "${1:-}" = --lease ]; then
   exit 0
 fi
 
+test_live_legacy_pool_lease
+test_secondmate_pool_lease_receipt
 test_missing_jq_refuses_before_lease_allocation
 test_legacy_other_pool_does_not_block same-origin different-root
 test_real_lease_survives_exit_and_failed_publication
