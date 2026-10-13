@@ -1,0 +1,4 @@
+not ok - a configured secondmate harness should relaunch
+error: secondmate home cannot be inside the firstmate repo: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-control-relaunch.Wkpsc8/smpin-9928/slots/1/proj
+error: the replacement agent for sm3 could not be launched on codex
+error: sm3's agent was stopped but the replacement did not launch; no agent is running, and its work plus the recorded progress note are preserved at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-control-relaunch.Wkpsc8/smpin-9928/slots/1/proj: expected exit 0, got 1

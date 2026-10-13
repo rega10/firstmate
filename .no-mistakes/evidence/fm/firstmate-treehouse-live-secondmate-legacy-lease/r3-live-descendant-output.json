@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Forced secondmate retirement finishes released descendant receipts without changing their slots",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-descendants.log",
+    "reason": ""
+  },
+  {
+    "name": "Forced secondmate retirement preserves ordinary successor allocations of pending descendants",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-descendants.log",
+    "reason": ""
+  },
+  {
+    "name": "A still-leased descendant with another identity blocks forced parent retirement",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-descendants.log",
+    "reason": ""
+  },
+  {
+    "name": "Removed-home retry uses Treehouse recovered status after pool-state corruption",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-descendants.log",
+    "reason": ""
+  }
+]

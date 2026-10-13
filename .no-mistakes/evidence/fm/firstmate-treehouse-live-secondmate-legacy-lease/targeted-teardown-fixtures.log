@@ -1,0 +1,19 @@
+ok - pending ship secondmate handles the leased successor without touching its home
+ok - pending ship secondmate handles the available successor without touching its home
+ok - pending ship secondmate handles the in-use successor without touching its home
+ok - pending scout secondmate handles the leased successor without touching its home
+ok - pending scout secondmate handles the available successor without touching its home
+ok - pending scout secondmate handles the in-use successor without touching its home
+ok - pending secondmate secondmate handles the leased successor without touching its home
+ok - pending secondmate secondmate handles the available successor without touching its home
+ok - pending secondmate secondmate handles the in-use successor without touching its home
+not ok - the pending secondmate did not refuse the mismatch (missing: 'Treehouse lease identity mismatch')
+--- output ---
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no live watcher process holds this home lock (last beat: 0s ago).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision according to the session-start block for this harness; do not use shell &.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REFUSED: unsafe secondmate home removal target /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.cYfast/secondmate-successor-descendant-leased/secondmate-home is inside the firstmate repo

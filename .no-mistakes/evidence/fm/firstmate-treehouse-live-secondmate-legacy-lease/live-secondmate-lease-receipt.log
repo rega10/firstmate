@@ -1,0 +1,80 @@
+== S7 (already launched once): second mate sm-live, pool lease held by bare id with a nonempty identity
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+record sm-live: treehouse_lease_id=036321bd0828a001e89336dc44e666cb treehouse_lease_holder=sm-live home=<POOLROOT>/.treehouse/proj2-7192ab/1/proj2 
+
+== S7b fresh second mate, bare holder, nonempty pool identity: record must carry the pool identity and holder
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"2","status":"leased","lease_id":"6e41f41914f34c2d90d4f66d055e0500","lease_holder":"sm-bare"}
+$ bin/fm-spawn.sh sm-bare <home> 'sleep 600' --secondmate
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+bin/fm-spawn.sh: line 3218: real_path_or_raw: command not found
+spawned sm-bare harness=sleep kind=secondmate mode=secondmate yolo=off window=firstmate:fm-sm-bare worktree=<POOLROOT>/.treehouse/proj2-7192ab/2/proj2
+exit=0
+record sm-bare: worktree=<POOLROOT>/.treehouse/proj2-7192ab/2/proj2 treehouse_lease_id=6e41f41914f34c2d90d4f66d055e0500 treehouse_lease_holder=sm-bare home=<POOLROOT>/.treehouse/proj2-7192ab/2/proj2 
+
+== S8 fresh second mate, pool holder is <physical-lab-home>:<id> with a nonempty identity
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"2","status":"leased","lease_id":"6e41f41914f34c2d90d4f66d055e0500","lease_holder":"sm-bare"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+$ bin/fm-spawn.sh sm-qual <home> 'sleep 600' --secondmate
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+bin/fm-spawn.sh: line 3218: real_path_or_raw: command not found
+error: secondmate sm-qual's Treehouse home is not leased to this task (status 'leased', holder '<LAB>:sm-qual'); preserve its home and reconcile the owner
+exit=1
+record sm-qual: none written
+
+== S9 fresh second mate on a live legacy lease (empty pool lease_id): must refuse with the repair, keep the home leased
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"2","status":"leased","lease_id":"6e41f41914f34c2d90d4f66d055e0500","lease_holder":"sm-bare"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+$ bin/fm-spawn.sh sm-legacy <home> 'sleep 600' --secondmate
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+bin/fm-spawn.sh: line 3218: real_path_or_raw: command not found
+error: secondmate sm-legacy has a live legacy lease with an empty pool lease_id; keep its home leased, assign one unique lease_id to its entry in <POOLROOT>/.treehouse/proj2-7192ab/treehouse-state.json and record the same treehouse_lease_id and treehouse_lease_holder=sm-legacy in <LAB>/state/sm-legacy.meta before retrying; never return/reacquire the home
+exit=1
+record sm-legacy: none written
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"2","status":"leased","lease_id":"6e41f41914f34c2d90d4f66d055e0500","lease_holder":"sm-bare"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+
+== S10 (adversarial) fresh second mate whose home is leased to another holder: must refuse
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"2","status":"leased","lease_id":"6e41f41914f34c2d90d4f66d055e0500","lease_holder":"sm-bare"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+$ bin/fm-spawn.sh sm-stolen <home> 'sleep 600' --secondmate
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+bin/fm-spawn.sh: line 3218: real_path_or_raw: command not found
+error: secondmate sm-stolen's Treehouse home is not leased to this task (status 'leased', holder 'someone-else'); preserve its home and reconcile the owner
+exit=1
+record sm-stolen: none written
+
+== S11 automatic recovery: endpoint of sm-live is gone, spawn --secondmate again; the receipt must be preserved
+treehouse_lease_id=036321bd0828a001e89336dc44e666cb
+treehouse_lease_holder=sm-live
+$ bin/fm-spawn.sh sm-live <home> 'sleep 600' --secondmate
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+spawned sm-live harness=sleep kind=secondmate mode=secondmate yolo=off window=firstmate:fm-sm-live worktree=<POOLROOT>/.treehouse/proj2-7192ab/1/proj2
+exit=0
+record sm-live: worktree=<POOLROOT>/.treehouse/proj2-7192ab/1/proj2 treehouse_lease_id=036321bd0828a001e89336dc44e666cb treehouse_lease_holder=sm-live home=<POOLROOT>/.treehouse/proj2-7192ab/1/proj2 
+treehouse_lease lines after recovery: 1 id, 1 holder
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"2","status":"leased","lease_id":"6e41f41914f34c2d90d4f66d055e0500","lease_holder":"sm-bare"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}

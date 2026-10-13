@@ -1,0 +1,116 @@
+ok - live legacy pool lease: bare
+ok - live legacy pool lease: qualified
+ok - live legacy pool lease: other
+ok - live legacy pool lease: unleased
+ok - secondmate publishes its seeded lease identity and qualified holder with clean stderr
+ok - secondmate publishes its seeded lease identity and bare holder with clean stderr
+ok - automatic secondmate recovery preserves the durable receipt without querying Treehouse
+ok - automatic secondmate recovery preserves the legacy receipt without querying Treehouse
+ok - automatic secondmate recovery preserves a pending retirement receipt
+ok - secondmate conditional retirement preserves its receipt and recovers a failed return
+ok - secondmate retry after successful release finishes cleanup without touching the current allocation
+ok - missing jq refuses ship before lease allocation or task record mutation
+ok - missing jq refuses scout before lease allocation or task record mutation
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/pool-identity-same-origin/held-root/.treehouse/project-a427d5/1/project. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/pool-identity-same-origin/held-root/.treehouse/project-a427d5/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/pool-identity-same-origin/held-root/.treehouse/project-b-a427d5/1/project-b. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/pool-identity-same-origin/held-root/.treehouse/project-b-a427d5/1/project-b' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+ok - a legacy record in a different same-origin allocator pool does not block spawn
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/pool-identity-different-root/held-root/.treehouse/project-684a59/1/project. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/pool-identity-different-root/held-root/.treehouse/project-684a59/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/pool-identity-different-root/free-root/.treehouse/project-684a59/1/project. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/pool-identity-different-root/free-root/.treehouse/project-684a59/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+ok - a legacy record in a different different-root allocator pool does not block spawn
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/lease-success/treehouse-root/.treehouse/project-0e6097/1/project. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/lease-success/treehouse-root/.treehouse/project-0e6097/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/lease-success/treehouse-root/.treehouse/project-0e6097/2/project. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/lease-success/treehouse-root/.treehouse/project-0e6097/2/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+ok - real Treehouse lease: success preserves the exited owner's allocation
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/lease-publication-failure/treehouse-root/.treehouse/project-3d6816/1/project. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/lease-publication-failure/treehouse-root/.treehouse/project-3d6816/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/lease-publication-failure/treehouse-root/.treehouse/project-3d6816/2/project. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/lease-publication-failure/treehouse-root/.treehouse/project-3d6816/2/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+ok - real Treehouse lease: publication-failure preserves the exited owner's allocation
+ok - free slot 2 launches while another task still records slot 1 in the same pool
+🌳 Setting up worktree...
+🌳 Leased worktree at /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/real-recorded-stale/treehouse-root/.treehouse/project-898f98/1/project. Run 'treehouse return /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-spawn-pool-base-freshen.qCRbsb/real-recorded-stale/treehouse-root/.treehouse/project-898f98/1/project' to release it.
+🌳 Worktree returned to pool.
+ok - real Treehouse preserves a recorded stale slot and refreshes it after retirement
+ok - the unclaimed slot is refused while another task records it and launches after that record is removed
+ok - the claimed-alias slot is refused while another task records it and launches after that record is removed
+ok - the parent slot is refused while another task records it and launches after that record is removed
+ok - the child slot is refused while another task records it and launches after that record is removed
+ok - the sibling slot is refused while another task records it and launches after that record is removed
+ok - the nested slot is refused while another task records it and launches after that record is removed
+ok - the same-id slot is refused while another task records it and launches after that record is removed
+ok - a remote-seeded secondmate home allocates and launches from its Treehouse pool
+ok - a Treehouse slot claim names the launched task, refuses when unclaimable, and is dropped by a locked abort
+ok - linked spawning home: primary preserves the primary before any refresh
+ok - linked spawning home: primary-alias preserves the primary before any refresh
+ok - linked spawning home: spawning preserves the primary before any refresh
+ok - linked spawning home: scout preserves the primary before any refresh
+ok - a stale pooled worktree refreshes to current origin/main before a crew branch is created
+ok - --base-branch picks the copy's starting point and is recorded; a missing or local-only base refuses
+ok - a spawn refuses when --base-branch and the brief's Base branch lines disagree
+ok - a Base branch line in the captain's intent neither blocks nor redirects a spawn
+ok - a based scout on a forge=gerrit project is refused at spawn
+ok - a stale pooled worktree resolves and refreshes a non-main default branch
+ok - direct-PR ships and scouts both refresh stale pooled worktrees before launch
+ok - a dirty pooled worktree is refused without discarding its local work
+ok - an unresolved remote default branch refuses the pooled worktree
+ok - an unreachable origin refuses a potentially stale pooled worktree
+ok - an origin-less pooled worktree launches as-is, skipping the freshness gate
+ok - a dirty origin-less pooled worktree is refused without discarding its local work
+ok - an origin configuration without a URL refuses the pooled worktree
+ok - an empty origin configuration section refuses the pooled worktree
+ok - an empty-only included origin section documents the accepted detection boundary
+ok - an inactive conditional origin include leaves the pooled worktree origin-less
+ok - an origin-less pool with a stale submodule pin refuses while naming both pins and no remedy
+ok - an unpushed submodule commit keeps the uncommitted-work refusal and survives it
+ok - work inside a submodule is still refused as uncommitted work, not called stale
+ok - a stale pin carrying real work is refused conservatively, never called stale
+ok - a stale pin beside other dirt yields the conservative refusal alone, with no stale-pin line
+# all fm-spawn-pool-base-freshen tests passed
+exit=0

@@ -1,0 +1,14 @@
+legacy bare exit=0
+spawned pool-live-legacy-bare harness=codex kind=scout window=firstmate:fm-pool-live-legacy-bare worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-spawn-pool-base-freshen.S2aILp/pool-live-legacy-bare/slots/2/project
+ok - live legacy pool lease: bare
+legacy qualified exit=0
+spawned pool-live-legacy-qualified harness=codex kind=scout window=firstmate:fm-pool-live-legacy-qualified worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-spawn-pool-base-freshen.S2aILp/pool-live-legacy-qualified/slots/2/project
+ok - live legacy pool lease: qualified
+legacy other exit=1
+error: refusing to spawn task pool-live-legacy-other: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-spawn-pool-base-freshen.S2aILp/pool-live-legacy-other/slots/1/project' is still recorded by task catalog-sm in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-spawn-pool-base-freshen.S2aILp/pool-live-legacy-other/home/state/catalog-sm.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+ok - live legacy pool lease: other
+legacy unleased exit=1
+error: refusing to spawn task pool-live-legacy-unleased: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-spawn-pool-base-freshen.S2aILp/pool-live-legacy-unleased/slots/1/project' is still recorded by task catalog-sm in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-spawn-pool-base-freshen.S2aILp/pool-live-legacy-unleased/home/state/catalog-sm.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+ok - live legacy pool lease: unleased
+not ok - a secondmate should retain its seeded lease receipt
+error: secondmate home cannot be inside the firstmate repo: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-spawn-pool-base-freshen.S2aILp/pool-secondmate-receipt/slots/1/project: expected exit 0, got 1

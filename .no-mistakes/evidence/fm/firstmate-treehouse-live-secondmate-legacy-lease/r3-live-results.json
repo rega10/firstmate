@@ -1,0 +1,121 @@
+[
+  {
+    "name": "A live legacy secondmate with a matching bare holder allows another spawn; the base commit refuses",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "A live legacy secondmate with a matching qualified holder allows another spawn",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "A legacy slot leased to another task refuses a new spawn",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "A legacy holder qualified with another home refuses a new spawn",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "A recorded legacy slot released in Treehouse refuses a new spawn",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "A fresh secondmate on a bare-holder durable lease records its exact receipt",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "A fresh secondmate on a qualified-holder durable lease starts without shell errors",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "A fresh secondmate with an empty legacy identity refuses with coordinated repair guidance",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "A fresh secondmate leased to another task refuses without changing its home",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "Automatic recovery preserves a secondmate durable receipt and home",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "Explicit relaunch preserves a secondmate durable receipt and home",
+    "result": "fail",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": "WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.\nerror: task seeded-bare's recorded endpoint primary:fm-seeded-bare reads 'missing', but tmux absence cannot be proven from a task record: the record does not carry the endpoint's socket identity, and a server-wide window inventory only describes the tmux server this process addresses, so a window absent from it may still be alive on another. An endpoint that cannot be proven absent may still hold a live agent on this task's worktree; refusing rather than launching a second agent into it\n"
+  },
+  {
+    "name": "Automatic recovery preserves a legacy secondmate record without adding lease fields",
+    "result": "fail",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": "can't find window: fm-seeded-bare\n"
+  },
+  {
+    "name": "Teardown retries after conditional release finish stale-record cleanup for every task kind",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "Teardown retries preserve another ordinary allocation without a durable identity",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "Active and pending teardown refuse mismatched or empty identities on still-leased slots",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "Teardown retry after real secondmate home removal finishes stale-record cleanup",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  },
+  {
+    "name": "An absent pool slot with a recreated directory refuses cleanup and preserves that directory",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-leases.log",
+    "reason": ""
+  }
+]

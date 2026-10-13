@@ -1,0 +1,134 @@
+== setup: launch second mate sm-retry on its seeded leased home
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+bin/fm-spawn.sh: line 3218: real_path_or_raw: command not found
+spawned sm-retry harness=sleep kind=secondmate mode=secondmate yolo=off window=firstmate:fm-sm-retry worktree=<POOLROOT>/.treehouse/proj2-7192ab/9/proj2
+receipt sm-retry: worktree=<POOLROOT>/.treehouse/proj2-7192ab/9/proj2 treehouse_lease_id=4893440e003477de7a157c6150f2fb59 treehouse_lease_holder=sm-retry 
+
+== T2 (adversarial, run first while the lease is live) pending receipt names a different identity than the still-leased slot: must refuse
+pending receipt sm-retry: worktree= treehouse_lease_id=4893440e003477de7a157c6150f2fb59 treehouse_lease_holder=sm-retry treehouse_retiring_worktree=<POOLROOT>/.treehouse/proj2-7192ab/9/proj2 
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+{"name":"6","status":"leased","lease_id":"27a944101cc217d37f06b348d784455a","lease_holder":"successor-task"}
+{"name":"7","status":"leased","lease_id":"f80fc8fba42a52bc28743a896efdfe43","lease_holder":"successor-task"}
+{"name":"8","status":"leased","lease_id":"efa33160223c1ef4180cc7ec99bc8912","lease_holder":"successor-task"}
+{"name":"9","status":"leased","lease_id":"4893440e003477de7a157c6150f2fb59","lease_holder":"sm-retry"}
+$ bin/fm-teardown.sh sm-retry 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+REFUSED: Treehouse lease identity mismatch for sm-retry at <POOLROOT>/.treehouse/proj2-7192ab/9/proj2: record lease_id='0123456789abcdef0123456789abcdef' holder='sm-retry'; pool lease_id='4893440e003477de7a157c6150f2fb59' holder='sm-retry' status='leased'; preserving the slot and task record
+Repair: verify the actual slot owner in <POOLROOT>/.treehouse/proj2-7192ab/treehouse-state.json before restoring the matching treehouse_lease_id and treehouse_lease_holder receipt in <LAB>/state/sm-retry.meta; if another task holds it, preserve both records and reconcile ownership. Never substitute another task's lease identity.
+exit=1
+pool status: unchanged by this call
+receipt sm-retry: still present
+slot directory: present; marker file: keep
+$ bin/fm-teardown.sh sm-retry --force
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+REFUSED: Treehouse lease identity mismatch for sm-retry at <POOLROOT>/.treehouse/proj2-7192ab/9/proj2: record lease_id='0123456789abcdef0123456789abcdef' holder='sm-retry'; pool lease_id='4893440e003477de7a157c6150f2fb59' holder='sm-retry' status='leased'; preserving the slot and task record
+Repair: verify the actual slot owner in <POOLROOT>/.treehouse/proj2-7192ab/treehouse-state.json before restoring the matching treehouse_lease_id and treehouse_lease_holder receipt in <LAB>/state/sm-retry.meta; if another task holds it, preserve both records and reconcile ownership. Never substitute another task's lease identity.
+exit=1
+pool status: unchanged by this call
+receipt sm-retry: still present
+slot directory: present; marker file: keep
+
+== T3 (adversarial) slot still leased with an empty identity (legacy lease), receipt carries an identity: must refuse
+pending receipt sm-retry: worktree= treehouse_lease_id=4893440e003477de7a157c6150f2fb59 treehouse_lease_holder=sm-retry treehouse_retiring_worktree=<POOLROOT>/.treehouse/proj2-7192ab/9/proj2 
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+{"name":"6","status":"leased","lease_id":"27a944101cc217d37f06b348d784455a","lease_holder":"successor-task"}
+{"name":"7","status":"leased","lease_id":"f80fc8fba42a52bc28743a896efdfe43","lease_holder":"successor-task"}
+{"name":"8","status":"leased","lease_id":"efa33160223c1ef4180cc7ec99bc8912","lease_holder":"successor-task"}
+{"name":"9","status":"leased","lease_id":"","lease_holder":"sm-retry"}
+$ bin/fm-teardown.sh sm-retry 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+REFUSED: Treehouse lease identity mismatch for sm-retry at <POOLROOT>/.treehouse/proj2-7192ab/9/proj2: record lease_id='4893440e003477de7a157c6150f2fb59' holder='sm-retry'; pool lease_id='<empty>' holder='sm-retry' status='leased'; preserving the slot and task record
+Repair while the allocator is idle: keep this live legacy slot leased; set lease_id='4893440e003477de7a157c6150f2fb59' on the worktrees entry for path '<POOLROOT>/.treehouse/proj2-7192ab/9/proj2' in <POOLROOT>/.treehouse/proj2-7192ab/treehouse-state.json, and set treehouse_lease_holder='sm-retry' in <LAB>/state/sm-retry.meta (retain treehouse_lease_id='4893440e003477de7a157c6150f2fb59'); then retry. Never return/reacquire the home or remove the record.
+exit=1
+pool status: unchanged by this call
+receipt sm-retry: still present
+slot directory: present; marker file: keep
+
+== T1 interruption right after the conditional return: slot released, receipt still pending; retry must finish cleanup only
+pending receipt sm-retry: worktree= treehouse_lease_id=4893440e003477de7a157c6150f2fb59 treehouse_lease_holder=sm-retry treehouse_retiring_worktree=<POOLROOT>/.treehouse/proj2-7192ab/9/proj2 
+$ treehouse return --force --if-lease-id 4893440e003477de7a157c6150f2fb59 <slot>
+🌳 Terminated lingering processes: bash (30683), sleep (33073)
+🌳 Worktree returned to pool.
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+{"name":"6","status":"leased","lease_id":"27a944101cc217d37f06b348d784455a","lease_holder":"successor-task"}
+{"name":"7","status":"leased","lease_id":"f80fc8fba42a52bc28743a896efdfe43","lease_holder":"successor-task"}
+{"name":"8","status":"leased","lease_id":"efa33160223c1ef4180cc7ec99bc8912","lease_holder":"successor-task"}
+{"name":"9","status":"dirty","lease_id":"","lease_holder":""}
+$ bin/fm-teardown.sh sm-retry 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+teardown sm-retry complete (window firstmate:fm-sm-retry, worktree )
+exit=0
+pool status: unchanged by this call
+receipt sm-retry: removed
+slot directory: present; marker file: keep
+
+== T4 retry while an ordinary treehouse get (no durable identity) occupies the released slot: finish cleanup, do not touch the allocation
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+{"name":"6","status":"leased","lease_id":"27a944101cc217d37f06b348d784455a","lease_holder":"successor-task"}
+{"name":"7","status":"leased","lease_id":"f80fc8fba42a52bc28743a896efdfe43","lease_holder":"successor-task"}
+{"name":"8","status":"leased","lease_id":"efa33160223c1ef4180cc7ec99bc8912","lease_holder":"successor-task"}
+{"name":"9","status":"dirty","lease_id":"","lease_holder":""}
+{"name":"10","status":"in-use","lease_id":"","lease_holder":""}
+{"name":"11","status":"in-use","lease_id":"","lease_holder":""}
+{"name":"12","status":"in-use","lease_id":"","lease_holder":""}
+{"name":"13","status":"in-use","lease_id":"","lease_holder":""}
+ordinary allocation occupies the retired slot path: dirty
+pending receipt sm-retry: worktree= treehouse_lease_id=4893440e003477de7a157c6150f2fb59 treehouse_lease_holder=sm-retry treehouse_retiring_worktree=<POOLROOT>/.treehouse/proj2-7192ab/9/proj2 
+$ bin/fm-teardown.sh sm-retry 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+teardown sm-retry complete (window firstmate:fm-sm-retry, worktree )
+exit=0
+pool status: unchanged by this call
+receipt sm-retry: removed
+slot directory: present; marker file: keep
+ordinary holder processes still running: 4
+
+== T4 second attempt: the released slot is cleaned so that Treehouse hands it to an ordinary treehouse get (no durable identity)
+note: earlier ordinary holders already exited
+slot 9 status after git clean: available
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+{"name":"6","status":"leased","lease_id":"27a944101cc217d37f06b348d784455a","lease_holder":"successor-task"}
+{"name":"7","status":"leased","lease_id":"f80fc8fba42a52bc28743a896efdfe43","lease_holder":"successor-task"}
+{"name":"8","status":"leased","lease_id":"efa33160223c1ef4180cc7ec99bc8912","lease_holder":"successor-task"}
+{"name":"9","status":"in-use","lease_id":"","lease_holder":""}
+{"name":"10","status":"available","lease_id":"","lease_holder":""}
+{"name":"11","status":"available","lease_id":"","lease_holder":""}
+{"name":"12","status":"available","lease_id":"","lease_holder":""}
+{"name":"13","status":"available","lease_id":"","lease_holder":""}
+pending receipt sm-retry: worktree= treehouse_lease_id=4893440e003477de7a157c6150f2fb59 treehouse_lease_holder=sm-retry treehouse_retiring_worktree=<POOLROOT>/.treehouse/proj2-7192ab/9/proj2 
+$ bin/fm-teardown.sh sm-retry
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+teardown sm-retry complete (window firstmate:fm-sm-retry, worktree )
+exit=
+pool status: unchanged by this call
+receipt sm-retry: removed
+slot directory: present; successor file: successor
+process in slot 9 per Treehouse: [{"pid":48202,"name":"sleep"}]
+note: the blank exit= above is a driver quoting slip under zsh; the line 'teardown sm-retry complete' is the product result

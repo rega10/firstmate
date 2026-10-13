@@ -1,0 +1,71 @@
+== T4b retry while an ordinary treehouse get (no durable identity) occupies the released slot of sm-retry
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"42ef0eb55f692cfef910cdd751408524","lease_holder":"sm-live"}
+{"name":"2","status":"leased","lease_id":"fba40aec2606890e7a94f20f4b177191","lease_holder":"<LAB>:sm-qual"}
+{"name":"3","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"4","status":"leased","lease_id":"7a590916a926330abbe077fdb3a12758","lease_holder":"someone-else"}
+{"name":"5","status":"leased","lease_id":"4575529a059f69b46ae12e2f8b18c833","lease_holder":"/somewhere/else:sm-foreign"}
+{"name":"6","status":"in-use","lease_id":"","lease_holder":""}
+{"name":"7","status":"available","lease_id":"","lease_holder":""}
+{"name":"8","status":"available","lease_id":"","lease_holder":""}
+{"name":"9","status":"available","lease_id":"","lease_holder":""}
+{"name":"10","status":"available","lease_id":"","lease_holder":""}
+status of the retired slot path: in-use
+pending receipt sm-retry: worktree= treehouse_lease_id=cc75704028dd82810debf7cecd81c8bf treehouse_lease_holder=sm-retry treehouse_retiring_worktree=<POOLROOT>/.treehouse/.treehouse/proj2-5576bd/6/proj2 
+$ bin/fm-teardown.sh sm-retry 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+teardown sm-retry complete (window primary:fm-sm-retry, worktree )
+exit=0
+pool status: unchanged by this call
+receipt sm-retry: removed
+occupant file: occupant; ordinary holder processes still running: 1
+
+== T5 real complete retirement of second mate sm-qual (qualified holder receipt)
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"42ef0eb55f692cfef910cdd751408524","lease_holder":"sm-live"}
+{"name":"2","status":"leased","lease_id":"fba40aec2606890e7a94f20f4b177191","lease_holder":"<LAB>:sm-qual"}
+{"name":"3","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"4","status":"leased","lease_id":"7a590916a926330abbe077fdb3a12758","lease_holder":"someone-else"}
+{"name":"5","status":"leased","lease_id":"4575529a059f69b46ae12e2f8b18c833","lease_holder":"/somewhere/else:sm-foreign"}
+{"name":"6","status":"dirty","lease_id":"","lease_holder":""}
+{"name":"7","status":"available","lease_id":"","lease_holder":""}
+{"name":"8","status":"available","lease_id":"","lease_holder":""}
+{"name":"9","status":"available","lease_id":"","lease_holder":""}
+{"name":"10","status":"available","lease_id":"","lease_holder":""}
+$ bin/fm-teardown.sh sm-qual --force
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+teardown sm-qual complete (window primary:fm-sm-qual, worktree <POOLROOT>/.treehouse/.treehouse/proj2-5576bd/2/proj2)
+exit=0
+pool status: CHANGED by this call
+{"name":"1","status":"leased","lease_id":"42ef0eb55f692cfef910cdd751408524","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"4","status":"leased","lease_id":"7a590916a926330abbe077fdb3a12758","lease_holder":"someone-else"}
+{"name":"5","status":"leased","lease_id":"4575529a059f69b46ae12e2f8b18c833","lease_holder":"/somewhere/else:sm-foreign"}
+{"name":"6","status":"dirty","lease_id":"","lease_holder":""}
+{"name":"7","status":"available","lease_id":"","lease_holder":""}
+{"name":"8","status":"available","lease_id":"","lease_holder":""}
+{"name":"9","status":"available","lease_id":"","lease_holder":""}
+{"name":"10","status":"available","lease_id":"","lease_holder":""}
+receipt sm-qual: removed
+home directory: removed
+
+== T6 (open round 1 finding F2) retry after the retiring home directory was removed, receipt still pending
+pending receipt sm-qual: worktree= treehouse_lease_id=fba40aec2606890e7a94f20f4b177191 treehouse_lease_holder=<LAB>:sm-qual treehouse_retiring_worktree=<POOLROOT>/.treehouse/.treehouse/proj2-5576bd/2/proj2 
+$ bin/fm-teardown.sh sm-qual 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/bin/fm-wake-lib.sh: line 1597: cd: <POOLROOT>/.treehouse/.treehouse/proj2-5576bd/2/proj2: No such file or directory
+REFUSED: cannot read Treehouse status for sm-qual's recorded lease_id 'fba40aec2606890e7a94f20f4b177191' at <POOLROOT>/.treehouse/.treehouse/proj2-5576bd/2/proj2; preserve the record and restore authoritative pool status before retrying
+exit=1
+pool status: unchanged by this call
+receipt sm-qual: still present
+$ bin/fm-teardown.sh sm-qual --force
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/bin/fm-wake-lib.sh: line 1597: cd: <POOLROOT>/.treehouse/.treehouse/proj2-5576bd/2/proj2: No such file or directory
+REFUSED: cannot read Treehouse status for sm-qual's recorded lease_id 'fba40aec2606890e7a94f20f4b177191' at <POOLROOT>/.treehouse/.treehouse/proj2-5576bd/2/proj2; preserve the record and restore authoritative pool status before retrying
+exit=1
+pool status: unchanged by this call
+receipt sm-qual: still present

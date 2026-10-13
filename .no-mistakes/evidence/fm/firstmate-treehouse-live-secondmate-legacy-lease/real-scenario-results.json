@@ -1,0 +1,9 @@
+[
+  {
+    "name": "A matching bare legacy holder permits a new spawn; the baseline refuses it",
+    "result": "fail",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/real-product-leases.log",
+    "reason": ""
+  }
+]

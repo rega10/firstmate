@@ -1,0 +1,9 @@
+[
+  {
+    "name": "Removed-home retry refuses unavailable pool status under invalid configuration and succeeds after repair",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-status-guard.log",
+    "reason": ""
+  }
+]

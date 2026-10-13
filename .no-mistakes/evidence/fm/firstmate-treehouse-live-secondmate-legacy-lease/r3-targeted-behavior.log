@@ -1,0 +1,71 @@
+FM_TEST_BEGIN 2026-10-13T07:36:48Z tests/fm-teardown.test.sh family=pr-forge expected_gate_skip=none
+ok - pending ship secondmate handles the leased successor without touching its home
+ok - pending ship secondmate handles the available successor without touching its home
+ok - pending ship secondmate handles the in-use successor without touching its home
+ok - pending scout secondmate handles the leased successor without touching its home
+ok - pending scout secondmate handles the available successor without touching its home
+ok - pending scout secondmate handles the in-use successor without touching its home
+ok - pending secondmate secondmate handles the leased successor without touching its home
+ok - pending secondmate secondmate handles the available successor without touching its home
+ok - pending secondmate secondmate handles the in-use successor without touching its home
+not ok - the pending secondmate did not refuse the mismatch (missing: 'Treehouse lease identity mismatch')
+--- output ---
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no live watcher process holds this home lock (last beat: 1s ago).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision according to the session-start block for this harness; do not use shell &.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REFUSED: unsafe secondmate home removal target /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tmp/fm-test-run.oTmzfG/w1/tmp/fm-teardown-tests.BcYZ9o/secondmate-successor-descendant-leased/secondmate-home is inside the firstmate repo
+FM_TEST_END 2026-10-13T07:37:06Z tests/fm-teardown.test.sh exit=1 duration_ms=18193 gate_skip=false
+FM_TEST_BEGIN 2026-10-13T07:37:06Z tests/fm-spawn-pool-base-freshen.test.sh family=standalone expected_gate_skip=none
+ok - live legacy pool lease: bare
+ok - live legacy pool lease: qualified
+ok - live legacy pool lease: other
+ok - live legacy pool lease: unleased
+not ok - a secondmate should retain its qualified seeded lease receipt
+
+error: secondmate home cannot be inside the firstmate repo: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tmp/fm-test-run.oTmzfG/w2/tmp/fm-spawn-pool-base-freshen.WLSIp9/pool-secondmate-receipt/slots/1/project: expected exit 0, got 1
+FM_TEST_END 2026-10-13T07:37:16Z tests/fm-spawn-pool-base-freshen.test.sh exit=1 duration_ms=9403 gate_skip=false
+FM_TEST_BEGIN 2026-10-13T07:37:16Z tests/fm-control-relaunch.test.sh family=backend-dispatch expected_gate_skip=none
+ok - fm-control removes the dialog file after exit and after relaunch
+ok - fm-control exit removes the dialog file before it releases the control lock
+ok - fm-control relaunch: a same-harness relaunch replaces the agent in the same endpoint and worktree
+ok - fm-control relaunch: pending composer text refuses before the exit command is typed
+ok - fm-control relaunch: an unreadable composer fails safe before the exit command is typed
+ok - fm-control relaunch: a linked spawning home preserves committed and unfinished work in the recorded copy
+ok - fm-control relaunch: durable task metadata survives replacement launch publication
+ok - fm-control relaunch: an armed PR poll stays authenticated
+ok - fm-spawn --relaunch: trace metadata keeps an armed PR poll authenticated
+ok - fm-control relaunch: delivery and concurrent task metadata publication serialize
+ok - fm-control relaunch: disabling tracing clears metadata and pane context
+ok - fm-control relaunch: progress and the Firstmate-worktree worker identity reach the replacement
+ok - fm-control relaunch: a ship task refuses without the progress note its replacement needs
+ok - fm-control relaunch: switching harness is one ordinary relaunch, and the old wiring goes with the old agent
+ok - fm-control relaunch: a harness switch resets model and effort unless they are named too
+ok - fm-control relaunch: a prefixed recorded harness can switch adapters transactionally
+ok - fm-control relaunch: a prefixed command requires an explicit replacement harness
+ok - fm-control relaunch: a same-harness relaunch keeps the profile axes it was running with
+ok - native Ultra relaunch preserves its profile and rejects an unsupported model before stopping
+ok - fm-control relaunch: a signed-out worker account pin refuses before the old agent stops
+ok - fm-control relaunch: the replacement follows the home's current worker account pin
+ok - fm-control relaunch: a Pi replacement keeps the home's tool exclusions
+ok - fm-control relaunch: exclusion-list refusals happen before the running agent stops
+ok - fm-control relaunch: explicit model and effort win over the recorded ones
+ok - fm-control relaunch: refuses to relaunch onto an adapter with no verified mechanics
+ok - fm-control relaunch: the retired incarnation's global turn-end token is revoked
+ok - fm-control relaunch: wiring cleanup failure refuses replacement arming
+ok - fm-control-lib: one owner resolves each harness's turn-end registry entry, and refuses a malformed token
+not ok - a configured secondmate harness should relaunch
+error: secondmate home cannot be inside the firstmate repo: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tmp/fm-control-relaunch.OJ6bRi/smpin-19183/slots/1/proj
+error: the replacement agent for sm3 could not be launched on codex
+error: sm3's agent was stopped but the replacement did not launch; no agent is running, and its work plus the recorded progress note are preserved at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tmp/fm-control-relaunch.OJ6bRi/smpin-19183/slots/1/proj: expected exit 0, got 1
+FM_TEST_END 2026-10-13T07:38:19Z tests/fm-control-relaunch.test.sh exit=1 duration_ms=63093 gate_skip=false
+FM_TEST_SUMMARY total=3 failed=3 skipped_gate=0 duration_ms=91039
+FM_TEST_SUMMARY_FAMILY family=backend-dispatch count=1 duration_ms=63093 failed=1
+FM_TEST_SUMMARY_FAMILY family=pr-forge count=1 duration_ms=18193 failed=1
+FM_TEST_SUMMARY_FAMILY family=standalone count=1 duration_ms=9403 failed=1
+FM_TEST_SLOWEST rank=1 script=tests/fm-control-relaunch.test.sh duration_ms=63093
+FM_TEST_SLOWEST rank=2 script=tests/fm-teardown.test.sh duration_ms=18193
+FM_TEST_SLOWEST rank=3 script=tests/fm-spawn-pool-base-freshen.test.sh duration_ms=9403

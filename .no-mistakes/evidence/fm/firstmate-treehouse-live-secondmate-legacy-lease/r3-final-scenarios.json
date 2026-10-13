@@ -1,0 +1,156 @@
+[
+  {
+    "name": "A live legacy secondmate with a matching bare holder allows another spawn; the base commit refuses",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A live legacy secondmate with a matching bare holder allows another spawn; the base commit refuses",
+    "reason": ""
+  },
+  {
+    "name": "A live legacy secondmate with a matching qualified holder allows another spawn",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A live legacy secondmate with a matching qualified holder allows another spawn",
+    "reason": ""
+  },
+  {
+    "name": "A legacy slot leased to another task refuses a new spawn",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A legacy slot leased to another task refuses a new spawn",
+    "reason": ""
+  },
+  {
+    "name": "A legacy holder qualified with another home refuses a new spawn",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A legacy holder qualified with another home refuses a new spawn",
+    "reason": ""
+  },
+  {
+    "name": "A recorded legacy slot released in Treehouse refuses a new spawn",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A recorded legacy slot released in Treehouse refuses a new spawn",
+    "reason": ""
+  },
+  {
+    "name": "A fresh secondmate on a bare-holder durable lease records its exact receipt",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A fresh secondmate on a bare-holder durable lease records its exact receipt",
+    "reason": ""
+  },
+  {
+    "name": "A fresh secondmate on a qualified-holder durable lease starts without shell errors",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A fresh secondmate on a qualified-holder durable lease starts without shell errors",
+    "reason": ""
+  },
+  {
+    "name": "A fresh secondmate with an empty legacy identity refuses with coordinated repair guidance",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A fresh secondmate with an empty legacy identity refuses with coordinated repair guidance",
+    "reason": ""
+  },
+  {
+    "name": "A fresh secondmate leased to another task refuses without changing its home",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A fresh secondmate leased to another task refuses without changing its home",
+    "reason": ""
+  },
+  {
+    "name": "Automatic recovery preserves a secondmate durable receipt and home",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Automatic recovery preserves a secondmate durable receipt and home",
+    "reason": ""
+  },
+  {
+    "name": "Explicit relaunch preserves a secondmate durable receipt and home",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Explicit relaunch preserves a secondmate durable receipt and home",
+    "reason": ""
+  },
+  {
+    "name": "Automatic recovery preserves a legacy secondmate record without adding lease fields",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Automatic recovery preserves a legacy secondmate record without adding lease fields",
+    "reason": ""
+  },
+  {
+    "name": "Teardown retries after conditional release finish stale-record cleanup for every task kind",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Teardown retries after conditional release finish stale-record cleanup for every task kind",
+    "reason": ""
+  },
+  {
+    "name": "Teardown retries preserve another ordinary allocation without a durable identity",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Teardown retries preserve another ordinary allocation without a durable identity",
+    "reason": ""
+  },
+  {
+    "name": "Active and pending teardown refuse mismatched or empty identities on still-leased slots",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Active and pending teardown refuse mismatched or empty identities on still-leased slots",
+    "reason": ""
+  },
+  {
+    "name": "Teardown retry after real secondmate home removal finishes stale-record cleanup",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Teardown retry after real secondmate home removal finishes stale-record cleanup",
+    "reason": ""
+  },
+  {
+    "name": "An absent pool slot with a recreated directory refuses cleanup and preserves that directory",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - An absent pool slot with a recreated directory refuses cleanup and preserves that directory",
+    "reason": ""
+  },
+  {
+    "name": "Forced secondmate retirement finishes released descendant receipts without changing their slots",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Forced secondmate retirement finishes released descendant receipts without changing their slots",
+    "reason": ""
+  },
+  {
+    "name": "Forced secondmate retirement preserves ordinary successor allocations of pending descendants",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Forced secondmate retirement preserves ordinary successor allocations of pending descendants",
+    "reason": ""
+  },
+  {
+    "name": "A still-leased descendant with another identity blocks forced parent retirement",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - A still-leased descendant with another identity blocks forced parent retirement",
+    "reason": ""
+  },
+  {
+    "name": "Removed-home retry uses Treehouse recovered status after pool-state corruption",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Removed-home retry uses Treehouse recovered status after pool-state corruption",
+    "reason": ""
+  },
+  {
+    "name": "Removed-home retry refuses unavailable pool status under invalid configuration and succeeds after repair",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-final-live-transcript.log - Removed-home retry refuses unavailable pool status under invalid configuration and succeeds after repair",
+    "reason": ""
+  }
+]

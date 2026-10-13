@@ -1,0 +1,2 @@
+Stopped lab terminal servers and removed disposable product homes and pools.
+Terminated remaining processes only after their current working directories matched owned lab pool paths: [58240, 92582, 16578, 77896, 70096, 63200, 21234, 80250]

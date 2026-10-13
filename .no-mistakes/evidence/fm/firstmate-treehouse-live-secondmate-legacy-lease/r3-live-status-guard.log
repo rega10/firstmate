@@ -1,0 +1,112 @@
+$ git init -q -b main
+exit=0
+$ git add .
+exit=0
+$ git -c user.name=Lab -c user.email=lab@example.invalid commit -qm 'Disposable product snapshot'
+exit=0
+$ git init -q -b main
+exit=0
+$ git add .
+exit=0
+$ git -c user.name=Lab -c user.email=lab@example.invalid commit -qm 'Disposable product snapshot'
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/code/bin/fm-lab-home.sh create /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/lab
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/lab
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/s -f /dev/null new-session -d -s primary -x 120 -y 40 -c /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/code '/bin/bash --noprofile --norc'
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/s display-message -p -t primary '#{socket_path},#{pid},#{session_id}'
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/s,29007,$0
+exit=0
+The tmux session is a disposable command terminal. Workers use fm-spawn raw-launch support. No agent, allocator, or backend is mocked.
+
+SCENARIO: Removed-home retry refuses unavailable pool status under invalid configuration and succeeds after repair
+$ treehouse get --lease --json --lease-holder status-unavailable --no-fetch
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code","lease_id":"712c4351cc3c9a0e8c695100ddea874a","lease_holder":"status-unavailable","leased_at":"2026-10-13T02:51:16.48446-05:00"}
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code' to release it.
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/code/bin/fm-spawn.sh status-unavailable /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code --secondmate 'sleep 600'
+spawned status-unavailable harness=sleep kind=secondmate mode=secondmate yolo=off window=primary:fm-status-unavailable worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/code/bin/fm-teardown.sh status-unavailable --force
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Terminated lingering processes: sleep (33244)
+🌳 Worktree returned to pool.
+teardown status-unavailable complete (window primary:fm-status-unavailable, worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code)
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no watcher has a fresh beacon (last beat: never, grace 300s).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision with a foreground checkpoint: bin/fm-watch-checkpoint.sh --seconds 180.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ treehouse destroy /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code --yes --include-unlanded
+🌳 Destroyed 1 worktree in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code and freed 22.6 MiB.
+  1     [disposable]  22.6 MiB  /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ treehouse status --json
+[]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ treehouse status --json
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+failed to load config: toml: line 1 (last key "invalid"): unexpected EOF; expected value
+exit=1
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/code/bin/fm-teardown.sh status-unavailable --force
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+failed to load config: toml: line 1 (last key "invalid"): unexpected EOF; expected value
+REFUSED: cannot read Treehouse status for status-unavailable's recorded lease_id '712c4351cc3c9a0e8c695100ddea874a' at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/pool/.treehouse/code-c1aeb6/1/code; preserve the record and restore authoritative pool status before retrying
+exit=1
+$ treehouse status --json
+[]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/code/bin/fm-teardown.sh status-unavailable
+teardown status-unavailable complete (window primary:fm-status-unavailable, worktree )
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ treehouse status --json
+[]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+OBSERVED: real Treehouse status failure preserves the pending record. Restoring valid configuration lets the same retry clean it.
+RESULT: pass
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.g/s kill-server
+exit=0
+CLEANUP: disposable terminal stopped; copied product, pool, homes, and user data removed.

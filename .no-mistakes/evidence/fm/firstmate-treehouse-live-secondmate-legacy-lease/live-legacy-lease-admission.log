@@ -1,0 +1,100 @@
+treehouse v2.3.0; target 3ba84b4c; base script is a byte copy of e6fe72ee:bin/fm-spawn.sh
+legacy record (no lease fields), md5 deccb3d94017d654f0a3a888e0a5260a:
+window=primary:fm-catalog-sm-k2
+endpoint_task_id=catalog-sm-k2
+backend=tmux
+project=<LAB>/pool/.treehouse/proj-a4da11/1/proj
+kind=secondmate
+home=<LAB>/pool/.treehouse/proj-a4da11/1/proj
+worktree=<LAB>/pool/.treehouse/proj-a4da11/1/proj
+spawn_gen=legacy-july
+harness=codex
+mode=local-only
+
+== S1 base commit: live legacy second mate (bare holder, empty lease_id) blocks the pool
+$ treehouse status --json  (pool as Treehouse 2.3.0 reports it)
+{"name":"1","status":"leased","lease_id":"","lease_holder":"catalog-sm-k2"}
+{"name":"2","status":"leased","lease_id":"4d23d8d4c7767a2d7f63ce338eeb9ea7","lease_holder":"<LAB>:probe-new"}
+$ .live-lease-validation/base-code/bin/fm-spawn.sh s1-base <LAB>/proj --scout 'sleep 600'
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+error: refusing to spawn task s1-base: worktree '<LAB>/pool/.treehouse/proj-a4da11/1/proj' is still recorded by task catalog-sm-k2 in <LAB>/state/catalog-sm-k2.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+exit=1
+record s1-base: none written
+
+== S2 target commit: same state, a new spawn is admitted into another slot
+$ treehouse status --json  (pool as Treehouse 2.3.0 reports it)
+{"name":"1","status":"leased","lease_id":"","lease_holder":"catalog-sm-k2"}
+{"name":"2","status":"leased","lease_id":"4d23d8d4c7767a2d7f63ce338eeb9ea7","lease_holder":"<LAB>:probe-new"}
+$ bin/fm-spawn.sh s2-bare <LAB>/proj --scout 'sleep 600'
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+🌳 Setting up worktree...
+🌳 Leased worktree at <LAB>/pool/.treehouse/proj-a4da11/3/proj. Run 'treehouse return <LAB>/pool/.treehouse/proj-a4da11/3/proj' to release it.
+spawned s2-bare harness=sleep kind=scout window=firstmate:fm-s2-bare worktree=<LAB>/pool/.treehouse/proj-a4da11/3/proj
+exit=0
+record s2-bare: worktree=<LAB>/pool/.treehouse/proj-a4da11/3/proj treehouse_lease_id=820063f71d9652a2cad5b522babfc771 treehouse_lease_holder=<LAB>:s2-bare 
+
+== S3 target commit: holder recorded as <physical-record-home>:<task-id> is admitted
+$ treehouse status --json  (pool as Treehouse 2.3.0 reports it)
+{"name":"1","status":"leased","lease_id":"","lease_holder":"<LAB>:catalog-sm-k2"}
+{"name":"2","status":"leased","lease_id":"4d23d8d4c7767a2d7f63ce338eeb9ea7","lease_holder":"<LAB>:probe-new"}
+{"name":"3","status":"leased","lease_id":"820063f71d9652a2cad5b522babfc771","lease_holder":"<LAB>:s2-bare"}
+$ bin/fm-spawn.sh s3-qualified <LAB>/proj --scout 'sleep 600'
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+🌳 Setting up worktree...
+🌳 Leased worktree at <LAB>/pool/.treehouse/proj-a4da11/4/proj. Run 'treehouse return <LAB>/pool/.treehouse/proj-a4da11/4/proj' to release it.
+spawned s3-qualified harness=sleep kind=scout window=firstmate:fm-s3-qualified worktree=<LAB>/pool/.treehouse/proj-a4da11/4/proj
+exit=0
+record s3-qualified: worktree=<LAB>/pool/.treehouse/proj-a4da11/4/proj treehouse_lease_id=efd91ee3914992ae63bad91fbf88c45f treehouse_lease_holder=<LAB>:s3-qualified 
+
+== S4 target commit (adversarial): slot leased to a different holder still blocks the pool
+$ treehouse status --json  (pool as Treehouse 2.3.0 reports it)
+{"name":"1","status":"leased","lease_id":"","lease_holder":"some-other-task"}
+{"name":"2","status":"leased","lease_id":"4d23d8d4c7767a2d7f63ce338eeb9ea7","lease_holder":"<LAB>:probe-new"}
+{"name":"3","status":"leased","lease_id":"820063f71d9652a2cad5b522babfc771","lease_holder":"<LAB>:s2-bare"}
+{"name":"4","status":"leased","lease_id":"efd91ee3914992ae63bad91fbf88c45f","lease_holder":"<LAB>:s3-qualified"}
+$ bin/fm-spawn.sh s4-other-holder <LAB>/proj --scout 'sleep 600'
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+error: refusing to spawn task s4-other-holder: worktree '<LAB>/pool/.treehouse/proj-a4da11/1/proj' is still recorded by task catalog-sm-k2 in <LAB>/state/catalog-sm-k2.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+exit=1
+record s4-other-holder: none written
+
+== S5 target commit (adversarial): holder qualified with a different home still blocks the pool
+$ treehouse status --json  (pool as Treehouse 2.3.0 reports it)
+{"name":"1","status":"leased","lease_id":"","lease_holder":"/somewhere/else:catalog-sm-k2"}
+{"name":"2","status":"leased","lease_id":"4d23d8d4c7767a2d7f63ce338eeb9ea7","lease_holder":"<LAB>:probe-new"}
+{"name":"3","status":"leased","lease_id":"820063f71d9652a2cad5b522babfc771","lease_holder":"<LAB>:s2-bare"}
+{"name":"4","status":"leased","lease_id":"efd91ee3914992ae63bad91fbf88c45f","lease_holder":"<LAB>:s3-qualified"}
+$ bin/fm-spawn.sh s5-foreign-home <LAB>/proj --scout 'sleep 600'
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+error: refusing to spawn task s5-foreign-home: worktree '<LAB>/pool/.treehouse/proj-a4da11/1/proj' is still recorded by task catalog-sm-k2 in <LAB>/state/catalog-sm-k2.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+exit=1
+record s5-foreign-home: none written
+
+== S6 target commit (adversarial): legacy record whose slot is no longer leased still blocks the pool
+$ treehouse return --force <slot 1>
+🌳 Terminated lingering processes: bash (25448)
+🌳 Worktree returned to pool.
+$ treehouse status --json  (pool as Treehouse 2.3.0 reports it)
+{"name":"1","status":"available","lease_id":"","lease_holder":""}
+{"name":"2","status":"leased","lease_id":"4d23d8d4c7767a2d7f63ce338eeb9ea7","lease_holder":"<LAB>:probe-new"}
+{"name":"3","status":"leased","lease_id":"820063f71d9652a2cad5b522babfc771","lease_holder":"<LAB>:s2-bare"}
+{"name":"4","status":"leased","lease_id":"efd91ee3914992ae63bad91fbf88c45f","lease_holder":"<LAB>:s3-qualified"}
+$ bin/fm-spawn.sh s6-unleased <LAB>/proj --scout 'sleep 600'
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+error: refusing to spawn task s6-unleased: worktree '<LAB>/pool/.treehouse/proj-a4da11/1/proj' is still recorded by task catalog-sm-k2 in <LAB>/state/catalog-sm-k2.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+exit=1
+record s6-unleased: none written
+
+== after all scenarios: legacy record md5 deccb3d94017d654f0a3a888e0a5260a (unchanged when equal to the value at the top)
+$ treehouse status --json  (pool as Treehouse 2.3.0 reports it)
+{"name":"1","status":"available","lease_id":"","lease_holder":""}
+{"name":"2","status":"leased","lease_id":"4d23d8d4c7767a2d7f63ce338eeb9ea7","lease_holder":"<LAB>:probe-new"}
+{"name":"3","status":"leased","lease_id":"820063f71d9652a2cad5b522babfc771","lease_holder":"<LAB>:s2-bare"}
+{"name":"4","status":"leased","lease_id":"efd91ee3914992ae63bad91fbf88c45f","lease_holder":"<LAB>:s3-qualified"}
+state records: catalog-sm-k2.meta probe-new.meta s2-bare.meta s3-qualified.meta 

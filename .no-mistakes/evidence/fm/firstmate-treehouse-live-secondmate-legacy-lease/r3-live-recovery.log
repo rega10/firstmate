@@ -1,0 +1,153 @@
+$ git init -q -b main
+exit=0
+$ git add .
+exit=0
+$ git -c user.name=Lab -c user.email=lab@example.invalid commit -qm 'Disposable product snapshot'
+exit=0
+$ git init -q -b main
+exit=0
+$ git add .
+exit=0
+$ git -c user.name=Lab -c user.email=lab@example.invalid commit -qm 'Disposable product snapshot'
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/code/bin/fm-lab-home.sh create /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/lab
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/lab
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/s -f /dev/null new-session -d -s primary -x 120 -y 40 -c /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/code '/bin/bash --noprofile --norc'
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/s display-message -p -t primary '#{socket_path},#{pid},#{session_id}'
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/s,88348,$0
+exit=0
+The tmux session is a disposable command terminal. Workers use fm-spawn raw-launch support. No agent, allocator, or backend is mocked.
+$ treehouse get --lease --json --lease-holder catalog-sm-k2 --no-fetch
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","lease_id":"06c3bca0167ef0522d84bde576630ed7","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00"}
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code' to release it.
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/s new-window -d -t primary -n fm-catalog-sm-k2 -c /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code 'sleep 600'
+exit=0
+
+SCENARIO: A fresh secondmate on a bare-holder durable lease records its exact receipt
+$ treehouse get --lease --json --lease-holder seeded-bare --no-fetch
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","lease_id":"1df27314c810e10e9e418fdd2a1b6177","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00"}
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code' to release it.
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[{"pid":88514,"name":"sleep"}]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"1df27314c810e10e9e418fdd2a1b6177","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/code/bin/fm-spawn.sh seeded-bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code --secondmate 'sleep 600'
+spawned seeded-bare harness=sleep kind=secondmate mode=secondmate yolo=off window=primary:fm-seeded-bare worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[{"pid":88514,"name":"sleep"}]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"1df27314c810e10e9e418fdd2a1b6177","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[{"pid":89868,"name":"bash"},{"pid":91343,"name":"sleep"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+OBSERVED: the secondmate record contains the allocator identity and exact holder; no new slot was allocated.
+RESULT: pass
+
+SCENARIO: Automatic recovery preserves a secondmate durable receipt and home
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/s kill-window -t primary:fm-seeded-bare
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[{"pid":88514,"name":"sleep"}]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"1df27314c810e10e9e418fdd2a1b6177","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[{"pid":91343,"name":"sleep"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/code/bin/fm-spawn.sh seeded-bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code --secondmate 'sleep 600'
+spawned seeded-bare harness=sleep kind=secondmate mode=secondmate yolo=off window=primary:fm-seeded-bare worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no watcher has a fresh beacon (last beat: never, grace 300s).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision with a foreground checkpoint: bin/fm-watch-checkpoint.sh --seconds 180.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[{"pid":88514,"name":"sleep"}]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"1df27314c810e10e9e418fdd2a1b6177","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[{"pid":91343,"name":"sleep"},{"pid":92599,"name":"bash"},{"pid":93644,"name":"sleep"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+OBSERVED: the existing home and receipt state survive endpoint replacement without allocator changes.
+RESULT: pass
+
+SCENARIO: Explicit relaunch preserves a secondmate durable receipt and home
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/s respawn-window -k -t primary:fm-seeded-bare -c /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code '/bin/bash --noprofile --norc'
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[{"pid":88514,"name":"sleep"}]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"1df27314c810e10e9e418fdd2a1b6177","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[{"pid":91343,"name":"sleep"},{"pid":93644,"name":"sleep"},{"pid":93786,"name":"bash"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/code/bin/fm-spawn.sh seeded-bare --relaunch --harness codex
+spawned seeded-bare harness=codex kind=secondmate mode=secondmate yolo=off window=primary:fm-seeded-bare worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[{"pid":88514,"name":"sleep"}]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"1df27314c810e10e9e418fdd2a1b6177","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[{"pid":91343,"name":"sleep"},{"pid":93644,"name":"sleep"},{"pid":93786,"name":"bash"},{"pid":98731,"name":"codex"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+OBSERVED: the existing home and receipt state survive endpoint replacement without allocator changes.
+RESULT: pass
+
+SCENARIO: Automatic recovery preserves a legacy secondmate record without adding lease fields
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/s kill-window -t primary:fm-seeded-bare
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[{"pid":88514,"name":"sleep"}]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[{"pid":91343,"name":"sleep"},{"pid":93644,"name":"sleep"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/code/bin/fm-spawn.sh seeded-bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code --secondmate 'sleep 600'
+spawned seeded-bare harness=sleep kind=secondmate mode=secondmate yolo=off window=primary:fm-seeded-bare worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[{"pid":88514,"name":"sleep"}]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[{"pid":691,"name":"bash"},{"pid":2887,"name":"sleep"},{"pid":91343,"name":"sleep"},{"pid":93644,"name":"sleep"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+OBSERVED: the existing home and receipt state survive endpoint replacement without allocator changes.
+RESULT: pass
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.v/tools/local/bin/tmux -S /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/s kill-server
+exit=0
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"catalog-sm-k2","leased_at":"2026-10-13T02:50:29.605462-05:00","processes":[]},{"name":"2","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"seeded-bare","leased_at":"2026-10-13T02:50:29.884786-05:00","processes":[{"pid":2887,"name":"sleep"},{"pid":91343,"name":"sleep"},{"pid":93644,"name":"sleep"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ treehouse destroy /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code --yes --include-leased --include-in-use --include-unlanded
+🌳 Destroyed 1 worktree in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code and freed 22.6 MiB.
+  1     [leased]  22.6 MiB  /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/1/code  (held by catalog-sm-k2)
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ treehouse destroy /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code --yes --include-leased --include-in-use --include-unlanded
+🌳 Destroyed 1 worktree in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code and freed 22.6 MiB.
+  2     [leased,in-use:2887,91343,93644]  22.6 MiB  /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.r/pool/.treehouse/code-30a96c/2/code  (held by seeded-bare)
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+CLEANUP: disposable terminal stopped; copied product, pool, homes, and user data removed.

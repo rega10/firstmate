@@ -1,0 +1,58 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock set-option -g default-shell /bin/bash
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock set-option -g default-command '/bin/bash --noprofile --norc'
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock set-environment -g HOME /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/user-home
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock set-environment -g PATH /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0NgKVZM:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock set-environment -g TMPDIR /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock set-environment -g TREEHOUSE_ROOT /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/pool
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock set-environment -g CODEX_HOME /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/codex-home
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/code/bin/fm-lab-home.sh create /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/home
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/home
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock display-message -p -t primary '#{socket_path},#{pid},#{session_id}'
+.live-lease-validation/fm-lab.sock,90760,$0
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock set-environment -g FM_HOME /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/home
+exit=0
+$ treehouse get --lease --json --lease-holder nm-live-catalog-sm
+{"path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/pool/.treehouse/code-f924f8/1/code","lease_id":"f5c70cdc88b8a27c6c7811bd892ebac3","lease_holder":"nm-live-catalog-sm","leased_at":"2026-10-13T02:01:47.761309-05:00"}
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/pool/.treehouse/code-f924f8/1/code. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/pool/.treehouse/code-f924f8/1/code' to release it.
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tools/local/bin/tmux -S .live-lease-validation/fm-lab.sock new-window -d -t primary -n fm-nm-live-catalog-sm -c /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/pool/.treehouse/code-f924f8/1/code '/bin/bash --noprofile --norc'
+exit=0
+$ git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/pool/.treehouse/code-f924f8/1/code rev-parse HEAD
+9ba4f0cdd29599e219abb7775f46c6e6f99e864e
+exit=0
+
+SCENARIO: A matching bare legacy holder permits a new spawn; the baseline refuses it
+$ treehouse status --json
+[{"name":"1","path":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/pool/.treehouse/code-f924f8/1/code","status":"leased","flavor":"git","lease_id":"","lease_holder":"nm-live-catalog-sm","leased_at":"2026-10-13T02:01:47.761309-05:00","processes":[{"pid":90820,"name":"bash"}]}]
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+exit=0
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/base-code/bin/fm-spawn.sh nm-live-bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/code --scout 'printf baseline-worker'
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/home
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no watcher has a fresh beacon (last beat: never, grace 300s).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  repair missing watcher supervision with a foreground checkpoint: bin/fm-watch-checkpoint.sh --seconds 180.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+error: refusing to spawn task nm-live-bare: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/pool/.treehouse/code-f924f8/1/code' is still recorded by task nm-live-catalog-sm in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/home/state/nm-live-catalog-sm.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+exit=1
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/code/bin/fm-spawn.sh nm-live-bare /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/code --scout 'printf live-worker'

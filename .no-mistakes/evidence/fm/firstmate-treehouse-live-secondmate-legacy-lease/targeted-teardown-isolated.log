@@ -1,0 +1,94 @@
+ok - pending ship secondmate handles the leased successor without touching its home
+ok - pending ship secondmate handles the available successor without touching its home
+ok - pending ship secondmate handles the in-use successor without touching its home
+ok - pending scout secondmate handles the leased successor without touching its home
+ok - pending scout secondmate handles the available successor without touching its home
+ok - pending scout secondmate handles the in-use successor without touching its home
+ok - pending secondmate secondmate handles the leased successor without touching its home
+ok - pending secondmate secondmate handles the available successor without touching its home
+ok - pending secondmate secondmate handles the in-use successor without touching its home
+ok - pending descendant secondmate handles the leased successor without touching its home
+ok - pending descendant secondmate handles the available successor without touching its home
+ok - pending descendant secondmate handles the in-use successor without touching its home
+ok - unknown pool identity refuses ship active teardown (pool id 'empty')
+ok - unknown pool identity refuses ship active teardown (pool id 'different-lease')
+ok - unknown pool identity refuses ship pending teardown (pool id 'empty')
+ok - unknown pool identity refuses ship pending teardown (pool id 'different-lease')
+ok - unknown pool identity refuses scout active teardown (pool id 'empty')
+ok - unknown pool identity refuses scout active teardown (pool id 'different-lease')
+ok - unknown pool identity refuses scout pending teardown (pool id 'empty')
+ok - unknown pool identity refuses scout pending teardown (pool id 'different-lease')
+ok - unknown pool identity refuses secondmate active teardown (pool id 'empty')
+ok - unknown pool identity refuses secondmate active teardown (pool id 'different-lease')
+ok - unknown pool identity refuses secondmate pending teardown (pool id 'empty')
+ok - unknown pool identity refuses secondmate pending teardown (pool id 'different-lease')
+ok - missing jq preserves the active lease record before retirement
+ok - missing jq preserves the pending lease record before retirement
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/lease-before-return/treehouse-root/.treehouse/project-95065a/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/lease-before-return/treehouse-root/.treehouse/project-95065a/1/project' to release it.
+WARNING: watcher still down (same stale episode; last beat: 4s ago, grace 300s) - full banner already printed this episode.
+REFUSED: cannot read Treehouse status for task-x1's recorded lease_id '9e76850eefc0dec79884c44d7a60a863' at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/lease-before-return/treehouse-root/.treehouse/project-95065a/1/project; preserve the record and restore authoritative pool status before retrying
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+WARNING: watcher still down (same stale episode; last beat: 6s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+REFUSED: worktree /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/lease-before-return/treehouse-root/.treehouse/project-95065a/1/project has uncommitted changes.
+uncommitted changes present (untracked-only leftovers)
+untracked paths (up to 10):
+  retained.txt
+Commit them (or get the captain's explicit OK to discard, then --force).
+error: Treehouse return is incomplete for task task-x1; retry teardown with its retained receipt
+WARNING: watcher still down (same stale episode; last beat: 8s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+Unable to create '.git/index.lock': File exists
+teardown: worktree return failed with transient git lock (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/lease-before-return/project/.git/worktrees/project/index.lock); waiting 0.01s and retrying (1/3)
+teardown: worktree return succeeded on retry; lock cleared on its own
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+ok - durable lease teardown recovers interruption before-return without touching a successor
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/lease-after-return/treehouse-root/.treehouse/project-149ff0/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/lease-after-return/treehouse-root/.treehouse/project-149ff0/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+WARNING: watcher still down (same stale episode; last beat: 4s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+teardown: worktree lease 760aefc78d4383c4fcae7b5087a05e75 is already released; leaving the current allocation untouched
+ok - durable lease teardown recovers interruption after-return without touching a successor
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/leased-descendant/treehouse-root/.treehouse/project-c66eb2/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/.live-lease-validation/tmp/fm-teardown-tests.jWFNw3/leased-descendant/treehouse-root/.treehouse/project-c66eb2/1/project' to release it.
+WARNING: watcher still down (same stale episode; last beat: 1s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+WARNING: watcher still down (same stale episode; last beat: 3s ago, grace 300s) - full banner already printed this episode.
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+A new version of treehouse is available: v2.3.0 → v3.1.2
+Run "treehouse update" to update
+
+ok - descendant teardown retains the exact lease receipt until its conditional return succeeds

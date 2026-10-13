@@ -1,0 +1,89 @@
+== T1 retry after the slot was released (the real teardown already returned and removed slot 2)
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+pending receipt sm-bare: worktree= treehouse_lease_id=6e41f41914f34c2d90d4f66d055e0500 treehouse_lease_holder=sm-bare treehouse_retiring_worktree=<POOLROOT>/.treehouse/proj2-7192ab/2/proj2 
+$ bin/fm-teardown.sh sm-bare 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/bin/fm-wake-lib.sh: line 1597: cd: <POOLROOT>/.treehouse/proj2-7192ab/2/proj2: No such file or directory
+REFUSED: cannot read Treehouse status for sm-bare's recorded lease_id '6e41f41914f34c2d90d4f66d055e0500' at <POOLROOT>/.treehouse/proj2-7192ab/2/proj2; preserve the record and restore authoritative pool status before retrying
+exit=1
+pool status: unchanged by this call
+receipt sm-bare: still present
+
+== T2 (adversarial) retry while the same slot path is leased again under a different durable identity: must refuse
+successor lease path equals the retired slot path: no
+/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-lab.2CwEVB/drive3.sh: line 20: /private/tmp/fm-lab-pool.TFKoFW/.treehouse/proj2-7192ab/2/proj2/successor-proof.txt: No such file or directory
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+{"name":"6","status":"leased","lease_id":"27a944101cc217d37f06b348d784455a","lease_holder":"successor-task"}
+{"name":"7","status":"leased","lease_id":"f80fc8fba42a52bc28743a896efdfe43","lease_holder":"successor-task"}
+{"name":"8","status":"leased","lease_id":"efa33160223c1ef4180cc7ec99bc8912","lease_holder":"successor-task"}
+pending receipt sm-bare: worktree= treehouse_lease_id=6e41f41914f34c2d90d4f66d055e0500 treehouse_lease_holder=sm-bare treehouse_retiring_worktree=<POOLROOT>/.treehouse/proj2-7192ab/2/proj2 
+$ bin/fm-teardown.sh sm-bare 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/bin/fm-wake-lib.sh: line 1597: cd: <POOLROOT>/.treehouse/proj2-7192ab/2/proj2: No such file or directory
+REFUSED: cannot read Treehouse status for sm-bare's recorded lease_id '6e41f41914f34c2d90d4f66d055e0500' at <POOLROOT>/.treehouse/proj2-7192ab/2/proj2; preserve the record and restore authoritative pool status before retrying
+exit=1
+pool status: unchanged by this call
+receipt sm-bare: still present
+$ bin/fm-teardown.sh sm-bare --force
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/bin/fm-wake-lib.sh: line 1597: cd: <POOLROOT>/.treehouse/proj2-7192ab/2/proj2: No such file or directory
+REFUSED: cannot read Treehouse status for sm-bare's recorded lease_id '6e41f41914f34c2d90d4f66d055e0500' at <POOLROOT>/.treehouse/proj2-7192ab/2/proj2; preserve the record and restore authoritative pool status before retrying
+exit=1
+pool status: unchanged by this call
+receipt sm-bare: still present
+successor file: cat: /private/tmp/fm-lab-pool.TFKoFW/.treehouse/proj2-7192ab/2/proj2/successor-proof.txt: No such file or directory
+
+== T3 (adversarial) retry while the slot is still leased with an empty identity (legacy lease): must refuse
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+{"name":"6","status":"leased","lease_id":"27a944101cc217d37f06b348d784455a","lease_holder":"successor-task"}
+{"name":"7","status":"leased","lease_id":"f80fc8fba42a52bc28743a896efdfe43","lease_holder":"successor-task"}
+{"name":"8","status":"leased","lease_id":"efa33160223c1ef4180cc7ec99bc8912","lease_holder":"successor-task"}
+$ bin/fm-teardown.sh sm-bare 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/bin/fm-wake-lib.sh: line 1597: cd: <POOLROOT>/.treehouse/proj2-7192ab/2/proj2: No such file or directory
+REFUSED: cannot read Treehouse status for sm-bare's recorded lease_id '6e41f41914f34c2d90d4f66d055e0500' at <POOLROOT>/.treehouse/proj2-7192ab/2/proj2; preserve the record and restore authoritative pool status before retrying
+exit=1
+pool status: unchanged by this call
+receipt sm-bare: still present
+successor file: cat: /private/tmp/fm-lab-pool.TFKoFW/.treehouse/proj2-7192ab/2/proj2/successor-proof.txt: No such file or directory
+
+== T4 retry while an ordinary treehouse get (no durable identity) now occupies the slot: finish cleanup, do not touch the allocation
+worktree <POOLROOT>/.treehouse/proj2-7192ab/2/proj2 is not managed by treehouse
+$ treehouse status --json
+{"name":"1","status":"leased","lease_id":"036321bd0828a001e89336dc44e666cb","lease_holder":"sm-live"}
+{"name":"3","status":"leased","lease_id":"c52df472e2b3462f741f4d43b8177b2e","lease_holder":"<LAB>:sm-qual"}
+{"name":"4","status":"leased","lease_id":"","lease_holder":"sm-legacy"}
+{"name":"5","status":"leased","lease_id":"87b279430e8311732ca73c1e50493e22","lease_holder":"someone-else"}
+{"name":"6","status":"leased","lease_id":"27a944101cc217d37f06b348d784455a","lease_holder":"successor-task"}
+{"name":"7","status":"leased","lease_id":"f80fc8fba42a52bc28743a896efdfe43","lease_holder":"successor-task"}
+{"name":"8","status":"leased","lease_id":"efa33160223c1ef4180cc7ec99bc8912","lease_holder":"successor-task"}
+{"name":"9","status":"in-use","lease_id":"","lease_holder":""}
+ordinary allocation path equals the retired slot path: no
+/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-lab.2CwEVB/drive3.sh: line 29: /private/tmp/fm-lab-pool.TFKoFW/.treehouse/proj2-7192ab/2/proj2/successor-proof.txt: No such file or directory
+pending receipt sm-bare: worktree= treehouse_lease_id=6e41f41914f34c2d90d4f66d055e0500 treehouse_lease_holder=sm-bare treehouse_retiring_worktree=<POOLROOT>/.treehouse/proj2-7192ab/2/proj2 
+$ bin/fm-teardown.sh sm-bare 
+fm-gate-refuse: gate agent lifecycle permitted only against lab home <LAB>
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SYPXEG1MRQH6WG24952C4W/bin/fm-wake-lib.sh: line 1597: cd: <POOLROOT>/.treehouse/proj2-7192ab/2/proj2: No such file or directory
+REFUSED: cannot read Treehouse status for sm-bare's recorded lease_id '6e41f41914f34c2d90d4f66d055e0500' at <POOLROOT>/.treehouse/proj2-7192ab/2/proj2; preserve the record and restore authoritative pool status before retrying
+exit=1
+pool status: unchanged by this call
+receipt sm-bare: still present
+successor file: cat: /private/tmp/fm-lab-pool.TFKoFW/.treehouse/proj2-7192ab/2/proj2/successor-proof.txt: No such file or directory
+ordinary holder process: still running

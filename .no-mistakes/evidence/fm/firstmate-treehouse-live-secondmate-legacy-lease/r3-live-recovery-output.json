@@ -1,0 +1,30 @@
+[
+  {
+    "name": "A fresh secondmate on a bare-holder durable lease records its exact receipt",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-recovery.log",
+    "reason": ""
+  },
+  {
+    "name": "Automatic recovery preserves a secondmate durable receipt and home",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-recovery.log",
+    "reason": ""
+  },
+  {
+    "name": "Explicit relaunch preserves a secondmate durable receipt and home",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-recovery.log",
+    "reason": ""
+  },
+  {
+    "name": "Automatic recovery preserves a legacy secondmate record without adding lease fields",
+    "result": "pass",
+    "live": true,
+    "evidence": "/Users/rega1011/.no-mistakes/evidence/01M4SYPXEG1MRQH6WG24952C4W/r3-live-recovery.log",
+    "reason": ""
+  }
+]
