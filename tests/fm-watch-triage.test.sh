@@ -2547,7 +2547,7 @@ test_nonterminal_stale_paused_absorbed_then_resurfaced() {
 # This intentionally keeps the first-sight alert, then uses the long cadence.
 # The backend/current-state fixtures are not live-harness evidence.
 test_own_work_wait_keeps_first_alert_then_long_cadence() {
-  local wait_kind dir state fakebin out capture_file statusf window key sig pid round
+  local wait_kind dir state fakebin out capture_file statusf window key sig pid round poll_ready
   for wait_kind in background-shell pipeline-run foreground-command; do
     dir=$(make_case "own-work-$wait_kind"); state="$dir/state"; fakebin="$dir/fakebin"
     out="$dir/watch.out"; capture_file="$dir/pane.txt"; statusf="$state/own-work.status"
@@ -2571,21 +2571,44 @@ test_own_work_wait_keeps_first_alert_then_long_cadence() {
     grep -Fx "stale: $window" "$out" >/dev/null || fail "$wait_kind did not surface as a plain stale"
     ack_stopped_cycle "$state" || fail "could not acknowledge $wait_kind first alert"
 
+    # Stop only after a complete poll, while the watcher is between polls.
+    # The next beacon precedes the recovery-lock work in the next poll, so
+    # wait_poll_cycle can otherwise TERM that work instead of the idle wait.
+    poll_ready="$dir/poll-ready"
+    mkfifo "$poll_ready.fifo"
+    cat > "$fakebin/sleep" <<'SH'
+#!/usr/bin/env bash
+if [ -n "${FM_TEST_POLL_READY:-}" ] && [ "$#" -eq 1 ] \
+  && [ "$1" = "${FM_POLL:-}" ] \
+  && [ "$PPID" = "$(cat "$FM_STATE_OVERRIDE/.watch.lock/pid" 2>/dev/null)" ]; then
+  exec 3<> "$FM_TEST_POLL_READY.fifo" || exit 1
+  printf '%s\n' "$PPID" > "$FM_TEST_POLL_READY"
+  IFS= read -r -t "$FM_TEST_STUB_MAX_BLOCK_SECONDS" _ <&3
+  exit "$?"
+fi
+exec /bin/sleep "$@"
+SH
+    chmod +x "$fakebin/sleep"
+
     # Cross the ordinary wedge threshold twice without aging the declaration
     # past the long pause cadence. Neither re-arm may add a second alert.
     for round in 1 2; do
+      rm -f "$poll_ready"
       printf '%s\n' $(( $(date +%s) - 500 )) > "$state/.stale-since-$key"
       PATH="$fakebin:$PATH" FM_FAKE_TMUX_WINDOW="$window" FM_FAKE_TMUX_CAPTURE="$capture_file" \
         FM_FAKE_TMUX_CURRENT_COMMAND=grok \
         FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work' \
         watch_bg "$state" "$fakebin" "$dir/recheck.out" env \
-          FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999
+          FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY="$poll_ready"
       pid=$!
-      wait_poll_cycle "$state" "$pid" || { reap "$pid"; fail "$wait_kind repeated an alert: $(cat "$dir/recheck.out")"; }
+      if ! wait_numeric_file "$poll_ready" 300 || [ "$(cat "$poll_ready")" != "$pid" ]; then
+        reap "$pid"; fail "$wait_kind did not finish its quiet poll: $(cat "$dir/recheck.out")"
+      fi
       [ ! -s "$dir/recheck.out" ] || { reap "$pid"; fail "$wait_kind printed a repeated alert"; }
       [ ! -s "$state/.wake-queue" ] || { reap "$pid"; fail "$wait_kind queued a repeated alert"; }
       [ ! -e "$state/.wedge-escalations-$key" ] || { reap "$pid"; fail "$wait_kind counted a wedge"; }
       reap "$pid"
+      printf 'release\n' > "$poll_ready.fifo"
       ack_stopped_cycle "$state" || fail "could not acknowledge $wait_kind test stop"
     done
 
