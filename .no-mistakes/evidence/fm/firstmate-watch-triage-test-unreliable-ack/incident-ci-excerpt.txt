@@ -1,0 +1,11 @@
+Source: https://github.com/rega10/firstmate/actions/runs/38117888743/attempts/1
+Job: Behavior portable serial 1 (114406382490)
+
+2026-10-11T06:39:48.1147626Z ok - a busy pane under a declared pause is rechecked on the long cadence, and lifting the pause restores the wedge escalation
+2026-10-11T06:39:52.8671931Z ok - away mode hands a busy declared pause to the daemon as a plain stale, and lifting the declaration restores the wedge escalation
+2026-10-11T06:40:05.6945152Z ok - away mode wakes the daemon once per declaration for a busy pane whose footer ticks on every capture
+2026-10-11T06:40:07.5730029Z ok - a not-provably-working non-terminal stale is surfaced immediately (never left to wait out the timer)
+2026-10-11T06:40:12.0862495Z ok - a declared pause is absorbed on first sight, then re-surfaced as a recheck past the threshold, never wedge-escalated
+2026-10-11T06:40:20.3846271Z ok - exited declared-pause and captain-held panes use bounded pause cadence while a live decision gate still surfaces once
+2026-10-11T06:40:34.7166771Z not ok - could not acknowledge pipeline-run test stop
+2026-10-11T06:40:34.9497947Z FM_TEST_END 2026-10-11T06:40:34Z tests/fm-watch-triage.test.sh exit=1 duration_ms=388061 gate_skip=false

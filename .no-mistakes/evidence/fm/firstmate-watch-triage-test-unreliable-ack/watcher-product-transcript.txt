@@ -1,0 +1,52 @@
+Real fm-watch.sh and fm-wake-drain.sh with disposable pane/current-state fixtures.
+The fixtures supply watcher inputs; this is not live harness evidence.
+
+Single acknowledgements issued by the existing helper:
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 20456.1791864986.PcCAGF
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 26707.1791864988.01UVdt
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 31622.1791864990.X9eSEq
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 38153.1791864993.8bDB7E
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 42784.1791864995.Un4iGW
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 46727.1791864997.mFk83Z
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 55339.1791865000.WUtr6J
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 60484.1791865002.xp8rrI
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 65853.1791865004.aOGLGD
+
+Watcher output and persisted queue records:
+WAIT_KIND=background-shell
+PRODUCT_RECORD=watch.out
+stale: test:fm-own-work
+PRODUCT_RECORD=recheck.out
+PRODUCT_RECORD=long-cadence.out
+stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+PRODUCT_RECORD=poll-ready
+31622
+WAKE_QUEUE
+1791864992	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+
+WAIT_KIND=pipeline-run
+PRODUCT_RECORD=watch.out
+stale: test:fm-own-work
+PRODUCT_RECORD=recheck.out
+PRODUCT_RECORD=long-cadence.out
+stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+PRODUCT_RECORD=poll-ready
+46727
+WAKE_QUEUE
+1791864998	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+
+WAIT_KIND=foreground-command
+PRODUCT_RECORD=watch.out
+stale: test:fm-own-work
+PRODUCT_RECORD=recheck.out
+PRODUCT_RECORD=long-cadence.out
+stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+PRODUCT_RECORD=poll-ready
+65853
+WAKE_QUEUE
+1791865005	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+
+UNDECLARED_IDLE_OUTPUT
+stale: test:fm-own-work
+UNDECLARED_IDLE_QUEUE
+1791865007	1	stale	test:fm-own-work	stale: test:fm-own-work

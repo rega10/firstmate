@@ -1,0 +1,2490 @@
++ set -u
+++ dirname tests/fm-watch-triage.test.sh
++ . tests/wake-helpers.sh
++++ dirname tests/wake-helpers.sh
+++ . tests/lib.sh
++++ '[' -n '' ']'
++++ FM_TEST_LIB_SOURCED=1
++++ umask 022
+++++ dirname tests/lib.sh
++++ . tests/git-config-helpers.sh
+++++ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+++++ GIT_CONFIG_GLOBAL=/dev/null
+++++ GIT_CONFIG_NOSYSTEM=1
+++++ unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR
++++ export FM_GATE_REFUSE_BYPASS=1
++++ FM_GATE_REFUSE_BYPASS=1
++++ export FM_TEST_SEAM=1
++++ FM_TEST_SEAM=1
++++ unset FM_TASK_ID
++++ unset TASKS_AXI_FILE TASKS_AXI_BACKEND
++++++ dirname tests/lib.sh
+++++ cd tests/..
+++++ pwd
++++ ROOT=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61
+++++ fm_test_tmpdir
+++++ local base=/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/ physical
+++++ base=/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ '[' -n /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T ']'
+++++ case "$base" in
++++++ CDPATH=
++++++ cd -- /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++++ pwd -P
+++++ physical=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.git ']'
+++++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ FM_TEST_TMPDIR=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ FM_TEST_CLEANUP_DIRS=()
+++++ mktemp /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-cleanup.19253.XXXXXX
++++ FM_TEST_CLEANUP_REGISTRY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-cleanup.19253.t7e7rf
+++++ fm_test_pid_identity 19253
+++++ local pid=19253
+++++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ bash -c '. "$1"; fm_pid_identity "$2"' _ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-lib.sh 19253
++++ FM_TEST_OWNER_IDENTITY='Mon Oct 12 23:16:24 2026     bash -x tests/fm-watch-triage.test.sh'
+++++ mktemp /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-procevent.19253.XXXXXX
++++ FM_TEST_PROCEVENT_REGISTRY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-procevent.19253.6MTgLC
+++++ mktemp /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-watcher.19253.XXXXXX
++++ FM_TEST_WATCHER_REGISTRY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-watcher.19253.y54WP6
++++ FM_TEST_STUB_MAX_BLOCK_SECONDS=120
++++ export FM_TEST_STUB_MAX_BLOCK_SECONDS
++++ trap fm_test_cleanup EXIT
++++ trap 'fm_test_cleanup; exit 130' INT
++++ trap 'fm_test_cleanup; exit 143' TERM
++++ trap 'fm_test_cleanup; exit 129' HUP
++++ trap 'fm_test_cleanup; exit 131' QUIT
++++ FM_TEST_ORPHAN_MAX_AGE_SECONDS=3600
++++ '[' 0 '!=' 1 ']'
++++ fm_test_reap_orphans
++++ local marker dir mtime now owner_pid owner_identity current_identity
+++++ date +%s
++++ now=1791864984
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-backlog-read-bound-tests.8yKrkS/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-backlog-read-bound-tests.8yKrkS/.fm-test-fixture
++++ owner_pid=64239
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-backlog-read-bound-tests.8yKrkS/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:15:58 2026     bash tests/fm-backlog-read-bound.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 64239
++++ current_identity='Mon Oct 12 23:15:58 2026     bash tests/fm-backlog-read-bound.test.sh'
++++ '[' -n 'Mon Oct 12 23:15:58 2026     bash tests/fm-backlog-read-bound.test.sh' ']'
++++ '[' 'Mon Oct 12 23:15:58 2026     bash tests/fm-backlog-read-bound.test.sh' = 'Mon Oct 12 23:15:58 2026     bash tests/fm-backlog-read-bound.test.sh' ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-control-auth.n202hl/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-control-auth.n202hl/.fm-test-fixture
++++ owner_pid=84606
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-control-auth.n202hl/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:07:16 2026     bash tests/fm-control-relaunch.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 84606
++++ current_identity=
++++ current_identity=
++++ '[' -n 'Mon Oct 12 23:07:16 2026     bash tests/fm-control-relaunch.test.sh' ']'
++++ '[' '' = 'Mon Oct 12 23:07:16 2026     bash tests/fm-control-relaunch.test.sh' ']'
+++++ stat -c %Y /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-control-auth.n202hl/.fm-test-fixture
+++++ stat -f %m /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-control-auth.n202hl/.fm-test-fixture
++++ mtime=1791864506
++++ '[' 478 -ge 3600 ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-parent-channel-scan-exclusion-root.mZRqPy/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-parent-channel-scan-exclusion-root.mZRqPy/.fm-test-fixture
++++ owner_pid=36894
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-parent-channel-scan-exclusion-root.mZRqPy/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:14:31 2026     bash tests/fm-parent-channel-scan-exclusion.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 36894
++++ current_identity=
++++ current_identity=
++++ '[' -n 'Mon Oct 12 23:14:31 2026     bash tests/fm-parent-channel-scan-exclusion.test.sh' ']'
++++ '[' '' = 'Mon Oct 12 23:14:31 2026     bash tests/fm-parent-channel-scan-exclusion.test.sh' ']'
+++++ stat -c %Y /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-parent-channel-scan-exclusion-root.mZRqPy/.fm-test-fixture
+++++ stat -f %m /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-parent-channel-scan-exclusion-root.mZRqPy/.fm-test-fixture
++++ mtime=1791864871
++++ '[' 113 -ge 3600 ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.KVsTeE/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.KVsTeE/.fm-test-fixture
++++ owner_pid=98799
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.KVsTeE/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 98799
++++ current_identity='Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' = 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.jQfHLj/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.jQfHLj/.fm-test-fixture
++++ owner_pid=22352
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.jQfHLj/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 22352
++++ current_identity='Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' = 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.GIariT/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.GIariT/.fm-test-fixture
++++ owner_pid=22352
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.GIariT/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 22352
++++ current_identity='Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' = 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.OpTFQJ/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.OpTFQJ/.fm-test-fixture
++++ owner_pid=98799
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.OpTFQJ/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 98799
++++ current_identity='Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' = 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.9WUtzX/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.9WUtzX/.fm-test-fixture
++++ owner_pid=98799
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.9WUtzX/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 98799
++++ current_identity='Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' = 'Mon Oct 12 23:16:15 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
++++ for marker in "$FM_TEST_TMPDIR"/fm-*/.fm-test-fixture
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.LGr0SO/.fm-test-fixture ']'
+++++ sed -n 1p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.LGr0SO/.fm-test-fixture
++++ owner_pid=22352
+++++ sed -n '2,$p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.LGr0SO/.fm-test-fixture
++++ owner_identity='Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh'
++++ case "$owner_pid" in
+++++ fm_test_pid_identity 22352
++++ current_identity='Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh'
++++ '[' -n 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ '[' 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' = 'Mon Oct 12 23:15:31 2026     bash tests/fm-watch-triage.test.sh' ']'
++++ continue
+++ '[' -z '' ']'
++++ fm_test_tmproot fm-wake-tangle-root
++++ local prefix=fm-wake-tangle-root root tmp_base
+++++ fm_test_tmpdir
+++++ local base=/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/ physical
+++++ base=/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ '[' -n /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T ']'
+++++ case "$base" in
++++++ CDPATH=
++++++ cd -- /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++++ pwd -P
+++++ physical=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.git ']'
+++++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ tmp_base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ tmp_base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ mktemp -d /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.XXXXXX
++++ root=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
+++++ cd -P -- /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
+++++ pwd -P
++++ root=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
++++ printf '%s\n%s\n' 19253 'Mon Oct 12 23:16:24 2026     bash -x tests/fm-watch-triage.test.sh'
++++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
++++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
+++ FM_ROOT_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
+++ export FM_ROOT_OVERRIDE
++++ fm_test_tmproot fm-wedge-rec
++++ local prefix=fm-wedge-rec root tmp_base
+++++ fm_test_tmpdir
+++++ local base=/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/ physical
+++++ base=/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ '[' -n /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T ']'
+++++ case "$base" in
++++++ CDPATH=
++++++ cd -- /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++++ pwd -P
+++++ physical=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.git ']'
+++++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ tmp_base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ tmp_base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ mktemp -d /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.XXXXXX
++++ root=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
+++++ cd -P -- /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
+++++ pwd -P
++++ root=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
++++ printf '%s\n%s\n' 19253 'Mon Oct 12 23:16:24 2026     bash -x tests/fm-watch-triage.test.sh'
++++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
++++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
+++ _fm_wedge_rec_dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4/rec
+++ export FM_WEDGE_ALARM_EXEC=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4/rec
+++ FM_WEDGE_ALARM_EXEC=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4/rec
++ . /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-classify-lib.sh
++++ d=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin
++++ '[' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin '!=' /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-classify-lib.sh ']'
++++ cd /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin
++++ pwd
+++ _FM_CLASSIFY_LIB_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin
++++ uname -s
+++ _FM_CLASSIFY_UNAME_S=Darwin
+++ FM_CREW_STATE_BIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-crew-state.sh
+++ case $- in
+++ _fm_classify_nounset=on
+++ . /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-timeout-lib.sh
++++ set -u
+++ '[' on = on ']'
+++ unset _fm_classify_nounset
+++ FM_CLASSIFY_CAPTAIN_RE_DEFAULT='done:|needs-decision:|blocked:|failed:|PR ready|checks green|ready in branch|merged'
+++ FM_CLASSIFY_PAUSED_VERB_DEFAULT=paused
+++ FM_PAUSE_RESURFACE_SECS_DEFAULT=14400
+++ FM_CLASSIFY_RESOLVE_VERB_DEFAULT=resolved
+++ FM_CLASSIFY_CAPTAIN_HELD_VERB_DEFAULT=captain-held
+++ FM_CLASSIFY_EVENT_WINDOW_LINES=200
+++ FM_CLASSIFY_RESERVED_KEY_PREFIXES_DEFAULT=pending-reply-
+++ FM_OPEN_DECISIONS_FOLD_VERSION=9
+++ FM_STATUS_SNAPSHOT_EVENT_LINE=
+++ FM_STATUS_SNAPSHOT_EVENT_MTIME=
+++ FM_STATUS_SNAPSHOT_EVENT_ENDPOINT=
+++ STATUS_PRESENTATION_REPORTED=
+++ STATUS_PRESENTATION_CLASSIFIED=
+++ _FM_CLASSIFY_KEYLESS_PHASE=$'\036default'
+++ FM_GATE_HUMAN_DECISION='ask-user: authority decision'
+++ FM_WORKTREE_WRITE_PRUNE='.git node_modules .venv venv __pycache__ .mypy_cache .pytest_cache .ruff_cache .tox target dist build .next .cache vendor'
+++ FM_WORKTREE_WRITE_MAXDEPTH=6
+++ FM_WORKTREE_WRITE_TIMEOUT=10
++ WATCH=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ DRAIN=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ fm_test_tmproot fm-watch-triage-tests
+++ local prefix=fm-watch-triage-tests root tmp_base
++++ fm_test_tmpdir
++++ local base=/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/ physical
++++ base=/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ '[' -n /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T ']'
++++ case "$base" in
+++++ CDPATH=
+++++ cd -- /var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++++ pwd -P
++++ physical=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ '[' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.git ']'
++++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++ tmp_base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
+++ tmp_base=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T
++++ mktemp -d /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.XXXXXX
+++ root=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
++++ cd -P -- /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
++++ pwd -P
+++ root=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
+++ printf '%s\n%s\n' 19253 'Mon Oct 12 23:16:24 2026     bash -x tests/fm-watch-triage.test.sh'
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
++ TMP_ROOT=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
++ HOLD_WATCH_PID=
++ '[' -n capture_own_work_evidence ']'
++ capture_own_work_evidence
++ test_own_work_wait_keeps_first_alert_then_long_cadence
++ local wait_kind dir state fakebin out capture_file statusf window key sig pid round poll_ready
++ for wait_kind in background-shell pipeline-run foreground-command
+++ make_case own-work-background-shell
+++ local name=own-work-background-shell dir fakebin
+++ dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell
+++ fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin
+++ mkdir -p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin
+++ fm_test_track_watcher_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
+++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state ']'
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin/tmux
+++ make_fake_crew_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin
+++ local fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin/fm-crew-state.sh
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin/fm-crew-state.sh
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell
++ dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell
++ state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin
++ out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/watch.out
++ capture_file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/pane.txt
++ statusf=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++ window=test:fm-own-work
+++ printf %s test:fm-own-work
+++ tr :/. ___
++ key=test_fm-own-work
++ printf 'idle worker awaiting its own %s\n' background-shell
++ printf 'window=%s\nkind=scout\nharness=grok\nbackend=tmux\n' test:fm-own-work
++ printf 'paused: waiting for my %s to finish; resume on completion\n' background-shell
+++ date +%s
++ set_mtime 1791864485 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++ local epoch=1791864485 f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status stamp
+++ date -r 1791864485 +%Y%m%d%H%M.%S
++ stamp=202610122308.05
++ touch -t 202610122308.05 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++ seen_sig /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++ local reported size ident
+++ case "$1" in
++++ status_observed_signature /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status size= ident= path_state link_target=- access kind encoded
+++++ _status_observed_path_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %HT:%p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++++ path_state='Regular File:100644'
++++ '[' -L /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status ']'
++++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status ']'
++++ '[' '!' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status ']'
++++ '[' -r /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status ']'
++++ kind=readable
++++ '[' -z '' ']'
+++++ _fm_status_file_size /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %z /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++++ size=72
++++ size=72
++++ case "$size" in
++++ '[' -z '' ']'
+++++ _fm_open_decisions_file_ident /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status epoch birth ident
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %d:%i /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++++ ident=16777232:97191983
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %B /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++++ epoch=1791864485
+++++ '[' 1791864485 '!=' 0 ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %FB /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
+++++ birth=1791864485.000000000
+++++ case "$ident$birth" in
+++++ '[' -n 1791864485.000000000 ']'
+++++ printf strong:%s:%s 16777232:97191983 1791864485.000000000
++++ ident=strong:16777232:97191983:1791864485.000000000
++++ '[' -n strong:16777232:97191983:1791864485.000000000 ']'
++++ '[' -r /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status ']'
++++ access=readable
+++++ printf '%s\0%s\0%s\0%s\0%s\0%s' 72 strong:16777232:97191983:1791864485.000000000 'Regular File:100644' - readable readable
+++++ LC_ALL=C
+++++ od -An -v -tx1
+++++ tr -d ' \n'
++++ encoded=3732007374726f6e673a31363737373233323a39373139313938333a313739313836343438352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ printf r1:%s 3732007374726f6e673a31363737373233323a39373139313938333a313739313836343438352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
+++ reported=r1:3732007374726f6e673a31363737373233323a39373139313938333a313739313836343438352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ size_of /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++++ LC_ALL=C
++++ wc -c
++++ tr -d '[:space:]'
+++ size=72
++++ _fm_open_decisions_file_ident /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status epoch birth ident
++++ '[' -n '' ']'
++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %d:%i /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++++ ident=16777232:97191983
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %B /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++++ epoch=1791864485
++++ '[' 1791864485 '!=' 0 ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %FB /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/own-work.status
++++ birth=1791864485.000000000
++++ case "$ident$birth" in
++++ '[' -n 1791864485.000000000 ']'
++++ printf strong:%s:%s 16777232:97191983 1791864485.000000000
+++ ident=strong:16777232:97191983:1791864485.000000000
+++ printf 'v2\t%s\t%s@%s' r1:3732007374726f6e673a31363737373233323a39373139313938333a313739313836343438352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65 72 strong:16777232:97191983:1791864485.000000000
++ sig=$'v2\tr1:3732007374726f6e673a31363737373233323a39373139313938333a313739313836343438352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t72@strong:16777232:97191983:1791864485.000000000'
++ printf %s $'v2\tr1:3732007374726f6e673a31363737373233323a39373139313938333a313739313836343438352e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t72@strong:16777232:97191983:1791864485.000000000'
++++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/pane.txt
+++ hash_text 'idle worker awaiting its own background-shell'
+++ command -v md5
+++ printf %s 'idle worker awaiting its own background-shell'
+++ md5 -q
++ printf %s 9e0fd2c714a69ea8ac3422b0f068b61a
++ printf '1\n'
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/watch.out env FM_PAUSE_RESURFACE_SECS=999
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/watch.out
++ shift 3
++ pid=20456
++ wait_for_exit 20456 100
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_PAUSE_RESURFACE_SECS=999 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ local pid=20456 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=8
++ '[' 8 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
+++ ps -p 20456 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=9
++ '[' 9 -lt 100 ']'
++ is_live_non_zombie 20456
++ local pid=20456 stat
++ kill -0 20456
++ return 1
++ wait 20456
++ return 0
++ grep -Fx 'stale: test:fm-own-work' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/watch.out
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ sequence=1
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ generation=20456.1791864986.PcCAGF
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ '[' -n 1 ']'
++ '[' -n 20456.1791864986.PcCAGF ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 20456.1791864986.PcCAGF
++ poll_ready=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
++ mkfifo /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready.fifo
++ cat
++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin/sleep
++ for round in 1 2
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ date +%s
++ printf '%s\n' 1791864487
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/recheck.out
++ shift 3
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-backgr+ pid=26707
+ound-shell/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ wait_numeric_file /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready 300
++ local file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=7
++ '[' 7 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=8
++ '[' 8 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
++ value=26707
++ case "$value" in
++ return 0
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
++ '[' 26707 '!=' 26707 ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/recheck.out ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.wake-queue ']'
++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.wedge-escalations-test_fm-own-work ']'
++ reap 26707
++ local rc
++ kill 26707
++ wait_for_exit 26707 100
++ local pid=26707 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 26707
++ local pid=26707 stat
++ kill -0 26707
+++ ps -p 26707 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 26707
++ local pid=26707 stat
++ kill -0 26707
++ return 1
++ wait 26707
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ generation=26707.1791864988.01UVdt
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 26707.1791864988.01UVdt ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 26707.1791864988.01UVdt
++ for round in 1 2
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ date +%s
++ printf '%s\n' 1791864489
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/recheck.out
++ shift 3
++ pid=31622
++ wait_numeric_file /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready 300
++ local file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
++ value=31622
++ case "$value" in
++ return 0
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
++ '[' 31622 '!=' 31622 ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/recheck.out ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.wake-queue ']'
++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.wedge-escalations-test_fm-own-work ']'
++ reap 31622
++ local rc
++ kill 31622
++ wait_for_exit 31622 100
++ local pid=31622 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 31622
++ local pid=31622 stat
++ kill -0 31622
+++ ps -p 31622 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 31622
++ local pid=31622 stat
++ kill -0 31622
++ return 1
++ wait 31622
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ generation=31622.1791864990.X9eSEq
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 31622.1791864990.X9eSEq ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 31622.1791864990.X9eSEq
+++ date +%s
++ set_mtime 1791864491 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.paused-resurfaced-test_fm-own-work
++ local epoch=1791864491 f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.paused-resurfaced-test_fm-own-work stamp
+++ date -r 1791864491 +%Y%m%d%H%M.%S
++ stamp=202610122308.11
++ touch -t 202610122308.11 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.paused-resurfaced-test_fm-own-work
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/long-cadence.out env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/long-cadence.out
++ shift 3
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ pid=35609
++ wait_for_exit 35609 100
++ local pid=35609 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 35609
++ local pid=35609 stat
++ kill -0 35609
+++ ps -p 35609 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 35609
++ local pid=35609 stat
++ kill -0 35609
+++ ps -p 35609 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 35609
++ local pid=35609 stat
++ kill -0 35609
+++ ps -p 35609 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 35609
++ local pid=35609 stat
++ kill -0 35609
+++ ps -p 35609 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 35609
++ local pid=35609 stat
++ kill -0 35609
+++ ps -p 35609 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 35609
++ local pid=35609 stat
++ kill -0 35609
+++ ps -p 35609 -o stat=
++ stat='U   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 35609
++ local pid=35609 stat
++ kill -0 35609
++ return 1
++ wait 35609
++ return 0
++ grep -F 'awaiting external' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/long-cadence.out
++ grep -F 'possible wedge' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/long-cadence.out
++ for wait_kind in background-shell pipeline-run foreground-command
+++ make_case own-work-pipeline-run
+++ local name=own-work-pipeline-run dir fakebin
+++ dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run
+++ fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin
+++ mkdir -p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin
+++ fm_test_track_watcher_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
+++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state ']'
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin/tmux
+++ make_fake_crew_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin
+++ local fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin/fm-crew-state.sh
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin/fm-crew-state.sh
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run
++ dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run
++ state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin
++ out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/watch.out
++ capture_file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/pane.txt
++ statusf=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++ window=test:fm-own-work
+++ printf %s test:fm-own-work
+++ tr :/. ___
++ key=test_fm-own-work
++ printf 'idle worker awaiting its own %s\n' pipeline-run
++ printf 'window=%s\nkind=scout\nharness=grok\nbackend=tmux\n' test:fm-own-work
++ printf 'paused: waiting for my %s to finish; resume on completion\n' pipeline-run
+++ date +%s
++ set_mtime 1791864492 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++ local epoch=1791864492 f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status stamp
+++ date -r 1791864492 +%Y%m%d%H%M.%S
++ stamp=202610122308.12
++ touch -t 202610122308.12 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++ seen_sig /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++ local reported size ident
+++ case "$1" in
++++ status_observed_signature /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status size= ident= path_state link_target=- access kind encoded
+++++ _status_observed_path_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %HT:%p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++++ path_state='Regular File:100644'
++++ '[' -L /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status ']'
++++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status ']'
++++ '[' '!' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status ']'
++++ '[' -r /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status ']'
++++ kind=readable
++++ '[' -z '' ']'
+++++ _fm_status_file_size /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %z /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++++ size=68
++++ size=68
++++ case "$size" in
++++ '[' -z '' ']'
+++++ _fm_open_decisions_file_ident /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status epoch birth ident
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %d:%i /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++++ ident=16777232:97193214
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %B /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++++ epoch=1791864492
+++++ '[' 1791864492 '!=' 0 ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %FB /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
+++++ birth=1791864492.000000000
+++++ case "$ident$birth" in
+++++ '[' -n 1791864492.000000000 ']'
+++++ printf strong:%s:%s 16777232:97193214 1791864492.000000000
++++ ident=strong:16777232:97193214:1791864492.000000000
++++ '[' -n strong:16777232:97193214:1791864492.000000000 ']'
++++ '[' -r /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status ']'
++++ access=readable
+++++ printf '%s\0%s\0%s\0%s\0%s\0%s' 68 strong:16777232:97193214:1791864492.000000000 'Regular File:100644' - readable readable
+++++ LC_ALL=C
+++++ od -An -v -tx1
+++++ tr -d ' \n'
++++ encoded=3638007374726f6e673a31363737373233323a39373139333231343a313739313836343439322e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ printf r1:%s 3638007374726f6e673a31363737373233323a39373139333231343a313739313836343439322e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
+++ reported=r1:3638007374726f6e673a31363737373233323a39373139333231343a313739313836343439322e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ size_of /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++++ LC_ALL=C
++++ wc -c
++++ tr -d '[:space:]'
+++ size=68
++++ _fm_open_decisions_file_ident /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status epoch birth ident
++++ '[' -n '' ']'
++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %d:%i /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++++ ident=16777232:97193214
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %B /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++++ epoch=1791864492
++++ '[' 1791864492 '!=' 0 ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %FB /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/own-work.status
++++ birth=1791864492.000000000
++++ case "$ident$birth" in
++++ '[' -n 1791864492.000000000 ']'
++++ printf strong:%s:%s 16777232:97193214 1791864492.000000000
+++ ident=strong:16777232:97193214:1791864492.000000000
+++ printf 'v2\t%s\t%s@%s' r1:3638007374726f6e673a31363737373233323a39373139333231343a313739313836343439322e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65 68 strong:16777232:97193214:1791864492.000000000
++ sig=$'v2\tr1:3638007374726f6e673a31363737373233323a39373139333231343a313739313836343439322e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t68@strong:16777232:97193214:1791864492.000000000'
++ printf %s $'v2\tr1:3638007374726f6e673a31363737373233323a39373139333231343a313739313836343439322e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t68@strong:16777232:97193214:1791864492.000000000'
++++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/pane.txt
+++ hash_text 'idle worker awaiting its own pipeline-run'
+++ command -v md5
+++ printf %s 'idle worker awaiting its own pipeline-run'
+++ md5 -q
++ printf %s 78eed4ea7d85f276e1be9d5b88d1f702
++ printf '1\n'
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/watch.out env FM_PAUSE_RESURFACE_SECS=999
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/watch.out
++ shift 3
++ pid=38153
++ wait_for_exit 38153 100
++ local pid=38153 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_PAUSE_RESURFACE_SECS=999 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ ps -p 38153 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
+++ ps -p 38153 -o stat=
++ stat='U   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
+++ ps -p 38153 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
+++ ps -p 38153 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
+++ ps -p 38153 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
+++ ps -p 38153 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
+++ ps -p 38153 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
+++ ps -p 38153 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=8
++ '[' 8 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
+++ ps -p 38153 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=9
++ '[' 9 -lt 100 ']'
++ is_live_non_zombie 38153
++ local pid=38153 stat
++ kill -0 38153
++ return 1
++ wait 38153
++ return 0
++ grep -Fx 'stale: test:fm-own-work' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/watch.out
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ sequence=1
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ generation=38153.1791864993.8bDB7E
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ '[' -n 1 ']'
++ '[' -n 38153.1791864993.8bDB7E ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 38153.1791864993.8bDB7E
++ poll_ready=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
++ mkfifo /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready.fifo
++ cat
++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin/sleep
++ for round in 1 2
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ date +%s
++ printf '%s\n' 1791864494
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/recheck.out
++ shift 3
++ pid=42784
++ wait_numeric_file /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready 300
++ local file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=7
++ '[' 7 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
++ value=42784
++ case "$value" in
++ return 0
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
++ '[' 42784 '!=' 42784 ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/recheck.out ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.wake-queue ']'
++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.wedge-escalations-test_fm-own-work ']'
++ reap 42784
++ local rc
++ kill 42784
++ wait_for_exit 42784 100
++ local pid=42784 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 42784
++ local pid=42784 stat
++ kill -0 42784
+++ ps -p 42784 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 42784
++ local pid=42784 stat
++ kill -0 42784
++ return 1
++ wait 42784
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ generation=42784.1791864995.Un4iGW
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 42784.1791864995.Un4iGW ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 42784.1791864995.Un4iGW
++ for round in 1 2
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ date +%s
++ printf '%s\n' 1791864496
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/recheck.out
++ shift 3
++ pid=46727
++ wait_numeric_file /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready 300
++ local file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=7
++ '[' 7 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
++ value=46727
++ case "$value" in
++ return 0
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
++ '[' 46727 '!=' 46727 ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/recheck.out ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.wake-queue ']'
++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.wedge-escalations-test_fm-own-work ']'
++ reap 46727
++ local rc
++ kill 46727
++ wait_for_exit 46727 100
++ local pid=46727 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 46727
++ local pid=46727 stat
++ kill -0 46727
+++ ps -p 46727 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 46727
++ local pid=46727 stat
++ kill -0 46727
++ return 1
++ wait 46727
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ generation=46727.1791864997.mFk83Z
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 46727.1791864997.mFk83Z ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 46727.1791864997.mFk83Z
+++ date +%s
++ set_mtime 1791864498 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.paused-resurfaced-test_fm-own-work
++ local epoch=1791864498 f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.paused-resurfaced-test_fm-own-work stamp
+++ date -r 1791864498 +%Y%m%d%H%M.%S
++ stamp=202610122308.18
++ touch -t 202610122308.18 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.paused-resurfaced-test_fm-own-work
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/long-cadence.out env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/long-cadence.out
++ shift 3
++ pid=53148
++ wait_for_exit 53148 100
++ local pid=53148 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 53148
++ local pid=53148 stat
++ kill -0 53148
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ ps -p 53148 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 53148
++ local pid=53148 stat
++ kill -0 53148
+++ ps -p 53148 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 53148
++ local pid=53148 stat
++ kill -0 53148
+++ ps -p 53148 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 53148
++ local pid=53148 stat
++ kill -0 53148
+++ ps -p 53148 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 53148
++ local pid=53148 stat
++ kill -0 53148
+++ ps -p 53148 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 53148
++ local pid=53148 stat
++ kill -0 53148
+++ ps -p 53148 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 53148
++ local pid=53148 stat
++ kill -0 53148
++ return 1
++ wait 53148
++ return 0
++ grep -F 'awaiting external' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/long-cadence.out
++ grep -F 'possible wedge' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/long-cadence.out
++ for wait_kind in background-shell pipeline-run foreground-command
+++ make_case own-work-foreground-command
+++ local name=own-work-foreground-command dir fakebin
+++ dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command
+++ fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin
+++ mkdir -p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin
+++ fm_test_track_watcher_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
+++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state ']'
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin/tmux
+++ make_fake_crew_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin
+++ local fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin/fm-crew-state.sh
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin/fm-crew-state.sh
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command
++ dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command
++ state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin
++ out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/watch.out
++ capture_file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/pane.txt
++ statusf=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++ window=test:fm-own-work
+++ printf %s test:fm-own-work
+++ tr :/. ___
++ key=test_fm-own-work
++ printf 'idle worker awaiting its own %s\n' foreground-command
++ printf 'window=%s\nkind=scout\nharness=grok\nbackend=tmux\n' test:fm-own-work
++ printf 'paused: waiting for my %s to finish; resume on completion\n' foreground-command
+++ date +%s
++ set_mtime 1791864499 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++ local epoch=1791864499 f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status stamp
+++ date -r 1791864499 +%Y%m%d%H%M.%S
++ stamp=202610122308.19
++ touch -t 202610122308.19 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++ seen_sig /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++ local reported size ident
+++ case "$1" in
++++ status_observed_signature /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status size= ident= path_state link_target=- access kind encoded
+++++ _status_observed_path_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %HT:%p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++++ path_state='Regular File:100644'
++++ '[' -L /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status ']'
++++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status ']'
++++ '[' '!' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status ']'
++++ '[' -r /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status ']'
++++ kind=readable
++++ '[' -z '' ']'
+++++ _fm_status_file_size /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %z /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++++ size=74
++++ size=74
++++ case "$size" in
++++ '[' -z '' ']'
+++++ _fm_open_decisions_file_ident /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status epoch birth ident
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %d:%i /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++++ ident=16777232:97194962
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %B /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++++ epoch=1791864499
+++++ '[' 1791864499 '!=' 0 ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %FB /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
+++++ birth=1791864499.000000000
+++++ case "$ident$birth" in
+++++ '[' -n 1791864499.000000000 ']'
+++++ printf strong:%s:%s 16777232:97194962 1791864499.000000000
++++ ident=strong:16777232:97194962:1791864499.000000000
++++ '[' -n strong:16777232:97194962:1791864499.000000000 ']'
++++ '[' -r /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status ']'
++++ access=readable
+++++ printf '%s\0%s\0%s\0%s\0%s\0%s' 74 strong:16777232:97194962:1791864499.000000000 'Regular File:100644' - readable readable
+++++ LC_ALL=C
+++++ od -An -v -tx1
+++++ tr -d ' \n'
++++ encoded=3734007374726f6e673a31363737373233323a39373139343936323a313739313836343439392e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ printf r1:%s 3734007374726f6e673a31363737373233323a39373139343936323a313739313836343439392e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
+++ reported=r1:3734007374726f6e673a31363737373233323a39373139343936323a313739313836343439392e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ size_of /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++++ LC_ALL=C
++++ wc -c
++++ tr -d '[:space:]'
+++ size=74
++++ _fm_open_decisions_file_ident /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status epoch birth ident
++++ '[' -n '' ']'
++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %d:%i /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++++ ident=16777232:97194962
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %B /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++++ epoch=1791864499
++++ '[' 1791864499 '!=' 0 ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %FB /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/own-work.status
++++ birth=1791864499.000000000
++++ case "$ident$birth" in
++++ '[' -n 1791864499.000000000 ']'
++++ printf strong:%s:%s 16777232:97194962 1791864499.000000000
+++ ident=strong:16777232:97194962:1791864499.000000000
+++ printf 'v2\t%s\t%s@%s' r1:3734007374726f6e673a31363737373233323a39373139343936323a313739313836343439392e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65 74 strong:16777232:97194962:1791864499.000000000
++ sig=$'v2\tr1:3734007374726f6e673a31363737373233323a39373139343936323a313739313836343439392e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t74@strong:16777232:97194962:1791864499.000000000'
++ printf %s $'v2\tr1:3734007374726f6e673a31363737373233323a39373139343936323a313739313836343439392e30303030303030303000526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t74@strong:16777232:97194962:1791864499.000000000'
++++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/pane.txt
+++ hash_text 'idle worker awaiting its own foreground-command'
+++ command -v md5
+++ printf %s 'idle worker awaiting its own foreground-command'
+++ md5 -q
++ printf %s 4fee93c0ddd39d476ae1d8eea5043108
++ printf '1\n'
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/watch.out env FM_PAUSE_RESURFACE_SECS=999
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/watch.out
++ shift 3
++ pid=55339
++ wait_for_exit 55339 100
++ local pid=55339 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 55339
++ local pid=55339 stat
++ kill -0 55339
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_PAUSE_RESURFACE_SECS=999 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ ps -p 55339 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 55339
++ local pid=55339 stat
++ kill -0 55339
+++ ps -p 55339 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 55339
++ local pid=55339 stat
++ kill -0 55339
+++ ps -p 55339 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 55339
++ local pid=55339 stat
++ kill -0 55339
+++ ps -p 55339 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 55339
++ local pid=55339 stat
++ kill -0 55339
+++ ps -p 55339 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 55339
++ local pid=55339 stat
++ kill -0 55339
+++ ps -p 55339 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 55339
++ local pid=55339 stat
++ kill -0 55339
+++ ps -p 55339 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 55339
++ local pid=55339 stat
++ kill -0 55339
++ return 1
++ wait 55339
++ return 0
++ grep -Fx 'stale: test:fm-own-work' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/watch.out
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ sequence=1
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ generation=55339.1791865000.WUtr6J
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ '[' -n 1 ']'
++ '[' -n 55339.1791865000.WUtr6J ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 1 --recovery-generation 55339.1791865000.WUtr6J
++ poll_ready=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
++ mkfifo /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready.fifo
++ cat
++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin/sleep
++ for round in 1 2
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ date +%s
++ printf '%s\n' 1791864501
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/recheck.out
++ shift 3
++ pid=60484
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ wait_numeric_file /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready 300
++ local file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=7
++ '[' 7 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
++ value=60484
++ case "$value" in
++ return 0
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
++ '[' 60484 '!=' 60484 ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/recheck.out ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.wake-queue ']'
++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.wedge-escalations-test_fm-own-work ']'
++ reap 60484
++ local rc
++ kill 60484
++ wait_for_exit 60484 100
++ local pid=60484 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 60484
++ local pid=60484 stat
++ kill -0 60484
+++ ps -p 60484 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 60484
++ local pid=60484 stat
++ kill -0 60484
++ return 1
++ wait 60484
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ generation=60484.1791865002.xp8rrI
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 60484.1791865002.xp8rrI ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 60484.1791865002.xp8rrI
++ for round in 1 2
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ date +%s
++ printf '%s\n' 1791864503
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/recheck.out env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/recheck.out
++ shift 3
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=240 FM_PAUSE_RESURFACE_SECS=999 FM_TEST_POLL_READY=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
++ pid=65853
++ wait_numeric_file /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready 300
++ local file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready limit=300 i=0 value
++ '[' 0 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=1
++ '[' 1 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=2
++ '[' 2 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=3
++ '[' 3 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=4
++ '[' 4 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=5
++ '[' 5 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=6
++ '[' 6 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+++ true
++ value=
++ case "$value" in
++ sleep 0.1
++ i=7
++ '[' 7 -lt 300 ']'
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
++ value=65853
++ case "$value" in
++ return 0
+++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
++ '[' 65853 '!=' 65853 ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/recheck.out ']'
++ '[' '!' -s /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.wake-queue ']'
++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.wedge-escalations-test_fm-own-work ']'
++ reap 65853
++ local rc
++ kill 65853
++ wait_for_exit 65853 100
++ local pid=65853 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 65853
++ local pid=65853 stat
++ kill -0 65853
+++ ps -p 65853 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 65853
++ local pid=65853 stat
++ kill -0 65853
++ return 1
++ wait 65853
++ return 143
++ rc=143
++ '[' 143 -ne 124 ']'
++ printf 'release\n'
++ ack_stopped_cycle /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state err sequence generation
++ err=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through \([0-9][0-9]*\) --recovery-generation [A-Za-z0-9._-][A-Za-z0-9._-]*$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ sequence=0
+++ sed -n 's/^WAKE_ACK_REQUIRED:.*--ack-through [0-9][0-9]* --recovery-generation \([A-Za-z0-9._-][A-Za-z0-9._-]*\)$/\1/p' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ generation=65853.1791865004.aOGLGD
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.test-cycle-drain.err
++ '[' -n 0 ']'
++ '[' -n 65853.1791865004.aOGLGD ']'
++ FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
++ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-wake-drain.sh --ack-through 0 --recovery-generation 65853.1791865004.aOGLGD
+++ date +%s
++ set_mtime 1791864505 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.paused-resurfaced-test_fm-own-work
++ local epoch=1791864505 f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.paused-resurfaced-test_fm-own-work stamp
+++ date -r 1791864505 +%Y%m%d%H%M.%S
++ stamp=202610122308.25
++ touch -t 202610122308.25 /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.paused-resurfaced-test_fm-own-work
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: paused · source: status-log · waiting for own work'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/long-cadence.out env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/long-cadence.out
++ shift 3
++ pid=71685
++ wait_for_exit 71685 100
++ local pid=71685 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=1 FM_PAUSE_RESURFACE_SECS=240 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ ps -p 71685 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
+++ ps -p 71685 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
+++ ps -p 71685 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
+++ ps -p 71685 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
+++ ps -p 71685 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
+++ ps -p 71685 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
+++ ps -p 71685 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
+++ ps -p 71685 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=8
++ '[' 8 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
+++ ps -p 71685 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=9
++ '[' 9 -lt 100 ']'
++ is_live_non_zombie 71685
++ local pid=71685 stat
++ kill -0 71685
++ return 1
++ wait 71685
++ return 0
++ grep -F 'awaiting external' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/long-cadence.out
++ grep -F 'possible wedge' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/long-cadence.out
+++ make_case own-work-undeclared
+++ local name=own-work-undeclared dir fakebin
+++ dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared
+++ fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin
+++ mkdir -p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin
+++ fm_test_track_watcher_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state
+++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state ']'
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin/tmux
+++ make_fake_crew_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin
+++ local fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin
+++ cat
+++ chmod +x /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin/fm-crew-state.sh
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin/fm-crew-state.sh
+++ printf '%s\n' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared
++ dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared
++ state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state
++ fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin
++ out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/watch.out
++ capture_file=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/pane.txt
++ statusf=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++ printf 'idle worker without a declared wait\n'
++ printf 'window=%s\nkind=scout\nharness=grok\nbackend=tmux\n' test:fm-own-work
++ printf 'working: implementing\n'
+++ seen_sig /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
+++ local reported size ident
+++ case "$1" in
++++ status_observed_signature /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status size= ident= path_state link_target=- access kind encoded
+++++ _status_observed_path_state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %HT:%p /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++++ path_state='Regular File:100644'
++++ '[' -L /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status ']'
++++ '[' '!' -e /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status ']'
++++ '[' '!' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status ']'
++++ '[' -r /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status ']'
++++ kind=readable
++++ '[' -z '' ']'
+++++ _fm_status_file_size /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
+++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %z /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++++ size=22
++++ size=22
++++ case "$size" in
++++ '[' -z '' ']'
+++++ _fm_open_decisions_file_ident /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
+++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status epoch birth ident
+++++ '[' -n '' ']'
+++++ '[' Darwin = Darwin ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %d:%i /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
+++++ ident=16777232:97196565
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %B /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
+++++ epoch=1791865006
+++++ '[' 1791865006 '!=' 0 ']'
++++++ LC_ALL=C
++++++ /usr/bin/stat -f %FB /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
+++++ birth=1791865006.206915116
+++++ case "$ident$birth" in
+++++ '[' -n 1791865006.206915116 ']'
+++++ printf strong:%s:%s 16777232:97196565 1791865006.206915116
++++ ident=strong:16777232:97196565:1791865006.206915116
++++ '[' -n strong:16777232:97196565:1791865006.206915116 ']'
++++ '[' -r /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status ']'
++++ access=readable
+++++ printf '%s\0%s\0%s\0%s\0%s\0%s' 22 strong:16777232:97196565:1791865006.206915116 'Regular File:100644' - readable readable
+++++ LC_ALL=C
+++++ od -An -v -tx1
+++++ tr -d ' \n'
++++ encoded=3232007374726f6e673a31363737373233323a39373139363536353a313739313836353030362e32303639313531313600526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ printf r1:%s 3232007374726f6e673a31363737373233323a39373139363536353a313739313836353030362e32303639313531313600526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
+++ reported=r1:3232007374726f6e673a31363737373233323a39373139363536353a313739313836353030362e32303639313531313600526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65
++++ size_of /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++++ LC_ALL=C
++++ wc -c
++++ tr -d '[:space:]'
+++ size=22
++++ _fm_open_decisions_file_ident /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++++ local f=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status epoch birth ident
++++ '[' -n '' ']'
++++ '[' Darwin = Darwin ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %d:%i /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++++ ident=16777232:97196565
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %B /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++++ epoch=1791865006
++++ '[' 1791865006 '!=' 0 ']'
+++++ LC_ALL=C
+++++ /usr/bin/stat -f %FB /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/own-work.status
++++ birth=1791865006.206915116
++++ case "$ident$birth" in
++++ '[' -n 1791865006.206915116 ']'
++++ printf strong:%s:%s 16777232:97196565 1791865006.206915116
+++ ident=strong:16777232:97196565:1791865006.206915116
+++ printf 'v2\t%s\t%s@%s' r1:3232007374726f6e673a31363737373233323a39373139363536353a313739313836353030362e32303639313531313600526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65 22 strong:16777232:97196565:1791865006.206915116
++ sig=$'v2\tr1:3232007374726f6e673a31363737373233323a39373139363536353a313739313836353030362e32303639313531313600526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t22@strong:16777232:97196565:1791865006.206915116'
++ printf %s $'v2\tr1:3232007374726f6e673a31363737373233323a39373139363536353a313739313836353030362e32303639313531313600526567756c61722046696c653a313030363434002d007265616461626c65007265616461626c65\t22@strong:16777232:97196565:1791865006.206915116'
++++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/pane.txt
+++ hash_text 'idle worker without a declared wait'
+++ command -v md5
+++ printf %s 'idle worker without a declared wait'
+++ md5 -q
++ printf %s 4f4bddc8c2473c73f249e4a62f03d75d
++ printf '1\n'
++ PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin
++ FM_FAKE_TMUX_WINDOW=test:fm-own-work
++ FM_FAKE_TMUX_CAPTURE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/pane.txt
++ FM_FAKE_TMUX_CURRENT_COMMAND=grok
++ FM_FAKE_CREW_STATE='state: unknown · source: none · no current-state source available'
++ watch_bg /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/watch.out env FM_STALE_ESCALATE_SECS=999
++ local state=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state fakebin=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin out=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/watch.out
++ shift 3
++ pid=75190
++ wait_for_exit 75190 100
++ local pid=75190 limit=100 i=0
++ '[' 0 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
++ env PATH=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.codex/tmp/arg0/codex-arg0uvMowQ:/opt/homebrew/Caskroom/codex/0.159.2/codex-path:/Users/rega1011/.nvm/versions/node/v24.20.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/rega1011/.local/bin:/Users/rega1011/.nix-profile/bin:/etc/profiles/per-user/rega1011/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/rega1011/go/bin:/Users/rega1011/.cargo/bin:/Users/rega1011/bin:/usr/local/sbin FM_STATE_OVERRIDE=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state FM_CREW_STATE_BIN=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/fakebin/fm-crew-state.sh FM_POLL=1 FM_SIGNAL_GRACE=1 FM_CHECK_INTERVAL=999999 FM_HEARTBEAT=999999 FM_SECONDMATE_LIVENESS_SECS=99999999 env FM_STALE_ESCALATE_SECS=999 /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M4SN9XYS7KEA33EH9T7K4B61/bin/fm-watch.sh
+++ ps -p 75190 -o stat=
++ stat='R   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=1
++ '[' 1 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
+++ ps -p 75190 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=2
++ '[' 2 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
+++ ps -p 75190 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=3
++ '[' 3 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
+++ ps -p 75190 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=4
++ '[' 4 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
+++ ps -p 75190 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=5
++ '[' 5 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
+++ ps -p 75190 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=6
++ '[' 6 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
+++ ps -p 75190 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=7
++ '[' 7 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
+++ ps -p 75190 -o stat=
++ stat='S   '
++ case "$stat" in
++ return 0
++ sleep 0.1
++ i=8
++ '[' 8 -lt 100 ']'
++ is_live_non_zombie 75190
++ local pid=75190 stat
++ kill -0 75190
++ return 1
++ wait 75190
++ return 0
++ grep -Fx 'stale: test:fm-own-work' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/watch.out
++ grep -F 'stale: test:fm-own-work' /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/.wake-queue
++ pass 'own-work waits keep one first alert, then bounded rechecks without wedges; undeclared idle still alarms'
++ printf 'ok - %s\n' 'own-work waits keep one first alert, then bounded rechecks without wedges; undeclared idle still alarms'
+ok - own-work waits keep one first alert, then bounded rechecks without wedges; undeclared idle still alarms
++ for wait_kind in background-shell pipeline-run foreground-command
++ case_dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell
++ printf '\nWAIT_KIND=%s\n' background-shell
+
+WAIT_KIND=background-shell
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' watch.out
+PRODUCT_RECORD=watch.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/watch.out
+stale: test:fm-own-work
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' recheck.out
+PRODUCT_RECORD=recheck.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/recheck.out
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' long-cadence.out
+PRODUCT_RECORD=long-cadence.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/long-cadence.out
+stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' poll-ready
+PRODUCT_RECORD=poll-ready
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/poll-ready
+31622
++ printf 'STATE_FILES\n'
+STATE_FILES
++ ls -a /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state
+.
+..
+.count-test_fm-own-work
+.guard-watcher-stale-banner
+.hash-test_fm-own-work
+.heartbeat-streak
+.inactive-outcome-reconcile
+.last-check
+.last-heartbeat
+.last-watcher-beat
+.own-work.open-decisions-cursor
+.paused-resurfaced-test_fm-own-work
+.paused-test_fm-own-work
+.seen-own-work_status
+.stale-test_fm-own-work
+.status-presentation-cursor
+.wake-queue
+.wake-queue.seq
+.watch-deliveries.log
+.watch-triage.log
+.watcher-down
+home-summary.json
+own-work.meta
+own-work.status
+terminal-outcomes
++ printf 'WAKE_QUEUE\n'
+WAKE_QUEUE
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.wake-queue
+1791864992	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
++ printf 'RECOVERY_RECORDS\n'
+RECOVERY_RECORDS
++ for record in "$case_dir/state/".watch-recovery*
++ '[' -f '/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.watch-recovery*' ']'
++ for wait_kind in background-shell pipeline-run foreground-command
++ case_dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run
++ printf '\nWAIT_KIND=%s\n' pipeline-run
+
+WAIT_KIND=pipeline-run
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' watch.out
+PRODUCT_RECORD=watch.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/watch.out
+stale: test:fm-own-work
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' recheck.out
+PRODUCT_RECORD=recheck.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/recheck.out
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' long-cadence.out
+PRODUCT_RECORD=long-cadence.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/long-cadence.out
+stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' poll-ready
+PRODUCT_RECORD=poll-ready
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/poll-ready
+46727
++ printf 'STATE_FILES\n'
+STATE_FILES
++ ls -a /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state
+.
+..
+.count-test_fm-own-work
+.guard-watcher-stale-banner
+.hash-test_fm-own-work
+.heartbeat-streak
+.inactive-outcome-reconcile
+.last-check
+.last-heartbeat
+.last-watcher-beat
+.own-work.open-decisions-cursor
+.paused-resurfaced-test_fm-own-work
+.paused-test_fm-own-work
+.seen-own-work_status
+.stale-test_fm-own-work
+.status-presentation-cursor
+.wake-queue
+.wake-queue.seq
+.watch-deliveries.log
+.watch-triage.log
+.watcher-down
+home-summary.json
+own-work.meta
+own-work.status
+terminal-outcomes
++ printf 'WAKE_QUEUE\n'
+WAKE_QUEUE
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.wake-queue
+1791864998	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
++ printf 'RECOVERY_RECORDS\n'
+RECOVERY_RECORDS
++ for record in "$case_dir/state/".watch-recovery*
++ '[' -f '/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.watch-recovery*' ']'
++ for wait_kind in background-shell pipeline-run foreground-command
++ case_dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command
++ printf '\nWAIT_KIND=%s\n' foreground-command
+
+WAIT_KIND=foreground-command
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' watch.out
+PRODUCT_RECORD=watch.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/watch.out
+stale: test:fm-own-work
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' recheck.out
+PRODUCT_RECORD=recheck.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/recheck.out
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' long-cadence.out
+PRODUCT_RECORD=long-cadence.out
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/long-cadence.out
+stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
++ for record in watch.out recheck.out long-cadence.out poll-ready
++ printf 'PRODUCT_RECORD=%s\n' poll-ready
+PRODUCT_RECORD=poll-ready
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/poll-ready
+65853
++ printf 'STATE_FILES\n'
+STATE_FILES
++ ls -a /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state
+.
+..
+.count-test_fm-own-work
+.guard-watcher-stale-banner
+.hash-test_fm-own-work
+.heartbeat-streak
+.inactive-outcome-reconcile
+.last-check
+.last-heartbeat
+.last-watcher-beat
+.own-work.open-decisions-cursor
+.paused-resurfaced-test_fm-own-work
+.paused-test_fm-own-work
+.seen-own-work_status
+.stale-test_fm-own-work
+.status-presentation-cursor
+.wake-queue
+.wake-queue.seq
+.watch-deliveries.log
+.watch-triage.log
+.watcher-down
+home-summary.json
+own-work.meta
+own-work.status
+terminal-outcomes
++ printf 'WAKE_QUEUE\n'
+WAKE_QUEUE
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.wake-queue
+1791865005	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 506s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
++ printf 'RECOVERY_RECORDS\n'
+RECOVERY_RECORDS
++ for record in "$case_dir/state/".watch-recovery*
++ '[' -f '/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.watch-recovery*' ']'
++ printf '\nUNDECLARED_IDLE_OUTPUT\n'
+
+UNDECLARED_IDLE_OUTPUT
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/watch.out
+stale: test:fm-own-work
++ printf 'UNDECLARED_IDLE_QUEUE\n'
+UNDECLARED_IDLE_QUEUE
++ cat /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/.wake-queue
+1791865007	1	stale	test:fm-own-work	stale: test:fm-own-work
++ exit 0
++ fm_test_cleanup
++ local d
++ fm_test_reap_watchers
++ local state lock_home $'seen=\n'
++ '[' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-watcher.19253.y54WP6 ']'
++ IFS=
++ read -r state
++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state ']'
++ case "$seen" in
++ seen+=$'/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state\n'
++ '[' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-background-shell/state/.watch.lock/pid ']'
++ continue
++ IFS=
++ read -r state
++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state ']'
++ case "$seen" in
++ seen+=$'/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state\n'
++ '[' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-pipeline-run/state/.watch.lock/pid ']'
++ continue
++ IFS=
++ read -r state
++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state ']'
++ case "$seen" in
++ seen+=$'/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state\n'
++ '[' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-foreground-command/state/.watch.lock/pid ']'
++ continue
++ IFS=
++ read -r state
++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state ']'
++ case "$seen" in
++ seen+=$'/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state\n'
++ '[' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89/own-work-undeclared/state/.watch.lock/pid ']'
++ continue
++ IFS=
++ read -r state
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-watcher.19253.y54WP6
++ fm_test_reap_procevent_homes
++ local home claim_root $'seen=\n'
++ '[' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-procevent.19253.6MTgLC ']'
++ IFS=$'\t'
++ read -r home claim_root
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-procevent.19253.6MTgLC
++ for d in "${FM_TEST_CLEANUP_DIRS[@]:-}"
++ '[' -n '' ']'
++ '[' -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-cleanup.19253.t7e7rf ']'
++ IFS=
++ read -r d
++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy ']'
++ fm_test_remove_tree /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
++ local dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
++ '[' -d /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy ']'
++ '[' '!' -L /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy ']'
++ find /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy -type d -exec chmod u+rwx '{}' +
++ rm -rf /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wake-tangle-root.QEhyUy
++ IFS=
++ read -r d
++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4 ']'
++ fm_test_remove_tree /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
++ local dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
++ '[' -d /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4 ']'
++ '[' '!' -L /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4 ']'
++ find /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4 -type d -exec chmod u+rwx '{}' +
++ rm -rf /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-wedge-rec.acGJB4
++ IFS=
++ read -r d
++ '[' -n /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89 ']'
++ fm_test_remove_tree /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
++ local dir=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
++ '[' -d /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89 ']'
++ '[' '!' -L /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89 ']'
++ find /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89 -type d -exec chmod u+rwx '{}' +
++ rm -rf /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-watch-triage-tests.ycuZ89
++ IFS=
++ read -r d
++ rm -f /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/.fm-test-cleanup.19253.t7e7rf

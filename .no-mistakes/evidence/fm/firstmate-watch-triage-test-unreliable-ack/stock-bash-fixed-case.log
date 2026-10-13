@@ -1,0 +1,3 @@
+GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)
+ok - own-work waits keep one first alert, then bounded rechecks without wedges; undeclared idle still alarms
+stock_bash_exit=0 elapsed_seconds=22

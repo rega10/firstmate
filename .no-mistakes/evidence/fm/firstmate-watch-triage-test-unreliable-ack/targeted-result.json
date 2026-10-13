@@ -1,0 +1,6 @@
+{
+  "command": "FM_TEST_ONLY=test_own_work_wait_keeps_first_alert_then_long_cadence bash -x tests/fm-watch-triage.test.sh",
+  "exit_code": 0,
+  "seconds": 23.81,
+  "bash": "GNU bash, version 5.3.9(1)-release (aarch64-apple-darwin25.6.0)"
+}

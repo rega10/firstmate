@@ -1,0 +1,66 @@
+Observed product transcript from the targeted candidate run.
+The watcher and wake drain are real executable processes.
+The pane and worker-state inputs are disposable fixtures.
+
+Case: background-shell
+  1.785s watch.out: stale: test:fm-own-work
+  1.785s state/.watcher-down: pending:downtime:14192.1791862800.rBzx1d
+  1.785s state/.wake-queue: 1791862800	1	stale	test:fm-own-work	stale: test:fm-own-work
+  2.270s state/.watcher-down: pending:handling:14192.1791862800.rBzx1d
+  3.718s state/.watcher-down: acked:handling:14192.1791862800.rBzx1d
+  3.719s state/.wake-queue: (empty)
+  4.631s poll-ready: 19656
+  4.832s state/.watcher-down: pending:downtime:19656.1791862803.OIjnEg
+  5.098s state/.watcher-down: pending:handling:19656.1791862803.OIjnEg
+  5.691s state/.watcher-down: acked:handling:19656.1791862803.OIjnEg
+  6.544s poll-ready: 22680
+  6.544s state/.watcher-down: pending:downtime:22680.1791862805.RAeQrQ
+  6.742s state/.watcher-down: pending:handling:22680.1791862805.RAeQrQ
+  7.456s state/.watcher-down: acked:handling:22680.1791862805.RAeQrQ
+  8.312s state/.watcher-down: pending:downtime:27900.1791862807.GvrPbs
+  8.312s state/.wake-queue: 1791862807	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 508s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+  8.399s long-cadence.out: stale: test:fm-own-work (paused 508s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+
+Case: pipeline-run
+  9.609s watch.out: stale: test:fm-own-work
+  9.609s state/.watcher-down: pending:downtime:30173.1791862808.T79btf
+  9.609s state/.wake-queue: 1791862808	1	stale	test:fm-own-work	stale: test:fm-own-work
+  9.846s state/.watcher-down: pending:handling:30173.1791862808.T79btf
+ 10.780s state/.watcher-down: acked:handling:30173.1791862808.T79btf
+ 10.807s state/.wake-queue: (empty)
+ 11.726s poll-ready: 34839
+ 11.821s state/.watcher-down: pending:downtime:34839.1791862810.lNjSkZ
+ 12.080s state/.watcher-down: pending:handling:34839.1791862810.lNjSkZ
+ 12.804s state/.watcher-down: acked:handling:34839.1791862810.lNjSkZ
+ 13.523s poll-ready: 38179
+ 13.599s state/.watcher-down: pending:downtime:38179.1791862812.OxnC19
+ 13.810s state/.watcher-down: pending:handling:38179.1791862812.OxnC19
+ 14.505s state/.watcher-down: acked:handling:38179.1791862812.OxnC19
+ 15.303s state/.watcher-down: pending:downtime:41304.1791862814.7WaK9p
+ 15.303s state/.wake-queue: 1791862814	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 507s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+ 15.340s long-cadence.out: stale: test:fm-own-work (paused 507s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+
+Case: foreground-command
+ 16.501s state/.watcher-down: pending:downtime:43904.1791862815.o5GBDR
+ 16.501s state/.wake-queue: 1791862815	1	stale	test:fm-own-work	stale: test:fm-own-work
+ 16.536s watch.out: stale: test:fm-own-work
+ 16.916s state/.watcher-down: pending:handling:43904.1791862815.o5GBDR
+ 17.774s state/.watcher-down: acked:handling:43904.1791862815.o5GBDR
+ 17.774s state/.wake-queue: (empty)
+ 18.679s poll-ready: 47713
+ 18.825s state/.watcher-down: pending:downtime:47713.1791862817.mzyhnm
+ 19.126s state/.watcher-down: pending:handling:47713.1791862817.mzyhnm
+ 19.780s state/.watcher-down: acked:handling:47713.1791862817.mzyhnm
+ 20.535s poll-ready: 50995
+ 20.761s state/.watcher-down: pending:downtime:50995.1791862819.hdBXWw
+ 20.889s state/.watcher-down: pending:handling:50995.1791862819.hdBXWw
+ 21.576s state/.watcher-down: acked:handling:50995.1791862819.hdBXWw
+ 22.395s state/.watcher-down: pending:downtime:54069.1791862821.4Q2Dho
+ 22.425s long-cadence.out: stale: test:fm-own-work (paused 507s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+ 22.426s state/.wake-queue: 1791862821	2	stale	test:fm-own-work	stale: test:fm-own-work (paused 507s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)
+
+Case: undeclared
+ 23.650s state/.watcher-down: pending:downtime:56103.1791862822.j0GwcZ
+ 23.650s state/.wake-queue: 1791862822	1	stale	test:fm-own-work	stale: test:fm-own-work
+ 23.751s watch.out: stale: test:fm-own-work
+

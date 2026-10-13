@@ -1,0 +1,9 @@
+Before contended stop: acked:handling:20406.1791862974.bcuNU5
+watcher: recovery state could not be persisted; retaining stale lock evidence
+After contended stop: acked:handling:20406.1791862974.bcuNU5
+Stopped watcher PID: 21614
+Retained singleton PID: 21614
+Observed: the unchanged acknowledgement helper returns failure after the contended stop.
+After explicit stale-lock recovery: acked:handling:28809.1791862982.Y7y78n
+Observed: one acknowledgement succeeds after recovery publishes a fresh generation.
+ok - real watcher contention reproduces missing acknowledgement and recovery restores it

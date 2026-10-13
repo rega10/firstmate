@@ -1,0 +1,474 @@
+﻿2026-10-11T06:33:51.3049634Z Current runner version: '2.337.0'
+2026-10-11T06:33:51.3085248Z ##[group]Runner Image Provisioner
+2026-10-11T06:33:51.3086942Z Hosted Compute Agent
+2026-10-11T06:33:51.3088091Z Version: 20261002.596
+2026-10-11T06:33:51.3089213Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-11T06:33:51.3090501Z Build Date: 2026-10-02T22:28:27Z
+2026-10-11T06:33:51.3091616Z Worker ID: {dae4611e-437e-4cf6-8712-8995952ae0ad}
+2026-10-11T06:33:51.3093005Z Region: eastus
+2026-10-11T06:33:51.3093940Z Cloud: Azure
+2026-10-11T06:33:51.3094768Z ##[endgroup]
+2026-10-11T06:33:51.3098056Z ##[group]Operating System
+2026-10-11T06:33:51.3099165Z Ubuntu
+2026-10-11T06:33:51.3100172Z 24.04.5
+2026-10-11T06:33:51.3101173Z LTS
+2026-10-11T06:33:51.3102026Z ##[endgroup]
+2026-10-11T06:33:51.3103029Z ##[group]Runner Image
+2026-10-11T06:33:51.3104072Z Image: ubuntu-24.04
+2026-10-11T06:33:51.3105203Z Version: 20261004.327.1
+2026-10-11T06:33:51.3107563Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-11T06:33:51.3110328Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-11T06:33:51.3112045Z ##[endgroup]
+2026-10-11T06:33:51.3114090Z ##[group]GITHUB_TOKEN Permissions
+2026-10-11T06:33:51.3117304Z Contents: read
+2026-10-11T06:33:51.3118434Z Metadata: read
+2026-10-11T06:33:51.3119363Z ##[endgroup]
+2026-10-11T06:33:51.3122511Z Secret source: Actions
+2026-10-11T06:33:51.3124104Z Cache mode: write
+2026-10-11T06:33:51.3125396Z Prepare workflow directory
+2026-10-11T06:33:51.3608229Z Prepare all required actions
+2026-10-11T06:33:51.3680614Z Getting action download info
+2026-10-11T06:33:51.5558236Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-10-11T06:33:51.6443328Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-10-11T06:33:51.8711199Z Complete job name: Behavior portable serial 1
+2026-10-11T06:33:51.9554940Z ##[group]Run actions/checkout@v6
+2026-10-11T06:33:51.9556159Z with:
+2026-10-11T06:33:51.9556618Z   fetch-depth: 0
+2026-10-11T06:33:51.9557110Z   repository: rega10/firstmate
+2026-10-11T06:33:51.9560919Z   token: ***
+2026-10-11T06:33:51.9561365Z   ssh-strict: true
+2026-10-11T06:33:51.9561819Z   ssh-user: git
+2026-10-11T06:33:51.9562300Z   persist-credentials: true
+2026-10-11T06:33:51.9562806Z   clean: true
+2026-10-11T06:33:51.9563265Z   sparse-checkout-cone-mode: true
+2026-10-11T06:33:51.9563800Z   fetch-tags: false
+2026-10-11T06:33:51.9564262Z   show-progress: true
+2026-10-11T06:33:51.9564730Z   lfs: false
+2026-10-11T06:33:51.9565153Z   submodules: false
+2026-10-11T06:33:51.9565617Z   set-safe-directory: true
+2026-10-11T06:33:51.9566372Z   allow-unsafe-pr-checkout: false
+2026-10-11T06:33:51.9567225Z ##[endgroup]
+2026-10-11T06:33:52.0591359Z Syncing repository: rega10/firstmate
+2026-10-11T06:33:52.0593346Z ##[group]Getting Git version info
+2026-10-11T06:33:52.0594347Z Working directory is '/home/runner/work/firstmate/firstmate'
+2026-10-11T06:33:52.0595431Z [command]/usr/bin/git version
+2026-10-11T06:33:52.0686350Z git version 2.55.0
+2026-10-11T06:33:52.0716293Z ##[endgroup]
+2026-10-11T06:33:52.0734486Z Temporarily overriding HOME='/home/runner/work/_temp/89f2c833-0bb2-4586-9c19-89162fb3c251' before making global git config changes
+2026-10-11T06:33:52.0736697Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-11T06:33:52.0740404Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/firstmate/firstmate
+2026-10-11T06:33:52.0791419Z Deleting the contents of '/home/runner/work/firstmate/firstmate'
+2026-10-11T06:33:52.0796072Z ##[group]Determining repository object format
+2026-10-11T06:33:52.0799518Z ##[endgroup]
+2026-10-11T06:33:52.0800476Z ##[group]Initializing the repository
+2026-10-11T06:33:52.0804677Z [command]/usr/bin/git init /home/runner/work/firstmate/firstmate
+2026-10-11T06:33:52.0904160Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-11T06:33:52.0906451Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-11T06:33:52.0908033Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-11T06:33:52.0909023Z hint: call:
+2026-10-11T06:33:52.0909447Z hint:
+2026-10-11T06:33:52.0909970Z hint: 	git config --global init.defaultBranch <name>
+2026-10-11T06:33:52.0910602Z hint:
+2026-10-11T06:33:52.0911204Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-11T06:33:52.0912359Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-11T06:33:52.0913525Z hint:
+2026-10-11T06:33:52.0914174Z hint: 	git branch -m <name>
+2026-10-11T06:33:52.0914718Z hint:
+2026-10-11T06:33:52.0915368Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-11T06:33:52.0916796Z Initialized empty Git repository in /home/runner/work/firstmate/firstmate/.git/
+2026-10-11T06:33:52.0918528Z [command]/usr/bin/git remote add origin https://github.com/rega10/firstmate
+2026-10-11T06:33:52.0964488Z ##[endgroup]
+2026-10-11T06:33:52.0965329Z ##[group]Disabling automatic garbage collection
+2026-10-11T06:33:52.0968990Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-11T06:33:52.1005123Z ##[endgroup]
+2026-10-11T06:33:52.1007220Z ##[group]Setting up auth
+2026-10-11T06:33:52.1007986Z Removing SSH command configuration
+2026-10-11T06:33:52.1012492Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-11T06:33:52.1050989Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-11T06:33:52.1428081Z Removing HTTP extra header
+2026-10-11T06:33:52.1437712Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-11T06:33:52.1485179Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-11T06:33:52.1711300Z Removing includeIf entries pointing to credentials config files
+2026-10-11T06:33:52.1718570Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-11T06:33:52.1755208Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-11T06:33:52.1981075Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-11T06:33:52.2022734Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/firstmate/firstmate/.git.path /home/runner/work/_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:33:52.2058145Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/firstmate/firstmate/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:33:52.2102702Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:33:52.2137440Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:33:52.2167710Z ##[endgroup]
+2026-10-11T06:33:52.2168477Z ##[group]Fetching the repository
+2026-10-11T06:33:52.2178330Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +0a6b293ce484a597cd9ec4073dfbe590928011fc:refs/remotes/pull/40/merge
+2026-10-11T06:33:54.0032176Z From https://github.com/rega10/firstmate
+2026-10-11T06:33:54.0048662Z  * [new branch]        codex-lock-token-reclaim                 -> origin/codex-lock-token-reclaim
+2026-10-11T06:33:54.0051060Z  * [new branch]        fm/automic-vault-development-only-boundary -> origin/fm/automic-vault-development-only-boundary
+2026-10-11T06:33:54.0052654Z  * [new branch]        fm/bitwarden-rotation-wording-followup   -> origin/fm/bitwarden-rotation-wording-followup
+2026-10-11T06:33:54.0054124Z  * [new branch]        fm/firstmate-afk-claude-inject-wedge     -> origin/fm/firstmate-afk-claude-inject-wedge
+2026-10-11T06:33:54.0056421Z  * [new branch]        fm/firstmate-afk-digest-chunked-prefixed-submission -> origin/fm/firstmate-afk-digest-chunked-prefixed-submission
+2026-10-11T06:33:54.0060738Z  * [new branch]        fm/firstmate-backgrounded-claude-drops-herdr-session-env -> origin/fm/firstmate-backgrounded-claude-drops-herdr-session-env
+2026-10-11T06:33:54.0064382Z  * [new branch]        fm/firstmate-bearings-snapshot-contract  -> origin/fm/firstmate-bearings-snapshot-contract
+2026-10-11T06:33:54.0067811Z  * [new branch]        fm/firstmate-calm-pi-085-read-rendering-drift -> origin/fm/firstmate-calm-pi-085-read-rendering-drift
+2026-10-11T06:33:54.0070942Z  * [new branch]        fm/firstmate-claude-automic-vault-auth   -> origin/fm/firstmate-claude-automic-vault-auth
+2026-10-11T06:33:54.0072853Z  * [new branch]        fm/firstmate-claude-bg-session-lock-sharing -> origin/fm/firstmate-claude-bg-session-lock-sharing
+2026-10-11T06:33:54.0074983Z  * [new branch]        fm/firstmate-composer-dead-shell-zsh-glyph-reads-empty -> origin/fm/firstmate-composer-dead-shell-zsh-glyph-reads-empty
+2026-10-11T06:33:54.0077562Z  * [new branch]        fm/firstmate-fork-reconciliation-option-a -> origin/fm/firstmate-fork-reconciliation-option-a
+2026-10-11T06:33:54.0079516Z  * [new branch]        fm/firstmate-fork-reconciliation-option-a-v2 -> origin/fm/firstmate-fork-reconciliation-option-a-v2
+2026-10-11T06:33:54.0081605Z  * [new branch]        fm/firstmate-fork-sync-upstream-2026-09  -> origin/fm/firstmate-fork-sync-upstream-2026-09
+2026-10-11T06:33:54.0084238Z  * [new branch]        fm/firstmate-fork-sync-upstream-2026-09-28 -> origin/fm/firstmate-fork-sync-upstream-2026-09-28
+2026-10-11T06:33:54.0086883Z  * [new branch]        fm/firstmate-fork-sync-upstream-jev-dispatch -> origin/fm/firstmate-fork-sync-upstream-jev-dispatch
+2026-10-11T06:33:54.0088707Z  * [new branch]        fm/firstmate-legacy-herdr-cleanup-repair -> origin/fm/firstmate-legacy-herdr-cleanup-repair
+2026-10-11T06:33:54.0090382Z  * [new branch]        fm/firstmate-orchestra-rebuild-on-wake   -> origin/fm/firstmate-orchestra-rebuild-on-wake
+2026-10-11T06:33:54.0092241Z  * [new branch]        fm/firstmate-posture-bearings-display-on-new-main -> origin/fm/firstmate-posture-bearings-display-on-new-main
+2026-10-11T06:33:54.0094116Z  * [new branch]        fm/firstmate-public-followup-fixture-date -> origin/fm/firstmate-public-followup-fixture-date
+2026-10-11T06:33:54.0095788Z  * [new branch]        fm/firstmate-relaunch-keeps-pr-poll      -> origin/fm/firstmate-relaunch-keeps-pr-poll
+2026-10-11T06:33:54.0097813Z  * [new branch]        fm/firstmate-source-reconciliation       -> origin/fm/firstmate-source-reconciliation
+2026-10-11T06:33:54.0099455Z  * [new branch]        fm/firstmate-spawn-codex-max-effort-astra -> origin/fm/firstmate-spawn-codex-max-effort-astra
+2026-10-11T06:33:54.0102106Z  * [new branch]        fm/firstmate-spawn-reuses-held-task-slot -> origin/fm/firstmate-spawn-reuses-held-task-slot
+2026-10-11T06:33:54.0105260Z  * [new branch]        fm/firstmate-startup-refresh-active-projects-only -> origin/fm/firstmate-startup-refresh-active-projects-only
+2026-10-11T06:33:54.0108579Z  * [new branch]        fm/firstmate-startup-report-herdr-notice-wake -> origin/fm/firstmate-startup-report-herdr-notice-wake
+2026-10-11T06:33:54.0110409Z  * [new branch]        fm/firstmate-summary-base-surface-byte-bound -> origin/fm/firstmate-summary-base-surface-byte-bound
+2026-10-11T06:33:54.0112713Z  * [new branch]        fm/firstmate-teardown-empty-worktree-record -> origin/fm/firstmate-teardown-empty-worktree-record
+2026-10-11T06:33:54.0114928Z  * [new branch]        fm/firstmate-teardown-legacy-record-gone-endpoint -> origin/fm/firstmate-teardown-legacy-record-gone-endpoint
+2026-10-11T06:33:54.0117073Z  * [new branch]        fm/firstmate-timeout-lib-bash32-bashpid  -> origin/fm/firstmate-timeout-lib-bash32-bashpid
+2026-10-11T06:33:54.0118960Z  * [new branch]        fm/firstmate-upstream-multibrain-sync    -> origin/fm/firstmate-upstream-multibrain-sync
+2026-10-11T06:33:54.0121179Z  * [new branch]        fm/firstmate-watcher-parked-pane-stale-suppression -> origin/fm/firstmate-watcher-parked-pane-stale-suppression
+2026-10-11T06:33:54.0122907Z  * [new branch]        fm/fleet-project-dashboard-mvp           -> origin/fm/fleet-project-dashboard-mvp
+2026-10-11T06:33:54.0125488Z  * [new branch]        fm/fm-claude-child-session-persistence   -> origin/fm/fm-claude-child-session-persistence
+2026-10-11T06:33:54.0128559Z  * [new branch]        fm/fm-herdr-brokenpipe-noise             -> origin/fm/fm-herdr-brokenpipe-noise
+2026-10-11T06:33:54.0131165Z  * [new branch]        fm/fm-orca-spawn-metadata-test           -> origin/fm/fm-orca-spawn-metadata-test
+2026-10-11T06:33:54.0133608Z  * [new branch]        fm/fm-review-misc-findings-clean         -> origin/fm/fm-review-misc-findings-clean
+2026-10-11T06:33:54.0136342Z  * [new branch]        fm/fm-sync-upstream-calm                 -> origin/fm/fm-sync-upstream-calm
+2026-10-11T06:33:54.0138966Z  * [new branch]        fm/fm-teardown-herdr-orphan-endpoint     -> origin/fm/fm-teardown-herdr-orphan-endpoint
+2026-10-11T06:33:54.0142008Z  * [new branch]        fm/orchestra-live-board-slice1-posture-registry -> origin/fm/orchestra-live-board-slice1-posture-registry
+2026-10-11T06:33:54.0144681Z  * [new branch]        fm/plan-board-skill-p7                   -> origin/fm/plan-board-skill-p7
+2026-10-11T06:33:54.0147633Z  * [new branch]        fm/production-bitwarden-team-rollout     -> origin/fm/production-bitwarden-team-rollout
+2026-10-11T06:33:54.0149150Z  * [new branch]        main                                     -> origin/main
+2026-10-11T06:33:54.0150318Z  * [new branch]        no-mistakes/evidence                     -> origin/no-mistakes/evidence
+2026-10-11T06:33:54.0151586Z  * [new tag]           fork-main-before-reconciliation          -> fork-main-before-reconciliation
+2026-10-11T06:33:54.0152761Z  * [new ref]           0a6b293ce484a597cd9ec4073dfbe590928011fc -> pull/40/merge
+2026-10-11T06:33:54.0154757Z ##[endgroup]
+2026-10-11T06:33:54.0155534Z ##[group]Determining the checkout info
+2026-10-11T06:33:54.0156806Z ##[endgroup]
+2026-10-11T06:33:54.0157430Z [command]/usr/bin/git sparse-checkout disable
+2026-10-11T06:33:54.0159109Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-11T06:33:54.0260820Z ##[group]Checking out the ref
+2026-10-11T06:33:54.0262296Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/40/merge
+2026-10-11T06:33:54.1374824Z Note: switching to 'refs/remotes/pull/40/merge'.
+2026-10-11T06:33:54.1375652Z 
+2026-10-11T06:33:54.1376691Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-11T06:33:54.1377985Z changes and commit them, and you can discard any commits you make in this
+2026-10-11T06:33:54.1379185Z state without impacting any branches by switching back to a branch.
+2026-10-11T06:33:54.1379849Z 
+2026-10-11T06:33:54.1380286Z If you want to create a new branch to retain commits you create, you may
+2026-10-11T06:33:54.1381335Z do so (now or later) by using -c with the switch command. Example:
+2026-10-11T06:33:54.1381938Z 
+2026-10-11T06:33:54.1382193Z   git switch -c <new-branch-name>
+2026-10-11T06:33:54.1382593Z 
+2026-10-11T06:33:54.1382838Z Or undo this operation with:
+2026-10-11T06:33:54.1383224Z 
+2026-10-11T06:33:54.1383436Z   git switch -
+2026-10-11T06:33:54.1383716Z 
+2026-10-11T06:33:54.1384204Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-11T06:33:54.1384916Z 
+2026-10-11T06:33:54.1385765Z HEAD is now at 0a6b293c Merge a98cce1d5be9a7e5c5f6da7c6c3e77e06eb5ac41 into 3f2d62a13ca048e1c77a8d09927d3501249bd798
+2026-10-11T06:33:54.1395474Z ##[endgroup]
+2026-10-11T06:33:54.1444489Z [command]/usr/bin/git log -1 --format=%H
+2026-10-11T06:33:54.1474092Z 0a6b293ce484a597cd9ec4073dfbe590928011fc
+2026-10-11T06:33:54.1721459Z ##[group]Run set -eu
+2026-10-11T06:33:54.1722134Z [36;1mset -eu[0m
+2026-10-11T06:33:54.1722763Z [36;1mbin/fm-install-shellcheck.sh "$RUNNER_TEMP/bin"[0m
+2026-10-11T06:33:54.1723598Z [36;1mecho "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"[0m
+2026-10-11T06:33:54.1974047Z shell: /usr/bin/bash -e {0}
+2026-10-11T06:33:54.1974762Z ##[endgroup]
+2026-10-11T06:33:54.5133603Z ShellCheck - shell script analysis tool
+2026-10-11T06:33:54.5134928Z version: 0.11.0
+2026-10-11T06:33:54.5136099Z license: GNU General Public License, version 3
+2026-10-11T06:33:54.5137198Z website: https://www.shellcheck.net
+2026-10-11T06:33:54.5278963Z ##[group]Run set -eu
+2026-10-11T06:33:54.5279731Z [36;1mset -eu[0m
+2026-10-11T06:33:54.5280619Z [36;1mbin/fm-install-actionlint.sh "$RUNNER_TEMP/bin"[0m
+2026-10-11T06:33:54.5281966Z [36;1mecho "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"[0m
+2026-10-11T06:33:54.5350279Z shell: /usr/bin/bash -e {0}
+2026-10-11T06:33:54.5351097Z ##[endgroup]
+2026-10-11T06:33:54.6876646Z 1.7.12
+2026-10-11T06:33:54.6877992Z installed by downloading from release page
+2026-10-11T06:33:54.6879735Z built with go1.26.1 compiler for linux/amd64
+2026-10-11T06:33:54.7039059Z ##[group]Run set -eu
+2026-10-11T06:33:54.7039735Z [36;1mset -eu[0m
+2026-10-11T06:33:54.7040324Z [36;1mcommand -v tmux >/dev/null || {[0m
+2026-10-11T06:33:54.7041532Z [36;1m  echo "::error::tmux is required for real afk injection e2e coverage"[0m
+2026-10-11T06:33:54.7042706Z [36;1m  exit 1[0m
+2026-10-11T06:33:54.7043217Z [36;1m}[0m
+2026-10-11T06:33:54.7043699Z [36;1mtmux -V[0m
+2026-10-11T06:33:54.7108593Z shell: /usr/bin/bash -e {0}
+2026-10-11T06:33:54.7109312Z ##[endgroup]
+2026-10-11T06:33:54.7790742Z tmux 3.4
+2026-10-11T06:33:54.7865498Z ##[group]Run set -eu
+2026-10-11T06:33:54.7866491Z [36;1mset -eu[0m
+2026-10-11T06:33:54.7867130Z [36;1mnpm install -g tasks-axi[0m
+2026-10-11T06:33:54.7867879Z [36;1mtasks-axi --version[0m
+2026-10-11T06:33:54.7933150Z shell: /usr/bin/bash -e {0}
+2026-10-11T06:33:54.7933883Z ##[endgroup]
+2026-10-11T06:33:55.9803660Z 
+2026-10-11T06:33:55.9804133Z added 3 packages in 922ms
+2026-10-11T06:33:56.0523215Z 0.2.6
+2026-10-11T06:33:56.0667073Z ##[group]Run set -eu
+2026-10-11T06:33:56.0667517Z [36;1mset -eu[0m
+2026-10-11T06:33:56.0667894Z [36;1mnpm install -g @earendil-works/pi-coding-agent[0m
+2026-10-11T06:33:56.0668412Z [36;1mnpm ls -g --depth 0 @earendil-works/pi-coding-agent[0m
+2026-10-11T06:33:56.0735278Z shell: /usr/bin/bash -e {0}
+2026-10-11T06:33:56.0735665Z ##[endgroup]
+2026-10-11T06:34:00.1490832Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-10-11T06:34:03.9931339Z 
+2026-10-11T06:34:03.9931988Z added 121 packages in 8s
+2026-10-11T06:34:03.9932339Z 
+2026-10-11T06:34:03.9932774Z 9 packages are looking for funding
+2026-10-11T06:34:03.9933278Z   run `npm fund` for details
+2026-10-11T06:34:05.6489458Z /usr/local/lib
+2026-10-11T06:34:05.6490058Z └── @earendil-works/pi-coding-agent@1.1.0
+2026-10-11T06:34:05.6490322Z 
+2026-10-11T06:34:05.6659506Z ##[group]Run set -eu
+2026-10-11T06:34:05.6659810Z [36;1mset -eu[0m
+2026-10-11T06:34:05.6660043Z [36;1mmkdir -p "$RUNNER_TEMP/fm-test"[0m
+2026-10-11T06:34:05.6660465Z [36;1m# The Pi package is installed above and CI provides npm and tsc, so[0m
+2026-10-11T06:34:05.6660993Z [36;1m# any missing typecheck prerequisite is a broken lane, not a valid skip.[0m
+2026-10-11T06:34:05.6661467Z [36;1mbin/fm-test-run.sh --lane "$FM_SERIAL_LANE" \[0m
+2026-10-11T06:34:05.6661916Z [36;1m  --fail-on-gate-skip 'Pi extension typecheck prerequisite not found' \[0m
+2026-10-11T06:34:05.6662499Z [36;1m  --json "$RUNNER_TEMP/fm-test/fm-test-timing-portable-serial-${FM_SERIAL_SHARD}.json"[0m
+2026-10-11T06:34:05.6727112Z shell: /usr/bin/bash -e {0}
+2026-10-11T06:34:05.6727619Z env:
+2026-10-11T06:34:05.6727841Z   FM_SERIAL_LANE: portable-serial-1of9
+2026-10-11T06:34:05.6728147Z   FM_SERIAL_SHARD: 1
+2026-10-11T06:34:05.6728372Z ##[endgroup]
+2026-10-11T06:34:06.8837831Z FM_TEST_BEGIN 2026-10-11T06:34:06Z tests/fm-watch-triage.test.sh family=watcher-wake-lock expected_gate_skip=none
+2026-10-11T06:34:07.3476817Z ok - status_span_has_actionable: benign absorbed, captain events surfaced, classified events not re-fired
+2026-10-11T06:34:07.6246708Z ok - an actionable event is not hidden by later routine appends, and is named as itself
+2026-10-11T06:34:07.9299381Z ok - span classification retires closed decisions and surfaces rejected transitions for reconciliation
+2026-10-11T06:34:08.0568014Z ok - span classification from an offset keeps closed decisions closed and live ones live
+2026-10-11T06:34:08.1423132Z ok - a malformed seen signature causes the whole status log to be classified
+2026-10-11T06:34:08.1758529Z ok - stale_is_terminal: terminal status surfaces, non-terminal and no-status are benign
+2026-10-11T06:34:08.2707742Z ok - classifier primitives: keyed decisions and activity phases, captain relevance, window-to-task, and overrides
+2026-10-11T06:34:09.5339929Z ok - unrecognized status prefixes are visible and recognized prefixes are unchanged
+2026-10-11T06:34:09.5834103Z ok - crew_is_provably_working: only working+run-step/pane is provable; idle/finished/parked/failed/unknown surface
+2026-10-11T06:34:09.5962732Z ok - status_is_paused: only the leading paused verb matches, paused is not captain-relevant, and the two declared-wait verbs stay separable
+2026-10-11T06:34:09.6505303Z ok - crew_absorb_class: working/paused/none from one read; crew_is_paused and crew_is_provably_working agree
+2026-10-11T06:34:09.7655194Z ok - crew_worktree_written_since: real writes are evidence; no worktree, no anchor, quiet trees, .git churn and a mate's own home are not
+2026-10-11T06:34:09.8601182Z ok - an empty FM_WORKTREE_WRITE_PRUNE widens the probe to the whole depth-bounded tree instead of disabling it
+2026-10-11T06:34:09.9273441Z ok - an empty FM_WORKTREE_WRITE_PRUNE exported into the environment prunes nothing, widening the probe
+2026-10-11T06:34:10.9986433Z ok - the worktree write probe is wall-clock bounded, and hitting the bound reads as no write evidence
+2026-10-11T06:34:11.0365355Z ok - signal_crew_provably_working: benign only when every referenced crew is provably working
+2026-10-11T06:34:11.2124227Z ok - a secondmate's unmarked routine progress absorbs when provably working; routed, terminal, note, marked, and unknown lines surface
+2026-10-11T06:34:14.1165109Z ok - a no-verb signal whose crew is provably working is absorbed (no exit, no queue, suppressor advanced, beacon present)
+2026-10-11T06:34:16.9028793Z ok - a bare turn-end whose crew is provably working (busy pane) is absorbed
+2026-10-11T06:34:19.2154224Z ok - a bare turn-end whose crew is not provably working is surfaced (the swallowed-finish fix)
+2026-10-11T06:34:21.0021207Z ok - a bare turn-end from a pane that churned since the previous poll is absorbed
+2026-10-11T06:34:26.9975215Z ok - pane churn starts a fresh stale-classification interval before a stopped render returns
+2026-10-11T06:34:28.7847818Z ok - pane churn resets prior wedge escalation state before the stale-path poll
+2026-10-11T06:34:30.6865781Z ok - a churning turn-end inside an already-open deferral window is absorbed without re-marking
+2026-10-11T06:34:33.3232995Z ok - a bare turn-end from a pane unchanged since the previous poll still surfaces
+2026-10-11T06:34:35.9932731Z ok - a bare turn-end backed by a malformed prior hash surfaces
+2026-10-11T06:34:38.6314558Z ok - a bare turn-end backed by a newline-terminated prior hash surfaces
+2026-10-11T06:34:41.1580042Z ok - a churning secondmate turn-end surfaces without a stale resurface path
+2026-10-11T06:34:43.8391011Z ok - a turn-end whose marker key matches another recorded endpoint surfaces
+2026-10-11T06:34:46.4856159Z ok - two metadata records sharing one endpoint make churn evidence ambiguous
+2026-10-11T06:34:48.3868912Z ok - a batch may satisfy positive evidence independently per task
+2026-10-11T06:34:51.2750212Z ok - per-task evidence composition stays off until the home opts in
+2026-10-11T06:34:54.4191159Z ok - a status-bearing batch never falls through to pane-churn evidence
+2026-10-11T06:34:56.9481753Z ok - pane-churn turn-end absorb is off until a home opts in
+2026-10-11T06:34:59.5836303Z ok - a perpetually churning pane surfaces once its bounded deferral window is spent
+2026-10-11T06:35:02.2324065Z ok - an unrecordable pane-churn deadline surfaces the turn-end
+2026-10-11T06:35:04.7590160Z ok - an invalid pane-churn bound surfaces the turn-end
+2026-10-11T06:35:07.2804169Z ok - an oversized pane-churn bound surfaces the turn-end
+2026-10-11T06:35:20.5266774Z ok - invalid existing pane-churn deadlines surface without mutation
+2026-10-11T06:35:23.4278504Z ok - a surfaced batch opens no partial pane-churn deadline
+2026-10-11T06:35:26.1782700Z ok - a no-verb working: note whose crew is idle with no running pipeline is surfaced
+2026-10-11T06:35:29.3075803Z ok - a secondmate's status note surfaces even while its own agent is busy
+2026-10-11T06:35:33.9939589Z ok - a busy secondmate's routine working: is absorbed while its later note: still surfaces
+2026-10-11T06:35:40.4180543Z ok - a secondmate blocker wakes despite busy evidence and later unrelated appends
+2026-10-11T06:35:43.9559854Z ok - a self-announced close never wakes its own home, and the next real note still does
+2026-10-11T06:35:47.5272066Z ok - a close after OPEN DECISIONS fold never wakes its own home, and the next real note still does
+2026-10-11T06:35:50.2246624Z ok - a folded worker decision with no home append still wakes
+2026-10-11T06:35:57.3093843Z ok - separate answers over unclassified decisions wake once, and the next real note still does
+2026-10-11T06:35:59.6109706Z ok - a close after OPEN DECISIONS fold still surfaces a worker failure inside the folded span
+2026-10-11T06:36:04.4378836Z ok - a close after OPEN DECISIONS fold still surfaces unlisted secondmate lines inside the folded span
+2026-10-11T06:36:07.1872267Z ok - captain-relevant signal is surfaced (queue + exit) and marked surfaced
+2026-10-11T06:36:09.3076672Z ok - a needs-decision signal row's queued payload is marked needs-decision: for branch exclusion
+2026-10-11T06:36:11.4364029Z ok - a reconciliation-required needs-decision row's queued payload is still marked needs-decision:
+2026-10-11T06:36:13.4472976Z ok - a captain-held signal stays actionable while the crew is still working
+2026-10-11T06:36:15.5695158Z ok - a pending-reply second-mate escalation is marked for main-only routing
+2026-10-11T06:36:17.6902165Z ok - an ordinary blocked event remains branch-eligible
+2026-10-11T06:36:19.8221470Z ok - a routine event containing a needs-decision phrase keeps its ordinary payload, unmarked
+2026-10-11T06:36:22.5986641Z ok - a captain event hidden behind a later routine append is still surfaced (queue + exit)
+2026-10-11T06:36:24.7545524Z ok - a keyed decision signal reads only the newly appended span, not the whole log
+2026-10-11T06:36:27.5466945Z ok - a finished release reported before routine cleanup chatter is still surfaced
+2026-10-11T06:36:30.4587502Z ok - a routine append after an already-classified event is absorbed (no re-wake)
+2026-10-11T06:36:37.7878938Z ok - unreadable status reports are bounded without advancing classification
+2026-10-11T06:36:43.6615559Z ok - permission recovery surfaces content from the unadvanced position
+2026-10-11T06:36:45.5381100Z ok - a stale pane sitting on a terminal status is surfaced (queue + exit)
+2026-10-11T06:36:49.3120994Z ok - a stale terminal-looking status is overridden and absorbed while a run is actively working, then wedge-escalated
+2026-10-11T06:36:53.7559644Z ok - provably-working non-terminal stale is absorbed on first sight, then wedge-escalated past the threshold
+2026-10-11T06:37:01.6624573Z ok - consecutive wedge escalations on the same pane accumulate and demand deep inspection at the threshold
+2026-10-11T06:37:03.6291229Z ok - a pane becoming active again resets the consecutive wedge-escalation counter
+2026-10-11T06:37:53.1996793Z ok - a record whose endpoint is dead or missing reports itself once and is never re-escalated
+2026-10-11T06:38:11.7289196Z ok - a live wedged agent, an unattributable one, and an unreadable endpoint escalate unchanged
+2026-10-11T06:38:19.7971404Z ok - the once-only gone report re-arms when the endpoint comes back, and reports a later death again
+2026-10-11T06:38:38.7178366Z ok - a second death after a same-window relaunch reports in full without a live probe, and an unchanged dead pane stays silent
+2026-10-11T06:38:57.7122834Z ok - a successor's byte-identical dead display reports in full, and the same incarnation still absorbs
+2026-10-11T06:38:59.4912155Z ok - TERM stops a watcher blocked inside a poll and still runs its cleanup
+2026-10-11T06:39:03.0300232Z watcher: recovery state could not be persisted; retaining stale lock evidence
+2026-10-11T06:39:04.1648776Z ok - TERM stops a watcher whose downtime-marker lock is held, retaining stale evidence
+2026-10-11T06:39:13.4674350Z ok - the cleanup marker-lock bound is decimal and zero falls back to the default
+2026-10-11T06:39:15.4904356Z ok - a busy worker below the turn-age bound remains working with no escalation
+2026-10-11T06:39:19.2976190Z ok - a busy worker with a stable pane hash still escalates once its completed-turn age reaches the bound
+2026-10-11T06:39:23.0830468Z ok - a busy worker whose pane hash changes every poll still escalates once its completed-turn age reaches the bound
+2026-10-11T06:39:25.0927209Z ok - touching a busy worker's completed-turn marker resets the age and prevents an old-age escalation
+2026-10-11T06:39:27.1113792Z ok - native progress resets busy age without a completed turn or notification
+2026-10-11T06:39:35.1595805Z ok - repeated busy turn-age escalations reuse the existing escalation counter and demand deep inspection at the threshold
+2026-10-11T06:39:39.9221384Z ok - the production default busy-turn-age bound is 3600s (5min under does not wedge, 66min over does)
+2026-10-11T06:39:48.1147626Z ok - a busy pane under a declared pause is rechecked on the long cadence, and lifting the pause restores the wedge escalation
+2026-10-11T06:39:52.8671931Z ok - away mode hands a busy declared pause to the daemon as a plain stale, and lifting the declaration restores the wedge escalation
+2026-10-11T06:40:05.6945152Z ok - away mode wakes the daemon once per declaration for a busy pane whose footer ticks on every capture
+2026-10-11T06:40:07.5730029Z ok - a not-provably-working non-terminal stale is surfaced immediately (never left to wait out the timer)
+2026-10-11T06:40:12.0862495Z ok - a declared pause is absorbed on first sight, then re-surfaced as a recheck past the threshold, never wedge-escalated
+2026-10-11T06:40:20.3846271Z ok - exited declared-pause and captain-held panes use bounded pause cadence while a live decision gate still surfaces once
+2026-10-11T06:40:34.7166771Z not ok - could not acknowledge pipeline-run test stop
+2026-10-11T06:40:34.9497947Z FM_TEST_END 2026-10-11T06:40:34Z tests/fm-watch-triage.test.sh exit=1 duration_ms=388061 gate_skip=false
+2026-10-11T06:40:34.9736676Z FM_TEST_BEGIN 2026-10-11T06:40:34Z tests/fm-spawn-worktree-settle.test.sh family=backend-dispatch expected_gate_skip=none
+2026-10-11T06:40:38.8707247Z ok - a single transient stale pane_current_path read is not accepted as the worktree
+2026-10-11T06:40:41.6683044Z ok - an already-settled pane confirms on the next read, not a whole extra cycle
+2026-10-11T06:40:42.9273071Z ok - a transient primary-checkout pane read is not accepted as the worktree
+2026-10-11T06:40:44.4776722Z ok - a pane stuck on the primary checkout fails loudly at the deadline
+2026-10-11T06:40:44.4777489Z # all fm-spawn-worktree-settle tests passed
+2026-10-11T06:40:44.5314423Z FM_TEST_END 2026-10-11T06:40:44Z tests/fm-spawn-worktree-settle.test.sh exit=0 duration_ms=9550 gate_skip=false
+2026-10-11T06:40:44.5544598Z FM_TEST_BEGIN 2026-10-11T06:40:44Z tests/fm-remote-herdr-guard.test.sh family=secondmate expected_gate_skip=none
+2026-10-11T06:40:44.8249110Z ok - holder processes expose their environment to the owner library
+2026-10-11T06:40:44.8429564Z ok - an empty session is started inside the launch agent
+2026-10-11T06:40:45.3603958Z ok - launchd and worker markers require gui-domain launchctl proof
+2026-10-11T06:40:46.3013146Z ok - background, inherited-XPC, SSH-born, SSH-descended, and unprovable owners are taken over
+2026-10-11T06:40:46.3381321Z ok - a running session with no provable owner is taken over rather than trusted
+2026-10-11T06:40:46.3747066Z ok - a host without lsof cannot prove an Aqua birth, so the session is taken over
+2026-10-11T06:40:47.2729355Z ok - a foreign server that never releases the socket yields exit 1 so launchd retries
+2026-10-11T06:40:47.6501130Z ok - the guard starts as soon as the foreign server releases the socket
+2026-10-11T06:40:47.6600037Z ok - argument errors are refused before any herdr call
+2026-10-11T06:40:47.6963147Z FM_TEST_END 2026-10-11T06:40:47Z tests/fm-remote-herdr-guard.test.sh exit=0 duration_ms=3134 gate_skip=false
+2026-10-11T06:40:47.7192077Z FM_TEST_BEGIN 2026-10-11T06:40:47Z tests/fm-stow-cascade.test.sh family=secondmate expected_gate_skip=none
+2026-10-11T06:40:47.8609948Z ok - each home is accounted against its own allowance instead of a fleet total
+2026-10-11T06:40:48.0180367Z ok - the cascade emits one stanza per registered home and refuses a double-counted registry
+2026-10-11T06:40:48.3854617Z ok - transport follows placement and live-agent state, and a remote home without an agent defers
+2026-10-11T06:40:48.5214492Z ok - each stanza carries the facts a per-home receipt needs, before and after curation
+2026-10-11T06:40:50.6864592Z ok - one slow or unreachable home is bounded and every other home still reports
+2026-10-11T06:40:50.7170149Z ok - the cascade stays silent with no secondmates and never runs from a secondmate home
+2026-10-11T06:40:50.7563316Z FM_TEST_END 2026-10-11T06:40:50Z tests/fm-stow-cascade.test.sh exit=0 duration_ms=3029 gate_skip=false
+2026-10-11T06:40:50.7798201Z FM_TEST_BEGIN 2026-10-11T06:40:50Z tests/fm-calm-claude-mod.test.sh family=pure-contract-unit expected_gate_skip=none
+2026-10-11T06:40:50.8969385Z ok - the Calm mod is one hooks module, linked into the project's auto-load path, with no command, skill, agent, or classic hook path that bypasses its exact opt-in
+2026-10-11T06:40:51.1186171Z ok - the Pi working ship renders byte-for-byte the shared sprite core's frame painted in standard ANSI, at every width, cadence step, freeze, clamp, and reset
+2026-10-11T06:40:51.2426899Z ok - the Raster packing lays the shared frame out row-major in Claude Code's dark or light theme palette, using light as the both-readable fallback, with plain padding, default backgrounds, BMP glyphs, clipping, and a standard base64 encoding
+2026-10-11T06:40:51.3338529Z ok - the Calm policy resolves the shared preference exactly as Pi does, reads on, max, and off as Pi does, and shares Pi's 240-character-or-newline preservation behavior while classifying working notes by stop reason, tool use, and restored transcript shape
+2026-10-11T06:40:51.9951710Z ok - the supervision notes read the store owner's tail copy and markers as Pi does: sailboat and anchor lines, silent rows skipped, bounded replay of unread and unprocessed rows not already shown in the session, and latch notes
+2026-10-11T06:40:52.9232632Z ok - the mod's operational-input classifier agrees with bin/fm-operational-input.sh on all 77 corpus cases: every current kind the owner encodes, every legacy shape, and every near miss
+2026-10-11T06:40:53.3724260Z ok - the mod's doorbell port agrees with bin/fm-operational-input.sh doorbell-kind on all 28 cases: every record the owner writes and every unbacked or malformed near miss
+2026-10-11T06:40:53.4088446Z FM_TEST_END 2026-10-11T06:40:53Z tests/fm-calm-claude-mod.test.sh exit=0 duration_ms=2621 gate_skip=false
+2026-10-11T06:40:53.4317075Z FM_TEST_BEGIN 2026-10-11T06:40:53Z tests/fm-documentation-audiences.test.sh family=pure-contract-unit expected_gate_skip=none
+2026-10-11T06:40:54.3252903Z ok - documentation inventory classifies every maintained prose surface exactly once
+2026-10-11T06:40:54.5429472Z ok - classification, setup routing, and maintained-prose scope fail safely
+2026-10-11T06:40:54.6288349Z ok - required documentation owner pointers cannot silently disappear
+2026-10-11T06:40:54.7311334Z ok - local links resolve while dates, versions, commands, and incident prose remain semantically reviewed
+2026-10-11T06:40:54.8321534Z ok - the configuration doc must carry the secret-store boundary section its mentions point at
+2026-10-11T06:40:54.8625277Z FM_TEST_END 2026-10-11T06:40:54Z tests/fm-documentation-audiences.test.sh exit=0 duration_ms=1423 gate_skip=false
+2026-10-11T06:40:54.8857572Z FM_TEST_BEGIN 2026-10-11T06:40:54Z tests/fm-remote-entrypoint.test.sh family=standalone expected_gate_skip=none
+2026-10-11T06:40:54.9475539Z ok - fm-remote-entrypoint.sh invoked via a PATH symlink resolves SCRIPT_DIR to the real bin/ directory
+2026-10-11T06:40:54.9743723Z ok - fm-remote-entrypoint.sh invoked directly still resolves SCRIPT_DIR correctly
+2026-10-11T06:40:55.0079492Z FM_TEST_END 2026-10-11T06:40:55Z tests/fm-remote-entrypoint.test.sh exit=0 duration_ms=114 gate_skip=false
+2026-10-11T06:40:55.0315277Z FM_TEST_BEGIN 2026-10-11T06:40:55Z tests/fm-send-secondmate-marker-herdr-e2e.test.sh family=live-harness-optin expected_gate_skip=live-capability
+2026-10-11T06:40:55.0650996Z skip: live: opt-in; set FM_SEND_MARKER_HERDR_E2E=1 to run
+2026-10-11T06:40:55.0998232Z fm-test-run: gate skip: tests/fm-send-secondmate-marker-herdr-e2e.test.sh: live: opt-in; set FM_SEND_MARKER_HERDR_E2E=1 to run
+2026-10-11T06:40:55.0999842Z FM_TEST_END 2026-10-11T06:40:55Z tests/fm-send-secondmate-marker-herdr-e2e.test.sh exit=0 duration_ms=55 gate_skip=true
+2026-10-11T06:40:55.1232126Z FM_TEST_BEGIN 2026-10-11T06:40:55Z tests/fm-opencode-primary-live-e2e.test.sh family=live-harness-optin expected_gate_skip=live-capability
+2026-10-11T06:40:55.1498591Z skip: live: opt-in; set FM_OPENCODE_LIVE_E2E=1 to run
+2026-10-11T06:40:55.1838572Z fm-test-run: gate skip: tests/fm-opencode-primary-live-e2e.test.sh: live: opt-in; set FM_OPENCODE_LIVE_E2E=1 to run
+2026-10-11T06:40:55.1839434Z FM_TEST_END 2026-10-11T06:40:55Z tests/fm-opencode-primary-live-e2e.test.sh exit=0 duration_ms=48 gate_skip=true
+2026-10-11T06:40:55.2079728Z FM_TEST_BEGIN 2026-10-11T06:40:55Z tests/fm-grok-stop-live-e2e.test.sh family=live-harness-optin expected_gate_skip=live-capability
+2026-10-11T06:40:55.2347458Z skip: live: opt-in; set FM_GROK_STOP_LIVE_E2E=1 to run
+2026-10-11T06:40:55.2700423Z fm-test-run: gate skip: tests/fm-grok-stop-live-e2e.test.sh: live: opt-in; set FM_GROK_STOP_LIVE_E2E=1 to run
+2026-10-11T06:40:55.2701820Z FM_TEST_END 2026-10-11T06:40:55Z tests/fm-grok-stop-live-e2e.test.sh exit=0 duration_ms=49 gate_skip=true
+2026-10-11T06:40:55.2937184Z FM_TEST_BEGIN 2026-10-11T06:40:55Z tests/fm-pr-state-live-e2e.test.sh family=live-harness-optin expected_gate_skip=live-capability
+2026-10-11T06:40:55.3199542Z skip: live: opt-in; set FM_PR_STATE_LIVE_E2E=1 to run
+2026-10-11T06:40:55.3538428Z fm-test-run: gate skip: tests/fm-pr-state-live-e2e.test.sh: live: opt-in; set FM_PR_STATE_LIVE_E2E=1 to run
+2026-10-11T06:40:55.3540093Z FM_TEST_END 2026-10-11T06:40:55Z tests/fm-pr-state-live-e2e.test.sh exit=0 duration_ms=47 gate_skip=true
+2026-10-11T06:40:55.3747937Z FM_TEST_SUMMARY total=11 failed=1 skipped_gate=4 duration_ms=409670
+2026-10-11T06:40:55.3763764Z FM_TEST_SUMMARY_FAMILY family=backend-dispatch count=1 duration_ms=9550 failed=0
+2026-10-11T06:40:55.3764859Z FM_TEST_SUMMARY_FAMILY family=live-harness-optin count=4 duration_ms=199 failed=0
+2026-10-11T06:40:55.3766201Z FM_TEST_SUMMARY_FAMILY family=pure-contract-unit count=2 duration_ms=4044 failed=0
+2026-10-11T06:40:55.3767142Z FM_TEST_SUMMARY_FAMILY family=secondmate count=2 duration_ms=6163 failed=0
+2026-10-11T06:40:55.3767710Z FM_TEST_SUMMARY_FAMILY family=standalone count=1 duration_ms=114 failed=0
+2026-10-11T06:40:55.3768282Z FM_TEST_SUMMARY_FAMILY family=watcher-wake-lock count=1 duration_ms=388061 failed=1
+2026-10-11T06:40:55.3786535Z FM_TEST_SLOWEST rank=1 script=tests/fm-watch-triage.test.sh duration_ms=388061
+2026-10-11T06:40:55.3787619Z FM_TEST_SLOWEST rank=2 script=tests/fm-spawn-worktree-settle.test.sh duration_ms=9550
+2026-10-11T06:40:55.3788649Z FM_TEST_SLOWEST rank=3 script=tests/fm-remote-herdr-guard.test.sh duration_ms=3134
+2026-10-11T06:40:55.3789589Z FM_TEST_SLOWEST rank=4 script=tests/fm-stow-cascade.test.sh duration_ms=3029
+2026-10-11T06:40:55.3790495Z FM_TEST_SLOWEST rank=5 script=tests/fm-calm-claude-mod.test.sh duration_ms=2621
+2026-10-11T06:40:55.3791467Z FM_TEST_SLOWEST rank=6 script=tests/fm-documentation-audiences.test.sh duration_ms=1423
+2026-10-11T06:40:55.3792451Z FM_TEST_SLOWEST rank=7 script=tests/fm-remote-entrypoint.test.sh duration_ms=114
+2026-10-11T06:40:55.3793475Z FM_TEST_SLOWEST rank=8 script=tests/fm-send-secondmate-marker-herdr-e2e.test.sh duration_ms=55
+2026-10-11T06:40:55.3794516Z FM_TEST_SLOWEST rank=9 script=tests/fm-grok-stop-live-e2e.test.sh duration_ms=49
+2026-10-11T06:40:55.3795547Z FM_TEST_SLOWEST rank=10 script=tests/fm-opencode-primary-live-e2e.test.sh duration_ms=48
+2026-10-11T06:40:55.3796781Z FM_TEST_SLOWEST rank=11 script=tests/fm-pr-state-live-e2e.test.sh duration_ms=47
+2026-10-11T06:40:55.4072021Z fm-test-run: wrote timing artifact: /home/runner/work/_temp/fm-test/fm-test-timing-portable-serial-1.json
+2026-10-11T06:40:55.4107231Z ##[error]Process completed with exit code 1.
+2026-10-11T06:40:55.4194675Z ##[group]Run actions/upload-artifact@v4
+2026-10-11T06:40:55.4194998Z with:
+2026-10-11T06:40:55.4195233Z   name: fm-test-timing-portable-serial-1
+2026-10-11T06:40:55.4195658Z   path: /home/runner/work/_temp/fm-test/fm-test-timing-portable-serial-1.json
+2026-10-11T06:40:55.4196407Z   if-no-files-found: warn
+2026-10-11T06:40:55.4196652Z   compression-level: 6
+2026-10-11T06:40:55.4196872Z   overwrite: false
+2026-10-11T06:40:55.4197082Z   include-hidden-files: false
+2026-10-11T06:40:55.4197313Z ##[endgroup]
+2026-10-11T06:40:55.5948873Z (node:205195) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-11T06:40:55.5949763Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-11T06:40:55.6016660Z With the provided path, there will be 1 file uploaded
+2026-10-11T06:40:55.6038584Z Artifact name is valid!
+2026-10-11T06:40:55.6039189Z Root directory input is valid!
+2026-10-11T06:40:55.8021626Z Beginning upload of artifact content to blob storage
+2026-10-11T06:40:55.8209699Z (node:205195) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-11T06:40:55.8453462Z Uploaded bytes 968
+2026-10-11T06:40:55.8596277Z Finished uploading artifact content to blob storage!
+2026-10-11T06:40:55.8597642Z SHA256 digest of uploaded artifact zip is a5bfad2584b3969ea5ac600c5f6ff2dce41841faf82bd9818c22f3cfc6c876d8
+2026-10-11T06:40:55.8599138Z Finalizing artifact upload
+2026-10-11T06:40:56.0424522Z Artifact fm-test-timing-portable-serial-1.zip successfully finalized. Artifact ID 11694333735
+2026-10-11T06:40:56.0426118Z Artifact fm-test-timing-portable-serial-1 has been successfully uploaded! Final size is 968 bytes. Artifact ID is 11694333735
+2026-10-11T06:40:56.0431651Z Artifact download URL: https://github.com/rega10/firstmate/actions/runs/38117888743/artifacts/11694333735
+2026-10-11T06:40:56.0654931Z Post job cleanup.
+2026-10-11T06:40:56.1535104Z [command]/usr/bin/git version
+2026-10-11T06:40:56.1581677Z git version 2.55.0
+2026-10-11T06:40:56.1627706Z Temporarily overriding HOME='/home/runner/work/_temp/33e6468d-b858-4b24-a2a5-b49353fe5773' before making global git config changes
+2026-10-11T06:40:56.1629338Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-11T06:40:56.1633361Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/firstmate/firstmate
+2026-10-11T06:40:56.1666585Z Removing SSH command configuration
+2026-10-11T06:40:56.1673334Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-11T06:40:56.1709289Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-11T06:40:56.1960573Z Removing HTTP extra header
+2026-10-11T06:40:56.1966747Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-11T06:40:56.2005330Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-11T06:40:56.2277379Z Removing includeIf entries pointing to credentials config files
+2026-10-11T06:40:56.2278561Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-11T06:40:56.2306439Z includeif.gitdir:/home/runner/work/firstmate/firstmate/.git.path
+2026-10-11T06:40:56.2307806Z includeif.gitdir:/home/runner/work/firstmate/firstmate/.git/worktrees/*.path
+2026-10-11T06:40:56.2309120Z includeif.gitdir:/github/workspace/.git.path
+2026-10-11T06:40:56.2310221Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-11T06:40:56.2319322Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/firstmate/firstmate/.git.path
+2026-10-11T06:40:56.2345512Z /home/runner/work/_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:40:56.2357776Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/firstmate/firstmate/.git.path /home/runner/work/_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:40:56.2401657Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/firstmate/firstmate/.git/worktrees/*.path
+2026-10-11T06:40:56.2447023Z /home/runner/work/_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:40:56.2450432Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/firstmate/firstmate/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:40:56.2491832Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-11T06:40:56.2521184Z /github/runner_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:40:56.2533436Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:40:56.2574372Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-11T06:40:56.2601470Z /github/runner_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:40:56.2614461Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config
+2026-10-11T06:40:56.2664042Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-11T06:40:56.2926102Z Removing credentials config '/home/runner/work/_temp/git-credentials-9fcdc6e1-04d6-4f41-a5f0-f2117829c3e2.config'
+2026-10-11T06:40:56.3095276Z Cleaning up orphan processes
+2026-10-11T06:40:56.3559288Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

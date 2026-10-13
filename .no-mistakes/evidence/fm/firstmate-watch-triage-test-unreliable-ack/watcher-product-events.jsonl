@@ -1,0 +1,77 @@
+{"elapsed_seconds": 0.184, "file": "own-work-background-shell/watch.out", "content": ""}
+{"elapsed_seconds": 0.609, "file": "own-work-background-shell/state/.watch.lock/pid", "content": "14192\n"}
+{"elapsed_seconds": 1.785, "file": "own-work-background-shell/watch.out", "content": "stale: test:fm-own-work\n"}
+{"elapsed_seconds": 1.785, "file": "own-work-background-shell/state/.watcher-down", "content": "pending:downtime:14192.1791862800.rBzx1d\n"}
+{"elapsed_seconds": 1.785, "file": "own-work-background-shell/state/.wake-queue", "content": "1791862800\t1\tstale\ttest:fm-own-work\tstale: test:fm-own-work\n"}
+{"elapsed_seconds": 2.27, "file": "own-work-background-shell/state/.watcher-down", "content": "pending:handling:14192.1791862800.rBzx1d\n"}
+{"elapsed_seconds": 3.718, "file": "own-work-background-shell/state/.watcher-down", "content": "acked:handling:14192.1791862800.rBzx1d\n"}
+{"elapsed_seconds": 3.719, "file": "own-work-background-shell/state/.wake-queue", "content": ""}
+{"elapsed_seconds": 3.751, "file": "own-work-background-shell/recheck.out", "content": ""}
+{"elapsed_seconds": 3.929, "file": "own-work-background-shell/state/.watch.lock/pid", "content": "19656\n"}
+{"elapsed_seconds": 4.631, "file": "own-work-background-shell/poll-ready", "content": "19656\n"}
+{"elapsed_seconds": 4.832, "file": "own-work-background-shell/state/.watcher-down", "content": "pending:downtime:19656.1791862803.OIjnEg\n"}
+{"elapsed_seconds": 5.098, "file": "own-work-background-shell/state/.watcher-down", "content": "pending:handling:19656.1791862803.OIjnEg\n"}
+{"elapsed_seconds": 5.691, "file": "own-work-background-shell/state/.watcher-down", "content": "acked:handling:19656.1791862803.OIjnEg\n"}
+{"elapsed_seconds": 5.855, "file": "own-work-background-shell/state/.watch.lock/pid", "content": "22680\n"}
+{"elapsed_seconds": 6.544, "file": "own-work-background-shell/poll-ready", "content": "22680\n"}
+{"elapsed_seconds": 6.544, "file": "own-work-background-shell/state/.watcher-down", "content": "pending:downtime:22680.1791862805.RAeQrQ\n"}
+{"elapsed_seconds": 6.742, "file": "own-work-background-shell/state/.watcher-down", "content": "pending:handling:22680.1791862805.RAeQrQ\n"}
+{"elapsed_seconds": 7.456, "file": "own-work-background-shell/state/.watcher-down", "content": "acked:handling:22680.1791862805.RAeQrQ\n"}
+{"elapsed_seconds": 7.509, "file": "own-work-background-shell/long-cadence.out", "content": ""}
+{"elapsed_seconds": 7.713, "file": "own-work-background-shell/state/.watch.lock/pid", "content": "27900\n"}
+{"elapsed_seconds": 8.312, "file": "own-work-background-shell/state/.watcher-down", "content": "pending:downtime:27900.1791862807.GvrPbs\n"}
+{"elapsed_seconds": 8.312, "file": "own-work-background-shell/state/.wake-queue", "content": "1791862807\t2\tstale\ttest:fm-own-work\tstale: test:fm-own-work (paused 508s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)\n"}
+{"elapsed_seconds": 8.399, "file": "own-work-background-shell/long-cadence.out", "content": "stale: test:fm-own-work (paused 508s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)\n"}
+{"elapsed_seconds": 8.569, "file": "own-work-pipeline-run/watch.out", "content": ""}
+{"elapsed_seconds": 8.752, "file": "own-work-pipeline-run/state/.watch.lock/pid", "content": "30173\n"}
+{"elapsed_seconds": 9.609, "file": "own-work-pipeline-run/watch.out", "content": "stale: test:fm-own-work\n"}
+{"elapsed_seconds": 9.609, "file": "own-work-pipeline-run/state/.watcher-down", "content": "pending:downtime:30173.1791862808.T79btf\n"}
+{"elapsed_seconds": 9.609, "file": "own-work-pipeline-run/state/.wake-queue", "content": "1791862808\t1\tstale\ttest:fm-own-work\tstale: test:fm-own-work\n"}
+{"elapsed_seconds": 9.846, "file": "own-work-pipeline-run/state/.watcher-down", "content": "pending:handling:30173.1791862808.T79btf\n"}
+{"elapsed_seconds": 10.78, "file": "own-work-pipeline-run/state/.watcher-down", "content": "acked:handling:30173.1791862808.T79btf\n"}
+{"elapsed_seconds": 10.807, "file": "own-work-pipeline-run/state/.wake-queue", "content": ""}
+{"elapsed_seconds": 10.903, "file": "own-work-pipeline-run/recheck.out", "content": ""}
+{"elapsed_seconds": 10.995, "file": "own-work-pipeline-run/state/.watch.lock/pid", "content": "34839\n"}
+{"elapsed_seconds": 11.726, "file": "own-work-pipeline-run/poll-ready", "content": "34839\n"}
+{"elapsed_seconds": 11.821, "file": "own-work-pipeline-run/state/.watcher-down", "content": "pending:downtime:34839.1791862810.lNjSkZ\n"}
+{"elapsed_seconds": 12.08, "file": "own-work-pipeline-run/state/.watcher-down", "content": "pending:handling:34839.1791862810.lNjSkZ\n"}
+{"elapsed_seconds": 12.804, "file": "own-work-pipeline-run/state/.watcher-down", "content": "acked:handling:34839.1791862810.lNjSkZ\n"}
+{"elapsed_seconds": 12.904, "file": "own-work-pipeline-run/state/.watch.lock/pid", "content": "38179\n"}
+{"elapsed_seconds": 13.523, "file": "own-work-pipeline-run/poll-ready", "content": "38179\n"}
+{"elapsed_seconds": 13.599, "file": "own-work-pipeline-run/state/.watcher-down", "content": "pending:downtime:38179.1791862812.OxnC19\n"}
+{"elapsed_seconds": 13.81, "file": "own-work-pipeline-run/state/.watcher-down", "content": "pending:handling:38179.1791862812.OxnC19\n"}
+{"elapsed_seconds": 14.505, "file": "own-work-pipeline-run/long-cadence.out", "content": ""}
+{"elapsed_seconds": 14.505, "file": "own-work-pipeline-run/state/.watcher-down", "content": "acked:handling:38179.1791862812.OxnC19\n"}
+{"elapsed_seconds": 14.692, "file": "own-work-pipeline-run/state/.watch.lock/pid", "content": "41304\n"}
+{"elapsed_seconds": 15.303, "file": "own-work-pipeline-run/state/.watcher-down", "content": "pending:downtime:41304.1791862814.7WaK9p\n"}
+{"elapsed_seconds": 15.303, "file": "own-work-pipeline-run/state/.wake-queue", "content": "1791862814\t2\tstale\ttest:fm-own-work\tstale: test:fm-own-work (paused 507s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)\n"}
+{"elapsed_seconds": 15.34, "file": "own-work-pipeline-run/long-cadence.out", "content": "stale: test:fm-own-work (paused 507s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)\n"}
+{"elapsed_seconds": 15.597, "file": "own-work-foreground-command/watch.out", "content": ""}
+{"elapsed_seconds": 15.687, "file": "own-work-foreground-command/state/.watch.lock/pid", "content": "43904\n"}
+{"elapsed_seconds": 16.501, "file": "own-work-foreground-command/state/.watcher-down", "content": "pending:downtime:43904.1791862815.o5GBDR\n"}
+{"elapsed_seconds": 16.501, "file": "own-work-foreground-command/state/.wake-queue", "content": "1791862815\t1\tstale\ttest:fm-own-work\tstale: test:fm-own-work\n"}
+{"elapsed_seconds": 16.536, "file": "own-work-foreground-command/watch.out", "content": "stale: test:fm-own-work\n"}
+{"elapsed_seconds": 16.916, "file": "own-work-foreground-command/state/.watcher-down", "content": "pending:handling:43904.1791862815.o5GBDR\n"}
+{"elapsed_seconds": 17.774, "file": "own-work-foreground-command/recheck.out", "content": ""}
+{"elapsed_seconds": 17.774, "file": "own-work-foreground-command/state/.watcher-down", "content": "acked:handling:43904.1791862815.o5GBDR\n"}
+{"elapsed_seconds": 17.774, "file": "own-work-foreground-command/state/.wake-queue", "content": ""}
+{"elapsed_seconds": 17.921, "file": "own-work-foreground-command/state/.watch.lock/pid", "content": "47713\n"}
+{"elapsed_seconds": 18.679, "file": "own-work-foreground-command/poll-ready", "content": "47713\n"}
+{"elapsed_seconds": 18.825, "file": "own-work-foreground-command/state/.watcher-down", "content": "pending:downtime:47713.1791862817.mzyhnm\n"}
+{"elapsed_seconds": 19.126, "file": "own-work-foreground-command/state/.watcher-down", "content": "pending:handling:47713.1791862817.mzyhnm\n"}
+{"elapsed_seconds": 19.78, "file": "own-work-foreground-command/state/.watcher-down", "content": "acked:handling:47713.1791862817.mzyhnm\n"}
+{"elapsed_seconds": 19.955, "file": "own-work-foreground-command/state/.watch.lock/pid", "content": "50995\n"}
+{"elapsed_seconds": 20.535, "file": "own-work-foreground-command/poll-ready", "content": "50995\n"}
+{"elapsed_seconds": 20.761, "file": "own-work-foreground-command/state/.watcher-down", "content": "pending:downtime:50995.1791862819.hdBXWw\n"}
+{"elapsed_seconds": 20.889, "file": "own-work-foreground-command/state/.watcher-down", "content": "pending:handling:50995.1791862819.hdBXWw\n"}
+{"elapsed_seconds": 21.576, "file": "own-work-foreground-command/state/.watcher-down", "content": "acked:handling:50995.1791862819.hdBXWw\n"}
+{"elapsed_seconds": 21.636, "file": "own-work-foreground-command/long-cadence.out", "content": ""}
+{"elapsed_seconds": 21.799, "file": "own-work-foreground-command/state/.watch.lock/pid", "content": "54069\n"}
+{"elapsed_seconds": 22.395, "file": "own-work-foreground-command/state/.watcher-down", "content": "pending:downtime:54069.1791862821.4Q2Dho\n"}
+{"elapsed_seconds": 22.425, "file": "own-work-foreground-command/long-cadence.out", "content": "stale: test:fm-own-work (paused 507s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)\n"}
+{"elapsed_seconds": 22.426, "file": "own-work-foreground-command/state/.wake-queue", "content": "1791862821\t2\tstale\ttest:fm-own-work\tstale: test:fm-own-work (paused 507s, awaiting external - declared pause, rechecked on a long cadence not a wedge; confirm the wait still holds)\n"}
+{"elapsed_seconds": 22.696, "file": "own-work-undeclared/watch.out", "content": ""}
+{"elapsed_seconds": 22.824, "file": "own-work-undeclared/state/.watch.lock/pid", "content": "56103\n"}
+{"elapsed_seconds": 23.65, "file": "own-work-undeclared/state/.watcher-down", "content": "pending:downtime:56103.1791862822.j0GwcZ\n"}
+{"elapsed_seconds": 23.65, "file": "own-work-undeclared/state/.wake-queue", "content": "1791862822\t1\tstale\ttest:fm-own-work\tstale: test:fm-own-work\n"}
+{"elapsed_seconds": 23.751, "file": "own-work-undeclared/watch.out", "content": "stale: test:fm-own-work\n"}

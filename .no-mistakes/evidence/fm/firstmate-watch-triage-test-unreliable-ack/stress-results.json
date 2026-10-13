@@ -1,0 +1,212 @@
+[
+  {
+    "iteration": 1,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 41.86,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 2,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 40.23,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 3,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 36.48,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 4,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 42.43,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 5,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 139.59,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 6,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 48.3,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 7,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 41.7,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 8,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 47.78,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 9,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 50.21,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 10,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 47.96,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 11,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 63.6,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 12,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 44.52,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 13,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 51.0,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 14,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 109.53,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 15,
+    "shell": "bash",
+    "exit_code": 0,
+    "seconds": 51.25,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 16,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 48.18,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 17,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 40.32,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 18,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 48.57,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 19,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 82.76,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 20,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 50.32,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 21,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 45.07,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 22,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 51.2,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 23,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 58.27,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 24,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 64.07,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 25,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 54.04,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 26,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 64.01,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 27,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 64.8,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 28,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 58.5,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 29,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 59.68,
+    "cpu_load_processes": 4
+  },
+  {
+    "iteration": 30,
+    "shell": "/bin/bash",
+    "exit_code": 0,
+    "seconds": 53.34,
+    "cpu_load_processes": 4
+  }
+]
