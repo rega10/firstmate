@@ -1775,7 +1775,7 @@ report_worktree_dirt() {
 # Check the receipt before any cleanup, including a retirement retry. An empty
 # identity on a still-leased legacy slot is not evidence of an earlier return.
 teardown_validate_treehouse_lease_record() { # <meta> <project>
-  local meta=$1 project=$2 worktree pending lease_id holder task_id record_home pool_state
+  local meta=$1 project=$2 worktree pending lease_id holder task_id record_home pool_state status_rc
   lease_id=$(fm_meta_get "$meta" treehouse_lease_id)
   [ -n "$lease_id" ] || return 0
   worktree=$(fm_meta_get "$meta" worktree)
@@ -1784,7 +1784,20 @@ teardown_validate_treehouse_lease_record() { # <meta> <project>
   [ -n "$worktree" ] || return 0
   holder=$(fm_meta_get "$meta" treehouse_lease_holder)
   task_id=$(basename "$meta" .meta)
+  # Pool homes are seeded from FM_ROOT. That source checkout survives removal
+  # of a secondmate home, which is also its recorded project directory.
+  if [ -n "$pending" ] && [ "$(fm_meta_get "$meta" kind)" = secondmate ] &&
+    [ "$project" = "$worktree" ] && [ ! -d "$project" ]; then
+    project=$FM_ROOT
+  fi
   fm_treehouse_slot_lease_status "$project" "$worktree" || {
+    status_rc=$?
+    # Only a validated status snapshot with no such slot certifies a removed
+    # pending home. An unreadable pool or an existing path still refuses.
+    if [ "$status_rc" -eq 1 ] && [ -n "$pending" ] &&
+      [ ! -e "$worktree" ] && [ ! -L "$worktree" ]; then
+      return 0
+    fi
     echo "REFUSED: cannot read Treehouse status for $task_id's recorded lease_id '$lease_id' at $worktree; preserve the record and restore authoritative pool status before retrying" >&2
     return 1
   }

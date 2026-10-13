@@ -4815,6 +4815,64 @@ SH
   done
 }
 
+test_secondmate_retry_after_home_removal() {
+  local case_dir treehouse_bin receipt path lease_id flag out rc current before_pool successor before_meta
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for removed-home retry verification"
+  case_dir=$(make_case secondmate-removed-home)
+  ln -s "$ROOT/bin" "$case_dir/project/bin"
+  export TREEHOUSE_ROOT="$case_dir/treehouse-root"
+  receipt=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" get --lease --json --lease-holder "$case_dir:task-x1") || fail "could not acquire the secondmate home"
+  path=$(printf '%s\n' "$receipt" | jq -r .path)
+  lease_id=$(printf '%s\n' "$receipt" | jq -r .lease_id)
+  receipt=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" get --lease --json --lease-holder successor) || fail "could not acquire the other pool lease"
+  successor=$(printf '%s\n' "$receipt" | jq -r .path)
+  printf 'preserve successor\n' > "$successor/sentinel"
+  # Emulate interruption after conditional return and home removal, before the
+  # parent deletes the retained retirement receipt.
+  (cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" return --force --if-lease-id "$lease_id" "$path") || fail "could not release the secondmate home"
+  git -C "$case_dir/project" worktree remove --force "$path" || fail "could not remove the retired home"
+  before_pool=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json) || fail "could not query the surviving source checkout"
+  printf '%s\n' "$before_pool" | jq -e --arg path "$path" 'all(.[]; .path != $path)' >/dev/null || fail "Treehouse still lists the removed home"
+  cat > "$case_dir/fakebin/treehouse" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FM_LEASE_TEST_DIR/returns"
+[ "${FM_LEASE_STATUS_FAIL:-0}" != 1 ] || exit 1
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+  chmod +x "$case_dir/fakebin/treehouse"
+  for flag in '' --force; do
+    fm_write_meta "$case_dir/state/task-x1.meta" \
+      'window=firstmate:fm-task-x1' 'endpoint_task_id=task-x1' \
+      'worktree=' "treehouse_retiring_worktree=$path" "project=$path" \
+      "home=$path" 'kind=secondmate' 'mode=secondmate' \
+      'spawn_gen=secondmate-removed-home-test' \
+      "treehouse_lease_id=$lease_id" "treehouse_lease_holder=$case_dir:task-x1"
+    before_meta=$(cat "$case_dir/state/task-x1.meta")
+    out=$(FM_HOME="$case_dir" HOME="$case_dir/user-home" \
+      FM_REAL_TREEHOUSE="$treehouse_bin" FM_LEASE_TEST_DIR="$case_dir" FM_LEASE_STATUS_FAIL=1 \
+      FM_ROOT_OVERRIDE="$case_dir/project" PATH="$case_dir/fakebin:$PATH" \
+      "$TEARDOWN" task-x1 ${flag:+"$flag"} 2>&1)
+    rc=$?
+    [ "$rc" -ne 0 ] || fail "removed-home retry accepted unreadable pool status"
+    assert_contains "$out" 'cannot read Treehouse status' "retry did not identify unreadable pool status"
+    [ "$(cat "$case_dir/state/task-x1.meta")" = "$before_meta" ] || fail "unreadable status changed the receipt"
+    out=$(FM_HOME="$case_dir" HOME="$case_dir/user-home" \
+      FM_REAL_TREEHOUSE="$treehouse_bin" FM_LEASE_TEST_DIR="$case_dir" \
+      FM_ROOT_OVERRIDE="$case_dir/project" PATH="$case_dir/fakebin:$PATH" \
+      "$TEARDOWN" task-x1 ${flag:+"$flag"} 2>&1)
+    rc=$?
+    expect_code 0 "$rc" "secondmate retry after home removal should finish cleanup (${flag:-normal})"$'\n'"$out"
+    assert_absent "$case_dir/state/task-x1.meta" "retry retained the removed home's receipt"
+    assert_absent "$path" "retry recreated the removed home"
+    assert_no_grep '^return ' "$case_dir/returns" "retry attempted a second return of the removed home"
+    current=$(cd "$case_dir/project" && HOME="$case_dir/user-home" "$treehouse_bin" status --json) || fail "could not query the pool after retry"
+    [ "$current" = "$before_pool" ] || fail "retry changed the pool"
+    assert_grep 'preserve successor' "$successor/sentinel" "retry touched the other pool lease"
+    pass "secondmate retry after home removal finishes stale-record cleanup (${flag:-normal})"
+  done
+  unset TREEHOUSE_ROOT
+}
+
 test_unknown_pool_lease_refuses_before_cleanup() {
   local kind phase case_dir path meta before_meta before_head out rc pool_id
   for kind in ship scout secondmate; do
@@ -5057,12 +5115,18 @@ SH
   pass "descendant teardown retains the exact lease receipt until its conditional return succeeds"
 }
 
+if [ "${1:-}" = --removed-home ]; then
+  test_secondmate_retry_after_home_removal
+  exit 0
+fi
+
 if [ "${1:-}" = --missing-jq ]; then
   test_missing_jq_preserves_lease_records
   exit 0
 fi
 
 if [ "${1:-}" = --lease ]; then
+  test_secondmate_retry_after_home_removal
   test_pending_lease_preserves_successor
   test_unknown_pool_lease_refuses_before_cleanup
   test_missing_jq_preserves_lease_records
@@ -5078,6 +5142,7 @@ if [ "${1:-}" = --lease-mismatch ]; then
 fi
 
 test_pending_lease_preserves_successor
+test_secondmate_retry_after_home_removal
 test_unknown_pool_lease_refuses_before_cleanup
 test_missing_jq_preserves_lease_records
 test_real_lease_teardown_recovers_interruption
