@@ -3536,6 +3536,7 @@ const pi = {
       : { messageType: "custom", message: { role: "custom", content: process.env.FM_START_EVENT_SHAPE === "custom-string"
         ? message : [{ type: "text", text: message }, { type: "image", data: "ignored", mimeType: "image/png" }] } };
     handlers.get("before_agent_start")?.(event, {});
+    handlers.get("message_start")?.({ message: { role: "user", content: message } }, {});
   },
   events: { on() {}, emit() {} },
 };
@@ -3573,6 +3574,11 @@ if (beforeAgentStarts !== 0) throw new Error(`streaming follow-ups raised before
 // The run reaches the first queued follow-up; the second is still queued when
 // the captain replaces the session, so only the second rides the handoff.
 consumeQueued(prompts[0]);
+for (const content of [prompts[1], [{ type: "text", text: prompts[1] }]]) {
+  const message = { role: "custom", customType: "extension-note", content, display: false };
+  handlers.get("before_agent_start")?.({ messageType: "custom", message }, {});
+  handlers.get("message_start")?.({ message }, {});
+}
 await handlers.get("session_shutdown")?.({ type: "session_shutdown", reason: "new" }, {});
 const handoffPath = `${process.env.FM_HOME}/state/extensions/pi-primary-watch/session-replacement-actionable.json`;
 const handoff = JSON.parse(readFileSync(handoffPath, "utf8"));

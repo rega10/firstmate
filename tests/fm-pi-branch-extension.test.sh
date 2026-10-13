@@ -1053,6 +1053,11 @@ const mainCtx = {
     getEntries: () => entries,
   },
 };
+const customContent = "Please give me a fresh system-resource report.";
+await fire("before_agent_start", {
+  messageType: "custom",
+  message: { role: "custom", customType: "extension-note", content: customContent, display: false },
+}, mainCtx);
 const operational = spawnSync(
   "bash",
   [`${realRoot}/bin/fm-operational-input.sh`, "encode", "watcher"],
@@ -1119,6 +1124,9 @@ for (let index = 0; index < requestedPrompts.length; index += 1) {
 const mirroredCaptainText = globalThis.__fmSessions[0].ops
   .filter((op) => op.kind === "custom" && op.message.customType === "fm-main-mirror")
   .map((op) => op.message.content);
+if (mirroredCaptainText.includes(`[captain] ${customContent}`)) {
+  throw new Error("a custom message entered captain mirror context");
+}
 for (const content of [unsolicitedPrompt, ...requestedPrompts]) {
   const copies = mirroredCaptainText.filter((text) => text === `[captain] ${content}`).length;
   if (copies !== 1) throw new Error(`current captain prompt was mirrored ${copies} times instead of once`);
@@ -2133,6 +2141,15 @@ for (const event of [
   }
   await fire("agent_end", {});
 }
+aborted = false;
+await fire("before_agent_start", {
+  messageType: "custom",
+  message: { role: "custom", customType: "extension-note", content: "unrelated extension turn", display: false },
+}, abortCtx);
+await fire("agent_start", {}, defaultSessionCtx);
+await fire("context", { messages: [...history, processingMsg] }, abortCtx);
+if (aborted) throw new Error("an unrelated custom turn retained the preceding processing turn's abort state");
+await fire("agent_end", {});
 await fire("agent_settled", {});
 if (requests().length !== 1) throw new Error("a request pending when the record appeared was re-presented to the parked main");
 if (JSON.stringify(unprocessedSeqs()) !== JSON.stringify([seq1])) throw new Error(`the record moved the processed marker: ${unprocessedSeqs()}`);
