@@ -3157,6 +3157,68 @@ EOF
   pass "pre-drain eligibility re-check no-ops an already-drained wake"
 }
 
+test_branch_mirror_staged_prompt_survives_intervening_entries() {
+  local repo home out status
+  repo="$TMP_ROOT/mirror-staged-root"
+  home="$TMP_ROOT/mirror-staged-home"
+  mkdir -p "$home/state" "$home/config"
+  install_pi_branch_extension_fixture "$repo"
+  PLUGIN="$repo/.pi/extensions/fm-branch-supervision.ts" FM_HOME="$home" FM_ROOT_OVERRIDE="$ROOT" \
+    DRIVER_PRELUDE="$DRIVER_PRELUDE" node --input-type=module > "$TMP_ROOT/node-output" 2>&1 <<'EOF'
+const prelude = process.env.DRIVER_PRELUDE;
+await eval(`(async () => { ${prelude}; globalThis.__t = { fire, dispatch, settle, home }; })()`);
+const { fire, dispatch, settle, home } = globalThis.__t;
+import { readFileSync } from "node:fs";
+
+globalThis.__fmOnBranchPrompt = async ({ session }) => {
+  const report = session.options.customTools.find((tool) => tool.name === "fm_branch_report");
+  const result = await report.execute("mirror-probe", {
+    task: "branch-driver", verdict: "routine", summary: "mirror probe completed", silent: true,
+  }, undefined, undefined, {});
+  if (result.isError) throw new Error(`mirror probe report failed: ${JSON.stringify(result)}`);
+};
+const entries = [];
+const ctx = {
+  sessionManager: {
+    getSessionFile: () => `${home}/main.jsonl`,
+    getEntries: () => entries,
+  },
+};
+await fire("session_start", {}, ctx);
+const prompt = "Please keep monitoring the fleet.";
+const mirrors = () => globalThis.__fmSessions[0].ops
+  .filter((op) => op.kind === "custom" && op.message.customType === "fm-main-mirror")
+  .map((op) => op.message.content);
+const cursorIndex = () => JSON.parse(readFileSync(`${home}/state/.branch-mirror-cursor`, "utf8")).index;
+for (const [turn, intervening] of ["system", "custom", null].entries()) {
+  await fire("before_agent_start", { messageType: "user", prompt }, ctx);
+  const wake = dispatch(`signal: prompt ${turn}`);
+  if (!wake.accepted) throw new Error("branch declined the in-flight prompt probe");
+  await wake.settlement;
+  if (mirrors().filter((text) => text === `[captain] ${prompt}`).length !== turn + 1) {
+    throw new Error("in-flight user prompt did not reach the branch exactly once");
+  }
+  // Real Pi 1.2 inserts a system message after before_agent_start and before
+  // the user entry. Other extension metadata may also occupy that position.
+  if (intervening === "system") entries.push({ type: "message", message: { role: "system", content: "prompt update" } });
+  if (intervening === "custom") entries.push({ type: "custom", customType: "probe", data: {} });
+  entries.push({ type: "message", message: { role: "user", content: [{ type: "text", text: prompt }] } });
+  entries.push({ type: "message", message: { role: "assistant", content: `response ${turn}` } });
+  await fire("turn_end", {}, ctx);
+  await settle(() => cursorIndex() === entries.length, "persisted dialog delivery");
+  const expected = Array.from({ length: turn + 1 }, (_, index) => [`[captain] ${prompt}`, `[main] response ${index}`]).flat();
+  if (JSON.stringify(mirrors()) !== JSON.stringify(expected)) {
+    throw new Error(`staged prompt duplicated or dialog lost: ${JSON.stringify(mirrors())}`);
+  }
+}
+process.exit(0);
+EOF
+  status=$?
+  out=$(cat "$TMP_ROOT/node-output")
+  expect_code 0 "$status" "intervening entries must not duplicate staged prompts: $out"
+  pass "staged prompts mirror once across intervening entries and repeated identical submissions"
+}
+
 test_branch_mirror_filters_order_and_cursor() {
   local repo home out status
   repo="$TMP_ROOT/mirror-root"
@@ -6002,6 +6064,7 @@ test_post_construction_provider_error_falls_back_latches_and_recovers_on_cooldow
 test_selection_change_does_not_corrupt_inflight_provider_state
 test_main_owned_grant_result_falls_back_to_main
 test_branch_predrain_recheck_noops_already_drained_wake
+test_branch_mirror_staged_prompt_survives_intervening_entries
 test_branch_mirror_filters_order_and_cursor
 test_branch_mirror_reanchors_for_the_new_session_branch_conversation
 test_branch_session_is_new_at_every_main_session_start
