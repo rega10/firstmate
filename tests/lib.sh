@@ -452,7 +452,7 @@ fm_test_fake_treehouse_lease() { # <fakebin> [<path> ...]
     cat <<'SH'
 case "${1:-}:${2:-}" in
   get:--help)
-    printf '%s\n' 'Usage: treehouse get [--lease] [--json] [--lease-holder <holder>]'
+    printf '%s\n' 'Usage: treehouse get [--lease] [--json] [--lease-holder <holder>] [--no-fetch]'
     exit 0 ;;
   return:--help)
     printf '%s\n' 'Usage: treehouse return [path] [--force] [--if-lease-id <id>]'

@@ -8,6 +8,8 @@
 # pool as-is, or stops when a configured origin is unusable or another task
 # record still holds the returned slot. Real Treehouse cases also prove that
 # leases preserve an exited owner's checkout while another slot launches.
+# Origin-contact cases count every real git contact with origin and prove the
+# spawn keeps that count minimal and announces each contact it still makes.
 set -u
 
 # shellcheck source=tests/fixtures.sh
@@ -96,7 +98,7 @@ REC
   pass "a remote-seeded secondmate home allocates and launches from its Treehouse pool"
 }
 
-test_linked_spawning_home_rejects_primary_before_refresh() {
+test_linked_spawning_home_rejects_primary_without_reset() {
   local rec id out status returned primary spawning before_reflog
   for returned in primary primary-alias spawning scout; do
     id="pool-linked-${returned}-r12"
@@ -151,13 +153,12 @@ test_linked_spawning_home_rejects_primary_before_refresh() {
       assert_contains "$out" "did not yield an isolated worktree" \
         "spawn did not explain its isolation refusal"
       [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published task metadata"
-      [ ! -e "$primary/.git/FETCH_HEAD" ] || fail "refused spawn fetched before proving isolation"
     fi
     [ "$(git -C "$primary" rev-parse HEAD)" = "$INITIAL_SHA" ] \
       || fail "spawn reset the repository primary from a linked home"
     [ "$(git -C "$primary" reflog)" = "$before_reflog" ] \
       || fail "spawn touched the primary reflog from a linked home"
-    pass "linked spawning home: $returned preserves the primary before any refresh"
+    pass "linked spawning home: $returned preserves the primary checkout"
   done
 }
 
@@ -743,6 +744,319 @@ test_pool_slot_claim_follows_the_spawn_outcome() {
   [ ! -e "$SLOT_CLAIM" ] && [ ! -L "$SLOT_CLAIM" ] \
     || fail "the aborted spawn left a slot claim naming a task with no record: $(cat "$SLOT_CLAIM")"
   pass "a Treehouse slot claim names the launched task, refuses when unclaimable, and is dropped by a locked abort"
+}
+
+# Every git contact with origin can cost the operator one remote approval
+# (a protected credential path asks once per network operation), so a spawn
+# keeps those contacts to the minimum and announces each one before it happens.
+# A counting upload-pack records every real contact, whichever git command or
+# allocator makes it, so the count is the number of approvals an operator sees.
+install_origin_contact_counter() {
+  CONTACT_LOG="$CASE_DIR/origin-contacts.log"
+  : > "$CONTACT_LOG"
+  cat > "$CASE_DIR/counting-upload-pack" <<SH
+#!/bin/sh
+printf '%s\n' "\$(ps -o args= -p \$PPID)" >> '$CONTACT_LOG'
+exec git upload-pack "\$@"
+SH
+  chmod +x "$CASE_DIR/counting-upload-pack"
+  git -C "$PROJECT_DIR" config remote.origin.uploadpack "$CASE_DIR/counting-upload-pack"
+}
+
+origin_contact_count() {
+  wc -l < "$CONTACT_LOG" | tr -d ' '
+}
+
+announced_origin_contact_count() { # <spawn output>
+  printf '%s\n' "$1" | grep -c '^notice: contacting origin' || true
+}
+
+# Whether this git updates origin/HEAD during a configured fetch (git 2.48+
+# remote.<name>.followRemoteHEAD). A spawn on an older git needs one more
+# contact to learn origin's default branch, so the expected count depends on it.
+git_fetch_follows_remote_head() {
+  local probe
+  probe=$(mktemp -d "$TMP_ROOT/follow-probe.XXXXXX")
+  git init --quiet -b main "$probe/src"
+  git -C "$probe/src" -c user.name='Firstmate Tests' -c user.email='tests@example.invalid' \
+    commit --quiet --allow-empty -m probe
+  git -C "$probe/src" branch trunk
+  git clone --quiet "file://$probe/src" "$probe/clone"
+  git -C "$probe/src" symbolic-ref HEAD refs/heads/trunk
+  git -C "$probe/clone" -c remote.origin.followRemoteHEAD=always fetch --quiet origin 2>/dev/null
+  [ "$(git -C "$probe/clone" symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null)" = refs/remotes/origin/trunk ]
+}
+
+test_treehouse_setup_uses_refreshed_refs() {
+  local treehouse_bin rec id variant receipt out status expected=2
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for setup-hook verification"
+  git_fetch_follows_remote_head && expected=1
+  for variant in new reused; do
+    id="pool-setup-$variant"
+    rec=$(make_case "setup-$variant" "$id")
+    read_case_record "$rec"
+    remember_origin_default main
+    git -C "$CASE_DIR/publisher" checkout --quiet -b trunk
+    printf 'new dependencies\n' > "$CASE_DIR/publisher/dependencies.txt"
+    git -C "$CASE_DIR/publisher" add dependencies.txt
+    git -C "$CASE_DIR/publisher" -c user.name='Firstmate Tests' -c user.email='tests@example.invalid' commit -qm dependencies
+    git -C "$CASE_DIR/publisher" push --quiet origin trunk
+    git --git-dir="$CASE_DIR/origin.git" symbolic-ref HEAD refs/heads/trunk
+    export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+      || fail "could not prepare the setup-hook slot"
+    POOL_DIR=$(printf '%s\n' "$receipt" | jq -r .path)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force \
+      --if-lease-id "$(printf '%s\n' "$receipt" | jq -r .lease_id)" "$POOL_DIR") \
+      || fail "could not return the setup-hook slot"
+    if [ "$variant" = new ]; then
+      git -C "$PROJECT_DIR" worktree remove "$POOL_DIR" || fail "could not remove the prepared slot"
+    fi
+    mkdir -p "$HOME_DIR/user-home/.config/treehouse"
+    printf '[hooks]\npost_create = ["git rev-parse HEAD > .setup-base"]\n' \
+      > "$HOME_DIR/user-home/.config/treehouse/config.toml"
+    printf '.setup-base\n' >> "$PROJECT_DIR/.git/info/exclude"
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    install_origin_contact_counter
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" run_spawn "$id" --scout)
+    status=$?
+    expect_code 0 "$status" "a $variant slot with a setup hook should launch"$'\n'"$out"
+    [ "$(cat "$POOL_DIR/.setup-base")" = "$(git -C "$POOL_DIR" rev-parse HEAD)" ] \
+      || fail "the $variant slot ran setup at stale source before launching current source"
+    [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse trunk)" ] \
+      || fail "the $variant slot did not launch origin's current default branch"
+    expect_announced_contacts "$out" "$expected" "setup in a $variant slot"
+    unset TREEHOUSE_ROOT
+    pass "a $variant Treehouse slot runs setup on the refreshed default branch"
+  done
+}
+
+test_shared_pool_refreshes_the_allocated_repository() {
+  local treehouse_bin rec id variant receipt source_project tip out status expected default_contacts=2
+  local spawn_args
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for shared-pool verification"
+  git_fetch_follows_remote_head && default_contacts=1
+  for variant in default named narrow; do
+    id="pool-cross-clone-$variant"
+    rec=$(make_case "cross-clone-$variant" "$id")
+    read_case_record "$rec"
+    source_project=$PROJECT_DIR
+    spawn_args=(--mode no-mistakes --yolo off)
+    expected=$((default_contacts * 2))
+    if [ "$variant" = named ]; then
+      publish_feature_branch feature/hub
+      brief_with_base "$id" feature/hub
+      spawn_args=(--scout --base-branch feature/hub)
+      expected=2
+    fi
+    tip=$(git -C "$CASE_DIR/publisher" rev-parse HEAD)
+    export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+      || fail "could not allocate the shared slot"
+    POOL_DIR=$(printf '%s\n' "$receipt" | jq -r .path)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force \
+      --if-lease-id "$(printf '%s\n' "$receipt" | jq -r .lease_id)" "$POOL_DIR") \
+      || fail "could not return the shared slot"
+    if git -C "$POOL_DIR" cat-file -e "$tip^{commit}" 2>/dev/null; then
+      fail "the shared slot already holds the new base commit"
+    fi
+    git clone --quiet "file://$CASE_DIR/origin.git" "$CASE_DIR/another/project" \
+      || fail "could not create the second source clone"
+    PROJECT_DIR="$CASE_DIR/another/project"
+    if [ "$variant" = narrow ]; then
+      git -C "$PROJECT_DIR" config --replace-all remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
+      git -C "$source_project" config --replace-all remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
+      expected=6
+    fi
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    install_origin_contact_counter
+    git -C "$source_project" config remote.origin.uploadpack "$CASE_DIR/counting-upload-pack"
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" run_spawn "$id" "${spawn_args[@]}")
+    status=$?
+    expect_code 0 "$status" "a shared-pool $variant launch should refresh the allocated repository"$'\n'"$out"
+    assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn did not reuse the shared slot"
+    [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$tip" ] \
+      || fail "the shared slot did not launch the refreshed $variant base"
+    expect_announced_contacts "$out" "$expected" "a shared-pool $variant launch"
+    unset TREEHOUSE_ROOT
+    pass "a shared-pool $variant launch refreshes the allocated repository and announces every contact"
+  done
+}
+
+test_spawn_contacts_origin_once_and_announces_it() {
+  local treehouse_bin rec id out status free_receipt contacts announced expected
+  treehouse_bin=$(command -v treehouse) || {
+    printf 'ok - skip: treehouse not found for the origin-contact count\n'
+    return 0
+  }
+  expected=2
+  git_fetch_follows_remote_head && expected=1
+  id='pool-origin-contacts'
+  rec=$(make_case origin-contacts "$id")
+  read_case_record "$rec"
+  export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+  # Reserve and return one slot so the terminal simulator knows its path.
+  free_receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+    || fail "could not prepare the free slot"
+  POOL_DIR=$(printf '%s\n' "$free_receipt" | jq -r .path)
+  (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force \
+    --if-lease-id "$(printf '%s\n' "$free_receipt" | jq -r .lease_id)" "$POOL_DIR") \
+    || fail "could not return the free slot"
+  cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+  chmod +x "$FAKEBIN_DIR/treehouse"
+  install_origin_contact_counter
+
+  out=$(FM_REAL_TREEHOUSE="$treehouse_bin" run_spawn "$id" --mode no-mistakes --yolo off)
+  status=$?
+  expect_code 0 "$status" "a real Treehouse spawn should launch"$'\n'"$out"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse HEAD)" ] \
+    || fail "the spawn did not start from the advanced origin tip"
+  contacts=$(origin_contact_count)
+  announced=$(announced_origin_contact_count "$out")
+  if [ "${FM_TEST_EVIDENCE:-0}" = 1 ]; then
+    printf '# origin contacts for one real Treehouse spawn: %s\n' "$contacts"
+    sed 's/^/#   contact: /' "$CONTACT_LOG"
+    printf '%s\n' "$out" | grep '^notice: contacting origin' | sed 's/^/#   announced: /'
+  fi
+  [ "$contacts" = "$expected" ] \
+    || fail "one spawn contacted origin $contacts times, expected $expected:"$'\n'"$(cat "$CONTACT_LOG")"
+  [ "$announced" = "$contacts" ] \
+    || fail "the spawn announced $announced origin contacts but made $contacts"$'\n'"$out"
+  unset TREEHOUSE_ROOT
+  pass "a real Treehouse spawn contacts origin $expected time(s) and announces each contact"
+}
+
+# Give the shared repository a remembered origin default, as any earlier fetch
+# leaves it, so a case can prove the spawn never trusts that memory.
+remember_origin_default() { # <branch>
+  git -C "$PROJECT_DIR" fetch --quiet origin
+  git -C "$PROJECT_DIR" remote set-head origin "$1" >/dev/null
+}
+
+expect_announced_contacts() { # <spawn output> <expected contacts> <label>
+  local contacts announced
+  contacts=$(origin_contact_count)
+  announced=$(announced_origin_contact_count "$1")
+  [ "$contacts" = "$2" ] \
+    || fail "$3: contacted origin $contacts times, expected $2:"$'\n'"$(cat "$CONTACT_LOG")"
+  [ "$announced" = "$contacts" ] \
+    || fail "$3: announced $announced origin contacts but made $contacts"$'\n'"$1"
+}
+
+# Origin moved its default branch after the shared repository last looked. The
+# one fetch must follow origin's current HEAD, never the remembered one.
+# Without reflogs nothing proves the fetch confirmed origin's HEAD, so the spawn
+# spends one announced contact asking origin directly instead of trusting it.
+test_moved_remote_default_is_followed_not_remembered() {
+  local reflogs=${1:-on} rec id out status expected=2
+  [ "$reflogs" = off ] || ! git_fetch_follows_remote_head || expected=1
+  id="pool-moved-default-reflogs-$reflogs"
+  rec=$(make_case "moved-default-reflogs-$reflogs" "$id")
+  read_case_record "$rec"
+  remember_origin_default main
+  if [ "$reflogs" = off ]; then
+    git -C "$PROJECT_DIR" config core.logAllRefUpdates false
+    rm "$PROJECT_DIR/.git/logs/refs/remotes/origin/HEAD"
+  fi
+  git -C "$CASE_DIR/publisher" checkout --quiet -b trunk
+  printf 'only on trunk\n' > "$CASE_DIR/publisher/trunk-only.txt"
+  git -C "$CASE_DIR/publisher" add trunk-only.txt
+  git -C "$CASE_DIR/publisher" -c user.name='Firstmate Tests' -c user.email='tests@example.invalid' commit -qm trunk
+  git -C "$CASE_DIR/publisher" push --quiet origin trunk
+  git --git-dir="$CASE_DIR/origin.git" symbolic-ref HEAD refs/heads/trunk
+  install_origin_contact_counter
+
+  out=$(run_spawn "$id" --mode no-mistakes --yolo off)
+  status=$?
+  expect_code 0 "$status" "a spawn should follow origin's moved default branch"$'\n'"$out"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse trunk)" ] \
+    || fail "the spawn started from the remembered default instead of origin's current trunk"
+  assert_grep 'only on trunk' "$POOL_DIR/trunk-only.txt" "the copy is missing trunk content"
+  expect_announced_contacts "$out" "$expected" "a moved remote default"
+  pass "a moved remote default branch is followed in $expected origin contact(s) with reflogs $reflogs, never remembered"
+}
+
+# A remote HEAD that names no branch must still refuse when the shared
+# repository remembers an older default that would otherwise look usable.
+test_unresolvable_remote_default_refuses_despite_remembered_default() {
+  local log_state=${1:-normal} rec id out status before head_log target_log_before target_log_after
+  id="pool-remembered-unresolved-$log_state"
+  rec=$(make_case "remembered-unresolved-$log_state" "$id")
+  read_case_record "$rec"
+  remember_origin_default main
+  if [ "$log_state" = empty ]; then
+    head_log=$(git -C "$PROJECT_DIR" rev-parse --path-format=absolute --git-path logs/refs/remotes/origin/HEAD)
+    git -C "$PROJECT_DIR" reflog expire --expire=all refs/remotes/origin/HEAD \
+      || fail "could not expire origin/HEAD's reflog"
+    git -C "$PROJECT_DIR" reflog exists refs/remotes/origin/HEAD \
+      || fail "expiration did not retain origin/HEAD's own log"
+    [ -f "$head_log" ] && [ ! -s "$head_log" ] || fail "origin/HEAD's own log is not empty"
+    target_log_before=$(git -C "$PROJECT_DIR" reflog show --format=%gs refs/remotes/origin/main | wc -l | tr -d ' ')
+    git -C "$CASE_DIR/publisher" -c user.name='Firstmate Tests' -c user.email='tests@example.invalid' \
+      commit --quiet --allow-empty -m advance-after-expiry
+    git -C "$CASE_DIR/publisher" push --quiet origin main
+  fi
+  git --git-dir="$CASE_DIR/origin.git" symbolic-ref HEAD refs/heads/missing-default
+  install_origin_contact_counter
+  before=$(git -C "$POOL_DIR" rev-parse HEAD)
+
+  out=$(run_spawn "$id" --mode no-mistakes --yolo off)
+  status=$?
+  [ "$status" -ne 0 ] || fail "spawn launched from a remembered default while origin's HEAD names no branch"
+  assert_contains "$out" "could not resolve origin's current default branch" \
+    "spawn did not clearly refuse the unresolvable remote default"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$before" ] \
+    || fail "spawn moved HEAD after failing to resolve the remote default branch"
+  [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published task metadata"
+  if [ "$log_state" = empty ]; then
+    target_log_after=$(git -C "$PROJECT_DIR" reflog show --format=%gs refs/remotes/origin/main | wc -l | tr -d ' ')
+    [ "$target_log_after" -gt "$target_log_before" ] || fail "the fetch did not grow main's target log"
+    [ ! -s "$head_log" ] || fail "the unresolved remote HEAD rewrote origin/HEAD's own log"
+  fi
+  expect_announced_contacts "$out" 2 "an unresolvable remote default"
+  pass "an unresolvable remote default refuses with a remembered default and a $log_state own log"
+}
+
+# A named base needs one explicit fetch, and a configured fetch that does not
+# track every branch keeps the explicit default-branch fetch.
+test_base_and_narrow_fetch_contacts_are_announced() {
+  local rec id out status
+  id='pool-contacts-named-base'
+  rec=$(make_case contacts-named-base "$id")
+  read_case_record "$rec"
+  publish_feature_branch feature/hub
+  brief_with_base "$id" feature/hub
+  install_origin_contact_counter
+  out=$(run_spawn "$id" --scout --base-branch feature/hub)
+  status=$?
+  expect_code 0 "$status" "a named-base spawn should launch"$'\n'"$out"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse feature/hub)" ] \
+    || fail "the named-base copy did not start from origin/feature/hub"
+  expect_announced_contacts "$out" 1 "a named base branch"
+
+  id='pool-contacts-narrow-fetch'
+  rec=$(make_case contacts-narrow-fetch "$id")
+  read_case_record "$rec"
+  git -C "$PROJECT_DIR" config --replace-all remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
+  install_origin_contact_counter
+  out=$(run_spawn "$id" --mode no-mistakes --yolo off)
+  status=$?
+  expect_code 0 "$status" "a narrow-fetch spawn should launch"$'\n'"$out"
+  [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse main)" ] \
+    || fail "the narrow-fetch copy did not start from current origin/main"
+  expect_announced_contacts "$out" 3 "a configured fetch that tracks one branch"
+  pass "a named base fetches once and a narrow configured fetch keeps its announced explicit fetch"
 }
 
 publish_feature_branch() { # <branch>
@@ -1503,6 +1817,23 @@ if [ "${1:-}" = --live-legacy ]; then
   exit 0
 fi
 
+if [ "${1:-}" = --origin-contacts ]; then
+  test_unresolvable_remote_default_refuses_despite_remembered_default empty
+  test_shared_pool_refreshes_the_allocated_repository
+  test_treehouse_setup_uses_refreshed_refs
+  test_spawn_contacts_origin_once_and_announces_it
+  test_moved_remote_default_is_followed_not_remembered
+  test_moved_remote_default_is_followed_not_remembered off
+  test_unresolvable_remote_default_refuses_despite_remembered_default
+  test_base_and_narrow_fetch_contacts_are_announced
+  exit 0
+fi
+
+if [ "${1:-}" = --shared-pool ]; then
+  test_shared_pool_refreshes_the_allocated_repository
+  exit 0
+fi
+
 if [ "${1:-}" = --lease ]; then
   test_live_legacy_pool_lease
   test_secondmate_pool_lease_receipt
@@ -1527,7 +1858,7 @@ test_real_treehouse_preserves_a_recorded_stale_slot
 test_pool_slot_still_recorded_by_another_task_refuses
 test_remote_seeded_home_spawns_from_treehouse_pool
 test_pool_slot_claim_follows_the_spawn_outcome
-test_linked_spawning_home_rejects_primary_before_refresh
+test_linked_spawning_home_rejects_primary_without_reset
 test_stale_pool_base_refreshes_before_branching
 test_named_base_branch_starts_from_that_branch
 test_base_branch_must_agree_with_the_brief
@@ -1537,6 +1868,14 @@ test_non_main_default_branch_refreshes_before_branching
 test_direct_pr_and_scout_refresh_before_launch
 test_dirty_pool_refuses_without_discarding_work
 test_unresolved_remote_default_refuses_pool
+test_spawn_contacts_origin_once_and_announces_it
+test_shared_pool_refreshes_the_allocated_repository
+test_treehouse_setup_uses_refreshed_refs
+test_moved_remote_default_is_followed_not_remembered
+test_moved_remote_default_is_followed_not_remembered off
+test_unresolvable_remote_default_refuses_despite_remembered_default
+test_unresolvable_remote_default_refuses_despite_remembered_default empty
+test_base_and_narrow_fetch_contacts_are_announced
 test_unreachable_origin_refuses_stale_pool_base
 test_originless_pool_launches_without_a_freshness_fetch
 test_originless_dirty_pool_refuses_without_discarding_work

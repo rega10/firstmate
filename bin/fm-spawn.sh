@@ -293,9 +293,22 @@
 #   set (its header owns the refusal). A secondmate runs in its own home and is
 #   not marked.
 #   Only after this isolation check, every fresh ship or scout requires a clean
-#   task worktree. When an origin configuration is detected, spawn fetches it,
-#   resolves the current remote default branch (or uses --base-branch, described
-#   above), and resets to its tip. When none is detected, spawn skips that remote freshness check and launches from the
+#   task worktree. For Treehouse spawns, spawn refreshes a configured origin in
+#   the spawning project before allocation, and Treehouse acquires with --no-fetch.
+#   One configured fetch normally refreshes the base and confirms origin's
+#   current default branch. Without fetch confirmation (including older Git or
+#   unavailable reflogs), spawn also asks origin with remote set-head --auto.
+#   A configured fetch that does not track every origin branch additionally
+#   requires an explicit fetch of the resolved default branch. A named base
+#   (--base-branch, described above) instead needs only its explicit branch fetch.
+#   If the allocated copy lacks the resolved commit, as can happen with a pool
+#   shared by separate clones, spawn repeats the refresh in that copy.
+#   Orca spawns refresh in their own worktree after allocation.
+#   After isolation and cleanliness checks, spawn resets the task copy to the
+#   resolved commit. Each git contact with origin can cost one remote approval,
+#   so every contact is announced first on stderr as
+#   `notice: contacting origin (<operation>): <why>`.
+#   When no origin is detected, spawn skips that remote freshness check and launches from the
 #   clean worktree's current HEAD. Relaunch reuses the recorded worktree without
 #   fetching or resetting its base. An unreachable detected origin, unresolved
 #   default branch, or non-clean worktree refuses a fresh spawn rather than
@@ -3725,6 +3738,7 @@ spawn_worktree_has_origin_config() { # <worktree>
   git -C "$worktree" config --get-regexp '^remote\.origin\.' >/dev/null 2>&1 && return 0
   while IFS=$'\t' read -r origin key; do
     case $origin in file:*) config=${origin#file:} ;; *) continue ;; esac
+    case $config in /*) ;; *) config="$worktree/$config" ;; esac
     [ -f "$config" ] || continue
     case $seen in *$'\n'"$config"$'\n'*) continue ;; esac
     seen+="$config"$'\n'
@@ -3733,8 +3747,113 @@ spawn_worktree_has_origin_config() { # <worktree>
   return 1
 }
 
-freshen_spawn_worktree_base() { # <worktree> [<base-branch>]
-  local worktree=$1 base=${2:-} default target expected actual status
+# Each git contact with origin can cost the operator one remote approval (a
+# protected credential path asks once per network operation), so a spawn makes
+# as few as it can and names every one, and why, just before it happens.
+announce_origin_contact() { # <operation> <reason>
+  echo "notice: contacting origin ($1): $2" >&2
+}
+
+# Whether origin's configured fetch tracks every remote branch under
+# refs/remotes/origin/ with no branch excluded, so one configured fetch refreshes
+# whichever branch origin names as its default.
+spawn_origin_fetch_tracks_all_branches() { # <worktree>
+  local refspecs refspec found=0
+  refspecs=$(git -C "$1" config --get-all remote.origin.fetch 2>/dev/null) || return 1
+  while IFS= read -r refspec; do
+    case $refspec in
+      ^*) return 1 ;;
+      'refs/heads/*:refs/remotes/origin/*' | '+refs/heads/*:refs/remotes/origin/*') found=1 ;;
+    esac
+  done <<EOF
+$refspecs
+EOF
+  [ "$found" = 1 ]
+}
+
+# Count only literal "fetch" subjects written by fetch's followRemoteHEAD rewrite.
+# Git can read the target's log when origin/HEAD's own log is empty; target-ref
+# fetch subjects include arguments and a result, so they cannot count as proof.
+# Missing, empty, or unconfirmed logs produce "absent".
+spawn_origin_head_log_mark() { # <worktree>
+  if git -C "$1" reflog exists refs/remotes/origin/HEAD; then
+    git -C "$1" reflog show --format=%gs refs/remotes/origin/HEAD 2>/dev/null |
+      awk '$0 == "fetch" { count++ } END { if (count) print count; else print "absent" }'
+  else
+    echo absent
+  fi
+}
+
+# Whether the count of fetch confirmations grew between two marks.
+spawn_origin_head_confirmed() { # <before-mark> <after-mark>
+  [ "$2" != absent ] || return 1
+  [ "$1" = absent ] || [ "$2" -gt "$1" ]
+}
+
+# One configured fetch normally both refreshes the base and confirms origin's
+# default branch: with followRemoteHEAD=always (git 2.48+) the fetch rewrites
+# origin/HEAD from the HEAD origin advertised in that same exchange. Git ignores
+# a failed rewrite silently, so spawn_origin_head_log_mark must prove a new
+# fetch confirmation rather than trusting the remembered symbolic ref.
+# The script header owns fallback contacts and fresh-base refusal rules.
+refresh_spawn_base_refs() { # <repository> [<base-branch>]
+  local worktree=$1 base=${2:-} default target tracks_all=0 head_log
+  SPAWN_BASE_TARGET=
+  SPAWN_BASE_COMMIT=
+  if ! spawn_worktree_has_origin_config "$worktree"; then
+    [ -z "$base" ] || {
+      echo "error: pooled worktree '$worktree' has no origin, so it cannot start from base branch '$base'" >&2
+      return 1
+    }
+    return 0
+  fi
+  if [ -n "$base" ]; then
+    default=$base
+  else
+    spawn_origin_fetch_tracks_all_branches "$worktree" && tracks_all=1
+    head_log=$(spawn_origin_head_log_mark "$worktree")
+    announce_origin_contact "git fetch origin" "refresh the launch base and read origin's current default branch"
+    if [ "$tracks_all" = 1 ]; then
+      git -C "$worktree" -c remote.origin.followRemoteHEAD=always fetch --quiet origin
+    else
+      git -C "$worktree" fetch --quiet origin
+    fi || {
+      echo "error: could not fetch origin for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
+      return 1
+    }
+    if [ "$tracks_all" != 1 ] || ! spawn_origin_head_confirmed "$head_log" "$(spawn_origin_head_log_mark "$worktree")"; then
+      announce_origin_contact "git remote set-head origin --auto" "the fetch could not confirm origin's current default branch, so ask origin for it"
+      if ! git -C "$worktree" remote set-head origin --auto >/dev/null 2>&1; then
+        echo "error: could not resolve origin's current default branch for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
+        return 1
+      fi
+    fi
+    default=$(default_branch "$worktree") || {
+      echo "error: could not determine origin's default branch for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
+      return 1
+    }
+  fi
+  target="origin/$default"
+  SPAWN_BASE_TARGET=$target
+  if [ -n "$base" ] || [ "$tracks_all" != 1 ]; then
+    if [ -n "$base" ]; then
+      announce_origin_contact "git fetch origin $default" "refresh the named base branch '$target'"
+    else
+      announce_origin_contact "git fetch origin $default" "refresh '$target' directly, because the configured fetch does not track every origin branch"
+    fi
+    if ! git -C "$worktree" fetch --quiet origin "+refs/heads/$default:refs/remotes/origin/$default"; then
+      echo "error: could not fetch '$target' for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
+      return 1
+    fi
+  fi
+  SPAWN_BASE_COMMIT=$(git -C "$worktree" rev-parse --verify --quiet "$target^{commit}" 2>/dev/null) || {
+    echo "error: '$target' is not a commit for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
+    return 1
+  }
+}
+
+freshen_spawn_worktree_base() { # <worktree>
+  local worktree=$1 target expected actual status
   status=$(git -C "$worktree" -c core.quotePath=false status --porcelain) || {
     echo "error: could not inspect pooled worktree '$worktree' before refreshing its base" >&2
     return 1
@@ -3747,39 +3866,14 @@ freshen_spawn_worktree_base() { # <worktree> [<base-branch>]
     fi
     return 1
   fi
-  if ! spawn_worktree_has_origin_config "$worktree"; then
-    [ -z "$base" ] || {
-      echo "error: pooled worktree '$worktree' has no origin, so it cannot start from base branch '$base'" >&2
-      return 1
-    }
-    return 0
+  if [ "$BACKEND" = orca ] ||
+    { [ -n "$SPAWN_BASE_COMMIT" ] && ! GIT_NO_LAZY_FETCH=1 git -C "$worktree" cat-file -e "$SPAWN_BASE_COMMIT^{commit}" 2>/dev/null; }; then
+    refresh_spawn_base_refs "$worktree" "$BASE_BRANCH" || return 1
   fi
-  if ! git -C "$worktree" fetch --quiet origin; then
-    echo "error: could not fetch origin for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
-    return 1
-  fi
-  if [ -n "$base" ]; then
-    default=$base
-  else
-    if ! git -C "$worktree" remote set-head origin --auto >/dev/null 2>&1; then
-      echo "error: could not resolve origin's current default branch for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
-      return 1
-    fi
-    default=$(default_branch "$worktree") || {
-      echo "error: could not determine origin's default branch for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
-      return 1
-    }
-  fi
-  target="origin/$default"
-  if ! git -C "$worktree" fetch --quiet origin "+refs/heads/$default:refs/remotes/origin/$default"; then
-    echo "error: could not fetch '$target' for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
-    return 1
-  fi
-  expected=$(git -C "$worktree" rev-parse --verify --quiet "$target^{commit}" 2>/dev/null) || {
-    echo "error: '$target' is not a commit for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
-    return 1
-  }
-  if ! git -C "$worktree" reset --hard "$target" >/dev/null; then
+  target=$SPAWN_BASE_TARGET
+  expected=$SPAWN_BASE_COMMIT
+  [ -n "$target" ] || return 0
+  if ! git -C "$worktree" reset --hard "$expected" >/dev/null; then
     echo "error: could not reset pooled worktree '$worktree' to '$target'; refusing to launch from a potentially stale base" >&2
     return 1
   fi
@@ -4668,7 +4762,8 @@ elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
     exit 1
   fi
   TREEHOUSE_LEASE_HOLDER="$(real_path_or_raw "$FM_HOME"):$ID"
-  treehouse_receipt=$(cd "$PROJ_ABS" && treehouse get --lease --json --lease-holder "$TREEHOUSE_LEASE_HOLDER") || {
+  refresh_spawn_base_refs "$PROJ_ABS" "$BASE_BRANCH" || exit 1
+  treehouse_receipt=$(cd "$PROJ_ABS" && treehouse get --lease --json --no-fetch --lease-holder "$TREEHOUSE_LEASE_HOLDER") || {
     echo "error: Treehouse lease acquisition failed for task $ID" >&2
     exit 1
   }
@@ -4712,7 +4807,7 @@ elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
   fi
 fi
 if [ "$RELAUNCH" -eq 0 ] && [ "$KIND" != secondmate ]; then
-  freshen_spawn_worktree_base "$WT" "$BASE_BRANCH" || exit 1
+  freshen_spawn_worktree_base "$WT" || exit 1
 fi
 
 # Re-assert the durable task copy after either treehouse acquisition or endpoint
