@@ -1,0 +1,25 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-common /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/treehouse/.treehouse/project-54b784/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/treehouse/.treehouse/project-54b784/1/project' to release it.
+spawned live-common harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p2 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/treehouse/.treehouse/project-54b784/1/project
+
+Real worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common
+/treehouse/.treehouse/project-54b784/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/comm
+on/treehouse/.treehouse/project-54b784/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-common/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-common
+project on  HEAD
+❯ . '/tmp/fm-live-common+04760caa7292775c1e3c588b2f9be22061fcc3d2401287fbce98280d673068ee/launch.s1792225044.51187.31259
+.sh'
+LIVE_WORKER_HEAD=968d80882f8410d5b1476d7b68daaaa8aec2a1b5
+Setup hook commit: 968d80882f8410d5b1476d7b68daaaa8aec2a1b5

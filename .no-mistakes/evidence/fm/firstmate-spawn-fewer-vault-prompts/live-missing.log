@@ -1,0 +1,7 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-missing /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/missing
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/home
+warn: no registry at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/home/data/projects.md; defaulting project to no-mistakes off
+notice: contacting origin (git fetch origin feature/missing): refresh the named base branch 'origin/feature/missing'
+ORIGIN_CONTACT
+fatal: couldn't find remote ref refs/heads/feature/missing
+error: could not fetch 'origin/feature/missing' for pooled worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/project'; refusing to launch from a potentially stale base

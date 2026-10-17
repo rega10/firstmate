@@ -1,0 +1,25 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-named /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/hub
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/home
+warn: no registry at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/home/data/projects.md; defaulting project to no-mistakes off
+notice: contacting origin (git fetch origin feature/hub): refresh the named base branch 'origin/feature/hub'
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/treehouse/.treehouse/project-91e6e1/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/treehouse/.treehouse/project-91e6e1/1/project' to release it.
+spawned live-named harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p6 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/treehouse/.treehouse/project-91e6e1/1/project
+
+Real worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/
+treehouse/.treehouse/project-91e6e1/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/name
+d/treehouse/.treehouse/project-91e6e1/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-named/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-named
+project on  HEAD
+❯ . '/tmp/fm-live-named+dc813cdb1b849ccfd2803ea568bebb05504b9cf4fa83eb3fa87f9109cf076404/launch.s1792225060.61842.18579.
+sh'
+LIVE_WORKER_HEAD=155858a305b2ff015090439e1e7396b08021ae85

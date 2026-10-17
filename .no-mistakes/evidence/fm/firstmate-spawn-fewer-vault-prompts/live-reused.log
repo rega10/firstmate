@@ -1,0 +1,28 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-reused /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/treehouse/.treehouse/project-5ffa57/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/treehouse/.treehouse/project-5ffa57/1/project' to release it.
+spawned live-reused harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p3 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/treehouse/.treehouse/project-5ffa57/1/project
+
+Real worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused
+/treehouse/.treehouse/project-5ffa57/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reus
+ed/treehouse/.treehouse/project-5ffa57/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-reused/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-reused
+project on  HEAD
+❯ . '/tmp/fm-live-reused+40cb9e639c9aecd1891882cca218a78316f45e88078616070ed67f44bd7797a5/launch.s1792225048.53800.12355
+.sh'
+LIVE_WORKER_HEAD=3d456ba929d2866ac786164b364fdde8d1d21502
+Setup hook commit: 3d456ba929d2866ac786164b364fdde8d1d21502

@@ -1,0 +1,30 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-named /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/hub
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/home
+warn: no registry at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/home/data/projects.md; defaulting project to no-mistakes off
+notice: contacting origin (git fetch origin feature/hub): refresh the named base branch 'origin/feature/hub'
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/treehouse/.treehouse/project-490295/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/treehouse/.treehouse/project-490295/1/project' to release it.
+notice: contacting origin (git fetch origin feature/hub): refresh the named base branch 'origin/feature/hub'
+ORIGIN_CONTACT
+spawned live-shared-named harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p9 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/treehouse/.treehouse/project-490295/1/project
+
+Real worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared
+-named/treehouse/.treehouse/project-490295/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shar
+ed-named/treehouse/.treehouse/project-490295/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-shared-named/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-shared-named
+project on  HEAD
+❯ . '/tmp/fm-live-shared-named+5f546a0c55fa62bfa5cada43946a6dc99d8d621ab4cad745ddd7560c6062127e/launch.s1792225072.69873
+.4252.sh'
+LIVE_WORKER_HEAD=96b98c1128aca2ac0d8d0188af5eb65346e3a759

@@ -1,0 +1,15 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-dirty /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/treehouse/.treehouse/project-a37307/2/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/treehouse/.treehouse/project-a37307/2/project' to release it.
+spawned live-dirty harness=sh kind=scout window=fm-lab-vault-live-82180-8370:w1:p4 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/treehouse/.treehouse/project-a37307/2/project
+
+Preserved original dirty slot: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/treehouse/.treehouse/project-a37307/1/project
+Original HEAD remains fdd53ae26bd073a31f854cb3d268066b6fc7ed61
+Uncommitted file remains: keep my work
+Treehouse selected a different clean slot: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/treehouse/.treehouse/project-a37307/2/project

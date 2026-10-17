@@ -1,0 +1,29 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-default /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/treehouse/.treehouse/project-dc3954/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/treehouse/.treehouse/project-dc3954/1/project' to release it.
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+spawned live-shared-default harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p8 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/treehouse/.treehouse/project-dc3954/1/project
+
+Real worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared
+-default/treehouse/.treehouse/project-dc3954/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shar
+ed-default/treehouse/.treehouse/project-dc3954/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-shared-default/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-shared-default
+project on  HEAD
+❯ . '/tmp/fm-live-shared-default+40168ef590af9f323a8a5ba104a63c3a8d08f3c1ed8b2a5219056d95067c7561/launch.s1792225068.654
+88.5022.sh'
+LIVE_WORKER_HEAD=024475f5dc989a7cd31958afa2253bcbc48b4d3b

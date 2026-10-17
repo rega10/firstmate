@@ -1,0 +1,656 @@
+Named isolated Herdr session: fm-lab-vault-live-50944-29209
+Lab provisioned. Default-session fleet tripwire recorded.
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-common /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-common /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/treehouse/.treehouse/project-54b784/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/treehouse/.treehouse/project-54b784/1/project' to release it.
+spawned live-common harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p2 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/treehouse/.treehouse/project-54b784/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:p2
+endpoint_task_id=live-common
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/treehouse/.treehouse/project-54b784/1/project
+treehouse_lease_id=4e32d43ea32037f6f9b4ca52b44dc302
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/home:live-common
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-common
+model=default
+effort=default
+spawn_gen=s1792225044.51187.31259
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:t2
+herdr_pane_id=w1:p2
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/common
+/treehouse/.treehouse/project-54b784/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/comm
+on/treehouse/.treehouse/project-54b784/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-common/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-common
+project on  HEAD
+❯ . '/tmp/fm-live-common+04760caa7292775c1e3c588b2f9be22061fcc3d2401287fbce98280d673068ee/launch.s1792225044.51187.31259
+.sh'
+LIVE_WORKER_HEAD=968d80882f8410d5b1476d7b68daaaa8aec2a1b5
+Setup hook commit matches launched worker: 968d80882f8410d5b1476d7b68daaaa8aec2a1b5
+OBSERVED live-common: contacts=1; notices=1; HEAD=968d80882f8410d5b1476d7b68daaaa8aec2a1b5
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-reused /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-reused /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/treehouse/.treehouse/project-5ffa57/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/treehouse/.treehouse/project-5ffa57/1/project' to release it.
+spawned live-reused harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p3 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/treehouse/.treehouse/project-5ffa57/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:p3
+endpoint_task_id=live-reused
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/treehouse/.treehouse/project-5ffa57/1/project
+treehouse_lease_id=1b5f728351f8ffc56c6c79cd3baf2ba2
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/home:live-reused
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-reused
+model=default
+effort=default
+spawn_gen=s1792225048.53800.12355
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:t3
+herdr_pane_id=w1:p3
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reused
+/treehouse/.treehouse/project-5ffa57/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/reus
+ed/treehouse/.treehouse/project-5ffa57/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-reused/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-reused
+project on  HEAD
+❯ . '/tmp/fm-live-reused+40cb9e639c9aecd1891882cca218a78316f45e88078616070ed67f44bd7797a5/launch.s1792225048.53800.12355
+.sh'
+LIVE_WORKER_HEAD=3d456ba929d2866ac786164b364fdde8d1d21502
+Setup hook commit matches launched worker: 3d456ba929d2866ac786164b364fdde8d1d21502
+OBSERVED live-reused: contacts=1; notices=1; HEAD=3d456ba929d2866ac786164b364fdde8d1d21502
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-moved-on /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-moved-on /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/treehouse/.treehouse/project-9f0058/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/treehouse/.treehouse/project-9f0058/1/project' to release it.
+spawned live-moved-on harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p4 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/treehouse/.treehouse/project-9f0058/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:p4
+endpoint_task_id=live-moved-on
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/treehouse/.treehouse/project-9f0058/1/project
+treehouse_lease_id=81ec947d8d30ebcd20683979f927a0af
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/home:live-moved-on
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-moved-on
+model=default
+effort=default
+spawn_gen=s1792225052.57978.22245
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:t4
+herdr_pane_id=w1:p4
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-
+on/treehouse/.treehouse/project-9f0058/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/move
+d-on/treehouse/.treehouse/project-9f0058/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-moved-on/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-moved-on
+project on  HEAD
+❯ . '/tmp/fm-live-moved-on+99cfa155d61ce71718ddd0007e56d03d4a927b04149d579d08863b98b567c87d/launch.s1792225052.57978.222
+45.sh'
+LIVE_WORKER_HEAD=4cb208dd6bb626178de2472ec8657cdac52f38a6
+OBSERVED live-moved-on: contacts=1; notices=1; HEAD=4cb208dd6bb626178de2472ec8657cdac52f38a6
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-moved-off /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-moved-off /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+notice: contacting origin (git remote set-head origin --auto): the fetch could not confirm origin's current default branch, so ask origin for it
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/treehouse/.treehouse/project-dcd94a/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/treehouse/.treehouse/project-dcd94a/1/project' to release it.
+spawned live-moved-off harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p5 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/treehouse/.treehouse/project-dcd94a/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:p5
+endpoint_task_id=live-moved-off
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/treehouse/.treehouse/project-dcd94a/1/project
+treehouse_lease_id=599e691f244a177cc2b5bf7a0736b6fd
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/home:live-moved-off
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-off/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-moved-off
+model=default
+effort=default
+spawn_gen=s1792225056.60337.25704
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:t5
+herdr_pane_id=w1:p5
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-
+off/treehouse/.treehouse/project-dcd94a/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/move
+d-off/treehouse/.treehouse/project-dcd94a/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-moved-off/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-moved-off
+project on  HEAD
+❯ . '/tmp/fm-live-moved-off+1ddf955b5906a3372bdefa7b394f4f67134339bbb0751c687a7e820498864f98/launch.s1792225056.60337.25
+704.sh'
+LIVE_WORKER_HEAD=8ca7adeeb8418f11b12efbcee0637e542076149c
+OBSERVED live-moved-off: contacts=2; notices=2; HEAD=8ca7adeeb8418f11b12efbcee0637e542076149c
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-named /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/hub
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-named /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/hub
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/home
+warn: no registry at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/home/data/projects.md; defaulting project to no-mistakes off
+notice: contacting origin (git fetch origin feature/hub): refresh the named base branch 'origin/feature/hub'
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/treehouse/.treehouse/project-91e6e1/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/treehouse/.treehouse/project-91e6e1/1/project' to release it.
+spawned live-named harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p6 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/treehouse/.treehouse/project-91e6e1/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:p6
+endpoint_task_id=live-named
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/treehouse/.treehouse/project-91e6e1/1/project
+treehouse_lease_id=08e885dab4d13cb93e83f406a8d6222d
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/home:live-named
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-named
+base_branch=feature/hub
+model=default
+effort=default
+spawn_gen=s1792225060.61842.18579
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:t6
+herdr_pane_id=w1:p6
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/named/
+treehouse/.treehouse/project-91e6e1/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/name
+d/treehouse/.treehouse/project-91e6e1/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-named/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-named
+project on  HEAD
+❯ . '/tmp/fm-live-named+dc813cdb1b849ccfd2803ea568bebb05504b9cf4fa83eb3fa87f9109cf076404/launch.s1792225060.61842.18579.
+sh'
+LIVE_WORKER_HEAD=155858a305b2ff015090439e1e7396b08021ae85
+OBSERVED live-named: contacts=1; notices=1; HEAD=155858a305b2ff015090439e1e7396b08021ae85
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-narrow /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-narrow /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+notice: contacting origin (git remote set-head origin --auto): the fetch could not confirm origin's current default branch, so ask origin for it
+ORIGIN_CONTACT
+notice: contacting origin (git fetch origin main): refresh 'origin/main' directly, because the configured fetch does not track every origin branch
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/treehouse/.treehouse/project-df5f8d/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/treehouse/.treehouse/project-df5f8d/1/project' to release it.
+spawned live-narrow harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p7 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/treehouse/.treehouse/project-df5f8d/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:p7
+endpoint_task_id=live-narrow
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/treehouse/.treehouse/project-df5f8d/1/project
+treehouse_lease_id=d4eeef7c3e702a7d9ba5d75d015e3f26
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/home:live-narrow
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-narrow
+model=default
+effort=default
+spawn_gen=s1792225064.63349.7201
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:t7
+herdr_pane_id=w1:p7
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narrow
+/treehouse/.treehouse/project-df5f8d/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/narr
+ow/treehouse/.treehouse/project-df5f8d/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-narrow/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-narrow
+project on  HEAD
+❯ . '/tmp/fm-live-narrow+9d2a29b0711584cb6cc4fecd1565122b2bfdedc7d493b3d339e1440979a2098c/launch.s1792225064.63349.7201.
+sh'
+LIVE_WORKER_HEAD=609a2b0a0aa7674829b50de48de9d065e7baf613
+OBSERVED live-narrow: contacts=3; notices=3; HEAD=609a2b0a0aa7674829b50de48de9d065e7baf613
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-default /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-default /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/treehouse/.treehouse/project-dc3954/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/treehouse/.treehouse/project-dc3954/1/project' to release it.
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+spawned live-shared-default harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p8 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/treehouse/.treehouse/project-dc3954/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:p8
+endpoint_task_id=live-shared-default
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/treehouse/.treehouse/project-dc3954/1/project
+treehouse_lease_id=7ab9ddf8a45e515ef1d557ff8230f508
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/home:live-shared-default
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-default/another/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-shared-default
+model=default
+effort=default
+spawn_gen=s1792225068.65488.5022
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:t8
+herdr_pane_id=w1:p8
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared
+-default/treehouse/.treehouse/project-dc3954/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shar
+ed-default/treehouse/.treehouse/project-dc3954/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-shared-default/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-shared-default
+project on  HEAD
+❯ . '/tmp/fm-live-shared-default+40168ef590af9f323a8a5ba104a63c3a8d08f3c1ed8b2a5219056d95067c7561/launch.s1792225068.654
+88.5022.sh'
+LIVE_WORKER_HEAD=024475f5dc989a7cd31958afa2253bcbc48b4d3b
+OBSERVED live-shared-default: contacts=2; notices=2; HEAD=024475f5dc989a7cd31958afa2253bcbc48b4d3b
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-named /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/hub
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-named /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/hub
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/home
+warn: no registry at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/home/data/projects.md; defaulting project to no-mistakes off
+notice: contacting origin (git fetch origin feature/hub): refresh the named base branch 'origin/feature/hub'
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/treehouse/.treehouse/project-490295/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/treehouse/.treehouse/project-490295/1/project' to release it.
+notice: contacting origin (git fetch origin feature/hub): refresh the named base branch 'origin/feature/hub'
+ORIGIN_CONTACT
+spawned live-shared-named harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p9 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/treehouse/.treehouse/project-490295/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:p9
+endpoint_task_id=live-shared-named
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/treehouse/.treehouse/project-490295/1/project
+treehouse_lease_id=2160693fc077547fe43da964e80558f2
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/home:live-shared-named
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-named/another/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-shared-named
+base_branch=feature/hub
+model=default
+effort=default
+spawn_gen=s1792225072.69873.4252
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:t9
+herdr_pane_id=w1:p9
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared
+-named/treehouse/.treehouse/project-490295/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shar
+ed-named/treehouse/.treehouse/project-490295/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-shared-named/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-shared-named
+project on  HEAD
+❯ . '/tmp/fm-live-shared-named+5f546a0c55fa62bfa5cada43946a6dc99d8d621ab4cad745ddd7560c6062127e/launch.s1792225072.69873
+.4252.sh'
+LIVE_WORKER_HEAD=96b98c1128aca2ac0d8d0188af5eb65346e3a759
+OBSERVED live-shared-named: contacts=2; notices=2; HEAD=96b98c1128aca2ac0d8d0188af5eb65346e3a759
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-narrow /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-narrow /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+notice: contacting origin (git remote set-head origin --auto): the fetch could not confirm origin's current default branch, so ask origin for it
+ORIGIN_CONTACT
+notice: contacting origin (git fetch origin main): refresh 'origin/main' directly, because the configured fetch does not track every origin branch
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/treehouse/.treehouse/project-a87a04/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/treehouse/.treehouse/project-a87a04/1/project' to release it.
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+notice: contacting origin (git remote set-head origin --auto): the fetch could not confirm origin's current default branch, so ask origin for it
+ORIGIN_CONTACT
+notice: contacting origin (git fetch origin main): refresh 'origin/main' directly, because the configured fetch does not track every origin branch
+ORIGIN_CONTACT
+spawned live-shared-narrow harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:pA worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/treehouse/.treehouse/project-a87a04/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-50944-29209:w1:pA
+endpoint_task_id=live-shared-narrow
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/treehouse/.treehouse/project-a87a04/1/project
+treehouse_lease_id=033d7cfc6cee8ea2fc6af7104e29137d
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/home:live-shared-narrow
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/another/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-shared-narrow
+model=default
+effort=default
+spawn_gen=s1792225077.71901.1353
+backend=herdr
+herdr_session=fm-lab-vault-live-50944-29209
+herdr_workspace_id=w1
+herdr_tab_id=w1:tA
+herdr_pane_id=w1:pA
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared
+-narrow/treehouse/.treehouse/project-a87a04/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shar
+ed-narrow/treehouse/.treehouse/project-a87a04/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-shared-narrow/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-shared-narrow
+project on  HEAD
+❯ . '/tmp/fm-live-shared-narrow+9702bf7546b0f2d5ee369dc7d8ed4cb043042feb263018f70ff2f53da6d7545a/launch.s1792225077.7190
+1.1353.sh'
+LIVE_WORKER_HEAD=63a7e7c52ce8a782c97a901cdee43a0f83b3b471
+OBSERVED live-shared-narrow: contacts=6; notices=6; HEAD=63a7e7c52ce8a782c97a901cdee43a0f83b3b471
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-unresolved-normal /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unresolved-normal/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-unresolved-normal /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unresolved-normal/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unresolved-normal/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+notice: contacting origin (git remote set-head origin --auto): the fetch could not confirm origin's current default branch, so ask origin for it
+ORIGIN_CONTACT
+error: could not resolve origin's current default branch for pooled worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unresolved-normal/project'; refusing to launch from a potentially stale base
+
+exit=1
+OBSERVED live-unresolved-normal: refused; contacts=2; notices=2; no worker record
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-unresolved-empty /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unresolved-empty/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-unresolved-empty /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unresolved-empty/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unresolved-empty/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+notice: contacting origin (git remote set-head origin --auto): the fetch could not confirm origin's current default branch, so ask origin for it
+ORIGIN_CONTACT
+error: could not resolve origin's current default branch for pooled worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unresolved-empty/project'; refusing to launch from a potentially stale base
+
+exit=1
+OBSERVED live-unresolved-empty: refused; contacts=2; notices=2; no worker record
+Empty own HEAD log remained empty while origin/main advanced to c85c35b74226e3c7cbe79ba079e74ae04f1b6fcb
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-missing /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/missing
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-missing /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr --base-branch feature/missing
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/home
+warn: no registry at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/home/data/projects.md; defaulting project to no-mistakes off
+notice: contacting origin (git fetch origin feature/missing): refresh the named base branch 'origin/feature/missing'
+ORIGIN_CONTACT
+fatal: couldn't find remote ref refs/heads/feature/missing
+error: could not fetch 'origin/feature/missing' for pooled worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/missing/project'; refusing to launch from a potentially stale base
+
+exit=1
+OBSERVED live-missing: refused; contacts=1; notices=1; no worker record
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-unreachable /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-unreachable /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+fatal: '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/missing.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+error: could not fetch origin for pooled worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/project'; refusing to launch from a potentially stale base
+
+exit=1
+Cleanup: 
+Lab removed. Default-session fleet tripwire unchanged.
+Traceback (most recent call last):
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live.py", line 152, in <module>
+    spawn(c,'live-unreachable',0,False,reason='could not fetch origin',expected_notices=1)
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live.py", line 72, in spawn
+    assert contacts==expected,(id,contacts,expected)
+AssertionError: ('live-unreachable', 1, 0)
+Named isolated Herdr session: fm-lab-vault-live-82180-8370
+Lab provisioned. Default-session fleet tripwire recorded.
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-unreachable /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-unreachable /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+fatal: '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/missing.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+error: could not fetch origin for pooled worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/unreachable/project'; refusing to launch from a potentially stale base
+
+exit=1
+OBSERVED live-unreachable: refused; contacts=1; notices=1; no worker record
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-held /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/held/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-held /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/held/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/held/home
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+error: refusing to spawn task live-held: worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/held/treehouse/.treehouse/project-6cd49d/1/project' is still recorded by task held in /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/held/home/state/held.meta (legacy unleased record blocks this pool); reconcile that task before reusing its slot
+
+exit=1
+OBSERVED live-held: refused; contacts=0; notices=0; no worker record
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-dirty /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-dirty /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/treehouse/.treehouse/project-a37307/2/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/treehouse/.treehouse/project-a37307/2/project' to release it.
+spawned live-dirty harness=sh kind=scout window=fm-lab-vault-live-82180-8370:w1:p4 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty/treehouse/.treehouse/project-a37307/2/project
+
+exit=0
+Cleanup: 
+Lab removed. Default-session fleet tripwire unchanged.
+Traceback (most recent call last):
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live.py", line 161, in <module>
+    spawn(c,'live-dirty',1,False,reason='is not clean')
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live.py", line 104, in spawn
+    assert p.returncode!=0 and not meta.exists(),id+' refusal failed'
+AssertionError: live-dirty refusal failed
+Named isolated Herdr session: fm-lab-vault-live-14300-18593
+Lab provisioned. Default-session fleet tripwire recorded.
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-dirty-hook /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty-hook/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-dirty-hook /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty-hook/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty-hook/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty-hook/treehouse/.treehouse/project-ff2782/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty-hook/treehouse/.treehouse/project-ff2782/1/project' to release it.
+error: pooled worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty-hook/treehouse/.treehouse/project-ff2782/1/project' is not clean; refusing to discard uncommitted work while refreshing its base
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+
+exit=1
+OBSERVED live-dirty-hook: refused; contacts=1; notices=1; no worker record
+Cleanup: 
+Lab removed. Default-session fleet tripwire unchanged.
+Traceback (most recent call last):
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live.py", line 165, in <module>
+    assert len(slots)==1 and (slots[0]/'uncommitted.txt').read_text()=='keep-my-work'
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1256, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1242, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1110, in _opener
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/dirty-hook/treehouse/.treehouse/project-ff2782/1/project/uncommitted.txt'
+Named isolated Herdr session: fm-lab-vault-live-36660-30471
+Lab provisioned. Default-session fleet tripwire recorded.
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-originless /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-originless /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+fatal: 'origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+error: could not fetch origin for pooled worktree '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/project'; refusing to launch from a potentially stale base
+
+exit=1
+Cleanup: 
+Lab removed. Default-session fleet tripwire unchanged.
+Traceback (most recent call last):
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live.py", line 170, in <module>
+    spawn(c,'live-originless',0)
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live.py", line 73, in spawn
+    assert contacts==expected,(id,contacts,expected)
+AssertionError: ('live-originless', 1, 0)
+Named isolated Herdr session: fm-lab-vault-live-43573-31231
+Lab provisioned. Default-session fleet tripwire recorded.
+$ FM_HOME=<disposable> /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-originless /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-originless /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/home
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/treehouse/.treehouse/project-24817c/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/treehouse/.treehouse/project-24817c/1/project' to release it.
+spawned live-originless harness=sh kind=scout window=fm-lab-vault-live-43573-31231:w1:p2 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/treehouse/.treehouse/project-24817c/1/project
+
+exit=0
+Persisted worker record:
+window=fm-lab-vault-live-43573-31231:w1:p2
+endpoint_task_id=live-originless
+worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/treehouse/.treehouse/project-24817c/1/project
+treehouse_lease_id=adc6cb362297a08e854bed21a32aeaee
+treehouse_lease_holder=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/home:live-originless
+project=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/originless/project
+harness=sh
+kind=scout
+tasktmp=/tmp/fm-live-originless
+model=default
+effort=default
+spawn_gen=s1792225177.43872.26328
+backend=herdr
+herdr_session=fm-lab-vault-live-43573-31231
+herdr_workspace_id=w1
+herdr_tab_id=w1:t2
+herdr_pane_id=w1:p2
+
+Worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/origin
+less/treehouse/.treehouse/project-24817c/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/orig
+inless/treehouse/.treehouse/project-24817c/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-originless/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-originless
+project on  HEAD
+❯ . '/tmp/fm-live-originless+91ade125dc3f8d7b389e9872d8d29d46024cae69944fefc9fbe286763c93ad2a/launch.s1792225177.43872.2
+6328.sh'
+LIVE_WORKER_HEAD=de5a850a7a4840bbe6ba75e1de0406d6e542c4d5
+OBSERVED live-originless: contacts=0; notices=0; HEAD=de5a850a7a4840bbe6ba75e1de0406d6e542c4d5
+Cleanup: 
+Lab removed. Default-session fleet tripwire unchanged.

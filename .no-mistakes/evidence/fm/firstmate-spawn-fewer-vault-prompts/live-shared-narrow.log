@@ -1,0 +1,37 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-shared-narrow /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/another/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+notice: contacting origin (git remote set-head origin --auto): the fetch could not confirm origin's current default branch, so ask origin for it
+ORIGIN_CONTACT
+notice: contacting origin (git fetch origin main): refresh 'origin/main' directly, because the configured fetch does not track every origin branch
+ORIGIN_CONTACT
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/treehouse/.treehouse/project-a87a04/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/treehouse/.treehouse/project-a87a04/1/project' to release it.
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+notice: contacting origin (git remote set-head origin --auto): the fetch could not confirm origin's current default branch, so ask origin for it
+ORIGIN_CONTACT
+notice: contacting origin (git fetch origin main): refresh 'origin/main' directly, because the configured fetch does not track every origin branch
+ORIGIN_CONTACT
+spawned live-shared-narrow harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:pA worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared-narrow/treehouse/.treehouse/project-a87a04/1/project
+
+Real worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shared
+-narrow/treehouse/.treehouse/project-a87a04/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/shar
+ed-narrow/treehouse/.treehouse/project-a87a04/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-shared-narrow/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-shared-narrow
+project on  HEAD
+❯ . '/tmp/fm-live-shared-narrow+9702bf7546b0f2d5ee369dc7d8ed4cb043042feb263018f70ff2f53da6d7545a/launch.s1792225077.7190
+1.1353.sh'
+LIVE_WORKER_HEAD=63a7e7c52ce8a782c97a901cdee43a0f83b3b471

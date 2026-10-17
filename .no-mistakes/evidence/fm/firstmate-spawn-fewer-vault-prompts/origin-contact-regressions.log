@@ -1,0 +1,47 @@
+ok - an unresolvable remote default refuses with a remembered default and a empty own log
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/cross-clone-default/treehouse-root/.treehouse/project-572c6e/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/cross-clone-default/treehouse-root/.treehouse/project-572c6e/1/project' to release it.
+🌳 Worktree returned to pool.
+ok - a shared-pool default launch refreshes the allocated repository and announces every contact
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/cross-clone-named/treehouse-root/.treehouse/project-73b499/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/cross-clone-named/treehouse-root/.treehouse/project-73b499/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+ok - a shared-pool named launch refreshes the allocated repository and announces every contact
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/cross-clone-narrow/treehouse-root/.treehouse/project-ae872d/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/cross-clone-narrow/treehouse-root/.treehouse/project-ae872d/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+ok - a shared-pool narrow launch refreshes the allocated repository and announces every contact
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/setup-new/treehouse-root/.treehouse/project-48217b/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/setup-new/treehouse-root/.treehouse/project-48217b/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+ok - a new Treehouse slot runs setup on the refreshed default branch
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/setup-reused/treehouse-root/.treehouse/project-8a8974/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/setup-reused/treehouse-root/.treehouse/project-8a8974/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+ok - a reused Treehouse slot runs setup on the refreshed default branch
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/origin-contacts/treehouse-root/.treehouse/project-1c168e/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/origin-contacts/treehouse-root/.treehouse/project-1c168e/1/project' to release it.
+A new version of treehouse is available: v2.3.0 → v3.1.4
+Run "treehouse update" to update
+
+🌳 Worktree returned to pool.
+# origin contacts for one real Treehouse spawn: 1
+#   contact: /Applications/Xcode.app/Contents/Developer/usr/bin/git -C /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/tmp/fm-spawn-pool-base-freshen.BWF3Vq/origin-contacts/project -c remote.origin.followRemoteHEAD=always fetch --quiet origin
+#   announced: notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ok - a real Treehouse spawn contacts origin 1 time(s) and announces each contact
+ok - a moved remote default branch is followed in 1 origin contact(s) with reflogs on, never remembered
+ok - a moved remote default branch is followed in 2 origin contact(s) with reflogs off, never remembered
+ok - an unresolvable remote default refuses with a remembered default and a normal own log
+ok - a named base fetches once and a narrow configured fetch keeps its announced explicit fetch

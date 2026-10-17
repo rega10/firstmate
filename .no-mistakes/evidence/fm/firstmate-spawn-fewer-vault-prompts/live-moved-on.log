@@ -1,0 +1,24 @@
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/bin/fm-spawn.sh live-moved-on /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/project 'sh -c '"'"'printf LIVE_WORKER_HEAD=; git rev-parse HEAD; sleep 120'"'"'' --scout --backend herdr
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/home
+notice: contacting origin (git fetch origin): refresh the launch base and read origin's current default branch
+ORIGIN_CONTACT
+🌳 Setting up worktree...
+🌳 Leased worktree at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/treehouse/.treehouse/project-9f0058/1/project. Run 'treehouse return /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/treehouse/.treehouse/project-9f0058/1/project' to release it.
+spawned live-moved-on harness=sh kind=scout window=fm-lab-vault-live-50944-29209:w1:p4 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-on/treehouse/.treehouse/project-9f0058/1/project
+
+Real worker terminal:
+cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/moved-
+on/treehouse/.treehouse/project-9f0058/1/project'
+project on  main
+❯ cd -- '/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M54CYBBMG7N780Q4RY0TVMDH/.test-vault-validation/live/move
+d-on/treehouse/.treehouse/project-9f0058/1/project'
+project on  HEAD
+❯ export GOTMPDIR=/tmp/fm-live-moved-on/gotmp
+project on  HEAD
+❯ export COMPACT_ADVISER_DISABLE=1
+project on  HEAD
+❯ export FM_TASK_ID=live-moved-on
+project on  HEAD
+❯ . '/tmp/fm-live-moved-on+99cfa155d61ce71718ddd0007e56d03d4a927b04149d579d08863b98b567c87d/launch.s1792225052.57978.222
+45.sh'
+LIVE_WORKER_HEAD=4cb208dd6bb626178de2472ec8657cdac52f38a6
