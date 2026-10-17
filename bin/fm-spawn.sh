@@ -293,14 +293,22 @@
 #   set (its header owns the refusal). A secondmate runs in its own home and is
 #   not marked.
 #   Only after this isolation check, every fresh ship or scout requires a clean
-#   task worktree. Before Treehouse allocation, spawn refreshes a configured
-#   origin and resolves its current default branch (or uses --base-branch,
-#   described above), then resets the isolated copy to that tip. Each git contact
-#   with origin can cost one remote approval, so Treehouse acquires with
-#   --no-fetch. One fetch normally refreshes the base and confirms the default
-#   (refresh_spawn_base_refs owns the fallbacks), and every remaining contact
-#   is announced first on stderr as `notice: contacting origin (<operation>): <why>`.
-#   When none is detected, spawn skips that remote freshness check and launches from the
+#   task worktree. For Treehouse spawns, spawn refreshes a configured origin in
+#   the spawning project before allocation, and Treehouse acquires with --no-fetch.
+#   One configured fetch normally refreshes the base and confirms origin's
+#   current default branch. Without fetch confirmation (including older Git or
+#   unavailable reflogs), spawn also asks origin with remote set-head --auto.
+#   A configured fetch that does not track every origin branch additionally
+#   requires an explicit fetch of the resolved default branch. A named base
+#   (--base-branch, described above) instead needs only its explicit branch fetch.
+#   If the allocated copy lacks the resolved commit, as can happen with a pool
+#   shared by separate clones, spawn repeats the refresh in that copy.
+#   Orca spawns refresh in their own worktree after allocation.
+#   After isolation and cleanliness checks, spawn resets the task copy to the
+#   resolved commit. Each git contact with origin can cost one remote approval,
+#   so every contact is announced first on stderr as
+#   `notice: contacting origin (<operation>): <why>`.
+#   When no origin is detected, spawn skips that remote freshness check and launches from the
 #   clean worktree's current HEAD. Relaunch reuses the recorded worktree without
 #   fetching or resetting its base. An unreachable detected origin, unresolved
 #   default branch, or non-clean worktree refuses a fresh spawn rather than
@@ -3763,7 +3771,10 @@ EOF
   [ "$found" = 1 ]
 }
 
-# Count of fetch confirmations in origin/HEAD's own reflog, or "absent".
+# Count only literal "fetch" subjects written by fetch's followRemoteHEAD rewrite.
+# Git can read the target's log when origin/HEAD's own log is empty; target-ref
+# fetch subjects include arguments and a result, so they cannot count as proof.
+# Missing, empty, or unconfirmed logs produce "absent".
 spawn_origin_head_log_mark() { # <worktree>
   if git -C "$1" reflog exists refs/remotes/origin/HEAD; then
     git -C "$1" reflog show --format=%gs refs/remotes/origin/HEAD 2>/dev/null |
@@ -3773,7 +3784,7 @@ spawn_origin_head_log_mark() { # <worktree>
   fi
 }
 
-# Whether origin/HEAD's own reflog grew between two marks.
+# Whether the count of fetch confirmations grew between two marks.
 spawn_origin_head_confirmed() { # <before-mark> <after-mark>
   [ "$2" != absent ] || return 1
   [ "$1" = absent ] || [ "$2" -gt "$1" ]
@@ -3782,11 +3793,9 @@ spawn_origin_head_confirmed() { # <before-mark> <after-mark>
 # One configured fetch normally both refreshes the base and confirms origin's
 # default branch: with followRemoteHEAD=always (git 2.48+) the fetch rewrites
 # origin/HEAD from the HEAD origin advertised in that same exchange. Git ignores
-# a failed rewrite silently, so only a new entry in origin/HEAD's own reflog
-# proves this fetch confirmed it. Without that proof (older git, reflogs off, an
-# unresolvable remote HEAD) the spawn asks origin directly with set-head --auto,
-# which refuses exactly as before. A fetch that does not track every branch, or
-# a named base, fetches that one branch explicitly so its tip is never stale.
+# a failed rewrite silently, so spawn_origin_head_log_mark must prove a new
+# fetch confirmation rather than trusting the remembered symbolic ref.
+# The script header owns fallback contacts and fresh-base refusal rules.
 refresh_spawn_base_refs() { # <repository> [<base-branch>]
   local worktree=$1 base=${2:-} default target tracks_all=0 head_log
   SPAWN_BASE_TARGET=
