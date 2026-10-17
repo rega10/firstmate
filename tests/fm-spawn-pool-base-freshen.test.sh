@@ -990,11 +990,23 @@ test_moved_remote_default_is_followed_not_remembered() {
 # A remote HEAD that names no branch must still refuse when the shared
 # repository remembers an older default that would otherwise look usable.
 test_unresolvable_remote_default_refuses_despite_remembered_default() {
-  local rec id out status before
-  id='pool-remembered-unresolved'
-  rec=$(make_case remembered-unresolved "$id")
+  local log_state=${1:-normal} rec id out status before head_log target_log_before target_log_after
+  id="pool-remembered-unresolved-$log_state"
+  rec=$(make_case "remembered-unresolved-$log_state" "$id")
   read_case_record "$rec"
   remember_origin_default main
+  if [ "$log_state" = empty ]; then
+    head_log=$(git -C "$PROJECT_DIR" rev-parse --path-format=absolute --git-path logs/refs/remotes/origin/HEAD)
+    git -C "$PROJECT_DIR" reflog expire --expire=all refs/remotes/origin/HEAD \
+      || fail "could not expire origin/HEAD's reflog"
+    git -C "$PROJECT_DIR" reflog exists refs/remotes/origin/HEAD \
+      || fail "expiration did not retain origin/HEAD's own log"
+    [ -f "$head_log" ] && [ ! -s "$head_log" ] || fail "origin/HEAD's own log is not empty"
+    target_log_before=$(git -C "$PROJECT_DIR" reflog show --format=%gs refs/remotes/origin/main | wc -l | tr -d ' ')
+    git -C "$CASE_DIR/publisher" -c user.name='Firstmate Tests' -c user.email='tests@example.invalid' \
+      commit --quiet --allow-empty -m advance-after-expiry
+    git -C "$CASE_DIR/publisher" push --quiet origin main
+  fi
   git --git-dir="$CASE_DIR/origin.git" symbolic-ref HEAD refs/heads/missing-default
   install_origin_contact_counter
   before=$(git -C "$POOL_DIR" rev-parse HEAD)
@@ -1006,8 +1018,14 @@ test_unresolvable_remote_default_refuses_despite_remembered_default() {
     "spawn did not clearly refuse the unresolvable remote default"
   [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$before" ] \
     || fail "spawn moved HEAD after failing to resolve the remote default branch"
+  [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published task metadata"
+  if [ "$log_state" = empty ]; then
+    target_log_after=$(git -C "$PROJECT_DIR" reflog show --format=%gs refs/remotes/origin/main | wc -l | tr -d ' ')
+    [ "$target_log_after" -gt "$target_log_before" ] || fail "the fetch did not grow main's target log"
+    [ ! -s "$head_log" ] || fail "the unresolved remote HEAD rewrote origin/HEAD's own log"
+  fi
   expect_announced_contacts "$out" 2 "an unresolvable remote default"
-  pass "an unresolvable remote default refuses even when an older default is remembered"
+  pass "an unresolvable remote default refuses with a remembered default and a $log_state own log"
 }
 
 # A named base needs one explicit fetch, and a configured fetch that does not
@@ -1800,6 +1818,7 @@ if [ "${1:-}" = --live-legacy ]; then
 fi
 
 if [ "${1:-}" = --origin-contacts ]; then
+  test_unresolvable_remote_default_refuses_despite_remembered_default empty
   test_shared_pool_refreshes_the_allocated_repository
   test_treehouse_setup_uses_refreshed_refs
   test_spawn_contacts_origin_once_and_announces_it
@@ -1855,6 +1874,7 @@ test_treehouse_setup_uses_refreshed_refs
 test_moved_remote_default_is_followed_not_remembered
 test_moved_remote_default_is_followed_not_remembered off
 test_unresolvable_remote_default_refuses_despite_remembered_default
+test_unresolvable_remote_default_refuses_despite_remembered_default empty
 test_base_and_narrow_fetch_contacts_are_announced
 test_unreachable_origin_refuses_stale_pool_base
 test_originless_pool_launches_without_a_freshness_fetch

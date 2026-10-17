@@ -3763,11 +3763,11 @@ EOF
   [ "$found" = 1 ]
 }
 
-# Length of origin/HEAD's own reflog, or "absent". `git reflog show` on a symref
-# with no log of its own falls back to its target's log, so existence comes first.
+# Count of fetch confirmations in origin/HEAD's own reflog, or "absent".
 spawn_origin_head_log_mark() { # <worktree>
   if git -C "$1" reflog exists refs/remotes/origin/HEAD; then
-    git -C "$1" reflog show --format=%gd refs/remotes/origin/HEAD 2>/dev/null | wc -l | tr -d ' '
+    git -C "$1" reflog show --format=%gs refs/remotes/origin/HEAD 2>/dev/null |
+      awk '$0 == "fetch" { count++ } END { if (count) print count; else print "absent" }'
   else
     echo absent
   fi
