@@ -293,12 +293,12 @@
 #   set (its header owns the refusal). A secondmate runs in its own home and is
 #   not marked.
 #   Only after this isolation check, every fresh ship or scout requires a clean
-#   task worktree. When an origin configuration is detected, spawn fetches it,
-#   resolves the current remote default branch (or uses --base-branch, described
-#   above), and resets to its tip. Each git contact with origin can cost one
-#   remote approval, so Treehouse acquires with --no-fetch where supported, one
-#   fetch normally both refreshes the base and confirms origin's default branch
-#   (freshen_spawn_worktree_base owns the fallbacks), and every remaining contact
+#   task worktree. Before Treehouse allocation, spawn refreshes a configured
+#   origin and resolves its current default branch (or uses --base-branch,
+#   described above), then resets the isolated copy to that tip. Each git contact
+#   with origin can cost one remote approval, so Treehouse acquires with
+#   --no-fetch. One fetch normally refreshes the base and confirms the default
+#   (refresh_spawn_base_refs owns the fallbacks), and every remaining contact
 #   is announced first on stderr as `notice: contacting origin (<operation>): <why>`.
 #   When none is detected, spawn skips that remote freshness check and launches from the
 #   clean worktree's current HEAD. Relaunch reuses the recorded worktree without
@@ -3730,6 +3730,7 @@ spawn_worktree_has_origin_config() { # <worktree>
   git -C "$worktree" config --get-regexp '^remote\.origin\.' >/dev/null 2>&1 && return 0
   while IFS=$'\t' read -r origin key; do
     case $origin in file:*) config=${origin#file:} ;; *) continue ;; esac
+    case $config in /*) ;; *) config="$worktree/$config" ;; esac
     [ -f "$config" ] || continue
     case $seen in *$'\n'"$config"$'\n'*) continue ;; esac
     seen+="$config"$'\n'
@@ -3786,20 +3787,10 @@ spawn_origin_head_confirmed() { # <before-mark> <after-mark>
 # unresolvable remote HEAD) the spawn asks origin directly with set-head --auto,
 # which refuses exactly as before. A fetch that does not track every branch, or
 # a named base, fetches that one branch explicitly so its tip is never stale.
-freshen_spawn_worktree_base() { # <worktree> [<base-branch>]
-  local worktree=$1 base=${2:-} default target expected actual status tracks_all=0 head_log
-  status=$(git -C "$worktree" -c core.quotePath=false status --porcelain) || {
-    echo "error: could not inspect pooled worktree '$worktree' before refreshing its base" >&2
-    return 1
-  }
-  if [ -n "$status" ]; then
-    if describe_stale_submodule_pins "$worktree" "$status"; then
-      echo "error: pooled worktree '$worktree' has a stale submodule checkout, not uncommitted work; refusing to launch and leaving it untouched" >&2
-    else
-      echo "error: pooled worktree '$worktree' is not clean; refusing to discard uncommitted work while refreshing its base" >&2
-    fi
-    return 1
-  fi
+refresh_spawn_base_refs() { # <repository> [<base-branch>]
+  local worktree=$1 base=${2:-} default target tracks_all=0 head_log
+  SPAWN_BASE_TARGET=
+  SPAWN_BASE_COMMIT=
   if ! spawn_worktree_has_origin_config "$worktree"; then
     [ -z "$base" ] || {
       echo "error: pooled worktree '$worktree' has no origin, so it cannot start from base branch '$base'" >&2
@@ -3834,6 +3825,7 @@ freshen_spawn_worktree_base() { # <worktree> [<base-branch>]
     }
   fi
   target="origin/$default"
+  SPAWN_BASE_TARGET=$target
   if [ -n "$base" ] || [ "$tracks_all" != 1 ]; then
     if [ -n "$base" ]; then
       announce_origin_contact "git fetch origin $default" "refresh the named base branch '$target'"
@@ -3845,11 +3837,33 @@ freshen_spawn_worktree_base() { # <worktree> [<base-branch>]
       return 1
     fi
   fi
-  expected=$(git -C "$worktree" rev-parse --verify --quiet "$target^{commit}" 2>/dev/null) || {
+  SPAWN_BASE_COMMIT=$(git -C "$worktree" rev-parse --verify --quiet "$target^{commit}" 2>/dev/null) || {
     echo "error: '$target' is not a commit for pooled worktree '$worktree'; refusing to launch from a potentially stale base" >&2
     return 1
   }
-  if ! git -C "$worktree" reset --hard "$target" >/dev/null; then
+}
+
+freshen_spawn_worktree_base() { # <worktree>
+  local worktree=$1 target expected actual status
+  status=$(git -C "$worktree" -c core.quotePath=false status --porcelain) || {
+    echo "error: could not inspect pooled worktree '$worktree' before refreshing its base" >&2
+    return 1
+  }
+  if [ -n "$status" ]; then
+    if describe_stale_submodule_pins "$worktree" "$status"; then
+      echo "error: pooled worktree '$worktree' has a stale submodule checkout, not uncommitted work; refusing to launch and leaving it untouched" >&2
+    else
+      echo "error: pooled worktree '$worktree' is not clean; refusing to discard uncommitted work while refreshing its base" >&2
+    fi
+    return 1
+  fi
+  if [ "$BACKEND" = orca ]; then
+    refresh_spawn_base_refs "$worktree" "$BASE_BRANCH" || return 1
+  fi
+  target=$SPAWN_BASE_TARGET
+  expected=$SPAWN_BASE_COMMIT
+  [ -n "$target" ] || return 0
+  if ! git -C "$worktree" reset --hard "$expected" >/dev/null; then
     echo "error: could not reset pooled worktree '$worktree' to '$target'; refusing to launch from a potentially stale base" >&2
     return 1
   fi
@@ -4738,16 +4752,8 @@ elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
     exit 1
   fi
   TREEHOUSE_LEASE_HOLDER="$(real_path_or_raw "$FM_HOME"):$ID"
-  # The base refresh below fetches origin itself, so Treehouse's own pool fetch
-  # would only be a second contact. A Treehouse older than --no-fetch keeps it.
-  treehouse_get_args=(get --lease --json --lease-holder "$TREEHOUSE_LEASE_HOLDER")
-  treehouse_get_help=$(treehouse get --help 2>&1 || true)
-  if printf '%s\n' "$treehouse_get_help" | grep -Eq '(^|[^[:alnum:]_-])--no-fetch([^[:alnum:]_-]|$)'; then
-    treehouse_get_args+=(--no-fetch)
-  elif spawn_worktree_has_origin_config "$PROJ_ABS"; then
-    announce_origin_contact "treehouse get" "this Treehouse cannot skip its own pool fetch before allocating a copy"
-  fi
-  treehouse_receipt=$(cd "$PROJ_ABS" && treehouse "${treehouse_get_args[@]}") || {
+  refresh_spawn_base_refs "$PROJ_ABS" "$BASE_BRANCH" || exit 1
+  treehouse_receipt=$(cd "$PROJ_ABS" && treehouse get --lease --json --no-fetch --lease-holder "$TREEHOUSE_LEASE_HOLDER") || {
     echo "error: Treehouse lease acquisition failed for task $ID" >&2
     exit 1
   }
@@ -4791,7 +4797,7 @@ elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
   fi
 fi
 if [ "$RELAUNCH" -eq 0 ] && [ "$KIND" != secondmate ]; then
-  freshen_spawn_worktree_base "$WT" "$BASE_BRANCH" || exit 1
+  freshen_spawn_worktree_base "$WT" || exit 1
 fi
 
 # Re-assert the durable task copy after either treehouse acquisition or endpoint

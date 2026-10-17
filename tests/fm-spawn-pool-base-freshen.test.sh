@@ -98,7 +98,7 @@ REC
   pass "a remote-seeded secondmate home allocates and launches from its Treehouse pool"
 }
 
-test_linked_spawning_home_rejects_primary_before_refresh() {
+test_linked_spawning_home_rejects_primary_without_reset() {
   local rec id out status returned primary spawning before_reflog
   for returned in primary primary-alias spawning scout; do
     id="pool-linked-${returned}-r12"
@@ -153,13 +153,12 @@ test_linked_spawning_home_rejects_primary_before_refresh() {
       assert_contains "$out" "did not yield an isolated worktree" \
         "spawn did not explain its isolation refusal"
       [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "refused spawn published task metadata"
-      [ ! -e "$primary/.git/FETCH_HEAD" ] || fail "refused spawn fetched before proving isolation"
     fi
     [ "$(git -C "$primary" rev-parse HEAD)" = "$INITIAL_SHA" ] \
       || fail "spawn reset the repository primary from a linked home"
     [ "$(git -C "$primary" reflog)" = "$before_reflog" ] \
       || fail "spawn touched the primary reflog from a linked home"
-    pass "linked spawning home: $returned preserves the primary before any refresh"
+    pass "linked spawning home: $returned preserves the primary checkout"
   done
 }
 
@@ -788,6 +787,54 @@ git_fetch_follows_remote_head() {
   [ "$(git -C "$probe/clone" symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null)" = refs/remotes/origin/trunk ]
 }
 
+test_treehouse_setup_uses_refreshed_refs() {
+  local treehouse_bin rec id variant receipt out status expected=2
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for setup-hook verification"
+  git_fetch_follows_remote_head && expected=1
+  for variant in new reused; do
+    id="pool-setup-$variant"
+    rec=$(make_case "setup-$variant" "$id")
+    read_case_record "$rec"
+    remember_origin_default main
+    git -C "$CASE_DIR/publisher" checkout --quiet -b trunk
+    printf 'new dependencies\n' > "$CASE_DIR/publisher/dependencies.txt"
+    git -C "$CASE_DIR/publisher" add dependencies.txt
+    git -C "$CASE_DIR/publisher" -c user.name='Firstmate Tests' -c user.email='tests@example.invalid' commit -qm dependencies
+    git -C "$CASE_DIR/publisher" push --quiet origin trunk
+    git --git-dir="$CASE_DIR/origin.git" symbolic-ref HEAD refs/heads/trunk
+    export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+      || fail "could not prepare the setup-hook slot"
+    POOL_DIR=$(printf '%s\n' "$receipt" | jq -r .path)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force \
+      --if-lease-id "$(printf '%s\n' "$receipt" | jq -r .lease_id)" "$POOL_DIR") \
+      || fail "could not return the setup-hook slot"
+    if [ "$variant" = new ]; then
+      git -C "$PROJECT_DIR" worktree remove "$POOL_DIR" || fail "could not remove the prepared slot"
+    fi
+    mkdir -p "$HOME_DIR/user-home/.config/treehouse"
+    printf '[hooks]\npost_create = ["git rev-parse HEAD > .setup-base"]\n' \
+      > "$HOME_DIR/user-home/.config/treehouse/config.toml"
+    printf '.setup-base\n' >> "$PROJECT_DIR/.git/info/exclude"
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    install_origin_contact_counter
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" run_spawn "$id" --scout)
+    status=$?
+    expect_code 0 "$status" "a $variant slot with a setup hook should launch"$'\n'"$out"
+    [ "$(cat "$POOL_DIR/.setup-base")" = "$(git -C "$POOL_DIR" rev-parse HEAD)" ] \
+      || fail "the $variant slot ran setup at stale source before launching current source"
+    [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$(git -C "$CASE_DIR/publisher" rev-parse trunk)" ] \
+      || fail "the $variant slot did not launch origin's current default branch"
+    expect_announced_contacts "$out" "$expected" "setup in a $variant slot"
+    unset TREEHOUSE_ROOT
+    pass "a $variant Treehouse slot runs setup on the refreshed default branch"
+  done
+}
+
 test_spawn_contacts_origin_once_and_announces_it() {
   local treehouse_bin rec id out status free_receipt contacts announced expected
   treehouse_bin=$(command -v treehouse) || {
@@ -936,22 +983,6 @@ test_base_and_narrow_fetch_contacts_are_announced() {
     || fail "the narrow-fetch copy did not start from current origin/main"
   expect_announced_contacts "$out" 3 "a configured fetch that tracks one branch"
   pass "a named base fetches once and a narrow configured fetch keeps its announced explicit fetch"
-}
-
-# A Treehouse without --no-fetch still fetches origin itself, so the spawn
-# names that contact before allocating rather than leaving it unexplained.
-test_treehouse_without_no_fetch_announces_its_pool_fetch() {
-  local rec id out status
-  id='pool-old-treehouse'
-  rec=$(make_case old-treehouse "$id")
-  read_case_record "$rec"
-  sed -i.bak 's/ \[--no-fetch\]//' "$FAKEBIN_DIR/treehouse"
-  out=$(run_spawn "$id" --mode no-mistakes --yolo off)
-  status=$?
-  expect_code 0 "$status" "a spawn on an older Treehouse should launch"$'\n'"$out"
-  assert_contains "$out" "notice: contacting origin (treehouse get)" \
-    "the spawn did not announce an older Treehouse's own pool fetch"
-  pass "an older Treehouse's own pool fetch is announced before allocation"
 }
 
 publish_feature_branch() { # <branch>
@@ -1713,12 +1744,12 @@ if [ "${1:-}" = --live-legacy ]; then
 fi
 
 if [ "${1:-}" = --origin-contacts ]; then
+  test_treehouse_setup_uses_refreshed_refs
   test_spawn_contacts_origin_once_and_announces_it
   test_moved_remote_default_is_followed_not_remembered
   test_moved_remote_default_is_followed_not_remembered off
   test_unresolvable_remote_default_refuses_despite_remembered_default
   test_base_and_narrow_fetch_contacts_are_announced
-  test_treehouse_without_no_fetch_announces_its_pool_fetch
   exit 0
 fi
 
@@ -1746,7 +1777,7 @@ test_real_treehouse_preserves_a_recorded_stale_slot
 test_pool_slot_still_recorded_by_another_task_refuses
 test_remote_seeded_home_spawns_from_treehouse_pool
 test_pool_slot_claim_follows_the_spawn_outcome
-test_linked_spawning_home_rejects_primary_before_refresh
+test_linked_spawning_home_rejects_primary_without_reset
 test_stale_pool_base_refreshes_before_branching
 test_named_base_branch_starts_from_that_branch
 test_base_branch_must_agree_with_the_brief
@@ -1757,11 +1788,11 @@ test_direct_pr_and_scout_refresh_before_launch
 test_dirty_pool_refuses_without_discarding_work
 test_unresolved_remote_default_refuses_pool
 test_spawn_contacts_origin_once_and_announces_it
+test_treehouse_setup_uses_refreshed_refs
 test_moved_remote_default_is_followed_not_remembered
 test_moved_remote_default_is_followed_not_remembered off
 test_unresolvable_remote_default_refuses_despite_remembered_default
 test_base_and_narrow_fetch_contacts_are_announced
-test_treehouse_without_no_fetch_announces_its_pool_fetch
 test_unreachable_origin_refuses_stale_pool_base
 test_originless_pool_launches_without_a_freshness_fetch
 test_originless_dirty_pool_refuses_without_discarding_work
