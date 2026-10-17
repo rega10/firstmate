@@ -3857,7 +3857,8 @@ freshen_spawn_worktree_base() { # <worktree>
     fi
     return 1
   fi
-  if [ "$BACKEND" = orca ]; then
+  if [ "$BACKEND" = orca ] ||
+    { [ -n "$SPAWN_BASE_COMMIT" ] && ! GIT_NO_LAZY_FETCH=1 git -C "$worktree" cat-file -e "$SPAWN_BASE_COMMIT^{commit}" 2>/dev/null; }; then
     refresh_spawn_base_refs "$worktree" "$BASE_BRANCH" || return 1
   fi
   target=$SPAWN_BASE_TARGET

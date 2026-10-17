@@ -835,6 +835,62 @@ SH
   done
 }
 
+test_shared_pool_refreshes_the_allocated_repository() {
+  local treehouse_bin rec id variant receipt source_project tip out status expected default_contacts=2
+  local spawn_args
+  treehouse_bin=$(command -v treehouse) || fail "treehouse is required for shared-pool verification"
+  git_fetch_follows_remote_head && default_contacts=1
+  for variant in default named narrow; do
+    id="pool-cross-clone-$variant"
+    rec=$(make_case "cross-clone-$variant" "$id")
+    read_case_record "$rec"
+    source_project=$PROJECT_DIR
+    spawn_args=(--mode no-mistakes --yolo off)
+    expected=$((default_contacts * 2))
+    if [ "$variant" = named ]; then
+      publish_feature_branch feature/hub
+      brief_with_base "$id" feature/hub
+      spawn_args=(--scout --base-branch feature/hub)
+      expected=2
+    fi
+    tip=$(git -C "$CASE_DIR/publisher" rev-parse HEAD)
+    export TREEHOUSE_ROOT="$CASE_DIR/treehouse-root"
+    receipt=$(cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" get --lease --json --no-fetch) \
+      || fail "could not allocate the shared slot"
+    POOL_DIR=$(printf '%s\n' "$receipt" | jq -r .path)
+    (cd "$PROJECT_DIR" && HOME="$HOME_DIR/user-home" "$treehouse_bin" return --force \
+      --if-lease-id "$(printf '%s\n' "$receipt" | jq -r .lease_id)" "$POOL_DIR") \
+      || fail "could not return the shared slot"
+    if git -C "$POOL_DIR" cat-file -e "$tip^{commit}" 2>/dev/null; then
+      fail "the shared slot already holds the new base commit"
+    fi
+    git clone --quiet "file://$CASE_DIR/origin.git" "$CASE_DIR/another/project" \
+      || fail "could not create the second source clone"
+    PROJECT_DIR="$CASE_DIR/another/project"
+    if [ "$variant" = narrow ]; then
+      git -C "$PROJECT_DIR" config --replace-all remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
+      git -C "$source_project" config --replace-all remote.origin.fetch '+refs/heads/main:refs/remotes/origin/main'
+      expected=6
+    fi
+    cat > "$FAKEBIN_DIR/treehouse" <<'SH'
+#!/usr/bin/env bash
+exec "$FM_REAL_TREEHOUSE" "$@"
+SH
+    chmod +x "$FAKEBIN_DIR/treehouse"
+    install_origin_contact_counter
+    git -C "$source_project" config remote.origin.uploadpack "$CASE_DIR/counting-upload-pack"
+    out=$(FM_REAL_TREEHOUSE="$treehouse_bin" run_spawn "$id" "${spawn_args[@]}")
+    status=$?
+    expect_code 0 "$status" "a shared-pool $variant launch should refresh the allocated repository"$'\n'"$out"
+    assert_grep "worktree=$POOL_DIR" "$HOME_DIR/state/$id.meta" "spawn did not reuse the shared slot"
+    [ "$(git -C "$POOL_DIR" rev-parse HEAD)" = "$tip" ] \
+      || fail "the shared slot did not launch the refreshed $variant base"
+    expect_announced_contacts "$out" "$expected" "a shared-pool $variant launch"
+    unset TREEHOUSE_ROOT
+    pass "a shared-pool $variant launch refreshes the allocated repository and announces every contact"
+  done
+}
+
 test_spawn_contacts_origin_once_and_announces_it() {
   local treehouse_bin rec id out status free_receipt contacts announced expected
   treehouse_bin=$(command -v treehouse) || {
@@ -1744,12 +1800,18 @@ if [ "${1:-}" = --live-legacy ]; then
 fi
 
 if [ "${1:-}" = --origin-contacts ]; then
+  test_shared_pool_refreshes_the_allocated_repository
   test_treehouse_setup_uses_refreshed_refs
   test_spawn_contacts_origin_once_and_announces_it
   test_moved_remote_default_is_followed_not_remembered
   test_moved_remote_default_is_followed_not_remembered off
   test_unresolvable_remote_default_refuses_despite_remembered_default
   test_base_and_narrow_fetch_contacts_are_announced
+  exit 0
+fi
+
+if [ "${1:-}" = --shared-pool ]; then
+  test_shared_pool_refreshes_the_allocated_repository
   exit 0
 fi
 
@@ -1788,6 +1850,7 @@ test_direct_pr_and_scout_refresh_before_launch
 test_dirty_pool_refuses_without_discarding_work
 test_unresolved_remote_default_refuses_pool
 test_spawn_contacts_origin_once_and_announces_it
+test_shared_pool_refreshes_the_allocated_repository
 test_treehouse_setup_uses_refreshed_refs
 test_moved_remote_default_is_followed_not_remembered
 test_moved_remote_default_is_followed_not_remembered off
