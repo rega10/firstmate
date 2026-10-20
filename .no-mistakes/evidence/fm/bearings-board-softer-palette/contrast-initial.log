@@ -1,0 +1,3 @@
+result: "{\"background\":\"rgb(11, 26, 51)\",\"colorScheme\":\"dark\",\"lightPreference\":true,\"overflow\":false,\"textChecks\":57,\"failures\":[],\"minimum\":{\"text\":\"waiting\",\"selector\":\"fm-badge fm-badge--info\",\"foreground\":\"rgb(251, 244, 226)\",\"background\":[60,114,166,1],\"ratio\":4.61,\"required\":4.5},\"placeholder\":{\"text\":\"Add a note for the review.\",\"foreground\":\"rgb(117, 117, 117)\",\"background\":[20,48,86,1],\"opacity\":\"1\",\"ratio\":2.87}}"
+help[1]:
+  Run `chrome-devtools-axi snapshot` to see current page state

@@ -1,0 +1,40 @@
+{
+  "measurement": "Chrome computed placeholder color and effective input background, using WCAG relative luminance",
+  "baseline": {
+    "text": "Add a note for the review.",
+    "foreground": "rgb(117, 117, 117)",
+    "background": [
+      255,
+      253,
+      247,
+      1
+    ],
+    "opacity": "1",
+    "ratio": 4.53
+  },
+  "target": {
+    "text": "Add a note for the review.",
+    "foreground": "rgb(117, 117, 117)",
+    "background": [
+      20,
+      48,
+      86,
+      1
+    ],
+    "opacity": "1",
+    "ratio": 2.87
+  },
+  "required_contrast": 4.5,
+  "target_background": "rgb(11, 26, 51)",
+  "target_color_scheme": "dark",
+  "browser_prefers_light": true,
+  "selection": {
+    "radioChecked": true,
+    "dispatchChecked": true,
+    "dispatchEnabled": true,
+    "selectionBackground": "rgb(58, 34, 36)",
+    "bodyBackground": "rgb(11, 26, 51)",
+    "viewport": 1440,
+    "scrollWidth": 1440
+  }
+}

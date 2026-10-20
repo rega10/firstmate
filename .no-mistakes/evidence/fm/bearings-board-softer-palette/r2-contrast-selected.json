@@ -1,0 +1,720 @@
+{
+  "bodyBackground": "rgb(11, 26, 51)",
+  "colorScheme": "dark",
+  "browserPrefersLight": true,
+  "viewport": 1440,
+  "scrollWidth": 1440,
+  "placeholder": {
+    "text": "Add a note for the review.",
+    "foreground": "rgb(183, 198, 219)",
+    "background": [
+      20,
+      48,
+      86,
+      1
+    ],
+    "opacity": "1",
+    "ratio": 7.63,
+    "pass": true
+  },
+  "minimumTextContrast": 4.61,
+  "failures": [],
+  "rows": [
+    {
+      "text": "bearings",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        20,
+        47,
+        84
+      ],
+      "ratio": 12.53,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "3",
+      "foreground": "rgb(231, 160, 144)",
+      "background": [
+        58,
+        34,
+        36
+      ],
+      "ratio": 6.85,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "need you",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        58,
+        34,
+        36
+      ],
+      "ratio": 8.45,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "3",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 10.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "underway",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "1",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 10.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "landed recently",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "4",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 10.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "charted next",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Captain's Call",
+      "foreground": "rgb(231, 160, 144)",
+      "background": [
+        11,
+        26,
+        51
+      ],
+      "ratio": 8.12,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "3 items wait on you, captain",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        11,
+        26,
+        51
+      ],
+      "ratio": 10.01,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "decision",
+      "foreground": "rgb(251, 244, 226)",
+      "background": [
+        192,
+        69,
+        42
+      ],
+      "ratio": 4.64,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "firstmate",
+      "foreground": "rgb(154, 173, 200)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 5.79,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Choose the next review",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 12.32,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "about",
+      "foreground": "rgb(154, 173, 200)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 5.79,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "The fleet board uses a navy background.",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 7.63,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "decide",
+      "foreground": "rgb(154, 173, 200)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 5.79,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Which review should start next?",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 7.63,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Review the visual changes",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        58,
+        34,
+        36
+      ],
+      "ratio": 13.64,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Inspect the board in Chrome.",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        58,
+        34,
+        36
+      ],
+      "ratio": 8.45,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "rec",
+      "foreground": "rgb(26, 34, 56)",
+      "background": [
+        240,
+        211,
+        140
+      ],
+      "ratio": 10.83,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Review later",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 10.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Keep this work queued.",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Reconcile",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 10.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Re-check the latest state, then close this with evidence or keep it open with a note",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Queue answer",
+      "foreground": "rgb(255, 253, 247)",
+      "background": [
+        192,
+        69,
+        42
+      ],
+      "ratio": 5,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "card 1 of 3",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        11,
+        26,
+        51
+      ],
+      "ratio": 10.01,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Charted Next",
+      "foreground": "rgb(231, 160, 144)",
+      "background": [
+        11,
+        26,
+        51
+      ],
+      "ratio": 8.12,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "showing 2 of 4",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        11,
+        26,
+        51
+      ],
+      "ratio": 10.01,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Review the next change",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 10.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Ready to start \u00b7 firstmate",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "waiting",
+      "foreground": "rgb(26, 34, 56)",
+      "background": [
+        224,
+        165,
+        46
+      ],
+      "ratio": 7.21,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Review the deferred change",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 10.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Wait for the next release \u00b7 firstmate",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "waiting",
+      "foreground": "rgb(26, 34, 56)",
+      "background": [
+        224,
+        165,
+        46
+      ],
+      "ratio": 7.21,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Check fleet inventory",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 10.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "A disposable integrity warning \u00b7 firstmate",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "needs repair",
+      "foreground": "rgb(251, 244, 226)",
+      "background": [
+        169,
+        58,
+        31
+      ],
+      "ratio": 5.78,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "+2 more queued - ask firstmate for the full chart",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "+1 more repair warning - ask firstmate for the full chart",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Archived work - Ask for the full fleet snapshot.",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 6.57,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Omitted",
+      "foreground": "rgb(231, 160, 144)",
+      "background": [
+        27,
+        58,
+        102
+      ],
+      "ratio": 5.33,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "1 picked for dispatch",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        22,
+        50,
+        90
+      ],
+      "ratio": 7.4,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Queue dispatch order",
+      "foreground": "rgb(26, 34, 56)",
+      "background": [
+        224,
+        165,
+        46
+      ],
+      "ratio": 7.21,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Underway",
+      "foreground": "rgb(231, 160, 144)",
+      "background": [
+        11,
+        26,
+        51
+      ],
+      "ratio": 8.12,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "working",
+      "foreground": "rgb(251, 244, 226)",
+      "background": [
+        47,
+        107,
+        79
+      ],
+      "ratio": 5.74,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Review the palette",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 12.32,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Check text and controls on dark surfaces. \u00b7 ship \u00b7 firstmate",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 7.63,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "blocked",
+      "foreground": "rgb(251, 244, 226)",
+      "background": [
+        60,
+        114,
+        166
+      ],
+      "ratio": 4.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Review the release",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 12.32,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Wait for the review result. \u00b7 scout \u00b7 firstmate",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 7.63,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "waiting",
+      "foreground": "rgb(251, 244, 226)",
+      "background": [
+        60,
+        114,
+        166
+      ],
+      "ratio": 4.61,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Review the docs",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 12.32,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Wait for input. \u00b7 ship \u00b7 firstmate",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 7.63,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Recently Landed",
+      "foreground": "rgb(231, 160, 144)",
+      "background": [
+        11,
+        26,
+        51
+      ],
+      "ratio": 8.12,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "Documented the board review",
+      "foreground": "rgb(244, 247, 252)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 12.32,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "firstmate \u00b7 local fleet",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86
+      ],
+      "ratio": 7.63,
+      "threshold": 4.5,
+      "pass": true
+    },
+    {
+      "text": "fm-bearings-board.v1 \u00b7 2026-10-19T12:00:00Z",
+      "foreground": "rgb(154, 173, 200)",
+      "background": [
+        11,
+        26,
+        51
+      ],
+      "ratio": 7.59,
+      "threshold": 4.5,
+      "pass": true
+    }
+  ]
+}

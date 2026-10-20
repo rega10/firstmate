@@ -1,0 +1,3 @@
+result: "\"Conversation\\nQUEUED\\n<choice>\\n“Choose the next review -> visual - The note remains readable.”\\nCaptain's Call answer - Choose the next review: visual - The note remains readable.\\n\\nContext data:\\n{\\n  \\\"schema\\\": \\\"fm-bearings-answer.v1\\\",\\n  \\\"question\\\": \\\"palette-choice\\\",\\n  \\\"selection\\\": \\\"visual\\\",\\n  \\\"note\\\": \\\"The note remains readable.\\\"\\n}\\nQUEUED\\n<choice>\\n“Dispatch: review-next”\\nDispatch order - start this queued work now: review-next\\n\\nContext data:\\n{\\n  \\\"question\\\": \\\"dispatch.charted\\\",\\n  \\\"answer\\\": \\\"review-next\\\"\\n}\\nAttach images\\nSend & End\\nSend to Agent\""
+help[1]:
+  Run `chrome-devtools-axi snapshot` to see current page state

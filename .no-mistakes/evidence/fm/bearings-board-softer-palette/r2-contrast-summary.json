@@ -1,0 +1,90 @@
+{
+  "initial": {
+    "bodyBackground": "rgb(11, 26, 51)",
+    "colorScheme": "dark",
+    "browserPrefersLight": true,
+    "viewport": 1440,
+    "scrollWidth": 1440,
+    "placeholder": {
+      "text": "Add a note for the review.",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86,
+        1
+      ],
+      "opacity": "1",
+      "ratio": 7.63,
+      "pass": true
+    },
+    "minimumTextContrast": 4.61,
+    "failures": []
+  },
+  "selected": {
+    "bodyBackground": "rgb(11, 26, 51)",
+    "colorScheme": "dark",
+    "browserPrefersLight": true,
+    "viewport": 1440,
+    "scrollWidth": 1440,
+    "placeholder": {
+      "text": "Add a note for the review.",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86,
+        1
+      ],
+      "opacity": "1",
+      "ratio": 7.63,
+      "pass": true
+    },
+    "minimumTextContrast": 4.61,
+    "failures": []
+  },
+  "mobile": {
+    "bodyBackground": "rgb(11, 26, 51)",
+    "colorScheme": "dark",
+    "browserPrefersLight": true,
+    "viewport": 473,
+    "scrollWidth": 473,
+    "placeholder": {
+      "text": "Add a note for the review.",
+      "foreground": "rgb(183, 198, 219)",
+      "background": [
+        20,
+        48,
+        86,
+        1
+      ],
+      "opacity": "1",
+      "ratio": 7.63,
+      "pass": true
+    },
+    "minimumTextContrast": 4.61,
+    "failures": []
+  },
+  "before": {
+    "bodyBackground": "rgb(11, 26, 51)",
+    "colorScheme": "dark",
+    "browserPrefersLight": true,
+    "viewport": 1440,
+    "scrollWidth": 1440,
+    "placeholder": {
+      "text": "Add a note for the review.",
+      "foreground": "rgb(117, 117, 117)",
+      "background": [
+        20,
+        48,
+        86,
+        1
+      ],
+      "opacity": "1",
+      "ratio": 2.87,
+      "pass": false
+    },
+    "minimumTextContrast": 4.61,
+    "failures": []
+  }
+}
