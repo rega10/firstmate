@@ -1,0 +1,14 @@
+{
+  "scenario": "tracking-completion",
+  "version": "target",
+  "lane_exit": 0,
+  "state": "done",
+  "exit": 124,
+  "command_started": false,
+  "command_finished": false,
+  "delay_exercised": true,
+  "group_disappearance": "group disappeared before monitor resumed",
+  "stdout": "",
+  "elapsed_seconds": 4.62,
+  "lane_stderr": ""
+}

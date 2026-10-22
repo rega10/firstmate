@@ -1,0 +1,14 @@
+{
+  "scenario": "shared-budget",
+  "version": "target",
+  "lane_exit": 0,
+  "state": "done",
+  "exit": 124,
+  "command_started": true,
+  "command_finished": false,
+  "delay_exercised": false,
+  "group_disappearance": null,
+  "stdout": "",
+  "elapsed_seconds": 5.29,
+  "lane_stderr": ""
+}

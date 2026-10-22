@@ -1,0 +1,14 @@
+{
+  "scenario": "release-delay",
+  "version": "base",
+  "lane_exit": 0,
+  "state": "done",
+  "exit": 0,
+  "command_started": true,
+  "command_finished": true,
+  "delay_exercised": true,
+  "group_disappearance": "group disappeared before release returned",
+  "stdout": "probe-output\n",
+  "elapsed_seconds": 5.93,
+  "lane_stderr": ""
+}
