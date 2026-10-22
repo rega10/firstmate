@@ -494,7 +494,7 @@ delayed_timeout_sample_case() (
   local fixture="$TMP_ROOT/delayed-timeout" pid='' group='' job i
   mkdir -p "$fixture/account" "$fixture/bin"
   trap '[ -z "$pid" ] || { kill -KILL "$pid" 2>/dev/null || true; [ -z "$group" ] || kill -KILL -- "-$group" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }' EXIT
-  # shellcheck disable=SC2031 # The earlier readiness state stayed in its subshell.
+  # shellcheck disable=SC2030,SC2031 # Each fixture keeps its state overrides in its own subshell.
   export FM_REMOTE_JOB_STATE_ROOT="$fixture/state" FM_REMOTE_JOB_QUEUE_TIMEOUT=60 FM_REMOTE_JOB_TIMEOUT=5
   fm_remote_job_stage "$fixture/account" "$REMOTE_ROOT" "$REMOTE_HOME" \
     fm-timeout-job.sh "$fixture/started" "$fixture/release" "$fixture/finished" </dev/null >/dev/null \
@@ -552,6 +552,7 @@ delayed_epoch_sample_case() (
   real_date=$(command -v date)
   mkdir -p "$fixture/account" "$fixture/bin"
   trap '[ -z "$pid" ] || { kill -KILL "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }' EXIT
+  # shellcheck disable=SC2031 # The earlier fixture's state overrides stayed in its subshell.
   export FM_REMOTE_JOB_STATE_ROOT="$fixture/state" FM_REMOTE_JOB_QUEUE_TIMEOUT=60 FM_REMOTE_JOB_TIMEOUT=6
   fm_remote_job_stage "$fixture/account" "$REMOTE_ROOT" "$REMOTE_HOME" \
     fm-touch-job.sh "$fixture/finished" </dev/null >/dev/null || fail "$FM_REMOTE_JOB_ERROR"
@@ -568,6 +569,7 @@ fi
 exec '$real_date' "\$@"
 SH
   chmod +x "$fixture/bin/date"
+  # shellcheck disable=SC2031 # Earlier fixture PATH overrides stayed in their subshells.
   HOME="$fixture/account" FM_ROOT_OVERRIDE="$REMOTE_ROOT" PATH="$fixture/bin:$PATH" \
     "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" --lane "$FM_REMOTE_JOB_ID" \
     > "$fixture/lane.out" 2> "$fixture/lane.err" &
