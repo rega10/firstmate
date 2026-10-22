@@ -498,10 +498,13 @@ if [ "\$1" = '$FM_REMOTE_JOB_ACTIVE_POLL_SECONDS' ] && [ -s '$fixture/started' ]
   done
   [ "\$(date +%s)" -gt "\$deadline" ] || exit 1
   : > '$fixture/release'
+  group=\$(cat '$fixture/started')
   for ((i = 0; i < 200; i++)); do
-    [ ! -e '$fixture/finished' ] || break
+    kill -0 -- "-\$group" 2>/dev/null || break
     /bin/sleep 0.05
   done
+  ! kill -0 -- "-\$group" 2>/dev/null || exit 1
+  printf 'exited\n' > '$fixture/group-exited'
 fi
 exec /bin/sleep "\$@"
 SH
@@ -522,6 +525,7 @@ SH
   pid=''
   assert_present "$fixture/sampled" "the delayed timeout fixture never delayed a sample"
   assert_present "$fixture/finished" "the delayed timeout command did not finish during the delayed sample"
+  assert_present "$fixture/group-exited" "the delayed sample resumed before the command group disappeared"
   [ "$FM_REMOTE_JOB_EXIT" -eq 124 ] || fail "a delayed sample accepted an over-time command as successful"
   fm_remote_job_reap "$fixture/account" "$FM_REMOTE_JOB_ID" || fail "the delayed timeout job could not be reaped"
   pass "a delayed timeout sample cannot accept an over-time command's natural exit"

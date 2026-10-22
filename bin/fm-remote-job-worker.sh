@@ -691,9 +691,9 @@ worker_publish_result() { # <job-dir> <exit>
   fi
 }
 
-worker_run_with_timeout() { # <job-dir> <seconds> <command> [args...]
-  local job=$1 timeout=$2 group_file group_start_file armed_file group_pid group_start
-  local group_tmp group_start_tmp rc tmp deadline next_check attempt timed_out=0 cancelled=0
+worker_run_with_timeout() { # <job-dir> <seconds-deadline> <command> [args...]
+  local job=$1 deadline=$2 group_file group_start_file armed_file group_pid group_start
+  local group_tmp group_start_tmp rc tmp next_check attempt timed_out=0 cancelled=0
   WORKER_PREEMPTED=0
   shift 2
   group_file="$job/.claim/group"
@@ -748,11 +748,8 @@ worker_run_with_timeout() { # <job-dir> <seconds> <command> [args...]
     rm -f -- "$group_file" "$group_start_file"
     return 125
   fi
-  deadline=$((SECONDS + timeout))
   next_check=$((SECONDS + 1))
   while :; do
-    # A delayed sample can find that an over-time command already exited.
-    # Check the deadline first so that completion cannot turn it into success.
     if [ "$SECONDS" -ge "$deadline" ]; then
       if worker_process_or_group_alive group "$group_pid"; then
         worker_signal_process_or_group group TERM "$group_pid"
@@ -761,7 +758,10 @@ worker_run_with_timeout() { # <job-dir> <seconds> <command> [args...]
       timed_out=1
       break
     fi
-    worker_process_or_group_alive group "$group_pid" || break
+    if ! worker_process_or_group_alive group "$group_pid"; then
+      [ "$SECONDS" -lt "$deadline" ] || timed_out=1
+      break
+    fi
     if [ "$SECONDS" -ge "$next_check" ]; then
       if fm_remote_job_cancelled "$job"; then
         worker_signal_process_or_group group TERM "$group_pid"
@@ -863,7 +863,7 @@ worker_capture_output() { # <fifo> <destination>
 }
 
 worker_run_job() { # <account-home> <job-dir>
-  local account_home=$1 job=$2 root home command command_path git_bin rc deadline remaining
+  local account_home=$1 job=$2 root home command command_path git_bin rc deadline execution_deadline
   local stdout_pipe stderr_pipe stdout_reader stderr_reader preemptible=0
   local -a argv child_env
   root=$(worker_read_text "$job" root 8192) || { worker_publish_result "$job" 126; return; }
@@ -879,8 +879,9 @@ worker_run_job() { # <account-home> <job-dir>
   fm_remote_job_regular_bounded "$job/argv" "$FM_REMOTE_JOB_MAX_BYTES" || { worker_publish_result "$job" 126; return; }
   fm_remote_job_regular_bounded "$job/stdin" "$FM_REMOTE_JOB_MAX_BYTES" || { worker_publish_result "$job" 126; return; }
   deadline=$(fm_remote_job_read_deadline "$job") || { worker_publish_result "$job" 126; return; }
-  remaining=$((deadline - $(date +%s)))
-  [ "$remaining" -gt 0 ] || { worker_publish_result "$job" 124; return; }
+  execution_deadline=$SECONDS
+  execution_deadline=$((execution_deadline + deadline - $(date +%s)))
+  [ "$SECONDS" -lt "$execution_deadline" ] || { worker_publish_result "$job" 124; return; }
   argv=()
   while IFS= read -r -d '' command; do argv+=("$command"); done < "$job/argv"
   [ "${#argv[@]}" -ge 1 ] || { worker_publish_result "$job" 126; return; }
@@ -896,10 +897,9 @@ worker_run_job() { # <account-home> <job-dir>
   fm_remote_job_compose_operator_path "$account_home" >/dev/null
   git_bin=$(fm_remote_job_operator_tool git 2>/dev/null || true)
   [ -n "$git_bin" ] || { worker_publish_result "$job" 126; return; }
-  remaining=$((deadline - $(date +%s)))
-  [ "$remaining" -gt 0 ] || { worker_publish_result "$job" 124; return; }
+  [ "$SECONDS" -lt "$execution_deadline" ] || { worker_publish_result "$job" 124; return; }
   set +e
-  worker_run_with_timeout "$job" "$remaining" \
+  worker_run_with_timeout "$job" "$execution_deadline" \
     "$git_bin" -C "$root" ls-files --error-unmatch "bin/$command" >/dev/null 2>&1
   rc=$?
   set -e
@@ -940,15 +940,14 @@ worker_run_job() { # <account-home> <job-dir>
   if [ -n "${FM_REMOTE_JOB_PLATFORM_OVERRIDE:-}" ]; then
     child_env+=("FM_REMOTE_JOB_PLATFORM_OVERRIDE=$FM_REMOTE_JOB_PLATFORM_OVERRIDE")
   fi
-  remaining=$((deadline - $(date +%s)))
-  [ "$remaining" -gt 0 ] || {
+  [ "$SECONDS" -lt "$execution_deadline" ] || {
     worker_cleanup_output_capture "$job" "$stdout_reader" "$stderr_reader"
     worker_publish_result "$job" 124
     return
   }
   set +e
   WORKER_PREEMPTIBLE=$preemptible
-  worker_run_with_timeout "$job" "$remaining" "${child_env[@]}" \
+  worker_run_with_timeout "$job" "$execution_deadline" "${child_env[@]}" \
     "$command_path" "${argv[@]:1}" < "$job/stdin" > "$stdout_pipe" 2> "$stderr_pipe"
   rc=$?
   WORKER_PREEMPTIBLE=0
