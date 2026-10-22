@@ -63,6 +63,9 @@
 # explicitly supplied FM_REMOTE_JOB_POLL_SECONDS remains the legacy fallback
 # for both intervals. Resolve the active default before filling the dispatcher
 # default, and retain it when the library is sourced again.
+# The lane establishes one SECONDS-based execution deadline before reading the
+# epoch clock for the job record. Tracking validation and command execution
+# share that deadline without restarting the budget.
 # Once-per-second cancellation, preemption, and disconnect checks can overshoot
 # their due time by one sampling interval plus work/scheduling time, as can the
 # active command's timeout check. Completion and result collection can each add
