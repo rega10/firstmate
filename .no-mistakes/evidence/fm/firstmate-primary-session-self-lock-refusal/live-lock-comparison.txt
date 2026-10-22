@@ -1,0 +1,26 @@
+Base commit 3f6512ee8be1f5fc381ecd31f4bdde11e7a4ccf2
+Original session: 7f273281-7576-42f0-a6f5-73692bce3940
+Moved session: 2cece46c-b335-4a14-9c6b-742aa96a4b87
+Original SessionStart: startup 4515
+Moved SessionStart: fork 22988
+Moved UserPromptSubmit lock check exit status: 2
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 4515, session 7f273281-7576-42f0-a6f5-73692bce3940); operate read-only until resolved
+This prompt was refused before fleet or away-mode actions.
+
+Final lock pid: 4515
+Final lock session: 7f273281-7576-42f0-a6f5-73692bce3940
+
+Target commit b7d91080450fb13972d428e80fec8307680bd7bd
+Original session: 79f0fcd4-6063-41bc-aed5-36b1cb39271e
+Moved session: 2974fa30-0614-4e58-b935-a3823abe22e3
+Original SessionStart: startup 47541
+Moved SessionStart: fork 53983
+Moved UserPromptSubmit lock check exit status: 0
+
+Final lock pid: 53983
+Final lock session: 2974fa30-0614-4e58-b935-a3823abe22e3
+
+Target vendor continuation record:
+{"type":"continued-in","timestamp":"2026-10-22T07:21:07.806Z","sessionId":"79f0fcd4-6063-41bc-aed5-36b1cb39271e","continuedInSessionId":"2974fa30-0614-4e58-b935-a3823abe22e3"}
+
+The base driver completed the live move and captured the prompt refusal. Its later move-record assertion uses a helper absent from the base commit, so that runner exits nonzero after recording the result.

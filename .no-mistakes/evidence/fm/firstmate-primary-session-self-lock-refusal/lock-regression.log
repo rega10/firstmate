@@ -1,0 +1,7 @@
+ok - fm-lock acquires with the hosted Codex thread fallback when ps is denied
+ok - fm-lock acquires with the hosted Codex thread fallback when parent lookup fails
+ok - fm-lock preserves a fresh Codex token lock owned by another thread
+ok - fm-lock preserves an old Codex token lock owned by another thread
+ok - fm-lock preserves a live holder when Codex seatbelt denies process inspection
+ok - fm-lock still reports a dead holder stale when ps is denied
+ok - fm-lock rejects a lock file with a malformed trailing fragment

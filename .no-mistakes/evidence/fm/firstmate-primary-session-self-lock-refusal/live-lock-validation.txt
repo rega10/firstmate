@@ -1,0 +1,59 @@
+Live product: Claude Code 2.1.296 and Firstmate executable lock/prompt interfaces.
+The identity checks use two real Claude hook sessions. Additional transcript data is isolated fixture input consumed by fm-lock.sh inside the real contender hook.
+
+owner.lock: exit 0
+lock acquired: harness pid 25726
+
+owner.prompt: exit 0
+
+contender.lock: exit 1
+error: another live firstmate session holds the lock (pid 25726, session 8a1eae90-879b-40f7-b4ea-c9af65f37de1); operate read-only until resolved
+mismatch: the lock records Claude session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 at pid 25726, but this is Claude session b3c4f0e1-6be3-46fd-bf6c-cf5a6bac14f8 at pid 30162
+
+contender.prompt: exit 2
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 25726, session 8a1eae90-879b-40f7-b4ea-c9af65f37de1); operate read-only until resolved
+mismatch: the lock records Claude session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 at pid 25726, but this is Claude session b3c4f0e1-6be3-46fd-bf6c-cf5a6bac14f8 at pid 30162
+This prompt was refused before fleet or away-mode actions.
+
+shared-pid: exit 1
+error: another live firstmate session holds the lock (pid 25726, session 8a1eae90-879b-40f7-b4ea-c9af65f37de1); operate read-only until resolved
+mismatch: the lock records Claude session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 at pid 25726, but this is Claude session b3c4f0e1-6be3-46fd-bf6c-cf5a6bac14f8 at pid 25726
+
+move-elsewhere: exit 1
+error: another live firstmate session holds the lock (pid 25726, session 8a1eae90-879b-40f7-b4ea-c9af65f37de1); operate read-only until resolved
+mismatch: the lock records Claude session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 at pid 25726, but this is Claude session b3c4f0e1-6be3-46fd-bf6c-cf5a6bac14f8 at pid 30162; Claude Code recorded that session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 moved to session elsewhere
+
+move-resumed: exit 1
+error: another live firstmate session holds the lock (pid 25726, session 8a1eae90-879b-40f7-b4ea-c9af65f37de1); operate read-only until resolved
+mismatch: the lock records Claude session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 at pid 25726, but this is Claude session b3c4f0e1-6be3-46fd-bf6c-cf5a6bac14f8 at pid 30162
+
+move-chain: exit 0
+lock acquired: harness pid 30162
+lock moved: Claude Code moved the owning conversation (session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 at pid 25726) into this session
+
+Main fixture session remained: 8a1eae90-879b-40f7-b4ea-c9af65f37de1
+Chained fixture session became: b3c4f0e1-6be3-46fd-bf6c-cf5a6bac14f8
+
+BASE 3f6512ee8be1f5fc381ecd31f4bdde11e7a4ccf2
+Before the move: startup 4515; session 7f273281-7576-42f0-a6f5-73692bce3940
+After the move: fork 22988; session 2cece46c-b335-4a14-9c6b-742aa96a4b87
+Moved prompt guard exit: 2
+READ-ONLY SESSION: error: another live firstmate session holds the lock (pid 4515, session 7f273281-7576-42f0-a6f5-73692bce3940); operate read-only until resolved
+This prompt was refused before fleet or away-mode actions.
+
+Final lock: pid 4515; session 7f273281-7576-42f0-a6f5-73692bce3940
+
+TARGET b7d91080450fb13972d428e80fec8307680bd7bd
+Before the move: startup 87325; session 3d54f2c6-1a4c-4387-885f-3d484b28e0aa
+After the move: fork 23186; session a4f894bb-2ad0-42ae-aafd-d977b225a595
+Moved prompt guard exit: 0
+
+Final lock: pid 23186; session a4f894bb-2ad0-42ae-aafd-d977b225a595
+Original front-end still alive after the moved prompt hook: pid 87325
+Claude-generated move record:
+{"type":"continued-in","timestamp":"2026-10-22T07:25:16.247Z","sessionId":"3d54f2c6-1a4c-4387-885f-3d484b28e0aa","continuedInSessionId":"a4f894bb-2ad0-42ae-aafd-d977b225a595"}
+
+
+Baseline limitation: the unchanged base scripts reproduced the live refusal. The target test then stopped at its post-scenario move-record assertion because that helper does not exist in the base library.
+Targeted supporting regressions: fm-session-lock-ancestry.test.sh, fm-lock.test.sh, fm-sessionstart-nudge.test.sh. All completed successfully. The nudge suite reported its unrelated PID-namespace capability skip on macOS.
+Test-driver fixes verified live: set a 40x120 pty grid before exec, submit escape sequences atomically, and require the original front-end alive before and after the moved prompt.

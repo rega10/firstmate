@@ -1,0 +1,10 @@
+not ok - Claude 2.1.296 (Claude Code) live move was not driven: Traceback (most recent call last):
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5H7AGR1GDXNWMAQ4E99S25S/.local-test-tmp/fm-claude-background-move.EMqd3m/drive.py", line 49, in <module>
+    wait_for(first_start, 'the first SessionStart')
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5H7AGR1GDXNWMAQ4E99S25S/.local-test-tmp/fm-claude-background-move.EMqd3m/drive.py", line 31, in wait_for
+    if predicate():
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5H7AGR1GDXNWMAQ4E99S25S/.local-test-tmp/fm-claude-background-move.EMqd3m/drive.py", line 42, in first_start
+    send('\x1b[B'); pump(1); send('\r'); seen_reset()
+  File "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5H7AGR1GDXNWMAQ4E99S25S/.local-test-tmp/fm-claude-background-move.EMqd3m/drive.py", line 26, in send
+    os.write(fd, ch.encode()); time.sleep(0.03)
+OSError: [Errno 5] Input/output error

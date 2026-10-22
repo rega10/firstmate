@@ -1,0 +1,2 @@
+error: another live firstmate session holds the lock (pid 25726, session 8a1eae90-879b-40f7-b4ea-c9af65f37de1); operate read-only until resolved
+mismatch: the lock records Claude session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 at pid 25726, but this is Claude session b3c4f0e1-6be3-46fd-bf6c-cf5a6bac14f8 at pid 30162; Claude Code recorded that session 8a1eae90-879b-40f7-b4ea-c9af65f37de1 moved to session elsewhere
