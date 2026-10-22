@@ -99,6 +99,8 @@ An unknown numeric harness classification refuses ownership and acquisition unti
 `bin/fm-lock.sh` preserves the live anchor during a proven owning session's confirmation.
 Upgrading a running Claude primary with a legacy lock requires restarting its recorded owner process before session start can reacquire ownership.
 A Claude `/clear` with a changed conversation id cannot prove owning continuity from the supplied harness identity and receives the ordinary read-only refusal.
+A conversation that Claude Code moved into a background session (the agent view's left arrow on an empty prompt, or `/background`) is the one exception: Claude records the move in the old transcript, so its new id takes over the lock even while the old front-end stays alive, and `fm_session_lock_moved_to_self` owns that proof.
+Every other Claude live-owner refusal reports both the recorded and the current session id and pid.
 For Claude, only a matching trusted conversation id may reuse completed startup while its anchor remains live.
 
 So a proven `clear` or `compact` re-emit re-verifies ownership and proceeds.

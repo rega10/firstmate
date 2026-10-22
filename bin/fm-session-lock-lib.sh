@@ -262,7 +262,9 @@ fm_harness_pid_alive() {
 # never from ps argv, where prompts and briefs are visible.
 #
 # A --fork-session successor mints a new id and cannot inherit a live lock;
-# stale acquisition becomes possible after the recorded anchor exits.
+# stale acquisition becomes possible after the recorded anchor exits. The one
+# exception is a conversation Claude Code itself moved: fm_session_lock_moved_to_self
+# below owns that proof.
 # Two genuinely different live sessions sharing one id is not a
 # supported state (Claude refuses to resume a running session under its id).
 
@@ -312,6 +314,66 @@ fm_session_lock_same_session() {  # <state> [<ancestry-pids>]
   trusted=$(fm_session_lock_trusted_session_id "${2:-}") || return 1
   recorded=$(fm_session_lock_recorded_session_id "$state") || return 1
   [ "$recorded" = "$trusted" ]
+}
+
+# Print the transcript of Claude session id $1, or return 1. Claude Code keeps
+# each conversation at <config>/projects/<project-slug>/<id>.jsonl. The id is
+# unique, so the slug is matched by glob rather than re-deriving Claude's path
+# encoding; exactly one regular, non-symlink match is required.
+fm_claude_transcript_path() {  # <session-id>
+  local id=$1 config=${CLAUDE_CONFIG_DIR:-${HOME:+$HOME/.claude}} path match=''
+  case "$id" in ''|*[!A-Za-z0-9-]*) return 1 ;; esac
+  [ -n "$config" ] || return 1
+  for path in "$config"/projects/*/"$id".jsonl; do
+    [ -f "$path" ] && [ ! -L "$path" ] || continue
+    [ -z "$match" ] || return 1
+    match=$path
+  done
+  [ -n "$match" ] || return 1
+  printf '%s\n' "$match"
+}
+
+# Print the session id Claude Code recorded as the continuation of Claude
+# session $1, or return 1. When a conversation moves into a background session
+# (the agent view's left arrow on an empty prompt, or /background), Claude
+# relaunches it under a new id with --fork-session and appends
+# {"type":"continued-in","sessionId":<old>,"continuedInSessionId":<new>} to the
+# old transcript, while the original front-end process stays alive as the
+# viewer. A fork that leaves the original conversation running writes no such
+# record. The record counts only while it is the transcript's last word: any
+# later user or assistant record means the old id was resumed and spoke again.
+fm_claude_session_continued_in() {  # <session-id>
+  local id=$1 transcript successor
+  transcript=$(fm_claude_transcript_path "$id") || return 1
+  successor=$(awk -v id="$id" '
+    index($0, "\"type\":\"continued-in\"") {
+      successor = ""
+      if (index($0, "\"sessionId\":\"" id "\"") && match($0, /"continuedInSessionId":"[A-Za-z0-9-]+"/))
+        successor = substr($0, RSTART + 24, RLENGTH - 25)
+      next
+    }
+    /"type":"(user|assistant)"/ { successor = "" }
+    END { if (successor != "") print successor }
+  ' "$transcript" 2>/dev/null) || return 1
+  [ -n "$successor" ] && [ "$successor" != "$id" ] || return 1
+  printf '%s\n' "$successor"
+}
+
+# True when Claude Code moved the conversation recorded beside the lock in
+# state dir $1 into this trusted session, directly or through a bounded chain
+# of moves. This is the only proof that lets a different conversation id take
+# over a lock whose recorded anchor is still alive: that anchor is then only
+# the moved conversation's former front-end. bin/fm-lock.sh owns the takeover.
+fm_session_lock_moved_to_self() {  # <state> [<ancestry-pids>]
+  local state=$1 trusted id _
+  trusted=$(fm_session_lock_trusted_session_id "${2:-}") || return 1
+  id=$(fm_session_lock_recorded_session_id "$state") || return 1
+  [ "$id" != "$trusted" ] || return 1
+  for _ in 1 2 3 4 5 6 7 8; do
+    id=$(fm_claude_session_continued_in "$id") || return 1
+    [ "$id" = "$trusted" ] && return 0
+  done
+  return 1
 }
 
 # Print the pid bin/fm-lock.sh records on lock line 1 for this session. For a

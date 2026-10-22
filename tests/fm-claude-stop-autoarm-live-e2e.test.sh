@@ -16,7 +16,7 @@ set -u
 # shellcheck source=tests/lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-fm_live_gate opt-in FM_CLAUDE_LIVE_E2E,FM_CLAUDE_SESSION_LOCK_LIVE_E2E claude
+fm_live_gate opt-in FM_CLAUDE_LIVE_E2E,FM_CLAUDE_SESSION_LOCK_LIVE_E2E,FM_CLAUDE_BACKGROUND_MOVE_LIVE_E2E claude
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -121,6 +121,160 @@ JSON
   for pid in "${LIVE_PIDS[@]}"; do wait "$pid" || true; done
   LIVE_PIDS=()
   pass "Claude $VERSION: trusted hook identities preserve one owner and refuse competing prompts and shared-pid claims"
+  exit 0
+fi
+
+# Focused live background-move guard. One real interactive session acquires the
+# lock, the agent view's left arrow moves its conversation into a background
+# session under a new id while the front-end stays alive, and the moved
+# conversation's prompt must take the lock over through the real prompt hook.
+# This proves the vendor surfaces the takeover depends on: the continued-in
+# record Claude appends to the old transcript and the moved session's trusted
+# hook identity. Only the first prompt reaches the model; the probe blocks the
+# rest after recording the verdict.
+if [ "${FM_CLAUDE_BACKGROUND_MOVE_LIVE_E2E:-0}" = 1 ]; then
+  # Outside the repository, so no parent CLAUDE.md import dialog is raised.
+  LAB=$(fm_test_tmproot fm-claude-background-move) || fail "cannot create live move lab root"
+  VERSION=$(claude --version)
+  # shellcheck disable=SC2329 # Invoked by the EXIT trap in this opt-in branch.
+  cleanup_move() {
+    local moved
+    moved=$(cat "$LAB/home/moved.id" 2>/dev/null || true)
+    [ -z "$moved" ] || pkill -f -- "--session-id $moved" 2>/dev/null || true
+    fm_test_cleanup
+  }
+  trap cleanup_move EXIT
+  "$ROOT/bin/fm-lab-home.sh" create "$LAB/home" >/dev/null || fail "cannot create live move lab"
+  cp -R "$ROOT/bin" "$LAB/home/bin"
+  : > "$LAB/home/AGENTS.md"
+  git init -q "$LAB/home"
+  mkdir -p "$LAB/home/.claude"
+  cat > "$LAB/home/probe.sh" <<'SH'
+#!/usr/bin/env bash
+set -u
+# The moved session is spawned by Claude's shared background daemon, whose
+# environment is not this lab's, so the home is always the probe's own root.
+FM_HOME=$(cd "$(dirname "$0")" && pwd -P)
+export FM_HOME
+payload=$(cat)
+id=$(printf '%s' "$payload" | jq -r '.session_id')
+case "$1" in
+  start)
+    printf '%s %s\n' "$(printf '%s' "$payload" | jq -r '.source')" "${CLAUDE_PID:-}" > "$FM_HOME/start-$id"
+    exit 0
+    ;;
+  stop)
+    : > "$FM_HOME/stop-$id"
+    exit 0
+    ;;
+esac
+printf '%s\n' "$payload" | "$FM_HOME/bin/fm-sessionstart-run.sh" --check-claude-lock > "$FM_HOME/prompt-$id.out" 2>&1
+printf '%s\n' "$?" > "$FM_HOME/prompt-$id.rc"
+if [ ! -e "$FM_HOME/owner.id" ]; then
+  printf '%s\n' "$id" > "$FM_HOME/owner.id"
+  exit 0
+fi
+printf 'Live move fixture deliberately blocks model execution.\n' >&2
+exit 2
+SH
+  chmod +x "$LAB/home/probe.sh"
+  cat > "$LAB/home/.claude/settings.json" <<'JSON'
+{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"\"$CLAUDE_PROJECT_DIR\"/probe.sh start","timeout":90}]}],"UserPromptSubmit":[{"hooks":[{"type":"command","command":"\"$CLAUDE_PROJECT_DIR\"/probe.sh prompt","timeout":90}]}],"Stop":[{"hooks":[{"type":"command","command":"\"$CLAUDE_PROJECT_DIR\"/probe.sh stop","timeout":30}]}]}}
+JSON
+  # A pty driver: every step waits on a hook-written file, not on rendered
+  # output, except accepting the folder-trust dialog when it is shown.
+  cat > "$LAB/drive.py" <<'PY'
+import os, pty, re, select, sys, time
+home, log = sys.argv[1], sys.argv[2]
+argv = sys.argv[3:]
+pid, fd = pty.fork()
+if pid == 0:
+    os.chdir(home)
+    os.execvp(argv[0], argv)
+out = open(log, 'ab')
+seen = b''
+def pump(seconds):
+    global seen
+    end = time.time() + seconds
+    while time.time() < end:
+        r, _, _ = select.select([fd], [], [], 0.1)
+        if r:
+            try:
+                data = os.read(fd, 65536)
+            except OSError:
+                return
+            out.write(data); out.flush(); seen = (seen + data)[-200000:]
+def send(text):
+    for ch in text:
+        os.write(fd, ch.encode()); time.sleep(0.03)
+def wait_for(predicate, what, seconds=120):
+    end = time.time() + seconds
+    while time.time() < end:
+        pump(0.5)
+        if predicate():
+            return
+    print('timeout waiting for ' + what); sys.exit(1)
+def starts():
+    return {n[6:]: open(os.path.join(home, n)).read().split() for n in os.listdir(home) if n.startswith('start-')}
+def shown(*words):
+    # The TUI positions words with cursor moves, so compare without escapes or spaces.
+    flat = re.sub(rb'\x1b\[[0-9;?]*[A-Za-z]|\s', b'', seen)
+    return any(w in flat for w in words)
+def first_start():
+    if shown(b'Itrustthisfolder', b'Quicksafetycheck'):
+        send('\x1b[B'); pump(1); send('\r'); seen_reset()
+    elif shown(b'AllowexternalCLAUDE.mdfileimports'):
+        send('\r'); seen_reset()
+    return len(starts()) > 0
+def seen_reset():
+    global seen
+    seen = b''
+wait_for(first_start, 'the first SessionStart')
+pump(3)
+send('Reply with just the word OK'); pump(1); send('\r')
+wait_for(lambda: os.path.exists(os.path.join(home, 'owner.id')), 'the owner prompt hook')
+owner = open(os.path.join(home, 'owner.id')).read().strip()
+wait_for(lambda: os.path.exists(os.path.join(home, 'stop-' + owner)), 'the owner turn to end')
+pump(2)
+send('\x1b[D')
+def moved():
+    for sid, fields in starts().items():
+        if sid != owner and fields and fields[0] == 'fork':
+            open(os.path.join(home, 'moved.id'), 'w').write(sid + '\n')
+            return True
+    return False
+wait_for(moved, 'a forked background session after the left arrow')
+moved_id = open(os.path.join(home, 'moved.id')).read().strip()
+pump(3)
+send('\r'); pump(4)
+send('Reply with just the word SECOND'); pump(1); send('\r')
+wait_for(lambda: os.path.exists(os.path.join(home, 'prompt-' + moved_id + '.rc')), 'the moved prompt hook')
+pump(2)
+send('/stop'); pump(1); send('\r'); pump(4)
+send('\x03'); pump(0.5); send('\x03'); pump(3)
+try:
+    os.kill(pid, 15)
+except OSError:
+    pass
+print('driven')
+PY
+  DRIVE_OUT=$(cd "$LAB/home" && env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_JOB_DIR \
+    FM_HOME="$LAB/home" TERM=xterm-256color python3 "$LAB/drive.py" "$LAB/home" "$LAB/pty.log" \
+    claude --model haiku --setting-sources project --strict-mcp-config --mcp-config '{"mcpServers":{}}' --tools '' 2>&1)
+  [ "$DRIVE_OUT" = driven ] || fail "Claude $VERSION live move was not driven: $DRIVE_OUT"
+  OWNER_ID=$(cat "$LAB/home/owner.id")
+  MOVED_ID=$(cat "$LAB/home/moved.id")
+  read -r _ MOVED_PID < "$LAB/home/start-$MOVED_ID"
+  [ "$OWNER_ID" != "$MOVED_ID" ] || fail "Claude $VERSION moved the conversation without a new id"
+  expect_code 0 "$(cat "$LAB/home/prompt-$OWNER_ID.rc")" "Claude $VERSION owner prompt"
+  got=$(bash -c '. "$1/bin/fm-session-lock-lib.sh" && fm_claude_session_continued_in "$2"' _ "$LAB/home" "$OWNER_ID") \
+    || fail "Claude $VERSION wrote no last-word continued-in record for the moved conversation"
+  [ "$got" = "$MOVED_ID" ] || fail "Claude $VERSION recorded the move to '$got', expected $MOVED_ID"
+  expect_code 0 "$(cat "$LAB/home/prompt-$MOVED_ID.rc")" \
+    "Claude $VERSION moved prompt: $(cat "$LAB/home/prompt-$MOVED_ID.out")"
+  [ "$(cat "$LAB/home/state/.lock")" = "$MOVED_PID" ] || fail "Claude $VERSION takeover did not anchor the moved session pid $MOVED_PID"
+  [ "$(cat "$LAB/home/state/.lock-session")" = "$MOVED_ID" ] || fail "Claude $VERSION takeover did not record the moved id"
+  pass "Claude $VERSION: a conversation moved to the background keeps the fleet lock through its new session id"
   exit 0
 fi
 

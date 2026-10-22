@@ -109,7 +109,7 @@ The run did not reach `opencode`, `pi`, `pi-signed`, `grok`, `kimi`, or `muse`, 
 
 ## Claude session-lock identity
 
-Verified on 2026-10-11 with Claude Code 2.1.284 on macOS using two isolated print-mode sessions.
+Verified on 2026-10-22 with Claude Code 2.1.296 on macOS using two isolated print-mode sessions.
 Their real hooks supplied matching payload and trusted environment session ids.
 The guard refused the competing session's acquisition and prompt, and an attempted different-id claim from the exact owning process.
 The hook blocked both test prompts before model execution.
@@ -125,7 +125,25 @@ FM_CLAUDE_SESSION_LOCK_LIVE_E2E=1 bash tests/fm-claude-stop-autoarm-live-e2e.tes
 Observed output:
 
 ```text
-ok - Claude 2.1.284 (Claude Code): trusted hook identities preserve one owner and refuse competing prompts and shared-pid claims
+ok - Claude 2.1.296 (Claude Code): trusted hook identities preserve one owner and refuse competing prompts and shared-pid claims
+```
+
+Verified on 2026-10-22 with Claude Code 2.1.296 on macOS using one interactive session driven through a pty.
+After one real turn acquired the lock, the agent view's left arrow moved the conversation into a background session started with `--session-id <new> --fork-session --resume`, while the original front-end process stayed alive.
+Claude appended a `continued-in` record naming the new id as the old transcript's last conversational record, and the background session's hooks carried the new id with a `CLAUDE_PID` inside their own ancestry.
+Before the move proof, that session's first prompt was refused as read-only, naming the front-end's own pid and the old session id as another live owner.
+With the move proof, the same prompt was accepted and the lock recorded the background session's pid and id.
+
+Refresh the background-move check with:
+
+```sh
+FM_CLAUDE_BACKGROUND_MOVE_LIVE_E2E=1 bash tests/fm-claude-stop-autoarm-live-e2e.test.sh
+```
+
+Observed output:
+
+```text
+ok - Claude 2.1.296 (Claude Code): a conversation moved to the background keeps the fleet lock through its new session id
 ```
 
 The portable entry point is `bin/fm-test-run.sh tests/fm-session-lock-ancestry.test.sh tests/fm-lock.test.sh tests/fm-sessionstart-nudge.test.sh tests/fm-session-start.test.sh`.
