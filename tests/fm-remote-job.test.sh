@@ -70,7 +70,13 @@ exit "${FM_PROBE_EXIT:-0}"
 SH
 cat > "$REMOTE_ROOT/bin/fm-timeout-job.sh" <<'SH'
 #!/bin/bash
-sleep 3
+trap '' TERM
+printf '%s\n' "$$" > "$1"
+for ((i = 0; i < 600; i++)); do
+  [ ! -e "$2" ] || break
+  sleep 0.1
+done
+printf 'finished\n' > "$3"
 SH
 cat > "$REMOTE_ROOT/bin/fm-delay-job.sh" <<'SH'
 #!/bin/bash
@@ -404,6 +410,7 @@ pass "worker identity binds the canonical configured code root"
 exit 0
 SH
   chmod +x "$readiness_bin/sleep"
+  # shellcheck disable=SC2030 # The readiness state is confined to this subshell.
   export FM_REMOTE_JOB_STATE_ROOT="$readiness_state"
   fm_remote_job_prepare_state "$ACCOUNT_HOME" || fail "could not prepare the readiness fixture"
   mkdir -p "$readiness_state/worker.lock"
@@ -439,16 +446,92 @@ wait "$OTHER_PID" 2>/dev/null || true
 OTHER_PID=
 pass "stale ownership is reclaimed without signaling a reused pid"
 
-FM_REMOTE_JOB_TIMEOUT=1
-fm_remote_job_stage "$ACCOUNT_HOME" "$REMOTE_ROOT" "$REMOTE_HOME" fm-timeout-job.sh < /dev/null > /dev/null
+# A three-second sleep raced the monitor under load: the command could finish
+# between an overdue sample and the next liveness check. Keep this command
+# alive until killed, allow setup headroom, and observe its whole group exit.
+TIMEOUT_STARTED="$TMP_ROOT/timeout-started"
+TIMEOUT_RELEASE="$TMP_ROOT/timeout-release"
+TIMEOUT_FINISHED="$TMP_ROOT/timeout-finished"
+FM_REMOTE_JOB_TIMEOUT=5
+fm_remote_job_stage "$ACCOUNT_HOME" "$REMOTE_ROOT" "$REMOTE_HOME" \
+  fm-timeout-job.sh "$TIMEOUT_STARTED" "$TIMEOUT_RELEASE" "$TIMEOUT_FINISHED" < /dev/null > /dev/null
 JOB_ID=$FM_REMOTE_JOB_ID
+for _ in $(seq 1 200); do
+  [ -s "$TIMEOUT_STARTED" ] && break
+  sleep 0.05
+done
+assert_present "$TIMEOUT_STARTED" "the timeout fixture never executed its command"
+TIMEOUT_GROUP=$(cat "$TIMEOUT_STARTED")
 fm_remote_job_wait "$ACCOUNT_HOME" "$JOB_ID" || fail "$FM_REMOTE_JOB_ERROR"
 [ "$FM_REMOTE_JOB_EXIT" -eq 124 ] || fail "the worker did not terminate an over-time job"
+for _ in $(seq 1 100); do
+  kill -0 -- "-$TIMEOUT_GROUP" 2>/dev/null || break
+  sleep 0.1
+done
+! kill -0 -- "-$TIMEOUT_GROUP" 2>/dev/null || fail "the timed-out command group survived its result"
+assert_absent "$TIMEOUT_FINISHED" "the timed-out command finished instead of being killed"
 fm_remote_job_reap "$ACCOUNT_HOME" "$JOB_ID" || fail "the timed-out job could not be reaped"
 pass "the worker enforces the job timeout and publishes its result"
 
+# Model a descheduled command monitor after the command actually starts.
+# Let the command finish past its deadline before resuming the sample: an
+# overdue command must not become successful just because its group vanished.
+delayed_timeout_sample_case() (
+  local fixture="$TMP_ROOT/delayed-timeout" pid='' group='' job i
+  mkdir -p "$fixture/account" "$fixture/bin"
+  trap '[ -z "$pid" ] || { kill -KILL "$pid" 2>/dev/null || true; [ -z "$group" ] || kill -KILL -- "-$group" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }' EXIT
+  # shellcheck disable=SC2031 # The earlier readiness state stayed in its subshell.
+  export FM_REMOTE_JOB_STATE_ROOT="$fixture/state" FM_REMOTE_JOB_QUEUE_TIMEOUT=60 FM_REMOTE_JOB_TIMEOUT=5
+  fm_remote_job_stage "$fixture/account" "$REMOTE_ROOT" "$REMOTE_HOME" \
+    fm-timeout-job.sh "$fixture/started" "$fixture/release" "$fixture/finished" </dev/null >/dev/null \
+    || fail "$FM_REMOTE_JOB_ERROR"
+  job="$FM_REMOTE_JOB_JOBS/$FM_REMOTE_JOB_ID"
+  # shellcheck disable=SC2031 # Cadence overrides stayed in their subshells.
+  cat > "$fixture/bin/sleep" <<SH
+#!/bin/bash
+if [ "\$1" = '$FM_REMOTE_JOB_ACTIVE_POLL_SECONDS' ] && [ -s '$fixture/started' ]; then
+  printf 'delayed\n' > '$fixture/sampled'
+  deadline=\$(cat '$job/deadline')
+  for ((i = 0; i < 200; i++)); do
+    [ "\$(date +%s)" -le "\$deadline" ] || break
+    /bin/sleep 0.05
+  done
+  [ "\$(date +%s)" -gt "\$deadline" ] || exit 1
+  : > '$fixture/release'
+  for ((i = 0; i < 200; i++)); do
+    [ ! -e '$fixture/finished' ] || break
+    /bin/sleep 0.05
+  done
+fi
+exec /bin/sleep "\$@"
+SH
+  chmod +x "$fixture/bin/sleep"
+  # shellcheck disable=SC2031 # Cadence fixture PATH changes stayed in their subshells.
+  HOME="$fixture/account" FM_ROOT_OVERRIDE="$REMOTE_ROOT" PATH="$fixture/bin:$PATH" \
+    "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" --lane "$FM_REMOTE_JOB_ID" \
+    > "$fixture/lane.out" 2> "$fixture/lane.err" &
+  pid=$!
+  for ((i = 0; i < 200; i++)); do
+    [ -s "$fixture/started" ] && break
+    sleep 0.05
+  done
+  assert_present "$fixture/started" "the delayed timeout fixture never started"
+  group=$(cat "$fixture/started")
+  fm_remote_job_wait "$fixture/account" "$FM_REMOTE_JOB_ID" || fail "$FM_REMOTE_JOB_ERROR"
+  wait "$pid" || fail "the delayed timeout lane failed"
+  pid=''
+  assert_present "$fixture/sampled" "the delayed timeout fixture never delayed a sample"
+  assert_present "$fixture/finished" "the delayed timeout command did not finish during the delayed sample"
+  [ "$FM_REMOTE_JOB_EXIT" -eq 124 ] || fail "a delayed sample accepted an over-time command as successful"
+  fm_remote_job_reap "$fixture/account" "$FM_REMOTE_JOB_ID" || fail "the delayed timeout job could not be reaped"
+  pass "a delayed timeout sample cannot accept an over-time command's natural exit"
+)
+delayed_timeout_sample_case || exit 1
+
+FM_REMOTE_JOB_TIMEOUT=1
 QUEUED_SIDE_EFFECT="$TMP_ROOT/queued-side-effect"
-fm_remote_job_stage "$ACCOUNT_HOME" "$REMOTE_ROOT" "$REMOTE_HOME" fm-timeout-job.sh < /dev/null > /dev/null
+fm_remote_job_stage "$ACCOUNT_HOME" "$REMOTE_ROOT" "$REMOTE_HOME" \
+  fm-timeout-job.sh "$TMP_ROOT/queued-blocker-started" "$TIMEOUT_RELEASE" "$TIMEOUT_FINISHED" < /dev/null > /dev/null
 FIRST_JOB_ID=$FM_REMOTE_JOB_ID
 FIRST_JOB_DIR="$STATE_ROOT/jobs/$FIRST_JOB_ID"
 for _ in $(seq 1 100); do

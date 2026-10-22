@@ -750,13 +750,18 @@ worker_run_with_timeout() { # <job-dir> <seconds> <command> [args...]
   fi
   deadline=$((SECONDS + timeout))
   next_check=$((SECONDS + 1))
-  while worker_process_or_group_alive group "$group_pid"; do
+  while :; do
+    # A delayed sample can find that an over-time command already exited.
+    # Check the deadline first so that completion cannot turn it into success.
     if [ "$SECONDS" -ge "$deadline" ]; then
-      worker_signal_process_or_group group TERM "$group_pid"
-      worker_signal_process_or_group group KILL "$group_pid"
+      if worker_process_or_group_alive group "$group_pid"; then
+        worker_signal_process_or_group group TERM "$group_pid"
+        worker_signal_process_or_group group KILL "$group_pid"
+      fi
       timed_out=1
       break
     fi
+    worker_process_or_group_alive group "$group_pid" || break
     if [ "$SECONDS" -ge "$next_check" ]; then
       if fm_remote_job_cancelled "$job"; then
         worker_signal_process_or_group group TERM "$group_pid"
