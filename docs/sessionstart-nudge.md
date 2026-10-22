@@ -69,7 +69,7 @@ A re-emit (`--reemit`) reprints the digest for a process that already has the he
 | --- | --- | --- |
 | `startup`, `new` | Full digest | This is a true session start that has not taken the helm; Pi CLI continuations are refined to `resume` by the adapter before reaching this boundary. |
 | `clear`, `compact` | `--reemit` after a proven complete startup, otherwise full digest | This process normally has the helm and lost only its context, but an earlier hook may have been truncated after acquiring the lock. |
-| `resume`, `reload`, `fork` | Delegate to the nudge wrapper, or emit a read-only digest for a Claude session facing another live owner | Restored context cannot confer ownership on a different Claude conversation sharing the app process. |
+| `resume`, `reload`, `fork` | Delegate to the nudge wrapper, or attempt acquisition through the full digest for a Claude session facing another live owner | The [lock interlock](#lock-and-completion-interlock) determines whether acquisition succeeds or the digest reports a read-only refusal. |
 | unreadable or unrecognized | Full digest | Taking the helm redundantly is cheap and idempotent; not taking it is the bug this tier exists to fix. |
 
 ### Change from the previous nudge matcher
@@ -99,6 +99,9 @@ An unknown numeric harness classification refuses ownership and acquisition unti
 `bin/fm-lock.sh` preserves the live anchor during a proven owning session's confirmation.
 Upgrading a running Claude primary with a legacy lock requires restarting its recorded owner process before session start can reacquire ownership.
 A Claude `/clear` with a changed conversation id cannot prove owning continuity from the supplied harness identity and receives the ordinary read-only refusal.
+A recorded background move (the agent view's left arrow on an empty prompt, or `/background`) lets the trusted successor acquire the lock while the old front-end stays alive.
+`fm_session_lock_moved_to_self` in [`bin/fm-session-lock-lib.sh`](../bin/fm-session-lock-lib.sh) owns the move proof; an ordinary fork cannot transfer a live lock.
+When both recorded and trusted Claude identities are available, a live-owner refusal reports each session id and anchor pid.
 For Claude, only a matching trusted conversation id may reuse completed startup while its anchor remains live.
 
 So a proven `clear` or `compact` re-emit re-verifies ownership and proceeds.

@@ -20,6 +20,11 @@
 # confirmation never rewrites line 1 while the recorded pid is alive, because
 # bin/fm-startup-network.sh compares that pid across its deferred sweeps; a dead
 # recorded pid is reclaimed and rewritten to this session's anchor.
+# A live recorded pid is taken over only when Claude Code itself recorded that
+# the owning conversation moved into this session (fm_session_lock_moved_to_self
+# in the library owns that proof); the takeover rewrites the sidecar and line 1
+# exactly like a reclaim. When both recorded and trusted Claude identities are
+# available, live-owner refusals name each session id and anchor pid.
 #
 # Usage: fm-lock.sh           acquire; exit 1 unless ownership is verified
 #        fm-lock.sh status    print holder and liveness; always exits 0.
@@ -226,10 +231,17 @@ confirm_own_lock() {  # <recorded-pid>
 }
 
 refuse_live_owner() {  # <recorded-pid>
-  local recorded holder
+  local recorded holder trusted successor mismatch
   holder=$(lock_holder_error_description "$1")
   if recorded=$(fm_session_lock_recorded_session_id "$STATE"); then
     echo "error: another live firstmate session holds the lock ($holder, session $recorded); operate read-only until resolved" >&2
+    if trusted=$(fm_session_lock_trusted_session_id); then
+      mismatch="mismatch: the lock records Claude session $recorded at pid $1, but this is Claude session $trusted at pid $me"
+      if successor=$(fm_claude_session_continued_in "$recorded"); then
+        mismatch="$mismatch; Claude Code recorded that session $recorded moved to session $successor"
+      fi
+      echo "$mismatch" >&2
+    fi
   else
     echo "error: another live firstmate session holds the lock ($holder); operate read-only until resolved" >&2
     if fm_session_lock_claude_ancestry "$1" && fm_session_lock_claude_ancestry "$(fm_harness_ancestry_pids || true)"; then
@@ -239,6 +251,17 @@ refuse_live_owner() {  # <recorded-pid>
   exit 1
 }
 
+# A live recorded owner refuses this session unless the owning conversation
+# moved here; that takeover falls through to the ordinary acquisition below.
+MOVED_FROM=
+refuse_live_owner_unless_moved() {  # <recorded-pid>
+  if fm_session_lock_moved_to_self "$STATE"; then
+    MOVED_FROM="$(fm_session_lock_recorded_session_id "$STATE") at pid $1"
+    return 0
+  fi
+  refuse_live_owner "$1"
+}
+
 if [ -f "$LOCK" ] && [ ! -L "$LOCK" ]; then
   old=$(fm_session_lock_owner_read "$STATE" || true)
   if fm_session_lock_owned_by_self "$STATE"; then
@@ -246,7 +269,7 @@ if [ -f "$LOCK" ] && [ ! -L "$LOCK" ]; then
     old=$(fm_session_lock_owner_read "$STATE" || true)
   fi
   if fm_harness_pid_alive "$old"; then
-    refuse_live_owner "$old"
+    refuse_live_owner_unless_moved "$old"
   fi
 fi
 
@@ -276,7 +299,7 @@ if [ -e "$LOCK" ] || [ -L "$LOCK" ]; then
     fm_session_lock_owned_by_self "$STATE" && confirm_own_lock "$old"
     old=$(fm_session_lock_owner_read "$STATE" || true)
     if fm_harness_pid_alive "$old"; then
-      refuse_live_owner "$old"
+      refuse_live_owner_unless_moved "$old"
     fi
   fi
 fi
@@ -326,3 +349,4 @@ fi
 commit_lock_session
 release_claim_lock
 lock_acquired_line "$me"
+[ -z "$MOVED_FROM" ] || echo "lock moved: Claude Code moved the owning conversation (session $MOVED_FROM) into this session"

@@ -447,6 +447,122 @@ test_same_session_id_owns_a_recycled_background_chain() {
   pass "session-lock: a trusted same-session id keeps owning a recycled background chain, and nothing weaker does"
 }
 
+# Claude Code's own record that it moved a conversation: when the agent view's
+# left arrow (or /background) moves a conversation into a background session,
+# Claude relaunches it under a new id and appends a continued-in record naming
+# that id to the old transcript, while the old front-end stays alive.
+write_claude_transcript() {  # <config-dir> <project-slug> <session-id> <record>...
+  local file="$1/projects/$2/$3.jsonl" record
+  shift 3
+  mkdir -p "${file%/*}"
+  : > "$file"
+  for record in "$@"; do
+    printf '%s\n' "$record" >> "$file"
+  done
+}
+
+claude_user_record() {  # <session-id>
+  printf '{"parentUuid":null,"type":"user","message":{"role":"user","content":"hello"},"sessionId":"%s"}' "$1"
+}
+
+claude_assistant_record() {  # <session-id>
+  printf '{"type":"assistant","message":{"role":"assistant","stop_reason":"end_turn"},"sessionId":"%s"}' "$1"
+}
+
+claude_move_record() {  # <from-id> <to-id>
+  printf '{"type":"continued-in","timestamp":"2026-10-13T08:06:46.569Z","sessionId":"%s","continuedInSessionId":"%s"}' "$1" "$2"
+}
+
+claude_queue_record() {  # <session-id>
+  printf '{"type":"queue-operation","operation":"enqueue","sessionId":"%s","content":"<task-notification>"}' "$1"
+}
+
+moved_here() {  # <fakebin> <state>
+  lib_eval "$1" "fm_session_lock_moved_to_self '$2'"
+}
+
+test_claude_move_record_proves_only_the_moved_conversation() {
+  local dir fakebin state cfg got
+  dir="$TMP_ROOT/claude-move-record"
+  fakebin=$(fm_fakebin "$dir")
+  state="$dir/state"
+  cfg="$dir/claude-config"
+  mkdir -p "$state" "$cfg/projects"
+  write_background_session_ps "$fakebin"
+  printf '700\n' > "$state/.lock"
+  printf 'S1\n' > "$state/.lock-session"
+  export CLAUDE_CONFIG_DIR="$cfg"
+
+  # Non-vacuity: without a move record the different id is refused.
+  write_claude_transcript "$cfg" -repo S1 "$(claude_user_record S1)" "$(claude_assistant_record S1)"
+  if FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "a different session id took over without any move record"
+  fi
+  # The incident shape: the move is the transcript's last conversational word.
+  write_claude_transcript "$cfg" -repo S1 "$(claude_user_record S1)" "$(claude_assistant_record S1)" \
+    "$(claude_move_record S1 S2)" "$(claude_queue_record S1)"
+  got=$(lib_eval "$fakebin" 'fm_claude_session_continued_in S1') \
+    || fail "the recorded move was not read from the transcript"
+  [ "$got" = S2 ] || fail "the recorded move named '$got', expected S2"
+  FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state" \
+    || fail "the conversation Claude moved into this session was not proven"
+  # The trust gate still applies to the successor's own id.
+  if FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=700 moved_here "$fakebin" "$state"; then
+    fail "an untrusted successor id was proven by the move record"
+  fi
+  if moved_here "$fakebin" "$state"; then
+    fail "a session with no id was proven by the move record"
+  fi
+  if FM_TEST_SESSION_ID=S3 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "a session the conversation did not move into was proven"
+  fi
+  if FM_TEST_SESSION_ID=S1 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "the recorded session itself was treated as a move"
+  fi
+  # The old id was resumed and spoke again, so the move no longer names it.
+  write_claude_transcript "$cfg" -repo S1 "$(claude_user_record S1)" "$(claude_move_record S1 S2)" \
+    "$(claude_user_record S1)"
+  if FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "a move followed by more conversation in the old id was still proven"
+  fi
+  # A move record written for another conversation proves nothing about S1.
+  write_claude_transcript "$cfg" -repo S1 "$(claude_user_record S1)" "$(claude_move_record S9 S2)"
+  if FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "a move record naming a different source session was accepted"
+  fi
+  # A bounded chain of moves follows each conversation's own transcript.
+  write_claude_transcript "$cfg" -repo S1 "$(claude_user_record S1)" "$(claude_move_record S1 X1)"
+  write_claude_transcript "$cfg" -repo X1 "$(claude_user_record X1)" "$(claude_move_record X1 S2)"
+  FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state" \
+    || fail "a conversation moved twice into this session was not proven"
+  write_claude_transcript "$cfg" -repo X1 "$(claude_user_record X1)" "$(claude_move_record X1 S1)"
+  if FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "a cycle of move records proved an unrelated session"
+  fi
+  # Never fail open on an ambiguous, symlinked, or glob-shaped transcript id.
+  rm -rf "$cfg/projects"
+  write_claude_transcript "$cfg" -repo S1 "$(claude_move_record S1 S2)"
+  write_claude_transcript "$cfg" -other S1 "$(claude_move_record S1 S2)"
+  if FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "an id with two transcripts was proven"
+  fi
+  rm -rf "$cfg/projects"
+  write_claude_transcript "$dir" elsewhere S1 "$(claude_move_record S1 S2)"
+  mkdir -p "$cfg/projects/-repo"
+  ln -s "$dir/projects/elsewhere/S1.jsonl" "$cfg/projects/-repo/S1.jsonl"
+  if FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "a symlinked transcript was trusted"
+  fi
+  rm -rf "$cfg/projects"
+  write_claude_transcript "$cfg" -repo S1 "$(claude_move_record S1 S2)"
+  printf '*\n' > "$state/.lock-session"
+  if FM_TEST_SESSION_ID=S2 FM_TEST_CLAUDE_PID=710 moved_here "$fakebin" "$state"; then
+    fail "a glob-shaped recorded id located a transcript"
+  fi
+  unset CLAUDE_CONFIG_DIR
+  pass "session-lock: only Claude Code's own last-word move record proves a moved conversation"
+}
+
 test_anchor_pid_is_the_model_loop_process_only_for_a_trusted_id() {
   local dir fakebin got
   dir="$TMP_ROOT/background-anchor"
@@ -895,6 +1011,75 @@ test_e2e_shared_frontend_refuses_other_sessions() {
   : > "$dir/state/stop-spare"
   : > "$dir/state/stop-frontend"
   pass "session-lock e2e: a shared Claude front-end grants authority only to the owning session"
+}
+
+# A primary whose owning conversation moved into a background session under a
+# new id while its front-end stayed alive holding the lock. Before Claude records the move, the successor is refused with both
+# identities; once the move is the old transcript's last word, it takes over.
+test_e2e_moved_conversation_takes_over_from_its_live_frontend() {
+  local dir frontend spare cfg mismatch
+  dir="$TMP_ROOT/e2e-moved-conversation"
+  cfg="$dir/claude-config"
+  make_background_session_home "$dir"
+  env -u CLAUDE_CODE_SESSION_ID -u CLAUDE_PID -u CLAUDE_CONFIG_DIR \
+    FM_HOME="$dir" FM_FIXTURE_CLAUDE="$NAMED_CLAUDE" FM_POLL=1 FM_HEARTBEAT=999999 \
+    FM_CLAUDE_AUTOARM_SYNC_WAIT_MS=0 \
+    bash -c '"$0" "$1" &' "$NAMED_CLAUDE" "$dir/frontend.sh"
+  wait_for_file "$dir/state/frontend-lock.rc" "the front-end's lock result"
+  wait_for_file "$dir/state/spare-pid" "the bg-spare"
+  frontend=$(cat "$dir/state/frontend-pid")
+  spare=$(cat "$dir/state/spare-pid")
+  BG_FIXTURE_PIDS+=("$frontend" "$(cat "$dir/state/daemon-pid")" "$(cat "$dir/state/ptyhost-pid")" "$spare")
+  expect_code 0 "$(cat "$dir/state/frontend-lock.rc")" "the front-end could not acquire the lock"
+  write_claude_transcript "$cfg" -repo S1 "$(claude_user_record S1)" "$(claude_assistant_record S1)"
+
+  # 1. No move recorded: refused, and the refusal names both identities.
+  fire_phase "$dir" 1 "export FM_TEST_PROMPT_GUARD=1; export CLAUDE_CONFIG_DIR='$cfg'; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=\$\$"
+  expect_phase_foreign "$dir" 1 0 "$frontend" "moved conversation, no move record"
+  mismatch="mismatch: the lock records Claude session S1 at pid $frontend, but this is Claude session S2 at pid $spare"
+  assert_grep "$mismatch" "$dir/state/phase-1/lock.out" "the refusal did not report both identities"
+  assert_grep "$mismatch" "$dir/state/phase-1/prompt.out" "the prompt refusal did not report both identities"
+  expect_code 2 "$(phase_value "$dir" 1 prompt.rc)" "an unproven successor's prompt was not blocked"
+
+  # 2. A move into another session is reported, and still refused.
+  write_claude_transcript "$cfg" -repo S1 "$(claude_user_record S1)" "$(claude_move_record S1 S3)"
+  fire_phase "$dir" 2 "export CLAUDE_CONFIG_DIR='$cfg'; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=\$\$"
+  expect_phase_foreign "$dir" 2 0 "$frontend" "conversation moved elsewhere"
+  assert_grep "Claude Code recorded that session S1 moved to session S3" \
+    "$dir/state/phase-2/lock.out" "the refusal did not report where the conversation moved"
+
+  # 3. The old id spoke again after the move: still refused.
+  write_claude_transcript "$cfg" -repo S1 "$(claude_move_record S1 S2)" "$(claude_user_record S1)"
+  fire_phase "$dir" 3 "export CLAUDE_CONFIG_DIR='$cfg'; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=\$\$"
+  expect_phase_foreign "$dir" 3 0 "$frontend" "old id resumed after the move"
+
+  # 4. The move is the last word: the successor takes over through the prompt
+  # path the captain's prompts hit, with both lock lines rewritten to itself.
+  write_claude_transcript "$cfg" -repo S1 "$(claude_user_record S1)" "$(claude_assistant_record S1)" \
+    "$(claude_move_record S1 S2)" "$(claude_queue_record S1)"
+  fire_phase "$dir" 4 "export FM_TEST_PROMPT_GUARD=1; export CLAUDE_CONFIG_DIR='$cfg'; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=\$\$"
+  expect_code 0 "$(phase_value "$dir" 4 lock.rc)" "the moved conversation was refused: $(cat "$dir/state/phase-4/lock.out")"
+  assert_grep "lock moved: Claude Code moved the owning conversation (session S1 at pid $frontend) into this session" \
+    "$dir/state/phase-4/lock.out" "the takeover did not report the move"
+  [ "$(phase_value "$dir" 4 lock-after)" = "$spare" ] \
+    || fail "the takeover left line 1 at $(phase_value "$dir" 4 lock-after), expected the successor $spare"
+  [ "$(phase_value "$dir" 4 session-after)" = S2 ] \
+    || fail "the takeover recorded session $(phase_value "$dir" 4 session-after), expected S2"
+  expect_code 0 "$(phase_value "$dir" 4 prompt.rc)" "the moved conversation's prompt was blocked: $(cat "$dir/state/phase-4/prompt.out")"
+  kill -0 "$frontend" 2>/dev/null || fail "the front-end died, so the takeover proved nothing about a live anchor"
+
+  # 5. The successor now owns the home exactly like any proven session.
+  cp "$dir/state/.lock-session" "$dir/sidecar-initial"
+  fire_phase "$dir" 5 "export CLAUDE_CONFIG_DIR='$cfg'; export CLAUDE_CODE_SESSION_ID=S2; export CLAUDE_PID=\$\$"
+  expect_phase_owned "$dir" 5 2 "$spare" "moved conversation after takeover"
+
+  # 6. The old id cannot take the lock back from the live successor.
+  fire_phase "$dir" 6 "export CLAUDE_CONFIG_DIR='$cfg'; export CLAUDE_CODE_SESSION_ID=S1; export CLAUDE_PID=\$\$"
+  expect_phase_foreign "$dir" 6 2 "$spare" "old id after the takeover" \
+    "another live firstmate session holds the lock (pid $spare, session S2)"
+  : > "$dir/state/stop-spare"
+  : > "$dir/state/stop-frontend"
+  pass "session-lock e2e: a conversation Claude moved to the background takes over from its live front-end, and nothing weaker does"
 }
 
 test_e2e_legacy_lock_upgrade_refuses_until_owner_restarts() {
@@ -1505,6 +1690,8 @@ test_verified_reclaim_keeps_new_sidecar() {
 }
 
 test_e2e_shared_frontend_refuses_other_sessions
+test_e2e_moved_conversation_takes_over_from_its_live_frontend
+test_claude_move_record_proves_only_the_moved_conversation
 test_identity_less_claude_acquisition_refuses_without_publication
 test_e2e_unknown_helper_identity_never_inherits_the_owner
 test_e2e_legacy_lock_upgrade_refuses_until_owner_restarts
