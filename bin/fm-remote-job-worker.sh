@@ -862,8 +862,8 @@ worker_capture_output() { # <fifo> <destination>
   } < "$fifo" > "$destination"
 }
 
-worker_run_job() { # <account-home> <job-dir>
-  local account_home=$1 job=$2 root home command command_path git_bin rc deadline execution_deadline
+worker_run_job() { # <account-home> <job-dir> <seconds-deadline>
+  local account_home=$1 job=$2 execution_deadline=$3 root home command command_path git_bin rc
   local stdout_pipe stderr_pipe stdout_reader stderr_reader preemptible=0
   local -a argv child_env
   root=$(worker_read_text "$job" root 8192) || { worker_publish_result "$job" 126; return; }
@@ -878,9 +878,6 @@ worker_run_job() { # <account-home> <job-dir>
     [ -d "$root/bin" ] && [ ! -L "$root/bin" ] || { worker_publish_result "$job" 126; return; }
   fm_remote_job_regular_bounded "$job/argv" "$FM_REMOTE_JOB_MAX_BYTES" || { worker_publish_result "$job" 126; return; }
   fm_remote_job_regular_bounded "$job/stdin" "$FM_REMOTE_JOB_MAX_BYTES" || { worker_publish_result "$job" 126; return; }
-  deadline=$(fm_remote_job_read_deadline "$job") || { worker_publish_result "$job" 126; return; }
-  execution_deadline=$SECONDS
-  execution_deadline=$((execution_deadline + deadline - $(date +%s)))
   [ "$SECONDS" -lt "$execution_deadline" ] || { worker_publish_result "$job" 124; return; }
   argv=()
   while IFS= read -r -d '' command; do argv+=("$command"); done < "$job/argv"
@@ -1027,7 +1024,7 @@ worker_reap_finished_lanes() {
 # arrived before running, establish the deadline, run to publication, and reap
 # the record when its caller cancelled and can no longer reap it.
 worker_lane_execute() { # <account-home> <job-dir>
-  local account_home=$1 job=$2 timeout queue_deadline deadline
+  local account_home=$1 job=$2 timeout queue_deadline deadline execution_deadline
   local supervisor_pid supervisor_start pid_tmp start_tmp
   worker_claim "$job" || return 0
   supervisor_pid=${BASHPID:-$$}
@@ -1072,6 +1069,7 @@ worker_lane_execute() { # <account-home> <job-dir>
   # The deadline is measured in whole seconds from a truncated clock read, so
   # the +1 keeps the granted window at least the recorded timeout instead of
   # silently shaving up to a second off it.
+  execution_deadline=$((SECONDS + timeout + 1))
   deadline=$(( $(date +%s) + timeout + 1 ))
   fm_remote_job_write_number "$job" deadline "$deadline" || {
     worker_publish_result "$job" 125 || true
@@ -1081,7 +1079,7 @@ worker_lane_execute() { # <account-home> <job-dir>
     worker_publish_result "$job" 125 || true
     return 0
   }
-  worker_run_job "$account_home" "$job"
+  worker_run_job "$account_home" "$job" "$execution_deadline"
   if fm_remote_job_cancelled "$job"; then
     fm_remote_job_reap "$account_home" "${job##*/}" || true
   fi

@@ -83,6 +83,16 @@ cat > "$REMOTE_ROOT/bin/fm-delay-job.sh" <<'SH'
 sleep "$1"
 printf 'ran\n' > "$2"
 SH
+cat > "$REMOTE_ROOT/bin/fm-cadence-job.sh" <<'SH'
+#!/bin/bash
+: > "$1"
+for ((i = 0; i < 200; i++)); do
+  [ ! -s "$1" ] || break
+  /bin/sleep 0.05
+done
+[ -s "$1" ] || exit 1
+printf 'ran\n' > "$2"
+SH
 cat > "$REMOTE_ROOT/bin/fm-touch-job.sh" <<'SH'
 #!/bin/bash
 printf 'ran\n' > "$1"
@@ -144,11 +154,15 @@ SH
   # shellcheck source=bin/fm-remote-job-lib.sh
   . "$ROOT/bin/fm-remote-job-lib.sh"
   fm_remote_job_stage "$ACCOUNT_HOME" "$REMOTE_ROOT" "$REMOTE_HOME" \
-    fm-delay-job.sh 0.8 "$poll_dir/ran" </dev/null >/dev/null || fail "$FM_REMOTE_JOB_ERROR"
+    fm-cadence-job.sh "$FM_POLL_SLEEP_LOG" "$poll_dir/ran" </dev/null >/dev/null || fail "$FM_REMOTE_JOB_ERROR"
   # Publish a real bounded result after the caller has entered its wait, without
   # a lane's own samples contaminating this consumer-only executable log.
   (
-    /bin/sleep 0.8
+    for ((i = 0; i < 200; i++)); do
+      [ ! -s "$FM_POLL_SLEEP_LOG" ] || break
+      /bin/sleep 0.05
+    done
+    [ -s "$FM_POLL_SLEEP_LOG" ] || exit 1
     : > "$FM_REMOTE_JOB_JOBS/$FM_REMOTE_JOB_ID/stdout"
     : > "$FM_REMOTE_JOB_JOBS/$FM_REMOTE_JOB_ID/stderr"
     printf '0\n' > "$FM_REMOTE_JOB_JOBS/$FM_REMOTE_JOB_ID/exit"
@@ -164,7 +178,7 @@ SH
 
   : > "$FM_POLL_SLEEP_LOG"
   fm_remote_job_stage "$ACCOUNT_HOME" "$REMOTE_ROOT" "$REMOTE_HOME" \
-    fm-delay-job.sh 0.8 "$poll_dir/ran" </dev/null >/dev/null || fail "$FM_REMOTE_JOB_ERROR"
+    fm-cadence-job.sh "$FM_POLL_SLEEP_LOG" "$poll_dir/ran" </dev/null >/dev/null || fail "$FM_REMOTE_JOB_ERROR"
   HOME="$ACCOUNT_HOME" "$BASH" "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" --lane "$FM_REMOTE_JOB_ID" &
   pid=$!
   wait "$pid" || fail "$label command lane failed"
@@ -531,6 +545,43 @@ SH
   pass "a delayed timeout sample cannot accept an over-time command's natural exit"
 )
 delayed_timeout_sample_case || exit 1
+
+delayed_epoch_sample_case() (
+  local fixture="$TMP_ROOT/delayed-epoch" pid='' job
+  local real_date
+  real_date=$(command -v date)
+  mkdir -p "$fixture/account" "$fixture/bin"
+  trap '[ -z "$pid" ] || { kill -KILL "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; }' EXIT
+  export FM_REMOTE_JOB_STATE_ROOT="$fixture/state" FM_REMOTE_JOB_QUEUE_TIMEOUT=60 FM_REMOTE_JOB_TIMEOUT=6
+  fm_remote_job_stage "$fixture/account" "$REMOTE_ROOT" "$REMOTE_HOME" \
+    fm-touch-job.sh "$fixture/finished" </dev/null >/dev/null || fail "$FM_REMOTE_JOB_ERROR"
+  job="$FM_REMOTE_JOB_JOBS/$FM_REMOTE_JOB_ID"
+  cat > "$fixture/bin/date" <<SH
+#!/bin/bash
+if [ "\${1:-}" = +%s ]; then
+  printf 'sampled\n' > '$fixture/clock-sampled'
+  IFS= read -r state < '$job/state'
+  if [ "\$state" = running ]; then
+    /bin/sleep 4
+  fi
+fi
+exec '$real_date' "\$@"
+SH
+  chmod +x "$fixture/bin/date"
+  HOME="$fixture/account" FM_ROOT_OVERRIDE="$REMOTE_ROOT" PATH="$fixture/bin:$PATH" \
+    "$REMOTE_ROOT/bin/fm-remote-job-worker.sh" --lane "$FM_REMOTE_JOB_ID" \
+    > "$fixture/lane.out" 2> "$fixture/lane.err" &
+  pid=$!
+  fm_remote_job_wait "$fixture/account" "$FM_REMOTE_JOB_ID" || fail "$FM_REMOTE_JOB_ERROR"
+  wait "$pid" || fail "the delayed epoch lane failed"
+  pid=''
+  assert_present "$fixture/clock-sampled" "the delayed epoch fixture did not use its clock"
+  [ "$FM_REMOTE_JOB_EXIT" -eq 0 ] || fail "a delayed epoch sample prematurely expired the execution budget"
+  assert_present "$fixture/finished" "the delayed epoch fixture did not execute its command"
+  fm_remote_job_reap "$fixture/account" "$FM_REMOTE_JOB_ID" || fail "the delayed epoch job could not be reaped"
+  pass "a delayed epoch sample cannot shorten an established execution budget"
+)
+delayed_epoch_sample_case || exit 1
 
 FM_REMOTE_JOB_TIMEOUT=1
 QUEUED_SIDE_EFFECT="$TMP_ROOT/queued-side-effect"
