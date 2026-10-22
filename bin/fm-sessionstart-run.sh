@@ -39,8 +39,9 @@
 #                           this process still holds the lock (the nudge stays
 #                           silent) and a plain instruction is enough when a new
 #                           process resumed an old session (the nudge fires).
-#                           A Claude fork facing another live owner receives
-#                           the read-only digest immediately.
+#                           A Claude session facing another live owner attempts
+#                           acquisition through the full digest; fm-lock.sh
+#                           decides whether to transfer ownership or refuse.
 #
 # Session-open transport paths exit 0, exactly like the nudge wrapper: a
 # Claude SessionStart exit 2 blocks session initialization, so a failed session
@@ -166,8 +167,8 @@ fi
 
 case "$SOURCE" in
   resume|reload|fork)
-    # Restored context may belong to an earlier owner. A Claude fork sharing
-    # its app ancestor must receive the refusal now, before any return action.
+    # Restored context may belong to an earlier owner; verify acquisition
+    # through the full digest before any return action.
     pids=$(fm_harness_ancestry_pids || true)
     if fm_session_lock_claude_ancestry "$pids"; then
       if fm_session_lock_foreign_owner_live "$STATE"; then

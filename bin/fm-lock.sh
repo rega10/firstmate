@@ -23,8 +23,8 @@
 # A live recorded pid is taken over only when Claude Code itself recorded that
 # the owning conversation moved into this session (fm_session_lock_moved_to_self
 # in the library owns that proof); the takeover rewrites the sidecar and line 1
-# exactly like a reclaim. Every other live-owner refusal names both the recorded
-# and this session's identity, so a mismatch is never reported as one value.
+# exactly like a reclaim. When both recorded and trusted Claude identities are
+# available, live-owner refusals name each session id and anchor pid.
 #
 # Usage: fm-lock.sh           acquire; exit 1 unless ownership is verified
 #        fm-lock.sh status    print holder and liveness; always exits 0.

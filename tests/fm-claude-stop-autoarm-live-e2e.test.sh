@@ -71,6 +71,30 @@ if [ "$1" = start ]; then
 fi
 printf '%s\n' "$payload" | "$FM_HOME/bin/fm-sessionstart-run.sh" --check-claude-lock > "$FM_HOME/$label.prompt.out" 2>&1
 printf '%s\n' "$?" > "$FM_HOME/$label.prompt.rc"
+if [ "$label" = contender ]; then
+  # Exercise transcript-data boundaries with real vendor hook identity and a
+  # real live owner. Only the transcript data is disposable fixture input.
+  owner=$(cat "$FM_HOME/state/.lock-session")
+  cfg="$FM_HOME/move-config"
+  mkdir -p "$cfg/projects/lab"
+  printf '{"type":"continued-in","sessionId":"%s","continuedInSessionId":"elsewhere"}\n' "$owner" > "$cfg/projects/lab/$owner.jsonl"
+  CLAUDE_CONFIG_DIR="$cfg" "$FM_HOME/bin/fm-lock.sh" > "$FM_HOME/move-elsewhere.out" 2>&1
+  printf '%s\n' "$?" > "$FM_HOME/move-elsewhere.rc"
+  printf '{"type":"continued-in","sessionId":"%s","continuedInSessionId":"%s"}\n{"type":"user","sessionId":"%s","message":{"content":"The original session spoke again."}}\n' "$owner" "$id" "$owner" > "$cfg/projects/lab/$owner.jsonl"
+  CLAUDE_CONFIG_DIR="$cfg" "$FM_HOME/bin/fm-lock.sh" > "$FM_HOME/move-resumed.out" 2>&1
+  printf '%s\n' "$?" > "$FM_HOME/move-resumed.rc"
+  # A separate home allows a successful chained takeover without changing the
+  # main fixture's owner, whose continued ownership is asserted below.
+  move_home="$FM_HOME/chained-home"
+  "$FM_HOME/bin/fm-lab-home.sh" create "$move_home" >/dev/null || exit 1
+  cp "$FM_HOME/state/.lock" "$FM_HOME/state/.lock-session" "$move_home/state/"
+  printf '{"type":"continued-in","sessionId":"%s","continuedInSessionId":"middle"}\n' "$owner" > "$cfg/projects/lab/$owner.jsonl"
+  printf '{"type":"continued-in","sessionId":"middle","continuedInSessionId":"%s"}\n' "$id" > "$cfg/projects/lab/middle.jsonl"
+  FM_HOME="$move_home" CLAUDE_CONFIG_DIR="$cfg" "$FM_HOME/bin/fm-lock.sh" > "$FM_HOME/move-chain.out" 2>&1
+  printf '%s\n' "$?" > "$FM_HOME/move-chain.rc"
+  kill -0 "$(cat "$FM_HOME/state/.lock")" || exit 1
+  cp "$move_home/state/.lock-session" "$FM_HOME/move-chain.session"
+fi
 if [ "$label" = owner ]; then
   # Hold the exact live anchor while the second real session tests refusal.
   # Also exercise equality with that anchor using the contender's real id.
@@ -115,6 +139,11 @@ JSON
   expect_code 1 "$(cat "$LAB/home/shared-pid.rc")" "Claude $VERSION shared-pid refusal"
   expect_code 1 "$(cat "$LAB/home/contender.lock.rc")" "Claude $VERSION competing acquire"
   expect_code 2 "$(cat "$LAB/home/contender.prompt.rc")" "Claude $VERSION competing prompt"
+  wait_identity_file "$LAB/home/move-chain.session"
+  expect_code 1 "$(cat "$LAB/home/move-elsewhere.rc")" "Claude $VERSION move to another session"
+  expect_code 1 "$(cat "$LAB/home/move-resumed.rc")" "Claude $VERSION original session spoke after move"
+  expect_code 0 "$(cat "$LAB/home/move-chain.rc")" "Claude $VERSION chained move takeover"
+  [ "$(cat "$LAB/home/move-chain.session")" = "$SECOND_ID" ] || fail "Claude $VERSION chained move recorded the wrong owner"
   cmp -s "$LAB/owner-session" "$LAB/home/state/.lock-session" || fail "Claude $VERSION contender changed the session id"
   [ "$(cat "$LAB/home/owner.id")" != "$(cat "$LAB/home/contender.id")" ] || fail "Claude $VERSION sessions reused an id"
   : > "$LAB/release"
@@ -184,11 +213,14 @@ JSON
   # A pty driver: every step waits on a hook-written file, not on rendered
   # output, except accepting the folder-trust dialog when it is shown.
   cat > "$LAB/drive.py" <<'PY'
-import os, pty, re, select, sys, time
+import fcntl, os, pty, re, select, struct, sys, termios, time
 home, log = sys.argv[1], sys.argv[2]
 argv = sys.argv[3:]
 pid, fd = pty.fork()
 if pid == 0:
+    # A non-TTY test runner otherwise supplies a 0x0 grid to Claude's TUI.
+    # Establish the grid before exec, so Claude cannot race the parent resize.
+    fcntl.ioctl(0, termios.TIOCSWINSZ, struct.pack('HHHH', 40, 120, 0, 0))
     os.chdir(home)
     os.execvp(argv[0], argv)
 out = open(log, 'ab')
@@ -205,8 +237,8 @@ def pump(seconds):
                 return
             out.write(data); out.flush(); seen = (seen + data)[-200000:]
 def send(text):
-    for ch in text:
-        os.write(fd, ch.encode()); time.sleep(0.03)
+    # Keep escape sequences together; a separated Escape dismisses dialogs.
+    os.write(fd, text.encode()); time.sleep(0.03)
 def wait_for(predicate, what, seconds=120):
     end = time.time() + seconds
     while time.time() < end:
@@ -245,10 +277,14 @@ def moved():
     return False
 wait_for(moved, 'a forked background session after the left arrow')
 moved_id = open(os.path.join(home, 'moved.id')).read().strip()
+owner_pid = int(starts()[owner][1])
+os.kill(owner_pid, 0)
 pump(3)
 send('\r'); pump(4)
 send('Reply with just the word SECOND'); pump(1); send('\r')
 wait_for(lambda: os.path.exists(os.path.join(home, 'prompt-' + moved_id + '.rc')), 'the moved prompt hook')
+os.kill(owner_pid, 0)
+open(os.path.join(home, 'frontend-alive'), 'w').write(str(owner_pid) + '\n')
 pump(2)
 send('/stop'); pump(1); send('\r'); pump(4)
 send('\x03'); pump(0.5); send('\x03'); pump(3)
