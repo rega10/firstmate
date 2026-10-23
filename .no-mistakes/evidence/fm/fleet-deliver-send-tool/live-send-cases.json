@@ -1,0 +1,572 @@
+[
+  {
+    "name": "external preview shows required fields and sends nothing",
+    "exit": 0,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external confirmed send reaches TLS SMTP with both attachments",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "new internal contact preview omits a trust-only confirmation verdict",
+    "exit": 0,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "internal sends on order alone using available preferred email",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "self sends on order alone using available preferred email",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "fallback sends on order alone using available preferred email",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "JPEG attachment sends: .jpg",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "JPEG attachment sends: .jpeg",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "unsupported preferred channel refuses instead of silently using email",
+    "exit": 6,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unlisted recipient refuses: unknown",
+    "exit": 2,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unlisted recipient refuses: external@lab.invalid",
+    "exit": 2,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external contact requires confirmation",
+    "exit": 3,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external rejects confirmation: OK",
+    "exit": 3,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external rejects confirmation: sure",
+    "exit": 3,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external rejects confirmation: no, don't send it",
+    "exit": 3,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external rejects confirmation: Should I say send it?",
+    "exit": 3,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external rejects confirmation: yes, send later",
+    "exit": 3,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external rejects confirmation: please send it",
+    "exit": 3,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "external accepts complete confirmation: YES, SEND!",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "external accepts complete confirmation: Send it.",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "external accepts complete confirmation: S\u00ed, env\u00eda.",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "internal also rejects an explicitly supplied invalid confirmation",
+    "exit": 3,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "away or quiet blocks third-party send: .afk",
+    "exit": 4,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "specific-send override permits isolated send: .afk",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "away or quiet blocks third-party send: .afk-contract",
+    "exit": 4,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "specific-send override permits isolated send: .afk-contract",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "stored multi-recipient address refuses send",
+    "exit": 1,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "stored multi-recipient address refuses preview",
+    "exit": 1,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden attachment source config/private.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden note source config/private.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden attachment source data/report/link-config.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden note source data/report/link-config.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden attachment source state/private.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden note source state/private.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden attachment source data/report/link-state.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden note source data/report/link-state.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden attachment source projects/private.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden note source projects/private.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden attachment source data/report/link-projects.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden note source data/report/link-projects.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden source .env",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden source data/report/.env.local",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden source data/top.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden source data/outbound/private.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "forbidden source data/report/state/private.pdf",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsupported attachment type report.md",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsupported attachment type notes.txt",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "attachment outside data refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "above cap refuses with manual-link guidance: FM_DELIVER_MAX_BYTES",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "exact cap permits send: FM_DELIVER_MAX_BYTES",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "above cap refuses with manual-link guidance: FM_MAIL_MAX_ATTACH_BYTES",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "exact cap permits send: FM_MAIL_MAX_ATTACH_BYTES",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "raw secret refuses: -----BEGIN PRIVATE KEY-----",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "raw secret refuses: ghp_",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "raw secret refuses: github_pat_",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "raw secret refuses: AKIA",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "raw secret refuses: password=",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "raw secret refuses: FM_MAIL_PASS=",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "raw secret refuses: xoxb-",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "raw secret refuses: sk-",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "compressed final archive member sends docx",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "compressed final archive member refuses docx",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "broken archive refuses docx",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "compressed final archive member sends xlsx",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "compressed final archive member refuses xlsx",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "broken archive refuses xlsx",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "PDF filter direct safe sends",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "PDF filter direct secret refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "PDF filter array safe sends",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "PDF filter array secret refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "PDF filter indirect-name safe sends",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "PDF filter indirect-name secret refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "PDF filter indirect-array safe sends",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "PDF filter indirect-array secret refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "PDF filter escaped safe sends",
+    "exit": 0,
+    "sent": 1,
+    "live": true
+  },
+  {
+    "name": "PDF filter escaped secret refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsupported PDF representation refuses: missing-reference",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsupported PDF representation refuses: indirect-chain",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsupported PDF representation refuses: other-filter",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsupported PDF representation refuses: array-reference",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsupported PDF representation refuses: broken-stream",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "compressed secret in PDF covering note refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsupported PDF filter also refuses preview",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsafe or empty covering note refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsafe or empty covering note refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unsafe or empty covering note refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "invalid UTF-8 covering note refuses",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unreadable order logs the attempt",
+    "exit": 1,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unreadable confirm logs the attempt",
+    "exit": 1,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unreadable note logs the attempt",
+    "exit": 5,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "invalid cap logs attempt: FM_DELIVER_MAX_BYTES",
+    "exit": 1,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "invalid cap logs attempt: FM_MAIL_MAX_ATTACH_BYTES",
+    "exit": 1,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "removed subject option refuses argument parsing",
+    "exit": 1,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "SMTP rejection reports masked error and logs the failure",
+    "exit": 7,
+    "sent": 0,
+    "live": true
+  },
+  {
+    "name": "unavailable SMTP reports connection failure and logs it",
+    "exit": 7,
+    "sent": 0,
+    "live": true
+  }
+]

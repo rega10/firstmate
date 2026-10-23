@@ -1,0 +1,148 @@
+[
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1896",
+    "rcpt to:<external@lab.invalid>",
+    "DATA accepted 1896 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1571",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1571 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1566",
+    "rcpt to:<self@lab.invalid>",
+    "DATA accepted 1566 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1570",
+    "rcpt to:<fallback@lab.invalid>",
+    "DATA accepted 1570 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=7070",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 7070 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=7073",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 7073 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1573",
+    "rcpt to:<external@lab.invalid>",
+    "DATA accepted 1573 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1573",
+    "rcpt to:<external@lab.invalid>",
+    "DATA accepted 1573 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1572",
+    "rcpt to:<external@lab.invalid>",
+    "DATA accepted 1572 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1570",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1570 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1570",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1570 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1570",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1570 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1569",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1569 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1382",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1382 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1375",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1375 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1558",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1558 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1559",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1559 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1609",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1609 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1615",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1615 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1565",
+    "rcpt to:<internal@lab.invalid>",
+    "DATA accepted 1565 bytes"
+  ],
+  [
+    "EHLO over TLSv1.3",
+    "AUTH PLAIN accepted disposable credentials",
+    "mail from:<sender@lab.invalid> size=1569",
+    "rcpt to:<reject@lab.invalid>"
+  ]
+]

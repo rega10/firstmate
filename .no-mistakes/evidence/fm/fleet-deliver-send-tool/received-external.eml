@@ -1,0 +1,44 @@
+From: sender@lab.invalid
+To: external@lab.invalid
+Subject: Documento: report.pdf
+Date: Fri, 23 Oct 2026 18:42:26 -0500
+Message-ID: <179279894695.24202.13134171108835659640@rg-mac-mini.local>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============7895947207421518738=="
+
+--===============7895947207421518738==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Le comparto los documentos de prueba.
+Segunda l=C3=ADnea confidencial de prueba.
+
+--===============7895947207421518738==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="report.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2Jq
+CjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2Jq
+CjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCAzMDAg
+MjAwXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiAvQ29udGVudHMgNCAw
+IFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCA3OCAvRmlsdGVyIC9GbGF0ZURlY29kZSA+
+PgpzdHJlYW0KeJxzClHQdzNUMDRSCElTMDFQsDBQCElR0HDJLC7IL05MyklVKEotyC8qUUjLL1LI
+LM7PSSxJTVFISc3JLEstqtTTVAjJUnANAQDOxxX2CmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8
+PCAvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4KZW5k
+b2JqCnhyZWYKMCA2CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAw
+MDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDI0MSAwMDAwMCBuIAow
+MDAwMDAwMzkwIDAwMDAwIG4gCnRyYWlsZXIKPDwgL1NpemUgNiAvUm9vdCAxIDAgUiA+PgpzdGFy
+dHhyZWYKNDYwCiUlRU9GCg==
+
+--===============7895947207421518738==
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="plan.png"
+MIME-Version: 1.0
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a9X8A
+AAAASUVORK5CYII=
+
+--===============7895947207421518738==--

@@ -1,0 +1,819 @@
+contact add: external
+exit: 0
+
+contact add: internal
+exit: 0
+
+contact add: self
+exit: 0
+
+contact add: reject
+exit: 0
+
+contact add: fallback
+exit: 0
+
+contact add: unsupported
+exit: 0
+
+
+SCENARIO: external preview shows required fields and sends nothing
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' '<lab>/home/data/report/plan.png' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/note.txt' --dry-run
+exit: 0
+confirmation card (dry run, nothing sent)
+recipient: external - Lab reviewer
+channel: email
+address: e***@lab.invalid
+file: report.pdf - 643 bytes
+file: plan.png - 68 bytes
+delivery: attachment
+subject: Documento: report.pdf
+covering text: Le comparto los documentos de prueba.
+
+SMTP messages: 0 -> 0; connections: 0 -> 0
+
+SCENARIO: external confirmed send reaches TLS SMTP with both attachments
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' '<lab>/home/data/report/plan.png' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt' --note-file '<lab>/home/data/report/note.txt'
+exit: 0
+sent: external email e***@lab.invalid 2 file(s) 711 bytes
+
+SMTP messages: 0 -> 1; connections: 0 -> 1
+persisted attempt: {"at": "2026-10-23T23:42:26Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}, {"name": "plan.png", "sha256": "3663243e86db47189eb21dfcee7d08ad15db5ff24dac17ce94db0a420e04160f", "bytes": 68}], "mode": "attachment", "order": "mándale report.pdf, plan.png a external", "confirmation": "Sí, envía.", "result": "sent", "detail": "sent to e***@lab.invalid (attachments: 2) message-id: <179279894695.24202.13134171108835659640@rg-mac-mini.local>"}
+
+SCENARIO: new internal contact preview omits a trust-only confirmation verdict
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --dry-run
+exit: 0
+confirmation card (dry run, nothing sent)
+recipient: internal - Lab reviewer
+channel: email
+address: i***@lab.invalid
+file: report.pdf - 643 bytes
+delivery: attachment
+subject: Document: report.pdf
+covering text: Please find the file attached.
+
+SMTP messages: 1 -> 1; connections: 1 -> 1
+
+SCENARIO: internal sends on order alone using available preferred email
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 1 -> 2; connections: 1 -> 2
+persisted attempt: {"at": "2026-10-23T23:42:27Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279894722.24233.14211719445932944937@rg-mac-mini.local>"}
+
+SCENARIO: self sends on order alone using available preferred email
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh self '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: self email s***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 2 -> 3; connections: 2 -> 3
+persisted attempt: {"at": "2026-10-23T23:42:27Z", "contact_id": "self", "channel": "email", "masked_address": "s***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a self", "confirmation": null, "result": "sent", "detail": "sent to s***@lab.invalid (attachments: 1) message-id: <179279894742.24266.2432558676315178715@rg-mac-mini.local>"}
+
+SCENARIO: fallback sends on order alone using available preferred email
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh fallback '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: fallback email f***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 3 -> 4; connections: 3 -> 4
+persisted attempt: {"at": "2026-10-23T23:42:27Z", "contact_id": "fallback", "channel": "email", "masked_address": "f***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a fallback", "confirmation": null, "result": "sent", "detail": "sent to f***@lab.invalid (attachments: 1) message-id: <179279894761.24286.5469517175689075561@rg-mac-mini.local>"}
+
+SCENARIO: JPEG attachment sends: .jpg
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/photo.jpg' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 4670 bytes
+
+SMTP messages: 4 -> 5; connections: 4 -> 5
+persisted attempt: {"at": "2026-10-23T23:42:27Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "photo.jpg", "sha256": "dba797a324f2d4a6cb2838da87e5a590b365803217341b1798f1f1d70cc7d91a", "bytes": 4670}], "mode": "attachment", "order": "mándale photo.jpg a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279894783.24307.4174750089624338726@rg-mac-mini.local>"}
+
+SCENARIO: JPEG attachment sends: .jpeg
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/photo.jpeg' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 4670 bytes
+
+SMTP messages: 5 -> 6; connections: 5 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:27Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "photo.jpeg", "sha256": "dba797a324f2d4a6cb2838da87e5a590b365803217341b1798f1f1d70cc7d91a", "bytes": 4670}], "mode": "attachment", "order": "mándale photo.jpeg a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279894802.24339.6265553696579452454@rg-mac-mini.local>"}
+
+SCENARIO: unsupported preferred channel refuses instead of silently using email
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh unsupported '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 6
+
+fm-deliver: channel telegram not implemented; only email sends today
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "unsupported", "channel": "telegram", "masked_address": "***345", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a unsupported", "confirmation": null, "result": "refused", "detail": "channel telegram not implemented; only email sends today"}
+
+SCENARIO: unlisted recipient refuses: unknown
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh unknown '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 2
+
+fm-deliver: contact id 'unknown' is not in the contact book; the contact must be added first with bin/fm-contacts.sh add
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "unknown", "channel": null, "masked_address": null, "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a unknown", "confirmation": null, "result": "refused", "detail": "contact id 'unknown' is not in the contact book; the contact must be added first with bin/fm-contacts.sh add"}
+
+SCENARIO: unlisted recipient refuses: external@lab.invalid
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external@lab.invalid '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 2
+
+fm-deliver: an address is not in the contact book; the contact must be added first with bin/fm-contacts.sh add
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external@lab.invalid", "channel": null, "masked_address": null, "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external@lab.invalid", "confirmation": null, "result": "refused", "detail": "an address is not in the contact book; the contact must be added first with bin/fm-contacts.sh add"}
+
+SCENARIO: external contact requires confirmation
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 3
+
+fm-deliver: the confirmation is missing: contact external is external, so --confirm-file with the owner's "yes, send", "send it", or "sí, envía" is required
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": null, "result": "refused", "detail": "the confirmation is missing: contact external is external, so --confirm-file with the owner's \"yes, send\", \"send it\", or \"sí, envía\" is required"}
+
+SCENARIO: external rejects confirmation: OK
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 3
+
+fm-deliver: the confirmation is missing: the confirm file holds no accepted confirmation ("yes, send", "send it", or "sí, envía")
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "OK", "result": "refused", "detail": "the confirmation is missing: the confirm file holds no accepted confirmation (\"yes, send\", \"send it\", or \"sí, envía\")"}
+
+SCENARIO: external rejects confirmation: sure
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 3
+
+fm-deliver: the confirmation is missing: the confirm file holds no accepted confirmation ("yes, send", "send it", or "sí, envía")
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "sure", "result": "refused", "detail": "the confirmation is missing: the confirm file holds no accepted confirmation (\"yes, send\", \"send it\", or \"sí, envía\")"}
+
+SCENARIO: external rejects confirmation: no, don't send it
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 3
+
+fm-deliver: the confirmation is missing: the confirm file holds no accepted confirmation ("yes, send", "send it", or "sí, envía")
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "no, don't send it", "result": "refused", "detail": "the confirmation is missing: the confirm file holds no accepted confirmation (\"yes, send\", \"send it\", or \"sí, envía\")"}
+
+SCENARIO: external rejects confirmation: Should I say send it?
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 3
+
+fm-deliver: the confirmation is missing: the confirm file holds no accepted confirmation ("yes, send", "send it", or "sí, envía")
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "Should I say send it?", "result": "refused", "detail": "the confirmation is missing: the confirm file holds no accepted confirmation (\"yes, send\", \"send it\", or \"sí, envía\")"}
+
+SCENARIO: external rejects confirmation: yes, send later
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 3
+
+fm-deliver: the confirmation is missing: the confirm file holds no accepted confirmation ("yes, send", "send it", or "sí, envía")
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "yes, send later", "result": "refused", "detail": "the confirmation is missing: the confirm file holds no accepted confirmation (\"yes, send\", \"send it\", or \"sí, envía\")"}
+
+SCENARIO: external rejects confirmation: please send it
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 3
+
+fm-deliver: the confirmation is missing: the confirm file holds no accepted confirmation ("yes, send", "send it", or "sí, envía")
+SMTP messages: 6 -> 6; connections: 6 -> 6
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "please send it", "result": "refused", "detail": "the confirmation is missing: the confirm file holds no accepted confirmation (\"yes, send\", \"send it\", or \"sí, envía\")"}
+
+SCENARIO: external accepts complete confirmation: YES, SEND!
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 0
+sent: external email e***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 6 -> 7; connections: 6 -> 7
+persisted attempt: {"at": "2026-10-23T23:42:28Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "YES, SEND!", "result": "sent", "detail": "sent to e***@lab.invalid (attachments: 1) message-id: <179279894894.24481.15782770085026828094@rg-mac-mini.local>"}
+
+SCENARIO: external accepts complete confirmation: Send it.
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 0
+sent: external email e***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 7 -> 8; connections: 7 -> 8
+persisted attempt: {"at": "2026-10-23T23:42:29Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "Send it.", "result": "sent", "detail": "sent to e***@lab.invalid (attachments: 1) message-id: <179279894913.24577.12995936891045145771@rg-mac-mini.local>"}
+
+SCENARIO: external accepts complete confirmation: Sí, envía.
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 0
+sent: external email e***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 8 -> 9; connections: 8 -> 9
+persisted attempt: {"at": "2026-10-23T23:42:29Z", "contact_id": "external", "channel": "email", "masked_address": "e***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": "Sí, envía.", "result": "sent", "detail": "sent to e***@lab.invalid (attachments: 1) message-id: <179279894932.24598.9639854215007163971@rg-mac-mini.local>"}
+
+SCENARIO: internal also rejects an explicitly supplied invalid confirmation
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/confirm.txt'
+exit: 3
+
+fm-deliver: the confirmation is missing: the confirm file holds no accepted confirmation ("yes, send", "send it", or "sí, envía")
+SMTP messages: 9 -> 9; connections: 9 -> 9
+persisted attempt: {"at": "2026-10-23T23:42:29Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": "Should I say send it?", "result": "refused", "detail": "the confirmation is missing: the confirm file holds no accepted confirmation (\"yes, send\", \"send it\", or \"sí, envía\")"}
+
+SCENARIO: away or quiet blocks third-party send: .afk
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 4
+
+fm-deliver: away or quiet mode is active (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/state/.afk); send only when the owner's away words name this send, with --allow-away
+SMTP messages: 9 -> 9; connections: 9 -> 9
+persisted attempt: {"at": "2026-10-23T23:42:29Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "away or quiet mode is active (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/state/.afk); send only when the owner's away words name this send, with --allow-away"}
+
+SCENARIO: specific-send override permits isolated send: .afk
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --allow-away
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 9 -> 10; connections: 9 -> 10
+persisted attempt: {"at": "2026-10-23T23:42:29Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279894967.24787.8106454769651481376@rg-mac-mini.local>"}
+
+SCENARIO: away or quiet blocks third-party send: .afk-contract
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 4
+
+fm-deliver: away or quiet mode is active (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/state/.afk-contract); send only when the owner's away words name this send, with --allow-away
+SMTP messages: 10 -> 10; connections: 10 -> 10
+persisted attempt: {"at": "2026-10-23T23:42:29Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "away or quiet mode is active (/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/state/.afk-contract); send only when the owner's away words name this send, with --allow-away"}
+
+SCENARIO: specific-send override permits isolated send: .afk-contract
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --allow-away
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 10 -> 11; connections: 10 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:29Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279894994.24976.4443540369494542354@rg-mac-mini.local>"}
+contact add: malformed
+exit: 1
+fm-contacts: refusing contact 'malformed': email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+contact add: malformed
+exit: 1
+fm-contacts: refusing contact 'malformed': email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+contact add: malformed
+exit: 1
+fm-contacts: refusing contact 'malformed': email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+contact add: malformed
+exit: 1
+fm-contacts: refusing contact 'malformed': email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+contact add: malformed
+exit: 1
+fm-contacts: refusing contact 'malformed': email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+contact add: malformed
+exit: 1
+fm-contacts: refusing contact 'malformed': email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+contact add: malformed
+exit: 1
+fm-contacts: refusing contact 'malformed': email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+contact add: malformed
+exit: 1
+fm-contacts: refusing contact 'malformed': email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+
+SCENARIO: stored multi-recipient address refuses send
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 1
+
+fm-deliver: cannot use the contact book: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/contacts.json: contact 0 (external): email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:30Z", "contact_id": "external", "channel": null, "masked_address": null, "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a external", "confirmation": null, "result": "error", "detail": "cannot use the contact book: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/contacts.json: contact 0 (external): email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets"}
+
+SCENARIO: stored multi-recipient address refuses preview
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh external '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --dry-run
+exit: 1
+
+fm-deliver: cannot use the contact book: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/contacts.json: contact 0 (external): email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets
+SMTP messages: 11 -> 11; connections: 11 -> 11
+
+SCENARIO: forbidden attachment source config/private.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/config/private.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/config/private.pdf: is under the home config, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:30Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "private.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale private.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/config/private.pdf: is under the home config, which is never sent"}
+
+SCENARIO: forbidden note source config/private.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/config/private.pdf'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/config/private.pdf: is under the home config, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:30Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/config/private.pdf: is under the home config, which is never sent"}
+
+SCENARIO: forbidden attachment source data/report/link-config.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/link-config.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-config.pdf: is under the home config, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:30Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "private.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale link-config.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-config.pdf: is under the home config, which is never sent"}
+
+SCENARIO: forbidden note source data/report/link-config.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/link-config.pdf'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-config.pdf: is under the home config, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:30Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-config.pdf: is under the home config, which is never sent"}
+
+SCENARIO: forbidden attachment source state/private.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/state/private.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/state/private.pdf: is under the home state, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:30Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "private.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale private.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/state/private.pdf: is under the home state, which is never sent"}
+
+SCENARIO: forbidden note source state/private.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/state/private.pdf'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/state/private.pdf: is under the home state, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:30Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/state/private.pdf: is under the home state, which is never sent"}
+
+SCENARIO: forbidden attachment source data/report/link-state.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/link-state.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-state.pdf: is under the home state, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "private.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale link-state.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-state.pdf: is under the home state, which is never sent"}
+
+SCENARIO: forbidden note source data/report/link-state.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/link-state.pdf'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-state.pdf: is under the home state, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-state.pdf: is under the home state, which is never sent"}
+
+SCENARIO: forbidden attachment source projects/private.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/projects/private.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/projects/private.pdf: is under the home projects, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "private.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale private.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/projects/private.pdf: is under the home projects, which is never sent"}
+
+SCENARIO: forbidden note source projects/private.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/projects/private.pdf'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/projects/private.pdf: is under the home projects, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/projects/private.pdf: is under the home projects, which is never sent"}
+
+SCENARIO: forbidden attachment source data/report/link-projects.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/link-projects.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-projects.pdf: is under the home projects, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "private.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale link-projects.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-projects.pdf: is under the home projects, which is never sent"}
+
+SCENARIO: forbidden note source data/report/link-projects.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/link-projects.pdf'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-projects.pdf: is under the home projects, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/link-projects.pdf: is under the home projects, which is never sent"}
+
+SCENARIO: forbidden source .env
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/.env' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/.env: is under the home .env, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": ".env", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale .env a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/.env: is under the home .env, which is never sent"}
+
+SCENARIO: forbidden source data/report/.env.local
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/.env.local' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/.env.local: is an .env source, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": ".env.local", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale .env.local a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/.env.local: is an .env source, which is never sent"}
+
+SCENARIO: forbidden source data/top.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/top.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/top.pdf: is a data/ bookkeeping file, not a data/<task>/ deliverable
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "top.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale top.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/top.pdf: is a data/ bookkeeping file, not a data/<task>/ deliverable"}
+
+SCENARIO: forbidden source data/outbound/private.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/outbound/private.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/outbound/private.pdf: is in the send log folder data/outbound/
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "private.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale private.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/outbound/private.pdf: is in the send log folder data/outbound/"}
+
+SCENARIO: forbidden source data/report/state/private.pdf
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/state/private.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/state/private.pdf: is under a state folder, which is never sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "private.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale private.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/state/private.pdf: is under a state folder, which is never sent"}
+
+SCENARIO: unsupported attachment type report.md
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.md' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/report.md: Markdown must be rendered to PDF first
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.md", "sha256": "d8b5f0bd4eefed4bb39c33fda5266b21f9e2ba7dbfc4d233a0cbcfeb1c0023f2", "bytes": 16}], "mode": "attachment", "order": "mándale report.md a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/report.md: Markdown must be rendered to PDF first"}
+
+SCENARIO: unsupported attachment type notes.txt
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/notes.txt' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/notes.txt: file type not allowed; send only .pdf .png .jpg .jpeg .docx .xlsx
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "notes.txt", "sha256": "d8b5f0bd4eefed4bb39c33fda5266b21f9e2ba7dbfc4d233a0cbcfeb1c0023f2", "bytes": 16}], "mode": "attachment", "order": "mándale notes.txt a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/notes.txt: file type not allowed; send only .pdf .png .jpg .jpeg .docx .xlsx"}
+
+SCENARIO: attachment outside data refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/order.txt' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/order.txt: is outside data/; only data/<task>/ deliverables are sent
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:31Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "order.txt", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale order.txt a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/order.txt: is outside data/; only data/<task>/ deliverables are sent"}
+
+SCENARIO: above cap refuses with manual-link guidance: FM_DELIVER_MAX_BYTES
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: the files total 643 bytes, above the FM_DELIVER_MAX_BYTES cap of 642 bytes
+SMTP messages: 11 -> 11; connections: 11 -> 11
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": null, "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: the files total 643 bytes, above the FM_DELIVER_MAX_BYTES cap of 642 bytes"}
+
+SCENARIO: exact cap permits send: FM_DELIVER_MAX_BYTES
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 11 -> 12; connections: 11 -> 12
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895222.25682.5013085431009584057@rg-mac-mini.local>"}
+
+SCENARIO: above cap refuses with manual-link guidance: FM_MAIL_MAX_ATTACH_BYTES
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: the files total 643 bytes, above the mail attachment cap of 642 bytes (FM_MAIL_MAX_ATTACH_BYTES); send them as a link instead, a manual step today
+SMTP messages: 12 -> 12; connections: 12 -> 12
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": null, "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: the files total 643 bytes, above the mail attachment cap of 642 bytes (FM_MAIL_MAX_ATTACH_BYTES); send them as a link instead, a manual step today"}
+
+SCENARIO: exact cap permits send: FM_MAIL_MAX_ATTACH_BYTES
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 643 bytes
+
+SMTP messages: 12 -> 13; connections: 12 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895249.25713.529596226505368558@rg-mac-mini.local>"}
+
+SCENARIO: raw secret refuses: -----BEGIN PRIVATE KEY-----
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/raw-secret.png' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern private-key header
+SMTP messages: 13 -> 13; connections: 13 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "raw-secret.png", "sha256": "6a2834a06336f13ec1537b95de43facb2be85a7334dcb0af7c9c941d8402846c", "bytes": 95}], "mode": "attachment", "order": "mándale raw-secret.png a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern private-key header"}
+
+SCENARIO: raw secret refuses: ghp_
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/raw-secret.png' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern ghp_ token
+SMTP messages: 13 -> 13; connections: 13 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "raw-secret.png", "sha256": "29f9e87b606c21f85a5755bb582feb0803ba3cebf3679eac526d55bae84c483e", "bytes": 80}], "mode": "attachment", "order": "mándale raw-secret.png a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern ghp_ token"}
+
+SCENARIO: raw secret refuses: github_pat_
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/raw-secret.png' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern github_pat_ token
+SMTP messages: 13 -> 13; connections: 13 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "raw-secret.png", "sha256": "77b7f5591f9eb568a8431e2b140b6646fc7c117dc982f780f585b556eb1ef292", "bytes": 87}], "mode": "attachment", "order": "mándale raw-secret.png a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern github_pat_ token"}
+
+SCENARIO: raw secret refuses: AKIA
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/raw-secret.png' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern AKIA key id
+SMTP messages: 13 -> 13; connections: 13 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "raw-secret.png", "sha256": "56313f5162b888a56226a4f1893dd51c7817b71f78888d0bc66cf5462ba6518e", "bytes": 80}], "mode": "attachment", "order": "mándale raw-secret.png a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern AKIA key id"}
+
+SCENARIO: raw secret refuses: password=
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/raw-secret.png' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern password=
+SMTP messages: 13 -> 13; connections: 13 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "raw-secret.png", "sha256": "ff2ca8a91ba18ca8053f72ee8f403133c2f64d2a5a5823214a731e4b5da83563", "bytes": 85}], "mode": "attachment", "order": "mándale raw-secret.png a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern password="}
+
+SCENARIO: raw secret refuses: FM_MAIL_PASS=
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/raw-secret.png' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern FM_MAIL_PASS
+SMTP messages: 13 -> 13; connections: 13 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:32Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "raw-secret.png", "sha256": "ee6f6ca2281515e1e8ba81e18ea330ac639e9c9147a045eec8b24cd79a8f2920", "bytes": 89}], "mode": "attachment", "order": "mándale raw-secret.png a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern FM_MAIL_PASS"}
+
+SCENARIO: raw secret refuses: xoxb-
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/raw-secret.png' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern Slack token
+SMTP messages: 13 -> 13; connections: 13 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "raw-secret.png", "sha256": "3b2dba91b04ee89036e7b5894d6fd120eb772f355610d52006181b0ca172d983", "bytes": 81}], "mode": "attachment", "order": "mándale raw-secret.png a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern Slack token"}
+
+SCENARIO: raw secret refuses: sk-
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/raw-secret.png' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern sk- key
+SMTP messages: 13 -> 13; connections: 13 -> 13
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "raw-secret.png", "sha256": "65662cb007c2e1f90c2933e83d148d18458971f971cad725eac26313c8897905", "bytes": 93}], "mode": "attachment", "order": "mándale raw-secret.png a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/raw-secret.png: matches the secret pattern sk- key"}
+
+SCENARIO: compressed final archive member sends docx
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/safe.docx' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 467 bytes
+
+SMTP messages: 13 -> 14; connections: 13 -> 14
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "safe.docx", "sha256": "628fd7f43cc9a7403ef156ad4c2ff8d487ba1485d5911fd7f714f3303ccb870a", "bytes": 467}], "mode": "attachment", "order": "mándale safe.docx a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895328.25845.14987981277072194699@rg-mac-mini.local>"}
+
+SCENARIO: compressed final archive member refuses docx
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/leak.docx' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/leak.docx: matches the secret pattern password=
+SMTP messages: 14 -> 14; connections: 14 -> 14
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "leak.docx", "sha256": "200b2aa18b1b80dae6acf2661d0f0e73a6e8e8b2ec9b65dd2682b94954cfee03", "bytes": 467}], "mode": "attachment", "order": "mándale leak.docx a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/leak.docx: matches the secret pattern password="}
+
+SCENARIO: broken archive refuses docx
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/leak.docx' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/leak.docx: cannot decode document content for the secret scan
+SMTP messages: 14 -> 14; connections: 14 -> 14
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "leak.docx", "sha256": "a3989126344744ef800dbc88bf7e744853f3f2eac75c9ab3301f4e845ef22078", "bytes": 9}], "mode": "attachment", "order": "mándale leak.docx a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/leak.docx: cannot decode document content for the secret scan"}
+
+SCENARIO: compressed final archive member sends xlsx
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/safe.xlsx' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 467 bytes
+
+SMTP messages: 14 -> 15; connections: 14 -> 15
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "safe.xlsx", "sha256": "628fd7f43cc9a7403ef156ad4c2ff8d487ba1485d5911fd7f714f3303ccb870a", "bytes": 467}], "mode": "attachment", "order": "mándale safe.xlsx a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895363.25888.9179674331481806774@rg-mac-mini.local>"}
+
+SCENARIO: compressed final archive member refuses xlsx
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/leak.xlsx' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/leak.xlsx: matches the secret pattern password=
+SMTP messages: 15 -> 15; connections: 15 -> 15
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "leak.xlsx", "sha256": "200b2aa18b1b80dae6acf2661d0f0e73a6e8e8b2ec9b65dd2682b94954cfee03", "bytes": 467}], "mode": "attachment", "order": "mándale leak.xlsx a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/leak.xlsx: matches the secret pattern password="}
+
+SCENARIO: broken archive refuses xlsx
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/leak.xlsx' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/leak.xlsx: cannot decode document content for the secret scan
+SMTP messages: 15 -> 15; connections: 15 -> 15
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "leak.xlsx", "sha256": "a3989126344744ef800dbc88bf7e744853f3f2eac75c9ab3301f4e845ef22078", "bytes": 9}], "mode": "attachment", "order": "mándale leak.xlsx a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/leak.xlsx: cannot decode document content for the secret scan"}
+
+SCENARIO: PDF filter direct safe sends
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-direct.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 621 bytes
+
+SMTP messages: 15 -> 16; connections: 15 -> 16
+persisted attempt: {"at": "2026-10-23T23:42:33Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-direct.pdf", "sha256": "2268ef0205519330e934219ffd9b07472c115cc9bbcf331050a1b41598c51a42", "bytes": 621}], "mode": "attachment", "order": "mándale filter-direct.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895396.25942.12311661909487365466@rg-mac-mini.local>"}
+
+SCENARIO: PDF filter direct secret refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-direct.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-direct.pdf: matches the secret pattern password=
+SMTP messages: 16 -> 16; connections: 16 -> 16
+persisted attempt: {"at": "2026-10-23T23:42:34Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-direct.pdf", "sha256": "c45ab2bdee876149a959a7be11b34b44cfc4a9d10bdd0bb9b2309f964504bae4", "bytes": 620}], "mode": "attachment", "order": "mándale filter-direct.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-direct.pdf: matches the secret pattern password="}
+
+SCENARIO: PDF filter array safe sends
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-array.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 623 bytes
+
+SMTP messages: 16 -> 17; connections: 16 -> 17
+persisted attempt: {"at": "2026-10-23T23:42:34Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-array.pdf", "sha256": "8d8f5281ef7cff3016719735341ce20978e5ff89b99c7da6eb2acc091ffcf971", "bytes": 623}], "mode": "attachment", "order": "mándale filter-array.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895424.26070.13227360496095474723@rg-mac-mini.local>"}
+
+SCENARIO: PDF filter array secret refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-array.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-array.pdf: matches the secret pattern password=
+SMTP messages: 17 -> 17; connections: 17 -> 17
+persisted attempt: {"at": "2026-10-23T23:42:34Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-array.pdf", "sha256": "db17f9303b6430f1063f9fd4cf7944e63f8ec6339555f5b505f1422eb68c6524", "bytes": 622}], "mode": "attachment", "order": "mándale filter-array.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-array.pdf: matches the secret pattern password="}
+
+SCENARIO: PDF filter indirect-name safe sends
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-indirect-name.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 642 bytes
+
+SMTP messages: 17 -> 18; connections: 17 -> 18
+persisted attempt: {"at": "2026-10-23T23:42:34Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-indirect-name.pdf", "sha256": "0d3b64984d37b2be51a06dab2a342e636ef29370a517427615a4e017a9396764", "bytes": 642}], "mode": "attachment", "order": "mándale filter-indirect-name.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895450.26254.15353278610103950403@rg-mac-mini.local>"}
+
+SCENARIO: PDF filter indirect-name secret refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-indirect-name.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-indirect-name.pdf: matches the secret pattern password=
+SMTP messages: 18 -> 18; connections: 18 -> 18
+persisted attempt: {"at": "2026-10-23T23:42:34Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-indirect-name.pdf", "sha256": "ff5c6dd4f3d034d7e55895b25e1b312b55530efb3aea8ad40295c9555d36f3a1", "bytes": 641}], "mode": "attachment", "order": "mándale filter-indirect-name.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-indirect-name.pdf: matches the secret pattern password="}
+
+SCENARIO: PDF filter indirect-array safe sends
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-indirect-array.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 644 bytes
+
+SMTP messages: 18 -> 19; connections: 18 -> 19
+persisted attempt: {"at": "2026-10-23T23:42:34Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-indirect-array.pdf", "sha256": "ec88e2182712bf1954007833351ac3caf0338e3f712f086bbdd55e1fd74682fb", "bytes": 644}], "mode": "attachment", "order": "mándale filter-indirect-array.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895478.26518.4128772173698429252@rg-mac-mini.local>"}
+
+SCENARIO: PDF filter indirect-array secret refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-indirect-array.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-indirect-array.pdf: matches the secret pattern password=
+SMTP messages: 19 -> 19; connections: 19 -> 19
+persisted attempt: {"at": "2026-10-23T23:42:34Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-indirect-array.pdf", "sha256": "668eb36bea5f334dd32865abb7e50845738c35cde80397e10c2c592e8986aa9b", "bytes": 643}], "mode": "attachment", "order": "mándale filter-indirect-array.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-indirect-array.pdf: matches the secret pattern password="}
+
+SCENARIO: PDF filter escaped safe sends
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-escaped.pdf' --order-file '<lab>/order.txt'
+exit: 0
+sent: internal email i***@lab.invalid 1 file(s) 623 bytes
+
+SMTP messages: 19 -> 20; connections: 19 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:34Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-escaped.pdf", "sha256": "0ed2e3fc890fb836985bff4d248a22bf26c8dd8aeead1d3367912c37529fe999", "bytes": 623}], "mode": "attachment", "order": "mándale filter-escaped.pdf a internal", "confirmation": null, "result": "sent", "detail": "sent to i***@lab.invalid (attachments: 1) message-id: <179279895509.26801.18005608443096153894@rg-mac-mini.local>"}
+
+SCENARIO: PDF filter escaped secret refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/filter-escaped.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-escaped.pdf: matches the secret pattern password=
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "filter-escaped.pdf", "sha256": "be2952edd4c09a9611063adb7fc88de1787fabecca4279e3106ac73c9f3b1c63", "bytes": 622}], "mode": "attachment", "order": "mándale filter-escaped.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-escaped.pdf: matches the secret pattern password="}
+
+SCENARIO: unsupported PDF representation refuses: missing-reference
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/unsupported-missing-reference.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-missing-reference.pdf: PDF stream Filter reference cannot be resolved
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "unsupported-missing-reference.pdf", "sha256": "6cb93bcaf7aabe4286a88cf71e192b9fe1fba4b51d8fb1b990eb929e86ab89bb", "bytes": 607}], "mode": "attachment", "order": "mándale unsupported-missing-reference.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-missing-reference.pdf: PDF stream Filter reference cannot be resolved"}
+
+SCENARIO: unsupported PDF representation refuses: indirect-chain
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/unsupported-indirect-chain.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-indirect-chain.pdf: PDF stream uses an unsupported Filter or filter chain
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "unsupported-indirect-chain.pdf", "sha256": "10bf2d1b6a6dbd5553d90c14a7410bf89093eea620fd15509074cc705e870690", "bytes": 650}], "mode": "attachment", "order": "mándale unsupported-indirect-chain.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-indirect-chain.pdf: PDF stream uses an unsupported Filter or filter chain"}
+
+SCENARIO: unsupported PDF representation refuses: other-filter
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/unsupported-other-filter.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-other-filter.pdf: PDF stream uses an unsupported Filter or filter chain
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "unsupported-other-filter.pdf", "sha256": "b6c122371c14e7e66fa0fd7074e60d7dd688f38fc9dd79c56ac776f776905a3e", "bytes": 616}], "mode": "attachment", "order": "mándale unsupported-other-filter.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-other-filter.pdf: PDF stream uses an unsupported Filter or filter chain"}
+
+SCENARIO: unsupported PDF representation refuses: array-reference
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/unsupported-array-reference.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-array-reference.pdf: PDF stream uses an unsupported Filter or filter chain
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "unsupported-array-reference.pdf", "sha256": "c90dc7fb5dcc138f3576d277f34704a753419118469ba2b389d554fb715042dc", "bytes": 637}], "mode": "attachment", "order": "mándale unsupported-array-reference.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-array-reference.pdf: PDF stream uses an unsupported Filter or filter chain"}
+
+SCENARIO: unsupported PDF representation refuses: broken-stream
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/unsupported-broken-stream.pdf' --order-file '<lab>/order.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-broken-stream.pdf: cannot decode document content for the secret scan
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "unsupported-broken-stream.pdf", "sha256": "66968cf9622ab056d65a71ce849bb20e61bb09913380211faeb39c3e9203bb05", "bytes": 572}], "mode": "attachment", "order": "mándale unsupported-broken-stream.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-broken-stream.pdf: cannot decode document content for the secret scan"}
+
+SCENARIO: compressed secret in PDF covering note refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/filter-indirect-name.pdf'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-indirect-name.pdf: matches the secret pattern password=
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/filter-indirect-name.pdf: matches the secret pattern password="}
+
+SCENARIO: unsupported PDF filter also refuses preview
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/unsupported-other-filter.pdf' --order-file '<lab>/order.txt' --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/unsupported-other-filter.pdf: PDF stream uses an unsupported Filter or filter chain
+SMTP messages: 20 -> 20; connections: 20 -> 20
+
+SCENARIO: unsafe or empty covering note refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/note.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/note.txt: matches the secret pattern password=
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/note.txt: matches the secret pattern password="}
+
+SCENARIO: unsafe or empty covering note refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/note.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/note.txt: matches the secret pattern ghp_ token
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:35Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/note.txt: matches the secret pattern ghp_ token"}
+
+SCENARIO: unsafe or empty covering note refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/note.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: note file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/note.txt is empty
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: note file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/note.txt is empty"}
+
+SCENARIO: invalid UTF-8 covering note refuses
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/note.txt'
+exit: 5
+
+fm-deliver: preflight refused the send: note file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/note.txt is not valid UTF-8
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: note file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/note.txt is not valid UTF-8"}
+
+SCENARIO: unreadable order logs the attempt
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/missing'
+exit: 1
+
+fm-deliver: cannot read order file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/missing: No such file or directory
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "internal", "channel": null, "masked_address": null, "files": [{"name": "report.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": null, "confirmation": null, "result": "error", "detail": "cannot read order file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/missing: No such file or directory"}
+
+SCENARIO: unreadable confirm logs the attempt
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --confirm-file '<lab>/home/data/report/missing'
+exit: 1
+
+fm-deliver: cannot read confirm file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/missing: No such file or directory
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "internal", "channel": null, "masked_address": null, "files": [{"name": "report.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "error", "detail": "cannot read confirm file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/missing: No such file or directory"}
+
+SCENARIO: unreadable note logs the attempt
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --note-file '<lab>/home/data/report/missing'
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/missing: not found
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NGH4HEX9Q5GZW2RAFHEGE2/.test-outbound/live/home/data/report/missing: not found"}
+
+SCENARIO: invalid cap logs attempt: FM_DELIVER_MAX_BYTES
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 1
+
+fm-deliver: FM_DELIVER_MAX_BYTES must be a positive integer, got: invalid
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "internal", "channel": null, "masked_address": null, "files": [{"name": "report.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "error", "detail": "FM_DELIVER_MAX_BYTES must be a positive integer, got: invalid"}
+
+SCENARIO: invalid cap logs attempt: FM_MAIL_MAX_ATTACH_BYTES
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 1
+
+fm-deliver: FM_MAIL_MAX_ATTACH_BYTES must be a positive integer, got: invalid
+SMTP messages: 20 -> 20; connections: 20 -> 20
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "internal", "channel": null, "masked_address": null, "files": [{"name": "report.pdf", "sha256": null, "bytes": null}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "error", "detail": "FM_MAIL_MAX_ATTACH_BYTES must be a positive integer, got: invalid"}
+
+SCENARIO: removed subject option refuses argument parsing
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt' --subject Override
+exit: 1
+
+usage: fm-deliver.sh [-h] --order-file ORDER_FILE
+                     [--confirm-file CONFIRM_FILE] [--note-file NOTE_FILE]
+                     [--allow-away] [--dry-run]
+                     contact_id files [files ...]
+fm-deliver: unrecognized arguments: --subject
+SMTP messages: 20 -> 20; connections: 20 -> 20
+
+SCENARIO: SMTP rejection reports masked error and logs the failure
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh reject '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 7
+
+fm-mail send refused recipients: r***@lab.invalid
+fm-deliver: the mail plane failed: fm-mail send refused recipients: r***@lab.invalid
+SMTP messages: 20 -> 20; connections: 20 -> 21
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "reject", "channel": "email", "masked_address": "r***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a reject", "confirmation": null, "result": "error", "detail": "the mail plane failed: fm-mail send refused recipients: r***@lab.invalid"}
+
+SCENARIO: unavailable SMTP reports connection failure and logs it
+$ FM_HOME=<disposable-home> bin/fm-deliver.sh internal '<lab>/home/data/report/report.pdf' --order-file '<lab>/order.txt'
+exit: 7
+
+fm-deliver: the mail plane failed: fm-mail send error: [Errno 61] Connection refused
+SMTP messages: 20 -> 20; connections: 21 -> 21
+persisted attempt: {"at": "2026-10-23T23:42:36Z", "contact_id": "internal", "channel": "email", "masked_address": "i***@lab.invalid", "files": [{"name": "report.pdf", "sha256": "472d11869e3d6f77c60f4eb95dbbaaf74cdf5c0e56ab20c55db167f2316cd43b", "bytes": 643}], "mode": "attachment", "order": "mándale report.pdf a internal", "confirmation": null, "result": "error", "detail": "the mail plane failed: fm-mail send error: [Errno 61] Connection refused"}
+
+All live CLI and SMTP assertions passed. Messages received: 20

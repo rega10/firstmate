@@ -1,0 +1,14 @@
+ok - fm-contacts: add validates, stores, and prints a contact
+ok - fm-contacts: add refuses invalid fields with a clear reason
+ok - fm-contacts: preferred channels may lack addresses on add and load
+ok - fm-contacts: add refuses a duplicate id
+ok - fm-contacts: contacts may share addresses on every channel
+ok - fm-contacts: list prints one masked line per contact
+ok - fm-contacts: list and resolve share preference order and masking for every channel
+ok - fm-contacts: show prints one full entry
+ok - fm-contacts: resolve scores exact, prefix, fuzzy, ambiguous, and missing names
+ok - fm-contacts: resolve matches names and aliases without matching ids
+ok - fm-contacts: a missing book is an empty book
+ok - fm-contacts: a book whose version is not 1 is refused
+ok - fm-contacts: --help and usage errors
+ok - fm-contacts: add and every reader require a single email mailbox

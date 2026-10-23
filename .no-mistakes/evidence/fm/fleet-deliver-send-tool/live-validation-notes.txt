@@ -1,0 +1,30 @@
+The test step drove the unmodified bin/fm-deliver.sh, bin/fm-contacts.sh, and bin/fm-mail.sh interfaces.
+The disposable FM_HOME and TLS SMTP receiver existed only under .test-outbound/ in the gate worktree.
+No production account, fleet state, credential store, or external recipient was used.
+
+Baseline commands:
+- TMPDIR="$PWD/.test-outbound/tmp" bash tests/fm-deliver.test.sh
+- TMPDIR="$PWD/.test-outbound/tmp" bash tests/fm-contacts.test.sh
+Both commands passed. These existing tests use a substitute mail plane and are supplementary, not live SMTP evidence.
+
+Live command:
+PATH="$PWD/.test-outbound/python/cpython-3.13.17-macos-aarch64-none/bin:$PATH" python3 .test-outbound/live-send.py
+
+The system Python 3.9 / LibreSSL did not trust the fixture certificate through SSL_CERT_FILE.
+The test downloaded uv and Python 3.13.17 entirely inside .test-outbound/ without global installation or configuration.
+Python 3.13.17 honored the disposable trust setting. Certificate verification stayed enabled.
+The receiver bound an ephemeral 127.0.0.1 port and spoke SMTP over implicit TLS with synthetic authentication.
+No product implementation, mail-plane script, Python library, or SMTP client was replaced.
+The live-send-driver.py artifact preserves the receiver and scenario driver for reproduction.
+
+The final run passed 95 public-command cases and received 20 complete SMTP messages.
+The SMTP receiver shut down in the driver's finally block.
+The test removed the disposable home, certificates, local Python, uv, and transient test files after evidence capture.
+The received-external.eml artifact contains the actual MIME message with two byte-verified attachments and Spanish covering text.
+The live-sends.jsonl artifact contains actual persisted attempts, including refusals and transport failures.
+The live-send-transcript.txt artifact contains public CLI output with persisted state and SMTP connection/delivery counts.
+The live-smtp-sessions.json artifact records actual SMTP dialogue events, excluding authentication material.
+
+This is a command-line change. There is no browser or native graphical surface to capture.
+The authoritative decision to refuse oversized attachments with manual-link guidance was retained and exercised.
+No source or test changes were needed.
