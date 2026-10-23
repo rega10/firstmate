@@ -30,8 +30,8 @@
 # prints, or logs it. Every attempt that passed argument parsing appends one
 # JSON line to $FM_HOME/data/outbound/sends.jsonl (FM_DATA_OVERRIDE replaces
 # $FM_HOME/data). docs/configuration.md "Outbound send" owns the preflight
-# rules, the log format, and the away rule; the agent-only `outbound-send`
-# skill owns when firstmate collects a confirmation.
+# rules, the log format, and away-mode enforcement; the agent-only
+# `outbound-send` skill owns confirmation and away authorization rules.
 #
 # Optional environment: FM_DELIVER_MAX_BYTES (default 20971520, total file
 # bytes of one send) and FM_MAIL_MAX_ATTACH_BYTES (the mail plane's

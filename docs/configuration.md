@@ -1685,6 +1685,7 @@ Unknown types and files with a recognized compression encoding, such as `.gz`, u
 Each `--cc` adds one address to the `Cc` header and the SMTP envelope.
 If SMTP refuses any recipient, `send` lists the refused addresses on stderr and exits 1 without resending or printing the success line.
 Other recipients may already have received the message, so retrying the whole send can deliver duplicates.
+Each message has a generated `Message-ID` header, and the success line includes it as `message-id: <identifier>`.
 `FM_MAIL_FROM_NAME`, when set, makes the From header that display name plus `FM_MAIL_USER`; when unset, From is the bare account.
 Subjects, bodies, display names, and attachment names are UTF-8 and are encoded 7-bit safe, so accented text survives any relay.
 
@@ -1750,10 +1751,10 @@ A missing file is an empty book, and a book whose `version` is not `1`, or that 
 | `role` | Free text that tells namesakes apart. |
 | `trust` | `self`, `internal`, or `external` (below). |
 | `language` | `es` or `en`, the language of the covering text. |
-| `preferred` | Ordered channel names from `email`, `telegram`, `imessage`, `whatsapp`; a channel may have a null address. A sender uses the first preferred channel that has an address and works today. Without `--preferred`, `add` lists the channels that have an address in that order. |
+| `preferred` | Ordered channel names from `email`, `telegram`, `imessage`, `whatsapp`; a channel may have a null address. Without `--preferred`, `add` lists the channels that have an address in that order. See [Outbound send](#outbound-send-dataoutboundsendsjsonl) for channel selection. |
 | `email` | One mailbox with exactly one `@`, a non-empty local part, and a dotted domain, or `null`; commas, semicolons, whitespace, and angle brackets are refused on add and load. |
 | `telegram_chat_id` | Numeric chat id as a string, or `null`. |
-| `imessage` | An email address or a `+<digits>` phone number, or `null`. |
+| `imessage` | One mailbox satisfying the `email` rules above, a `+<digits>` phone number, or `null`. |
 | `whatsapp` | A `+<digits>` phone number, or `null`. |
 | `added` | The `YYYY-MM-DD` date `add` stored the entry. |
 | `added_by` | The captain's words that asked for the entry. |
@@ -1772,7 +1773,7 @@ The command saves immediately without an interactive confirmation prompt.
 - `internal` is the captain's own team.
 - `external` is anyone else.
 
-Trust is the input to the send confirmation rule, which belongs to the sending surface, not to the book.
+Trust is the input to the send confirmation rule, owned by the agent-only [`outbound-send` skill](../.agents/skills/outbound-send/SKILL.md#4-when-a-confirmation-is-needed).
 
 **Resolve**
 
@@ -1811,7 +1812,7 @@ Only `show <id>` and `add` print a full entry.
 
 The send tool (`bin/fm-deliver.sh`) sends files to one contact from the contact book on the contact's preferred channel, after a preflight, and appends every attempt to the send log.
 Email through the mail plane is the only channel implemented today.
-This section is the single owner of the tool's exit codes, the preflight rules, the away rule, and the log format; the script's header and `--help` own its flags, and the agent-only `outbound-send` skill owns when firstmate collects the captain's confirmation.
+This section is the single owner of the tool's exit codes, preflight rules, away-mode enforcement, and log format; the script's header and `--help` own its flags, and the agent-only [`outbound-send` skill](../.agents/skills/outbound-send/SKILL.md) owns the confirmation and away authorization rules.
 
 **Command**
 
@@ -1823,16 +1824,16 @@ av inject +FM_MAIL_PASS -- bin/fm-deliver.sh <contact-id> <file>... --order-file
 - `<contact-id>` must be an id in `data/contacts.json`; any other value, a raw address included, is refused, so a new address goes through the book's add flow first.
 - `--order-file` holds the captain's exact words that ordered this send and is required.
 - `--confirm-file` holds the captain's exact confirmation words.
-  It is required for an `external` contact and optional for `self` and `internal` contacts.
-  When it is given, its complete normalized text must equal an accepted form from the `outbound-send` skill, ignoring case, accents, and punctuation.
-  Additional words refuse the confirmation.
+  The tool requires it for an `external` contact and validates any supplied confirmation against the [skill's accepted answers](../.agents/skills/outbound-send/SKILL.md#4-when-a-confirmation-is-needed).
+  The skill governs firstmate's additional confirmation requirements.
 - `--note-file` holds the covering text.
   Without it, the text is one line in the contact's language (`Le comparto el archivo adjunto.` or `Please find the file attached.`, plural for several files) and a line with the file names.
-- `--dry-run` runs every check except the confirmation and prints the confirmation card: the recipient's name and role, the channel, the masked address, each file with its size, attachment or link, the subject, and the first line of the covering text.
+- `--dry-run` runs every check except the confirmation and prints the confirmation card: the recipient's name and role, the channel, the masked address, each file with its size, attachment delivery, the subject, and the first line of the covering text.
   It sends nothing and writes no log line.
 
 The subject is `Documento: <first file name>` or `Document: <first file name>`, according to the contact's language.
 The first preferred channel that has an address is the channel.
+If that channel is not implemented, the tool refuses instead of trying a later preferred channel.
 An email send runs `bin/fm-mail.sh send --attach <file>... -- <address> <subject> -` with the covering text on stdin and the environment passed through unchanged, so the password reaches the mail plane only through `av inject`.
 The tool never reads, prints, or logs `FM_MAIL_PASS`, and the address appears in no argv except that mail-plane call.
 On success it prints one receipt line, `sent: <contact name> <channel> <masked address> <n> file(s) <total bytes> bytes`.
@@ -1851,7 +1852,7 @@ On success it prints one receipt line, `sent: <contact name> <channel> <masked a
 **Away and quiet mode**
 
 The tool refuses with exit 4 while `state/.afk-contract` or `state/.afk` exists, unless `--allow-away` is passed.
-Firstmate passes it only when the captain's away words name that specific send, or for the captain's own `self` contact.
+The [skill's away and quiet rules](../.agents/skills/outbound-send/SKILL.md#5-away-and-quiet-mode) govern when firstmate may pass it.
 
 **Preflight**
 
@@ -1876,7 +1877,7 @@ Covering notes must pass the same location checks and secret scan before they be
 They must be regular, non-empty UTF-8 files within the per-file size cap; their extension is unrestricted.
 
 Files above the attachment cap must go as a link.
-The tool does not make links today: firstmate uploads the file and sends the link in a covering note as a manual step, on the captain's own instruction.
+The tool refuses these files and does not make or send links today; link delivery is a manual step outside this tool, on the captain's own instruction.
 
 **Send log**
 
@@ -1893,15 +1894,15 @@ The folder is created with mode 0700 and the file with mode 0600.
 | `contact_id` | The id as given. |
 | `channel` | The chosen channel, or `null` before one is known. |
 | `masked_address` | The address masked as in the contact book's `list`, or `null`. |
-| `files` | One `{name, sha256, bytes}` per file; `sha256` and `bytes` are `null` for a file the location checks refused or could not read. |
+| `files` | One `{name, sha256, bytes}` per file. Metadata not yet collected is `null`; a file above the per-file read cap has its size but no hash. |
 | `mode` | `attachment`, the only mode today. |
-| `order` | The captain's order words, exactly, or `null` if the order file could not be read. |
-| `confirmation` | The captain's confirmation words exactly, or `null`. |
+| `order` | The captain's order words with trailing CR/LF characters removed, or `null` if the order file could not be read or decoded, or was empty. |
+| `confirmation` | The captain's confirmation words with trailing CR/LF characters removed, or `null` when absent, unreadable, undecodable, empty, or not yet read. |
 | `result` | `sent`, `refused`, or `error`. |
 | `detail` | The mail plane's `sent to` line, the refusal reason, or the error, with the address masked. |
 
 The log never holds the full address, the covering text, a link URL, or any file content.
-The mail plane sets a Message-ID header before sending and includes that identifier in the successful `sent to` line recorded in `detail`.
+The successful `sent to` line recorded in `detail` includes the identifier described under [Sending mail](#mail-plane-env).
 File-read and cap-validation failures are logged after argument parsing; the log itself must be writable.
 
 ## Relay (.env)

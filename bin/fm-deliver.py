@@ -13,7 +13,7 @@
 #   FM_DELIVER_CONTACTS_PY   bin/fm-contacts.py, whose reader and masking this
 #                            engine reuses so the book schema has one owner
 # docs/configuration.md "Outbound send" owns the exit codes, the preflight
-# rules, the log format, and the away rule. Standard library only, so it runs
+# rules, the log format, and away-mode enforcement. Standard library only, so it runs
 # under the system Python 3.9 with `python3 -I`. It never reads FM_MAIL_PASS:
 # the environment passes through to fm-mail.sh unchanged.
 import argparse
@@ -398,9 +398,9 @@ def attempt(args, config, confirmation, entry):
     """Run the checks and the send, filling `entry` as facts become known.
     Returns the receipt line (None for a dry run), or raises Refusal."""
     home, data, mail, contacts, max_bytes, attach_cap = config
-    # The files are checked first so every logged attempt carries their hashes,
-    # but a preflight problem is reported only after the contact, channel,
-    # confirmation, and away checks.
+    # After input and cap validation, collect file metadata before recipient
+    # checks so later refusals retain it. Report preflight problems only after
+    # the contact, channel, confirmation, and away checks.
     records, problems, total = preflight(args.files, home, data, max_bytes, attach_cap)
     entry['files'] = [{k: r[k] for k in ('name', 'sha256', 'bytes')} for r in records]
     note = None
