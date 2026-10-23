@@ -28,7 +28,7 @@
 #                        owner's confirmation. The caller decides what to ask.
 #
 # Every other failure (usage, validation, an unreadable or unsupported book)
-# exits 1 with one `fm-contacts:` line on stderr.
+# exits 1.
 #
 # The book is $FM_HOME/data/contacts.json (FM_DATA_OVERRIDE replaces
 # $FM_HOME/data), home-private and gitignored; a missing file is an empty book.
