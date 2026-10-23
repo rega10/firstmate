@@ -1740,9 +1740,15 @@ A missing file is an empty book, and a book whose `version` is not `1`, or that 
 | `imessage` | An email address or a `+<digits>` phone number, or `null`. |
 | `whatsapp` | A `+<digits>` phone number, or `null`. |
 | `added` | The `YYYY-MM-DD` date `add` stored the entry. |
-| `added_by` | Free text, normally the captain's words that asked for the entry. |
+| `added_by` | The captain's words that asked for the entry. |
 
 Every entry needs at least one address and a unique id; entries may share addresses on any channel.
+
+**Adding a contact**
+
+Before invoking `add`, firstmate reads the proposed entry back to the captain: name, aliases, channel, masked address, language, and trust.
+Firstmate invokes `add` only after the captain says yes and records the captain's words that asked for the entry in `added_by`.
+The command saves immediately without an interactive confirmation prompt.
 
 **Trust**
 
@@ -1763,7 +1769,7 @@ Each contact's `name` and `aliases` are normalized the same way and scored in ti
 
 Each contact keeps its best tier, and `distance` is the edit distance to the candidate that gave it.
 Resolution is a cascade: when any contact matches exactly, only exact matches are listed, and otherwise every prefix and fuzzy match is listed.
-Output is one JSON object, `{"query", "normalized", "matches": [{"id", "name", "tier", "distance", "masked_email"}]}`, with matches sorted by tier, then distance, then id.
+Output is one JSON object, `{"query", "normalized", "matches": [{"id", "name", "role", "tier", "distance", "masked_address"}]}`, with matches sorted by tier, then distance, then id.
 
 | Exit | Meaning |
 | --- | --- |
@@ -1773,11 +1779,16 @@ Output is one JSON object, `{"query", "normalized", "matches": [{"id", "name", "
 | 1 | An error: usage, validation, or an unreadable or refused book. |
 
 The caller, not the book, decides what to ask.
+When multiple contacts match, the caller presents them as a numbered list with each contact's name, role, and masked address.
 
 **Masking**
 
 `list` and `resolve` never print a full address.
+Both select the first channel in `preferred` that has an address, without checking channel availability.
 A masked email is the first character of the local part, `***`, and then `@` and the domain, such as `p***@example.com`.
+Other channels show `***` and the last three characters, such as `***901`; addresses of three characters or fewer hide the first character and show the rest.
+This suffix rule also applies to iMessage email addresses.
+If no preferred channel has an address, `masked_address` is `null` in `resolve`, and `list` shows `-`.
 Only `show <id>` and `add` print a full entry.
 
 ## Relay (.env)

@@ -15,10 +15,11 @@
 #                        JSON. Refuses an invalid field or a duplicate id. Without
 #                        --preferred, the channels that have an address are
 #                        preferred in the order email, telegram, imessage,
-#                        whatsapp.
+#                        whatsapp. Invoke only after caller confirmation;
+#                        see --help and docs/configuration.md "Contact book".
 #   list                 One tab-separated line per contact: id, name, role,
-#                        trust, and the masked email. Never prints a full
-#                        address.
+#                        trust, and the masked preferred address. Never prints
+#                        a full address.
 #   show <id>            Print one full entry as JSON.
 #   resolve <spoken words>...
 #                        Normalize the words and print scored matches as one
@@ -55,6 +56,12 @@ fm-contacts.sh add --id <id> --name <name> [--alias <a>]... --role <text>
 fm-contacts.sh list
 fm-contacts.sh show <id>
 fm-contacts.sh resolve <spoken words>...
+
+Before invoking add, firstmate must read the entry back to the owner:
+name, aliases, channel, masked address, language, and trust.
+Invoke add only after the owner says yes, recording the owner's words
+that asked for the entry in --added-by.
+The add command saves immediately and does not prompt for confirmation.
 EOF
 }
 

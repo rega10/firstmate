@@ -56,7 +56,7 @@ test_add_stores_entry() {
   home=$(new_home add)
   contacts "$home" add --id site-it-lead --name "José Pérez" --alias "el de sistemas" \
     --role "Site IT" --trust external --language es --email jose.perez@example.com \
-    --added-by "captain words"
+    --added-by "captain words" </dev/null
   rc=$?
   expect_code 0 "$rc" "add of a valid contact"
   book="$home/data/contacts.json"
@@ -68,6 +68,7 @@ test_add_stores_entry() {
   assert_equals "$(date +%Y-%m-%d)" "$(json_field "$book" 'd["contacts"][0]["added"]')" "added is today's date"
   assert_grep '"José Pérez"' "$book" "the book is written as UTF-8 text, not ASCII escapes"
   assert_equals "jose.perez@example.com" "$(json_field "$TMP_ROOT/out" 'd["email"]')" "add prints the stored entry as JSON"
+  assert_equals "captain words" "$(json_field "$book" 'd["contacts"][0]["added_by"]')" "add records the captain's words without prompting"
   mode=$(python3 -I -c 'import os, sys; print(oct(os.stat(sys.argv[1]).st_mode & 0o777)[2:])' "$book")
   assert_equals "600" "$mode" "the book is private (0600)"
   pass "fm-contacts: add validates, stores, and prints a contact"
@@ -191,6 +192,66 @@ test_list_masks_addresses() {
   pass "fm-contacts: list prints one masked line per contact"
 }
 
+test_preferred_address_masking() {
+  local home kind channel missing masked address rc out
+  local address_args=()
+  for kind in email telegram imessage whatsapp imessage-email telegram-short telegram-single; do
+    channel=$kind
+    case "$kind" in
+      email) address=person@example.com; masked='p***@example.com'; address_args=(--email "$address") ;;
+      telegram) address=-123456789; masked='***789'; address_args=(--telegram-chat-id="$address") ;;
+      imessage) address=+12345678901; masked='***901'; address_args=(--imessage "$address") ;;
+      whatsapp) address=+19876543210; masked='***210'; address_args=(--whatsapp "$address") ;;
+      imessage-email) channel=imessage; address=team@example.com; masked='***com'; address_args=(--imessage "$address") ;;
+      telegram-short) channel=telegram; address=123; masked='***23'; address_args=(--telegram-chat-id "$address") ;;
+      telegram-single) channel=telegram; address=1; masked='***'; address_args=(--telegram-chat-id "$address") ;;
+    esac
+    if [ "$channel" = email ]; then missing=telegram; else missing=email; fi
+    home=$(new_home "mask-$kind")
+    contacts "$home" add --id recipient --name Recipient --role "Site Ops" --trust internal \
+      --language en "${address_args[@]}" --preferred "$missing" --preferred "$channel" --added-by t \
+      || fail "adding $kind masking fixture failed"
+    contacts "$home" list
+    rc=$?
+    expect_code 0 "$rc" "list masks $kind"
+    assert_equals "$(printf 'recipient\tRecipient\tSite Ops\tinternal\t%s' "$masked")" \
+      "$(cat "$TMP_ROOT/out")" "list selects and masks $kind after skipping an absent address"
+    expect_resolve "$home" 0 recipient exact 1 Recipient
+    assert_equals "$masked" "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["masked_address"]')" "resolve uses the same mask for $kind"
+    assert_equals "Site Ops" "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["role"]')" "resolve includes the role for $kind"
+    out=$(json_field "$TMP_ROOT/out" 'd["matches"][0]["masked_address"]')
+    assert_not_contains "$out" "$address" "the mask never includes the full $kind address"
+  done
+
+  home=$(new_home mask-order)
+  contacts "$home" add --id recipient --name Recipient --role Ops --trust internal --language en \
+    --email person@example.com --whatsapp +12345678901 --preferred whatsapp --preferred email --added-by t \
+    || fail "adding preference order fixture failed"
+  expect_resolve "$home" 0 recipient exact 1 Recipient
+  assert_equals '***901' "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["masked_address"]')" "masking follows preference order when multiple addresses exist"
+  assert_not_contains "$(cat "$TMP_ROOT/out")" 'person@example.com' "resolve does not reveal an unselected address"
+  contacts "$home" list
+  rc=$?
+  expect_code 0 "$rc" "list follows preference order"
+  assert_equals $'recipient\tRecipient\tOps\tinternal\t***901' "$(cat "$TMP_ROOT/out")" "list masks the first available preferred address"
+  contacts "$home" add --id second --name Recipient --role Legal --trust external --language en \
+    --telegram-chat-id 123456789 --added-by t || fail "adding ambiguous masking fixture failed"
+  expect_resolve "$home" 3 recipient exact 2 Recipient
+  assert_equals "['Ops', 'Legal']" "$(json_field "$TMP_ROOT/out" '[m["role"] for m in d["matches"]]')" "ambiguous exact matches include their roles"
+  assert_equals "['***901', '***789']" "$(json_field "$TMP_ROOT/out" '[m["masked_address"] for m in d["matches"]]')" "ambiguous exact matches include non-email masks"
+
+  home=$(new_home mask-unavailable)
+  contacts "$home" add --id recipient --name Recipient --role Ops --trust internal --language en \
+    --email person@example.com --preferred telegram --added-by t || fail "adding unavailable preference fixture failed"
+  expect_resolve "$home" 0 recipient exact 1 Recipient
+  assert_equals None "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["masked_address"]')" "resolve has no mask when preferred addresses are absent"
+  contacts "$home" list
+  rc=$?
+  expect_code 0 "$rc" "list with no preferred address"
+  assert_equals $'recipient\tRecipient\tOps\tinternal\t-' "$(cat "$TMP_ROOT/out")" "list marks an absent preferred address"
+  pass "fm-contacts: list and resolve share preference order and masking for every channel"
+}
+
 test_show_prints_full_entry() {
   local home rc
   home=$(new_home show)
@@ -228,7 +289,8 @@ test_resolve() {
 
   expect_resolve "$home" 0 me exact 1 me
   out=$(cat "$TMP_ROOT/out")
-  assert_contains "$out" '"masked_email": "o***@example.net"' "resolve output carries the masked email"
+  assert_equals 'o***@example.net' "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["masked_address"]')" "resolve output carries the masked address"
+  assert_equals Owner "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["role"]')" "an exact match includes its role"
   assert_not_contains "$out" "owner@example.net" "resolve never prints a full address"
   expect_resolve "$home" 0 me exact 1 mi
 
@@ -243,10 +305,15 @@ test_resolve() {
   # A dictation typo within edit distance 2 needs confirmation.
   expect_resolve "$home" 3 site-it-lead fuzzy 1 Jsoe Perez
   assert_equals "2" "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["distance"]')" "fuzzy distance is reported"
+  assert_equals "Site IT, location team" "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["role"]')" "a fuzzy match includes its role"
+  assert_equals 'j***@example.com' "$(json_field "$TMP_ROOT/out" 'd["matches"][0]["masked_address"]')" "a fuzzy match includes its masked address"
 
   # Two contacts share a first name: ambiguous, both offered.
   expect_resolve "$home" 3 maria-gomez prefix 2 maria
   assert_equals "maria-lopez" "$(json_field "$TMP_ROOT/out" 'd["matches"][1]["id"]')" "both namesakes are offered"
+  assert_equals "['Legal', 'Finance']" "$(json_field "$TMP_ROOT/out" '[m["role"] for m in d["matches"]]')" "ambiguous prefix matches include distinct roles"
+  assert_equals "['m***@example.org', 'm***@example.com']" \
+    "$(json_field "$TMP_ROOT/out" '[m["masked_address"] for m in d["matches"]]')" "ambiguous prefix matches include masked addresses"
   # A word prefix in order narrows it to one, but still needs confirmation.
   expect_resolve "$home" 3 maria-lopez prefix 1 maria lop
 
@@ -327,6 +394,7 @@ test_preferred_allows_absent_addresses
 test_add_refuses_duplicate_ids
 test_shared_addresses
 test_list_masks_addresses
+test_preferred_address_masking
 test_show_prints_full_entry
 test_resolve
 test_resolve_ignores_ids

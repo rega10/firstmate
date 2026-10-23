@@ -123,11 +123,17 @@ def candidates(contact):
     return [contact['name']] + list(contact['aliases'])
 
 
-def mask_email(address):
-    if not address:
-        return None
-    local, _, domain = address.partition('@')
-    return local[:1] + '***@' + domain
+def masked_address(contact):
+    channel_fields = dict(CHANNELS)
+    for channel in contact['preferred']:
+        address = contact[channel_fields[channel]]
+        if address is None:
+            continue
+        if channel == 'email':
+            local, _, domain = address.partition('@')
+            return local[:1] + '***@' + domain
+        return '***' + address[max(1, len(address) - 3):]
+    return None
 
 
 def resolve(book, words):
@@ -147,9 +153,10 @@ def resolve(book, words):
     matches = [{
         'id': contact['id'],
         'name': contact['name'],
+        'role': contact['role'],
         'tier': TIERS[tier],
         'distance': distance,
-        'masked_email': mask_email(contact.get('email')),
+        'masked_address': masked_address(contact),
     } for (tier, distance), contact in shown]
     print(json.dumps({'query': query, 'normalized': normalized, 'matches': matches}, ensure_ascii=False))
     if len(exact) == 1:
@@ -391,7 +398,7 @@ def cmd_list(path, argv):
     for contact in book['contacts']:
         print('\t'.join((
             contact['id'], contact['name'], contact['role'], contact['trust'],
-            mask_email(contact['email']) or '-',
+            masked_address(contact) or '-',
         )))
     return 0
 
