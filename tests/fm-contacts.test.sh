@@ -46,7 +46,7 @@ seed_book() {
   contacts "$home" add --id maria-gomez --name "Maria Gomez" --role "Legal" \
     --trust internal --language es --email mgomez@example.org --added-by "seed" \
     || fail "seed: adding maria-gomez failed: $(cat "$TMP_ROOT/err")"
-  contacts "$home" add --id me --name "Captain Self" --alias "me" --role "Owner" \
+  contacts "$home" add --id me --name "Captain Self" --alias "me" --alias "mi" --role "Owner" \
     --trust self --language en --email owner@example.net --added-by "seed" \
     || fail "seed: adding me failed: $(cat "$TMP_ROOT/err")"
 }
@@ -92,13 +92,47 @@ test_add_validation_failures() {
   expect_refusal "exactly one @" --id ana "${base[@]}" --trust internal --email ana.example.com
   expect_refusal "exactly one @" --id ana "${base[@]}" --trust internal --email "ana@@example.com"
   expect_refusal "at least one address" --id ana "${base[@]}" --trust internal
-  expect_refusal "preferred channel whatsapp has no address" --id ana "${base[@]}" --trust internal --email ana@example.com --preferred whatsapp
+  expect_refusal "preferred channel must be one of" --id ana "${base[@]}" --trust internal --email ana@example.com --preferred fax
   expect_refusal "required" --id ana --name Ana --role Ops --language en --trust internal --email ana@example.com
   assert_absent "$home/data/contacts.json" "a refused add never creates the book"
   pass "fm-contacts: add refuses invalid fields with a clear reason"
 }
 
-test_add_refuses_duplicates() {
+test_preferred_allows_absent_addresses() {
+  local home channel fallback rc
+  local address=()
+  for channel in email telegram imessage whatsapp; do
+    home=$(new_home "preferred-$channel")
+    if [ "$channel" = email ]; then
+      address=(--telegram-chat-id 123)
+      fallback=telegram
+    else
+      address=(--email ana@example.com)
+      fallback=email
+    fi
+    contacts "$home" add --id ana --name Ana --role Ops --trust internal --language en \
+      "${address[@]}" --preferred "$channel" --preferred "$fallback" --added-by t
+    rc=$?
+    expect_code 0 "$rc" "add with absent preferred $channel address"
+    assert_equals "['$channel', '$fallback']" "$(json_field "$TMP_ROOT/out" 'd["preferred"]')" "add preserves preference order"
+    contacts "$home" list
+    rc=$?
+    expect_code 0 "$rc" "list with absent preferred $channel address"
+    assert_contains "$(cat "$TMP_ROOT/out")" $'ana\tAna\tOps\tinternal' "list loads the contact"
+    contacts "$home" show ana
+    rc=$?
+    expect_code 0 "$rc" "show with absent preferred $channel address"
+    assert_equals "['$channel', '$fallback']" "$(json_field "$TMP_ROOT/out" 'd["preferred"]')" "show preserves preference order"
+    expect_resolve "$home" 0 ana exact 1 Ana
+    contacts "$home" add --id luis --name Luis --role Ops --trust internal --language en \
+      --email luis@example.com --added-by t
+    rc=$?
+    expect_code 0 "$rc" "add loads a book with absent preferred $channel address"
+  done
+  pass "fm-contacts: preferred channels may lack addresses on add and load"
+}
+
+test_add_refuses_duplicate_ids() {
   local home rc
   home=$(new_home dup)
   contacts "$home" add --id ana --name Ana --role Ops --trust internal --language en \
@@ -108,13 +142,37 @@ test_add_refuses_duplicates() {
   rc=$?
   expect_code 1 "$rc" "duplicate id"
   assert_contains "$(cat "$TMP_ROOT/err")" "duplicate id" "duplicate id refusal"
-  contacts "$home" add --id ana-two --name "Ana Two" --role Ops --trust internal --language en \
-    --email ANA@Example.com --added-by t
-  rc=$?
-  expect_code 1 "$rc" "duplicate email"
-  assert_contains "$(cat "$TMP_ROOT/err")" "already used by contact 'ana'" "duplicate email refusal names the owner"
   assert_equals "1" "$(json_field "$home/data/contacts.json" 'len(d["contacts"])')" "refused adds leave the book unchanged"
-  pass "fm-contacts: add refuses a duplicate id or email"
+  pass "fm-contacts: add refuses a duplicate id"
+}
+
+test_shared_addresses() {
+  local home id rc
+  home=$(new_home shared)
+  for id in ana luis; do
+    contacts "$home" add --id "$id" --name "$id" --role Ops --trust internal --language en \
+      --email ops@example.com --telegram-chat-id=-123 --imessage team@example.com \
+      --whatsapp +12345678901 --added-by t
+    rc=$?
+    expect_code 0 "$rc" "add $id with shared addresses on every channel"
+  done
+  assert_equals "2" "$(json_field "$home/data/contacts.json" 'len(d["contacts"])')" "both contacts are stored"
+  contacts "$home" list
+  rc=$?
+  expect_code 0 "$rc" "list loads shared addresses"
+  assert_equals "2" "$(wc -l < "$TMP_ROOT/out" | tr -d ' ')" "list includes both contacts"
+  contacts "$home" show luis
+  rc=$?
+  expect_code 0 "$rc" "show loads shared addresses"
+  assert_equals "['ops@example.com', '-123', 'team@example.com', '+12345678901']" \
+    "$(json_field "$TMP_ROOT/out" '[d[f] for f in ("email", "telegram_chat_id", "imessage", "whatsapp")]')" "show preserves all shared addresses"
+  expect_resolve "$home" 0 ana exact 1 ana
+  expect_resolve "$home" 0 luis exact 1 luis
+  contacts "$home" add --id other --name Other --role Ops --trust internal --language en \
+    --email other@example.com --added-by t
+  rc=$?
+  expect_code 0 "$rc" "add loads shared addresses"
+  pass "fm-contacts: contacts may share addresses on every channel"
 }
 
 test_list_masks_addresses() {
@@ -172,6 +230,7 @@ test_resolve() {
   out=$(cat "$TMP_ROOT/out")
   assert_contains "$out" '"masked_email": "o***@example.net"' "resolve output carries the masked email"
   assert_not_contains "$out" "owner@example.net" "resolve never prints a full address"
+  expect_resolve "$home" 0 me exact 1 mi
 
   # Spanish dictation: the article is dropped on both sides.
   expect_resolve "$home" 0 site-it-lead exact 1 el de sistemas
@@ -194,6 +253,26 @@ test_resolve() {
   # Nobody by that name.
   expect_resolve "$home" 2 - - 0 Roberto Sanchez
   pass "fm-contacts: resolve scores exact, prefix, fuzzy, ambiguous, and missing names"
+}
+
+test_resolve_ignores_ids() {
+  local home
+  home=$(new_home names-only)
+  contacts "$home" add --id maria --name "María López" --role Finance --trust internal \
+    --language es --email maria@example.com --added-by t || fail "adding María López failed"
+  contacts "$home" add --id maria-ruiz --name "María Ruiz" --role Legal --trust internal \
+    --language es --email ruiz@example.com --added-by t || fail "adding María Ruiz failed"
+  expect_resolve "$home" 3 maria-ruiz prefix 2 maria
+  assert_equals "maria" "$(json_field "$TMP_ROOT/out" 'd["matches"][1]["id"]')" "an id does not hide the other namesake"
+  contacts "$home" add --id secret-recipient --name Ana --role Ops --trust internal \
+    --language en --email ana@example.com --added-by t || fail "adding Ana failed"
+  expect_resolve "$home" 2 - - 0 secret recipient
+  expect_resolve "$home" 2 - - 0 secret
+  expect_resolve "$home" 2 - - 0 secrex recipient
+  contacts "$home" add --id me --name "Captain Self" --role Owner --trust self \
+    --language en --email owner@example.com --added-by t || fail "adding owner failed"
+  expect_resolve "$home" 2 - - 0 me
+  pass "fm-contacts: resolve matches names and aliases without matching ids"
 }
 
 test_missing_book_is_empty() {
@@ -244,10 +323,13 @@ test_help_and_usage() {
 
 test_add_stores_entry
 test_add_validation_failures
-test_add_refuses_duplicates
+test_preferred_allows_absent_addresses
+test_add_refuses_duplicate_ids
+test_shared_addresses
 test_list_masks_addresses
 test_show_prints_full_entry
 test_resolve
+test_resolve_ignores_ids
 test_missing_book_is_empty
 test_refuses_unsupported_version
 test_help_and_usage

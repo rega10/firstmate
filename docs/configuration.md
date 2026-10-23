@@ -1701,7 +1701,7 @@ This section is the single owner of the book's schema, the trust meanings, the r
 **Schema**
 
 The book is `$FM_HOME/data/contacts.json`, home-private and gitignored, written atomically as pretty-printed UTF-8 JSON with mode 0600.
-A missing file is an empty book, and a book whose `version` is not `1`, or that holds an invalid or duplicate entry, is refused rather than read.
+A missing file is an empty book, and a book whose `version` is not `1`, or that holds an invalid entry or duplicate id, is refused rather than read.
 
 ```json
 {
@@ -1734,7 +1734,7 @@ A missing file is an empty book, and a book whose `version` is not `1`, or that 
 | `role` | Free text that tells namesakes apart. |
 | `trust` | `self`, `internal`, or `external` (below). |
 | `language` | `es` or `en`, the language of the covering text. |
-| `preferred` | Ordered channel names from `email`, `telegram`, `imessage`, `whatsapp`; each needs an address in this entry. Without `--preferred`, `add` lists the channels that have an address in that order. |
+| `preferred` | Ordered channel names from `email`, `telegram`, `imessage`, `whatsapp`; a channel may have a null address. A sender uses the first preferred channel that has an address and works today. Without `--preferred`, `add` lists the channels that have an address in that order. |
 | `email` | One address with exactly one `@` and a dotted domain, or `null`. |
 | `telegram_chat_id` | Numeric chat id as a string, or `null`. |
 | `imessage` | An email address or a `+<digits>` phone number, or `null`. |
@@ -1742,11 +1742,11 @@ A missing file is an empty book, and a book whose `version` is not `1`, or that 
 | `added` | The `YYYY-MM-DD` date `add` stored the entry. |
 | `added_by` | Free text, normally the captain's words that asked for the entry. |
 
-Every entry needs at least one address, and no two entries may share an id or an address on the same channel (email and iMessage compare case-insensitively).
+Every entry needs at least one address and a unique id; entries may share addresses on any channel.
 
 **Trust**
 
-- `self` is the captain's own addresses; the captain is contact `me`, so "send it to me" needs no special case.
+- `self` is the captain's own addresses; the captain is contact `me` with explicit aliases such as `"me"` and `"mi"`, so "send it to me" needs no special case.
 - `internal` is the captain's own team.
 - `external` is anyone else.
 
@@ -1755,11 +1755,11 @@ Trust is the input to the send confirmation rule, which belongs to the sending s
 **Resolve**
 
 `resolve <spoken words>...` joins its arguments and normalizes them: lowercase, accents removed through NFKD, punctuation turned into word breaks, and the words `el`, `la`, and `the` dropped.
-Each contact's `name`, `id`, and `aliases` are normalized the same way and scored in tiers:
+Each contact's `name` and `aliases` are normalized the same way and scored in tiers:
 
-- `exact`: the normalized query equals a normalized name, id, or alias.
-- `prefix`: every query word is a prefix of a distinct word of one name, id, or alias, in the same order.
-- `fuzzy`: the Levenshtein distance to one name, id, or alias is 2 or less.
+- `exact`: the normalized query equals a normalized name or alias.
+- `prefix`: every query word is a prefix of a distinct word of one name or alias, in the same order.
+- `fuzzy`: the Levenshtein distance to one name or alias is 2 or less.
 
 Each contact keeps its best tier, and `distance` is the edit distance to the candidate that gave it.
 Resolution is a cascade: when any contact matches exactly, only exact matches are listed, and otherwise every prefix and fuzzy match is listed.

@@ -5,7 +5,7 @@
 #   add --id ... --name ... ...  Validate and store one contact; print it.
 #   list                         One line per contact, addresses masked.
 #   show <id>                    Print one full entry as JSON.
-#   resolve <spoken words>...    Match spoken words against names, ids, and
+#   resolve <spoken words>...    Match spoken words against names and
 #                                aliases; print scored matches as JSON.
 #
 # The book path arrives through FM_CONTACTS_FILE, never through arguments.
@@ -33,7 +33,7 @@ CHANNELS = (
     ('imessage', 'imessage'),
     ('whatsapp', 'whatsapp'),
 )
-CHANNEL_FIELD = dict(CHANNELS)
+CHANNEL_NAMES = tuple(channel for channel, _ in CHANNELS)
 ADDRESS_FIELDS = tuple(field for _, field in CHANNELS)
 FIELDS = (
     'id', 'name', 'aliases', 'role', 'trust', 'language', 'preferred',
@@ -120,7 +120,7 @@ def score(query, candidate):
 
 
 def candidates(contact):
-    return [contact['name'], contact['id']] + list(contact['aliases'])
+    return [contact['name']] + list(contact['aliases'])
 
 
 def mask_email(address):
@@ -229,10 +229,8 @@ def validate_contact(contact, where):
         if len(set(map(str, preferred))) != len(preferred):
             raise ContactError('preferred must not repeat a channel')
         for channel in preferred:
-            if channel not in CHANNEL_FIELD:
-                raise ContactError('preferred channel must be one of %s, got %r' % ('|'.join(CHANNEL_FIELD), channel))
-            if contact[CHANNEL_FIELD[channel]] is None:
-                raise ContactError('preferred channel %s has no address' % channel)
+            if channel not in CHANNEL_NAMES:
+                raise ContactError('preferred channel must be one of %s, got %r' % ('|'.join(CHANNEL_NAMES), channel))
         if not isinstance(contact['added'], str) or not DATE_RE.match(contact['added']):
             raise ContactError('added must be a YYYY-MM-DD date, got %r' % (contact['added'],))
         try:
@@ -244,25 +242,12 @@ def validate_contact(contact, where):
         raise ContactError('%s: %s' % (where, err))
 
 
-def address_key(field, value):
-    return value.casefold() if field in ('email', 'imessage') else value
-
-
 def check_unique(contacts):
     seen_ids = set()
-    seen_addresses = {}
     for contact in contacts:
         if contact['id'] in seen_ids:
             raise ContactError('duplicate id %r' % contact['id'])
         seen_ids.add(contact['id'])
-        for field in ADDRESS_FIELDS:
-            value = contact[field]
-            if value is None:
-                continue
-            key = (field, address_key(field, value))
-            if key in seen_addresses:
-                raise ContactError('duplicate %s %r: already used by contact %r' % (field, value, seen_addresses[key]))
-            seen_addresses[key] = contact['id']
 
 
 # --- storage ------------------------------------------------------------------

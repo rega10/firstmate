@@ -12,8 +12,7 @@
 #       [--email <addr>] [--telegram-chat-id <id>] [--imessage <addr>]
 #       [--whatsapp <+phone>] [--preferred <channel>]... --added-by <text>
 #                        Validate and store one contact, then print it as
-#                        JSON. Refuses an invalid field, a duplicate id, or an
-#                        address another contact already uses. Without
+#                        JSON. Refuses an invalid field or a duplicate id. Without
 #                        --preferred, the channels that have an address are
 #                        preferred in the order email, telegram, imessage,
 #                        whatsapp.
