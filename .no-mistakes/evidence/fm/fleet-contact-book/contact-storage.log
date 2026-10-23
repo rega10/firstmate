@@ -1,0 +1,116 @@
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh --help
+exit: 0
+stdout:
+fm-contacts.sh add --id <id> --name <name> [--alias <a>]... --role <text>
+                   --trust <self|internal|external> --language <es|en>
+                   [--email <addr>] [--telegram-chat-id <id>] [--imessage <addr>]
+                   [--whatsapp <+phone>] [--preferred <channel>]... --added-by <text>
+fm-contacts.sh list
+fm-contacts.sh show <id>
+fm-contacts.sh resolve <spoken words>...
+
+Before invoking add, firstmate must read the entry back to the owner:
+name, aliases, channel, masked address, language, and trust.
+Invoke add only after the owner says yes, recording the owner's words
+that asked for the entry in --added-by.
+The add command saves immediately and does not prompt for confirmation.
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh list
+exit: 0
+stdout:
+stderr:
+fm-contacts: the contact book is empty
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id site-it-lead --name 'José Pérez' --role 'Site IT' --trust external --language es --added-by 'Sí, agrega este contacto para el equipo.' --alias 'el de sistemas' --alias 'José' --alias 'the IT lead' --email jose.perez@example.com
+exit: 0
+stdout:
+{
+  "id": "site-it-lead",
+  "name": "José Pérez",
+  "aliases": [
+    "el de sistemas",
+    "José",
+    "the IT lead"
+  ],
+  "role": "Site IT",
+  "trust": "external",
+  "language": "es",
+  "preferred": [
+    "email"
+  ],
+  "email": "jose.perez@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+Persisted contacts.json mode: 0600; lock mode: 0600.
+{
+  "version": 1,
+  "contacts": [
+    {
+      "id": "site-it-lead",
+      "name": "José Pérez",
+      "aliases": [
+        "el de sistemas",
+        "José",
+        "the IT lead"
+      ],
+      "role": "Site IT",
+      "trust": "external",
+      "language": "es",
+      "preferred": [
+        "email"
+      ],
+      "email": "jose.perez@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Sí, agrega este contacto para el equipo."
+    }
+  ]
+}
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh show site-it-lead
+exit: 0
+stdout:
+{
+  "id": "site-it-lead",
+  "name": "José Pérez",
+  "aliases": [
+    "el de sistemas",
+    "José",
+    "the IT lead"
+  ],
+  "role": "Site IT",
+  "trust": "external",
+  "language": "es",
+  "preferred": [
+    "email"
+  ],
+  "email": "jose.perez@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ jq -e <version-and-unicode-check> <disposable-home>/data/contacts.json
+true
+
+
+$ git check-ignore --no-index data/contacts.json
+data/contacts.json
+

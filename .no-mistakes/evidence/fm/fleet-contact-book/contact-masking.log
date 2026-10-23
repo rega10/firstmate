@@ -1,0 +1,220 @@
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id email --name 'Recipient email' --role 'Role email' --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --email person@example.com --preferred telegram --preferred email
+exit: 0
+stdout:
+{
+  "id": "email",
+  "name": "Recipient email",
+  "aliases": [],
+  "role": "Role email",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "telegram",
+    "email"
+  ],
+  "email": "person@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'Recipient email'
+exit: 0
+stdout:
+{"query": "Recipient email", "normalized": "recipient email", "matches": [{"id": "email", "name": "Recipient email", "role": "Role email", "tier": "exact", "distance": 0, "masked_address": "p***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id telegram --name 'Recipient telegram' --role 'Role telegram' --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --telegram-chat-id=-123456789 --preferred email --preferred telegram
+exit: 0
+stdout:
+{
+  "id": "telegram",
+  "name": "Recipient telegram",
+  "aliases": [],
+  "role": "Role telegram",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "email",
+    "telegram"
+  ],
+  "email": null,
+  "telegram_chat_id": "-123456789",
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'Recipient telegram'
+exit: 0
+stdout:
+{"query": "Recipient telegram", "normalized": "recipient telegram", "matches": [{"id": "telegram", "name": "Recipient telegram", "role": "Role telegram", "tier": "exact", "distance": 0, "masked_address": "***789"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id imessage --name 'Recipient imessage' --role 'Role imessage' --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --imessage team@example.com --preferred telegram --preferred imessage
+exit: 0
+stdout:
+{
+  "id": "imessage",
+  "name": "Recipient imessage",
+  "aliases": [],
+  "role": "Role imessage",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "telegram",
+    "imessage"
+  ],
+  "email": null,
+  "telegram_chat_id": null,
+  "imessage": "team@example.com",
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'Recipient imessage'
+exit: 0
+stdout:
+{"query": "Recipient imessage", "normalized": "recipient imessage", "matches": [{"id": "imessage", "name": "Recipient imessage", "role": "Role imessage", "tier": "exact", "distance": 0, "masked_address": "***com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id whatsapp --name 'Recipient whatsapp' --role 'Role whatsapp' --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --whatsapp +12345678901 --preferred imessage --preferred whatsapp
+exit: 0
+stdout:
+{
+  "id": "whatsapp",
+  "name": "Recipient whatsapp",
+  "aliases": [],
+  "role": "Role whatsapp",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "imessage",
+    "whatsapp"
+  ],
+  "email": null,
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": "+12345678901",
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'Recipient whatsapp'
+exit: 0
+stdout:
+{"query": "Recipient whatsapp", "normalized": "recipient whatsapp", "matches": [{"id": "whatsapp", "name": "Recipient whatsapp", "role": "Role whatsapp", "tier": "exact", "distance": 0, "masked_address": "***901"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id order --name 'Recipient order' --role 'Role order' --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --email person@example.com --whatsapp +12345678901 --preferred whatsapp --preferred email
+exit: 0
+stdout:
+{
+  "id": "order",
+  "name": "Recipient order",
+  "aliases": [],
+  "role": "Role order",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "whatsapp",
+    "email"
+  ],
+  "email": "person@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": "+12345678901",
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'Recipient order'
+exit: 0
+stdout:
+{"query": "Recipient order", "normalized": "recipient order", "matches": [{"id": "order", "name": "Recipient order", "role": "Role order", "tier": "exact", "distance": 0, "masked_address": "***901"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id unavailable --name 'Recipient unavailable' --role 'Role unavailable' --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --email person@example.com --preferred telegram
+exit: 0
+stdout:
+{
+  "id": "unavailable",
+  "name": "Recipient unavailable",
+  "aliases": [],
+  "role": "Role unavailable",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "telegram"
+  ],
+  "email": "person@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'Recipient unavailable'
+exit: 0
+stdout:
+{"query": "Recipient unavailable", "normalized": "recipient unavailable", "matches": [{"id": "unavailable", "name": "Recipient unavailable", "role": "Role unavailable", "tier": "exact", "distance": 0, "masked_address": null}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id shared --name 'Shared mailbox' --role Support --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --email person@example.com
+exit: 0
+stdout:
+{
+  "id": "shared",
+  "name": "Shared mailbox",
+  "aliases": [],
+  "role": "Support",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "email"
+  ],
+  "email": "person@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh list
+exit: 0
+stdout:
+email	Recipient email	Role email	internal	p***@example.com
+telegram	Recipient telegram	Role telegram	internal	***789
+imessage	Recipient imessage	Role imessage	internal	***com
+whatsapp	Recipient whatsapp	Role whatsapp	internal	***901
+order	Recipient order	Role order	internal	***901
+unavailable	Recipient unavailable	Role unavailable	internal	-
+shared	Shared mailbox	Support	internal	p***@example.com
+stderr:
+

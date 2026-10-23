@@ -1,0 +1,192 @@
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id me --name 'Alex Owner' --role Owner --trust self --language en --added-by 'Sí, agrega este contacto para el equipo.' --alias me --alias mi --email alex@example.net
+exit: 0
+stdout:
+{
+  "id": "me",
+  "name": "Alex Owner",
+  "aliases": [
+    "me",
+    "mi"
+  ],
+  "role": "Owner",
+  "trust": "self",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "alex@example.net",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve EL DE SISTEMAS
+exit: 0
+stdout:
+{"query": "EL DE SISTEMAS", "normalized": "de sistemas", "matches": [{"id": "site-it-lead", "name": "José Pérez", "role": "Site IT", "tier": "exact", "distance": 0, "masked_address": "j***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve Jose
+exit: 0
+stdout:
+{"query": "Jose", "normalized": "jose", "matches": [{"id": "site-it-lead", "name": "José Pérez", "role": "Site IT", "tier": "exact", "distance": 0, "masked_address": "j***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'JOSE PEREZ.'
+exit: 0
+stdout:
+{"query": "JOSE PEREZ.", "normalized": "jose perez", "matches": [{"id": "site-it-lead", "name": "José Pérez", "role": "Site IT", "tier": "exact", "distance": 0, "masked_address": "j***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve the IT lead
+exit: 0
+stdout:
+{"query": "the IT lead", "normalized": "it lead", "matches": [{"id": "site-it-lead", "name": "José Pérez", "role": "Site IT", "tier": "exact", "distance": 0, "masked_address": "j***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve la 'José'
+exit: 0
+stdout:
+{"query": "la José", "normalized": "jose", "matches": [{"id": "site-it-lead", "name": "José Pérez", "role": "Site IT", "tier": "exact", "distance": 0, "masked_address": "j***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve me
+exit: 0
+stdout:
+{"query": "me", "normalized": "me", "matches": [{"id": "me", "name": "Alex Owner", "role": "Owner", "tier": "exact", "distance": 0, "masked_address": "a***@example.net"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve mi
+exit: 0
+stdout:
+{"query": "mi", "normalized": "mi", "matches": [{"id": "me", "name": "Alex Owner", "role": "Owner", "tier": "exact", "distance": 0, "masked_address": "a***@example.net"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve site-it-lead
+exit: 2
+stdout:
+{"query": "site-it-lead", "normalized": "site it lead", "matches": []}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve unlisted.person@example.org
+exit: 2
+stdout:
+{"query": "unlisted.person@example.org", "normalized": "unlisted person example org", "matches": []}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id maria --name 'María López' --role Finance --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --email maria.lopez@example.com
+exit: 0
+stdout:
+{
+  "id": "maria",
+  "name": "María López",
+  "aliases": [],
+  "role": "Finance",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "email"
+  ],
+  "email": "maria.lopez@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id maria-ruiz --name 'María Ruiz' --role Legal --trust internal --language es --added-by 'Sí, agrega este contacto para el equipo.' --telegram-chat-id 123456789
+exit: 0
+stdout:
+{
+  "id": "maria-ruiz",
+  "name": "María Ruiz",
+  "aliases": [],
+  "role": "Legal",
+  "trust": "internal",
+  "language": "es",
+  "preferred": [
+    "telegram"
+  ],
+  "email": null,
+  "telegram_chat_id": "123456789",
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve maria
+exit: 3
+stdout:
+{"query": "maria", "normalized": "maria", "matches": [{"id": "maria-ruiz", "name": "María Ruiz", "role": "Legal", "tier": "prefix", "distance": 5, "masked_address": "***789"}, {"id": "maria", "name": "María López", "role": "Finance", "tier": "prefix", "distance": 6, "masked_address": "m***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve jose per
+exit: 3
+stdout:
+{"query": "jose per", "normalized": "jose per", "matches": [{"id": "site-it-lead", "name": "José Pérez", "role": "Site IT", "tier": "prefix", "distance": 2, "masked_address": "j***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve Jsoe Perez
+exit: 3
+stdout:
+{"query": "Jsoe Perez", "normalized": "jsoe perez", "matches": [{"id": "site-it-lead", "name": "José Pérez", "role": "Site IT", "tier": "fuzzy", "distance": 2, "masked_address": "j***@example.com"}]}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve Roberto Sanchez
+exit: 2
+stdout:
+{"query": "Roberto Sanchez", "normalized": "roberto sanchez", "matches": []}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id jose-duplicate --name 'José Pérez' --role Vendor --trust external --language es --added-by 'Sí, agrega este contacto para el equipo.' --whatsapp +19876543210
+exit: 0
+stdout:
+{
+  "id": "jose-duplicate",
+  "name": "José Pérez",
+  "aliases": [],
+  "role": "Vendor",
+  "trust": "external",
+  "language": "es",
+  "preferred": [
+    "whatsapp"
+  ],
+  "email": null,
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": "+19876543210",
+  "added": "2026-10-23",
+  "added_by": "Sí, agrega este contacto para el equipo."
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'JOSE PEREZ'
+exit: 3
+stdout:
+{"query": "JOSE PEREZ", "normalized": "jose perez", "matches": [{"id": "jose-duplicate", "name": "José Pérez", "role": "Vendor", "tier": "exact", "distance": 0, "masked_address": "***210"}, {"id": "site-it-lead", "name": "José Pérez", "role": "Site IT", "tier": "exact", "distance": 0, "masked_address": "j***@example.com"}]}
+stderr:
+

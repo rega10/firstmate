@@ -1,0 +1,696 @@
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh list
+exit: 0
+stdout:
+stderr:
+fm-contacts: the contact book is empty
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'José'
+exit: 2
+stdout:
+{"query": "José", "normalized": "jose", "matches": []}
+stderr:
+
+
+$ FM_HOME=<disposable-home> FM_DATA_OVERRIDE=<disposable-data> bin/fm-contacts.sh add --id override --name 'Override Person' --role Ops --trust internal --language en --email override@example.com --added-by Confirmed
+exit: 0
+stdout:
+{
+  "id": "override",
+  "name": "Override Person",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "override@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed"
+}
+stderr:
+
+
+$ FM_HOME=<disposable-home> FM_DATA_OVERRIDE=<disposable-data> bin/fm-contacts.sh show override
+exit: 0
+stdout:
+{
+  "id": "override",
+  "name": "Override Person",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "override@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed"
+}
+stderr:
+
+
+$ bin/fm-contacts.sh add --id person-0 --name 'Person 0' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-0",
+  "name": "Person 0",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-1 --name 'Person 1' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-1",
+  "name": "Person 1",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-2 --name 'Person 2' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-2",
+  "name": "Person 2",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-3 --name 'Person 3' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-3",
+  "name": "Person 3",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-4 --name 'Person 4' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-4",
+  "name": "Person 4",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-5 --name 'Person 5' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-5",
+  "name": "Person 5",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-6 --name 'Person 6' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-6",
+  "name": "Person 6",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-7 --name 'Person 7' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-7",
+  "name": "Person 7",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-8 --name 'Person 8' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-8",
+  "name": "Person 8",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-9 --name 'Person 9' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-9",
+  "name": "Person 9",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-10 --name 'Person 10' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-10",
+  "name": "Person 10",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-11 --name 'Person 11' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-11",
+  "name": "Person 11",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-12 --name 'Person 12' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-12",
+  "name": "Person 12",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-13 --name 'Person 13' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-13",
+  "name": "Person 13",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-14 --name 'Person 14' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-14",
+  "name": "Person 14",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ bin/fm-contacts.sh add --id person-15 --name 'Person 15' --role Ops --trust internal --language en --email shared@example.com --added-by 'Confirmed concurrently'
+exit: 0
+{
+  "id": "person-15",
+  "name": "Person 15",
+  "aliases": [],
+  "role": "Ops",
+  "trust": "internal",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "shared@example.com",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-10-23",
+  "added_by": "Confirmed concurrently"
+}
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh list
+exit: 0
+stdout:
+person-0	Person 0	Ops	internal	s***@example.com
+person-2	Person 2	Ops	internal	s***@example.com
+person-1	Person 1	Ops	internal	s***@example.com
+person-3	Person 3	Ops	internal	s***@example.com
+person-4	Person 4	Ops	internal	s***@example.com
+person-5	Person 5	Ops	internal	s***@example.com
+person-6	Person 6	Ops	internal	s***@example.com
+person-7	Person 7	Ops	internal	s***@example.com
+person-8	Person 8	Ops	internal	s***@example.com
+person-9	Person 9	Ops	internal	s***@example.com
+person-10	Person 10	Ops	internal	s***@example.com
+person-11	Person 11	Ops	internal	s***@example.com
+person-12	Person 12	Ops	internal	s***@example.com
+person-13	Person 13	Ops	internal	s***@example.com
+person-14	Person 14	Ops	internal	s***@example.com
+person-15	Person 15	Ops	internal	s***@example.com
+stderr:
+
+
+Persisted book after simultaneous add calls:
+{
+  "version": 1,
+  "contacts": [
+    {
+      "id": "person-0",
+      "name": "Person 0",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-2",
+      "name": "Person 2",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-1",
+      "name": "Person 1",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-3",
+      "name": "Person 3",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-4",
+      "name": "Person 4",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-5",
+      "name": "Person 5",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-6",
+      "name": "Person 6",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-7",
+      "name": "Person 7",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-8",
+      "name": "Person 8",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-9",
+      "name": "Person 9",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-10",
+      "name": "Person 10",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-11",
+      "name": "Person 11",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-12",
+      "name": "Person 12",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-13",
+      "name": "Person 13",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-14",
+      "name": "Person 14",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    },
+    {
+      "id": "person-15",
+      "name": "Person 15",
+      "aliases": [],
+      "role": "Ops",
+      "trust": "internal",
+      "language": "en",
+      "preferred": [
+        "email"
+      ],
+      "email": "shared@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Confirmed concurrently"
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id unsafe --name Unsafe --role Ops --trust friend --language en --email unsafe@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: refusing contact 'unsafe': trust must be one of self|internal|external, got 'friend'
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id unsafe --name Unsafe --role Ops --trust internal --language fr --email unsafe@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: refusing contact 'unsafe': language must be one of es|en, got 'fr'
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id unsafe --name Unsafe --role Ops --trust internal --language en --email bad@@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: refusing contact 'unsafe': email must look like name@domain.tld with exactly one @, got 'bad@@example.com'
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id 'Invalid ID' --name Unsafe --role Ops --trust internal --language en --email unsafe@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: refusing contact 'Invalid ID': id must be a lowercase slug such as site-it-lead, got 'Invalid ID'
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id unsafe --name 'Unsafe
+Recipient' --role Ops --trust internal --language en --email unsafe@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: refusing contact 'unsafe': name must not contain control characters
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id me --name Unsafe --role Ops --trust internal --language en --email unsafe@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: refusing contact 'me': duplicate id 'me'
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh show nonexistent
+exit: 1
+stdout:
+stderr:
+fm-contacts: no contact with id 'nonexistent'
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve
+exit: 1
+stdout:
+stderr:
+fm-contacts: usage: fm-contacts.sh resolve <spoken words>...
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh list
+exit: 1
+stdout:
+stderr:
+fm-contacts: cannot read /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'José'
+exit: 1
+stdout:
+stderr:
+fm-contacts: cannot read /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id unsafe --name Unsafe --role Ops --trust internal --language en --email unsafe@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: cannot read /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh list
+exit: 1
+stdout:
+stderr:
+fm-contacts: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: unsupported version 2; this tool reads version 1 only
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'José'
+exit: 1
+stdout:
+stderr:
+fm-contacts: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: unsupported version 2; this tool reads version 1 only
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id unsafe --name Unsafe --role Ops --trust internal --language en --email unsafe@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: unsupported version 2; this tool reads version 1 only
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh list
+exit: 1
+stdout:
+stderr:
+fm-contacts: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: duplicate id 'site-it-lead'
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh resolve 'José'
+exit: 1
+stdout:
+stderr:
+fm-contacts: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: duplicate id 'site-it-lead'
+
+
+$ FM_HOME=<disposable-home> bin/fm-contacts.sh add --id unsafe --name Unsafe --role Ops --trust internal --language en --email unsafe@example.com --added-by Confirmed
+exit: 1
+stdout:
+stderr:
+fm-contacts: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW599VEDQTQQE4YHAHQ8E2/.contact-test-tmp/manual/corrupt/data/contacts.json: duplicate id 'site-it-lead'
+

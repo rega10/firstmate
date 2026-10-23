@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "contacts": [
+    {
+      "id": "site-it-lead",
+      "name": "José Pérez",
+      "aliases": [
+        "el de sistemas",
+        "José",
+        "the IT lead"
+      ],
+      "role": "Site IT",
+      "trust": "external",
+      "language": "es",
+      "preferred": [
+        "email"
+      ],
+      "email": "jose.perez@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "Sí, agrega este contacto para el equipo."
+    }
+  ]
+}
