@@ -3,7 +3,17 @@
 #
 # A small mail client used by fm-mail.sh:
 #   read                   List unseen INBOX mail as a compact digest.
-#   send <to> <subj> <body | ->   Send one SMTP message; "-" reads stdin.
+#   send [--attach <path>]... [--cc <addr>]... [--] <to> <subj> <body | ->
+#                          Send one SMTP message; "-" reads the body from
+#                          stdin as UTF-8. Each --attach adds one file as an
+#                          attachment (MIME type from its extension, else
+#                          application/octet-stream) and each --cc adds one
+#                          Cc recipient. Attachments are checked before any
+#                          network call: a missing, unreadable, or non-regular
+#                          file, or a total above FM_MAIL_MAX_ATTACH_BYTES
+#                          (default 20971520 bytes of file content), refuses
+#                          the send with exit 1. FM_MAIL_FROM_NAME, when set,
+#                          adds a display name to the From header.
 #   poll_list              Emit unseen mail as tab-separated rows for the bash
 #                          poll, bounded to uids this home has not surfaced,
 #                          plus a retry-set of previously unfetchable uids;
@@ -14,16 +24,19 @@
 # so credentials never appear in argv or logs. read/poll use BODY.PEEK so mail
 # is never marked seen before firstmate answers it.
 import imaplib
+import mimetypes
 import os
 import re
 import socket
 import ssl
+import stat
 import sys
 import email
+import email.policy
 import smtplib
 from email.header import decode_header, make_header
 from email.message import EmailMessage
-from email.utils import formatdate
+from email.utils import formataddr, formatdate
 
 USER = os.environ['FM_MAIL_USER']
 PW = os.environ['FM_MAIL_PASS']
@@ -143,24 +156,147 @@ def cmd_read():
         return 1
 
 
-def cmd_send(to, subj, body):
+DEFAULT_MAX_ATTACH_BYTES = 20971520
+
+# A 7-bit policy makes the library pick quoted-printable or base64 for a
+# non-ASCII body instead of raw 8-bit bytes, so accented text survives any
+# SMTP relay, including one that does not announce 8BITMIME.
+SEND_POLICY = email.policy.default.clone(cte_type='7bit')
+
+
+class SendRefused(Exception):
+    """A send that is refused before any network call."""
+
+
+def utf8_arg(value):
+    """Recover an argv string as UTF-8 text regardless of the process locale."""
     try:
+        return os.fsencode(value).decode('utf-8')
+    except UnicodeDecodeError:
+        raise SendRefused('argument is not valid UTF-8: %r' % value)
+
+
+def max_attach_bytes():
+    """The attachment size cap in bytes. An invalid value refuses the send
+    rather than silently applying a different cap than the operator set."""
+    raw = os.environ.get('FM_MAIL_MAX_ATTACH_BYTES', '')
+    if raw == '':
+        return DEFAULT_MAX_ATTACH_BYTES
+    if not re.fullmatch(r'[0-9]+', raw) or int(raw) <= 0:
+        raise SendRefused('FM_MAIL_MAX_ATTACH_BYTES must be a positive integer, got: %s' % raw)
+    return int(raw)
+
+
+def load_attachments(paths):
+    """Check every attachment, enforce the total size cap, then read the files.
+    Returns (filename, maintype, subtype, data) tuples. Runs before any
+    network call; the file type is checked before open so a FIFO can never
+    block the send, and the cap is checked on the size before reading and on
+    the bytes actually read. A send without attachments never reads the cap."""
+    if not paths:
+        return []
+    cap = max_attach_bytes()
+    total = 0
+    for path in paths:
+        try:
+            st = os.stat(path)
+        except FileNotFoundError:
+            raise SendRefused('attachment not found: %s' % path)
+        except OSError as e:
+            raise SendRefused('attachment unreadable: %s (%s)' % (path, e.strerror or e))
+        if not stat.S_ISREG(st.st_mode):
+            raise SendRefused('attachment is not a regular file: %s' % path)
+        if not os.access(path, os.R_OK):
+            raise SendRefused('attachment unreadable: %s' % path)
+        total += st.st_size
+    if total > cap:
+        raise SendRefused('attachments total %d bytes, above the FM_MAIL_MAX_ATTACH_BYTES cap of %d bytes'
+                          % (total, cap))
+    out = []
+    total = 0
+    for path in paths:
+        try:
+            with open(path, 'rb') as f:
+                data = f.read()
+        except OSError as e:
+            raise SendRefused('attachment unreadable: %s (%s)' % (path, e.strerror or e))
+        total += len(data)
+        ctype, encoding = mimetypes.guess_type(path)
+        if ctype is None or encoding is not None:
+            # An encoded file (such as .gz) is sent as opaque bytes.
+            ctype = 'application/octet-stream'
+        maintype, subtype = ctype.split('/', 1)
+        out.append((utf8_arg(os.path.basename(path)), maintype, subtype, data))
+    if total > cap:
+        raise SendRefused('attachments total %d bytes, above the FM_MAIL_MAX_ATTACH_BYTES cap of %d bytes'
+                          % (total, cap))
+    return out
+
+
+def cmd_send(to, subj, body, attach_paths=(), ccs=()):
+    try:
+        to = utf8_arg(to)
+        subj = utf8_arg(subj)
+        ccs = [utf8_arg(c) for c in ccs]
+        from_name = utf8_arg(os.environ.get('FM_MAIL_FROM_NAME', ''))
+        attachments = load_attachments(attach_paths)
         if body == '-':
-            body = sys.stdin.read().rstrip('\n')
-        m = EmailMessage()
-        m['From'] = USER
+            body = sys.stdin.buffer.read().decode('utf-8').rstrip('\n')
+        else:
+            body = utf8_arg(body)
+    except UnicodeDecodeError:
+        print('fm-mail send refused: body is not valid UTF-8', file=sys.stderr)
+        return 1
+    except SendRefused as e:
+        print('fm-mail send refused:', e, file=sys.stderr)
+        return 1
+    try:
+        m = EmailMessage(policy=SEND_POLICY)
+        m['From'] = formataddr((from_name, USER)) if from_name else USER
         m['To'] = to
+        if ccs:
+            m['Cc'] = ', '.join(ccs)
         m['Subject'] = subj
         m['Date'] = formatdate(localtime=True)
         m.set_content(body)
+        for filename, maintype, subtype, data in attachments:
+            m.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
         with smtplib.SMTP_SSL(STH, STP, context=CTX, timeout=MAIL_TIMEOUT) as s:
             s.login(USER, PW)
+            # send_message takes the envelope recipients from the To and Cc
+            # headers, so every Cc recipient receives the message.
             s.send_message(m)
-        print('sent to', to)
+        print('sent to', to, '(attachments: %d)' % len(attachments))
         return 0
     except Exception as e:
         print('fm-mail send error:', e)
         return 1
+
+
+def parse_send_args(args):
+    """Split `[--attach <path>]... [--cc <addr>]... [--] <to> <subj> <body>`.
+    Options come before the positionals; the first other argument, or `--`,
+    ends them, so a subject that starts with a dash stays a subject."""
+    attach, ccs = [], []
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a in ('--attach', '--cc'):
+            if i + 1 >= len(args) or args[i + 1] == '':
+                raise SendRefused('%s needs a value' % a)
+            (attach if a == '--attach' else ccs).append(args[i + 1])
+            i += 2
+            continue
+        if a == '--':
+            i += 1
+            break
+        if len(a) > 1 and a.startswith('-'):
+            raise SendRefused('unknown send option: %s' % a)
+        break
+    rest = args[i:]
+    if len(rest) < 3:
+        raise SendRefused('usage: send [--attach <path>]... [--cc <addr>]... <to> <subject> <body | ->')
+    return attach, ccs, rest[0], rest[1], rest[2]
 
 
 def cmd_seen(cursor_path):
@@ -477,9 +613,12 @@ def main():
     if cmd == 'read':
         return cmd_read()
     if cmd == 'send':
-        if len(sys.argv) < 5:
+        try:
+            attach, ccs, to, subj, body = parse_send_args(sys.argv[2:])
+        except SendRefused as e:
+            print('fm-mail send refused:', e, file=sys.stderr)
             return 1
-        return cmd_send(sys.argv[2], sys.argv[3], sys.argv[4])
+        return cmd_send(to, subj, body, attach, ccs)
     if cmd == 'seen':
         return cmd_seen(sys.argv[2] if len(sys.argv) > 2 else '')
     if cmd == 'poll_list':

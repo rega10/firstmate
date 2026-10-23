@@ -125,6 +125,300 @@ SH
   pass "fm-mail: send passes body not empty through stdin"
 }
 
+# send_fixture <name>: create a fakebin whose python3 runs the real engine
+# with smtplib.SMTP_SSL replaced by a fake built on smtplib.SMTP. The real
+# send_message still derives the envelope and flattens the message; the fake
+# only records the connection, the envelope recipients, and the exact message
+# bytes under $TMP_ROOT/<name>/, so no test reaches the network. Prints the
+# fixture directory; its fakebin is <dir>/fakebin.
+send_fixture() {
+  local dir="$TMP_ROOT/$1" real_py harness
+  real_py=$(command -v python3)
+  mkdir -p "$dir/fakebin"
+  harness="$dir/send-harness.py"
+  cat > "$harness" <<'PYEOF'
+import importlib.util, os, smtplib, sys
+
+CAP = os.environ['FM_MAIL_TEST_CAPTURE']
+
+class FakeSMTP(smtplib.SMTP):
+    def __init__(self, host, port, context=None, timeout=None):
+        open(os.path.join(CAP, 'connected'), 'w').close()
+        smtplib.SMTP.__init__(self)
+    def ehlo_or_helo_if_needed(self):
+        pass
+    def login(self, user, password):
+        pass
+    def sendmail(self, from_addr, to_addrs, msg, mail_options=(), rcpt_options=()):
+        with open(os.path.join(CAP, 'rcpt'), 'w') as f:
+            f.write('\n'.join(to_addrs) + '\n')
+        with open(os.path.join(CAP, 'message.eml'), 'wb') as f:
+            f.write(msg if isinstance(msg, bytes) else msg.encode('ascii'))
+        return {}
+
+smtplib.SMTP_SSL = FakeSMTP
+spec = importlib.util.spec_from_file_location('fm_mail', sys.argv[1])
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+sys.argv = [sys.argv[1]] + sys.argv[2:]
+sys.exit(mod.main())
+PYEOF
+  cat > "$dir/fakebin/python3" <<EOF
+#!/bin/bash
+exec "$real_py" "$harness" "\$@"
+EOF
+  chmod +x "$dir/fakebin/python3"
+  printf '%s\n' "$dir"
+}
+
+# send_inspect <dir> [originals-dir]: describe the captured message - top
+# content type, decoded From/To/Cc/Subject, whether the wire bytes are 7-bit,
+# the text body, and each attachment's type, name, size, and whether its bytes
+# match the same-named file under originals-dir.
+send_inspect() {
+  python3 - "$1/message.eml" "${2:-}" <<'PYEOF'
+import email, email.policy, os, sys
+raw = open(sys.argv[1], 'rb').read()
+msg = email.message_from_bytes(raw, policy=email.policy.default)
+print('content-type:', msg.get_content_type())
+for h in ('From', 'To', 'Cc', 'Subject'):
+    if msg[h] is not None:
+        print('%s: %s' % (h.lower(), str(msg[h])))
+try:
+    raw.decode('ascii')
+    print('wire: 7bit')
+except UnicodeDecodeError:
+    print('wire: 8bit')
+parts = list(msg.iter_parts()) if msg.is_multipart() else [msg]
+for i, part in enumerate(parts):
+    if part.get_content_disposition() == 'attachment':
+        data = part.get_content()
+        name = part.get_filename()
+        intact = ''
+        if sys.argv[2]:
+            orig = open(os.path.join(sys.argv[2], name), 'rb').read()
+            intact = ' intact' if orig == data else ' corrupted'
+        print('attachment %d: %s %s %d%s' % (i, part.get_content_type(), name, len(data), intact))
+    else:
+        print('body %d: %s %s' % (i, part.get_content_type(), part.get_content().rstrip('\n')))
+PYEOF
+}
+
+# send_run <dir> <home> [args...]: run fm-mail.sh send through the fixture.
+send_run() {
+  local dir=$1 home=$2
+  shift 2
+  FM_MAIL_USER=sender@example.com FM_MAIL_PASS=test-pass \
+    FM_IMAP_HOST=imap.test FM_SMTP_HOST=smtp.test \
+    FM_MAIL_TEST_CAPTURE="$dir" FM_HOME="$home" PATH="$dir/fakebin:$PATH" \
+    "$MAIL" send "$@"
+}
+
+test_send_plain_message_unchanged() {
+  local dir out rc=0 info
+  dir=$(send_fixture send-plain)
+  out=$(send_run "$dir" "$HOME_DIR" to@example.com "Plain subject" "plain body" 2>&1) || rc=$?
+  expect_code 0 "$rc" "a plain send without options must succeed"
+  assert_contains "$out" "sent to to@example.com (attachments: 0)" "plain send reports the recipient and no attachments"
+  assert_not_contains "$out" "test-pass" "send output never prints the password"
+  info=$(send_inspect "$dir")
+  assert_contains "$info" "content-type: text/plain" "a send without attachments stays a single text/plain message"
+  assert_contains "$info" "from: sender@example.com" "without FM_MAIL_FROM_NAME the From header is the bare account"
+  assert_not_contains "$info" "cc:" "a send without --cc sets no Cc header"
+  assert_contains "$info" "subject: Plain subject" "the subject is sent"
+  assert_contains "$info" "body 0: text/plain plain body" "the body is sent"
+  assert_equals "to@example.com" "$(cat "$dir/rcpt")" "the envelope holds only the To recipient"
+  rc=0
+  out=$(printf 'stdin body\n' | send_run "$dir" "$HOME_DIR" to@example.com "Stdin subject" - 2>&1) || rc=$?
+  expect_code 0 "$rc" "a plain send with a stdin body must succeed"
+  assert_contains "$(send_inspect "$dir")" "body 0: text/plain stdin body" "a - body still reads stdin"
+  pass "fm-mail: a plain send keeps its positional form and single-part message"
+}
+
+test_send_one_attachment() {
+  local dir files out rc=0 info size
+  dir=$(send_fixture send-one-attach)
+  files="$dir/files"
+  mkdir -p "$files"
+  printf '%%PDF-1.4\n%s\n' "questionnaire bytes" > "$files/questionnaire.pdf"
+  size=$(wc -c < "$files/questionnaire.pdf" | tr -d ' ')
+  out=$(send_run "$dir" "$HOME_DIR" --attach "$files/questionnaire.pdf" \
+    contact@example.com "Site questionnaire" "Please fill this in." 2>&1) || rc=$?
+  expect_code 0 "$rc" "a send with one attachment must succeed"
+  assert_contains "$out" "sent to contact@example.com (attachments: 1)" "the sent line carries the attachment count"
+  info=$(send_inspect "$dir" "$files")
+  assert_contains "$info" "content-type: multipart/mixed" "an attachment makes the message multipart/mixed"
+  assert_contains "$info" "body 0: text/plain Please fill this in." "the plain-text body is the first part"
+  assert_contains "$info" "attachment 1: application/pdf questionnaire.pdf $size intact" \
+    "the PDF is attached with its MIME type, name, and exact bytes"
+  pass "fm-mail: send --attach adds one file as a normal attachment"
+}
+
+test_send_two_attachments_with_mime_types() {
+  local dir files out rc=0 info
+  dir=$(send_fixture send-two-attach)
+  files="$dir/files"
+  mkdir -p "$files"
+  printf '%%PDF-1.4 form\n' > "$files/form.pdf"
+  printf '\211PNG\r\n\032\n\000\001\002binary' > "$files/plan.png"
+  printf 'opaque' > "$files/notes.fmunknownext"
+  out=$(send_run "$dir" "$HOME_DIR" --attach "$files/form.pdf" --attach "$files/plan.png" \
+    --attach "$files/notes.fmunknownext" contact@example.com "Two files" "See attached." 2>&1) || rc=$?
+  expect_code 0 "$rc" "a send with several attachments must succeed"
+  assert_contains "$out" "(attachments: 3)" "the sent line counts every attachment"
+  info=$(send_inspect "$dir" "$files")
+  assert_contains "$info" "body 0: text/plain See attached." "the plain-text body stays first"
+  assert_contains "$info" "attachment 1: application/pdf form.pdf" "the first attachment keeps the PDF type"
+  assert_contains "$info" "attachment 2: image/png plan.png" "the second attachment gets the PNG type"
+  assert_contains "$info" "attachment 3: application/octet-stream notes.fmunknownext" "an unknown extension falls back to application/octet-stream"
+  assert_not_contains "$info" "corrupted" "every attachment arrives with its exact bytes"
+  pass "fm-mail: send --attach is repeatable and types each file from its extension"
+}
+
+test_send_cc_reaches_every_recipient() {
+  local dir out rc=0 info
+  dir=$(send_fixture send-cc)
+  out=$(send_run "$dir" "$HOME_DIR" --cc first-cc@example.com --cc second-cc@example.com \
+    to@example.com "With copies" "Body" 2>&1) || rc=$?
+  expect_code 0 "$rc" "a send with --cc must succeed"
+  assert_contains "$out" "sent to to@example.com (attachments: 0)" "the sent line still names only the To recipient"
+  assert_not_contains "$out" "first-cc@example.com" "the sent line does not log Cc addresses"
+  info=$(send_inspect "$dir")
+  assert_contains "$info" "cc: first-cc@example.com, second-cc@example.com" "the Cc header lists every --cc address"
+  assert_equals "to@example.com
+first-cc@example.com
+second-cc@example.com" "$(cat "$dir/rcpt")" "the envelope reaches every To and Cc recipient"
+  pass "fm-mail: send --cc sets the Cc header and delivers to every recipient"
+}
+
+test_send_from_display_name() {
+  local dir home out rc=0 info
+  dir=$(send_fixture send-from-name)
+  home="$TMP_ROOT/from-name-home"
+  mkdir -p "$home"
+  printf 'FM_MAIL_FROM_NAME="Oficina Técnica Núñez"\n' > "$home/.env"
+  out=$(send_run "$dir" "$home" to@example.com "Named" "Body" 2>&1) || rc=$?
+  expect_code 0 "$rc" "a send with a display name from .env must succeed"
+  info=$(send_inspect "$dir")
+  assert_contains "$info" "from: Oficina Técnica Núñez <sender@example.com>" "the .env display name and the account form the From header"
+  assert_contains "$info" "wire: 7bit" "a UTF-8 display name is encoded for the wire"
+  rc=0
+  out=$(FM_MAIL_FROM_NAME="Env Name" send_run "$dir" "$home" to@example.com "Named" "Body" 2>&1) || rc=$?
+  expect_code 0 "$rc" "a send with a display name from the environment must succeed"
+  assert_contains "$(send_inspect "$dir")" "from: Env Name <sender@example.com>" "the environment display name wins over .env"
+  pass "fm-mail: FM_MAIL_FROM_NAME adds a display name to the From header"
+}
+
+test_send_utf8_subject_and_body() {
+  local dir out rc=0 info
+  dir=$(send_fixture send-utf8)
+  out=$(printf 'Señora Muñoz: le envío el cuestionario técnico. ¿Podría revisarlo?\n' | \
+    LC_ALL=C send_run "$dir" "$HOME_DIR" to@example.com "Cuestionario de instalación: añada sus datos" - 2>&1) || rc=$?
+  expect_code 0 "$rc" "a send with UTF-8 subject and body must succeed under the C locale"
+  info=$(send_inspect "$dir")
+  assert_contains "$info" "subject: Cuestionario de instalación: añada sus datos" "the accented subject survives"
+  assert_contains "$info" "body 0: text/plain Señora Muñoz: le envío el cuestionario técnico. ¿Podría revisarlo?" "the accented body survives"
+  assert_contains "$info" "wire: 7bit" "accented text is sent 7-bit safe"
+  rc=0
+  out=$(send_run "$dir" "$HOME_DIR" to@example.com "Información" "Atención: año" 2>&1) || rc=$?
+  expect_code 0 "$rc" "a send with a UTF-8 argument body must succeed"
+  assert_contains "$(send_inspect "$dir")" "body 0: text/plain Atención: año" "an accented argument body survives"
+  pass "fm-mail: send keeps Spanish accents in the subject and body"
+}
+
+test_send_refuses_above_size_cap() {
+  local dir files out rc=0
+  dir=$(send_fixture send-cap)
+  files="$dir/files"
+  mkdir -p "$files"
+  head -c 600 /dev/zero > "$files/a.pdf"
+  head -c 500 /dev/zero > "$files/b.pdf"
+  out=$(FM_MAIL_MAX_ATTACH_BYTES=1000 send_run "$dir" "$HOME_DIR" --attach "$files/a.pdf" \
+    --attach "$files/b.pdf" to@example.com "Too big" "Body" 2>&1) || rc=$?
+  expect_code 1 "$rc" "attachments above the cap must refuse the send"
+  assert_contains "$out" "attachments total 1100 bytes, above the FM_MAIL_MAX_ATTACH_BYTES cap of 1000 bytes" \
+    "the refusal names the total and the cap"
+  assert_absent "$dir/connected" "a refused send never opens an SMTP connection"
+  rc=0
+  out=$(FM_MAIL_MAX_ATTACH_BYTES=1100 send_run "$dir" "$HOME_DIR" --attach "$files/a.pdf" \
+    --attach "$files/b.pdf" to@example.com "Exactly at cap" "Body" 2>&1) || rc=$?
+  expect_code 0 "$rc" "attachments exactly at the cap are sent"
+  rm -f "$dir/connected"
+  rc=0
+  out=$(FM_MAIL_MAX_ATTACH_BYTES=20MB send_run "$dir" "$HOME_DIR" --attach "$files/a.pdf" \
+    to@example.com "Bad cap" "Body" 2>&1) || rc=$?
+  expect_code 1 "$rc" "an invalid cap refuses the send"
+  assert_contains "$out" "FM_MAIL_MAX_ATTACH_BYTES must be a positive integer" "an invalid cap names the variable"
+  assert_absent "$dir/connected" "an invalid cap never opens an SMTP connection"
+  rc=0
+  out=$(FM_MAIL_MAX_ATTACH_BYTES=20MB send_run "$dir" "$HOME_DIR" to@example.com "No files" "Body" 2>&1) || rc=$?
+  expect_code 0 "$rc" "a send without attachments ignores the cap"
+  pass "fm-mail: send refuses attachments above the total size cap"
+}
+
+test_send_default_size_cap() {
+  local dir files out rc=0
+  dir=$(send_fixture send-default-cap)
+  files="$dir/files"
+  mkdir -p "$files"
+  head -c 20971521 /dev/zero > "$files/big.bin"
+  out=$(send_run "$dir" "$HOME_DIR" --attach "$files/big.bin" to@example.com "Big" "Body" 2>&1) || rc=$?
+  rm -f "$files/big.bin"
+  expect_code 1 "$rc" "a file one byte above 20 MB must refuse by default"
+  assert_contains "$out" "cap of 20971520 bytes" "the default cap is 20 MB"
+  assert_absent "$dir/connected" "the default-cap refusal never opens an SMTP connection"
+  pass "fm-mail: the default attachment cap is 20 MB"
+}
+
+test_send_refuses_missing_or_irregular_attachment() {
+  local dir files out rc=0
+  dir=$(send_fixture send-missing)
+  files="$dir/files"
+  mkdir -p "$files/folder"
+  printf 'ok' > "$files/ok.pdf"
+  out=$(send_run "$dir" "$HOME_DIR" --attach "$files/ok.pdf" --attach "$files/absent.pdf" \
+    to@example.com "Missing" "Body" 2>&1) || rc=$?
+  expect_code 1 "$rc" "a missing attachment must refuse the send"
+  assert_contains "$out" "attachment not found: $files/absent.pdf" "the refusal names the missing file"
+  assert_absent "$dir/connected" "a missing attachment never opens an SMTP connection"
+  rc=0
+  out=$(send_run "$dir" "$HOME_DIR" --attach "$files/folder" to@example.com "Folder" "Body" 2>&1) || rc=$?
+  expect_code 1 "$rc" "a directory attachment must refuse the send"
+  assert_contains "$out" "attachment is not a regular file: $files/folder" "the refusal names the non-regular path"
+  assert_absent "$dir/connected" "a non-regular attachment never opens an SMTP connection"
+  # root reads a mode-000 file, so the unreadable case runs only as a normal user.
+  if [ "$(id -u)" -ne 0 ]; then
+    printf 'secret' > "$files/locked.pdf"
+    chmod 000 "$files/locked.pdf"
+    rc=0
+    out=$(send_run "$dir" "$HOME_DIR" --attach "$files/locked.pdf" to@example.com "Locked" "Body" 2>&1) || rc=$?
+    chmod 600 "$files/locked.pdf"
+    expect_code 1 "$rc" "an unreadable attachment must refuse the send"
+    assert_contains "$out" "attachment unreadable: $files/locked.pdf" "the refusal names the unreadable file"
+    assert_absent "$dir/connected" "an unreadable attachment never opens an SMTP connection"
+  fi
+  pass "fm-mail: send refuses a missing, unreadable, or non-regular attachment before connecting"
+}
+
+test_send_option_errors_print_usage() {
+  local dir out rc=0
+  dir=$(send_fixture send-opt-errors)
+  out=$(send_run "$dir" "$HOME_DIR" --attach 2>&1) || rc=$?
+  expect_code 1 "$rc" "--attach without a value must fail"
+  assert_contains "$out" "--attach needs a value" "the error names the option missing its value"
+  rc=0
+  out=$(send_run "$dir" "$HOME_DIR" --bcc x@example.com to@example.com "S" "B" 2>&1) || rc=$?
+  expect_code 1 "$rc" "an unknown send option must fail"
+  assert_contains "$out" "unknown send option: --bcc" "the error names the unknown option"
+  assert_contains "$out" "--attach <path>" "the usage names the attachment option"
+  assert_absent "$dir/connected" "an option error never opens an SMTP connection"
+  rc=0
+  out=$(send_run "$dir" "$HOME_DIR" -- to@example.com "-dash subject" "Body" 2>&1) || rc=$?
+  expect_code 0 "$rc" "-- lets a subject start with a dash"
+  assert_contains "$(send_inspect "$dir")" "subject: -dash subject" "the dash subject is sent as the subject"
+  pass "fm-mail: send option errors are clear and -- ends the options"
+}
+
 test_poll_error_propagates() {
   local fakebin homedir_bin
   fakebin=$(fm_fakebin "$TMP_ROOT")
@@ -2607,6 +2901,16 @@ test_help_plumbing
 test_unknown_subcommand_prints_usage
 test_no_secret_leaked_to_status
 test_send_passes_body
+test_send_plain_message_unchanged
+test_send_one_attachment
+test_send_two_attachments_with_mime_types
+test_send_cc_reaches_every_recipient
+test_send_from_display_name
+test_send_utf8_subject_and_body
+test_send_refuses_above_size_cap
+test_send_default_size_cap
+test_send_refuses_missing_or_irregular_attachment
+test_send_option_errors_print_usage
 test_poll_error_propagates
 test_poll_dedupes_surfaces_by_uid
 test_poll_resurfaces_uid_after_generation_change
