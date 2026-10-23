@@ -1,0 +1,23 @@
+attachments-cc-spanish: pass; exit=0; SMTP connections=1; messages=1
+stdin-spanish-c-locale: pass; exit=0; SMTP connections=1; messages=1
+plain-positional-compatibility: pass; exit=0; SMTP connections=1; messages=1
+cap-total-above: pass; exit=1; SMTP connections=0; messages=0
+cap-total-exact: pass; exit=0; SMTP connections=1; messages=1
+cap-default-above: pass; exit=1; SMTP connections=0; messages=0
+cap-invalid-0: pass; exit=1; SMTP connections=0; messages=0
+cap-invalid-minus1: pass; exit=1; SMTP connections=0; messages=0
+cap-invalid-20MB: pass; exit=1; SMTP connections=0; messages=0
+attachment-missing: pass; exit=1; SMTP connections=0; messages=0
+attachment-directory: pass; exit=1; SMTP connections=0; messages=0
+attachment-fifo: pass; exit=1; SMTP connections=0; messages=0
+attachment-unreadable: pass; exit=1; SMTP connections=0; messages=0
+attach-missing-value: pass; exit=1; SMTP connections=0; messages=0
+cc-missing-value: pass; exit=1; SMTP connections=0; messages=0
+unknown-option: pass; exit=1; SMTP connections=0; messages=0
+invalid-utf8-stdin: pass; exit=1; SMTP connections=0; messages=0
+reject-to: pass; exit=1; SMTP connections=1; messages=1
+reject-cc: pass; exit=1; SMTP connections=1; messages=1
+reject-both-copies: pass; exit=1; SMTP connections=1; messages=1
+reject-all: pass; exit=1; SMTP connections=1; messages=0
+reject-sole-recipient: pass; exit=1; SMTP connections=1; messages=0
+All public CLI sends completed against the real TLS transport. No product code was substituted.

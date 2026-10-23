@@ -1,0 +1,1011 @@
+[
+  {
+    "name": "attachments-cc-spanish",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--attach",
+      ".mail-validation/files/plan.png",
+      "--attach",
+      ".mail-validation/files/notes.fmunknownext",
+      "--cc",
+      "copy-one@example.test",
+      "--cc",
+      "copy-two@example.test",
+      "contact@example.test",
+      "Cuestionario de instalación: añada sus datos",
+      "Señora Muñoz:\nLe envío el cuestionario técnico. ¿Podría revisarlo?"
+    ],
+    "exit_code": 0,
+    "stdout": "sent to contact@example.test (attachments: 3)\n",
+    "stderr": "",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": true
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-one@example.test",
+        "accepted": true
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-two@example.test",
+        "accepted": true
+      },
+      {
+        "event": "DATA",
+        "bytes": 2535,
+        "delivered_to": [
+          "contact@example.test",
+          "copy-one@example.test",
+          "copy-two@example.test"
+        ]
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [
+      {
+        "delivered_to": [
+          "contact@example.test",
+          "copy-one@example.test",
+          "copy-two@example.test"
+        ],
+        "bytes": 2535,
+        "from": "Oficina Técnica Núñez <sender@example.test>",
+        "to": "contact@example.test",
+        "cc": "copy-one@example.test, copy-two@example.test",
+        "subject": "Cuestionario de instalación: añada sus datos",
+        "content_type": "multipart/mixed",
+        "body": "Señora Muñoz:\nLe envío el cuestionario técnico. ¿Podría revisarlo?\n",
+        "attachments": [
+          {
+            "filename": "cuestionario técnico.pdf",
+            "content_type": "application/pdf",
+            "bytes": 617,
+            "sha256": "009caac265fd789d9ea869dfd6a60ba8e2dabc5bb739e110bbdef2b87084548d",
+            "matches_original_bytes": true
+          },
+          {
+            "filename": "plan.png",
+            "content_type": "image/png",
+            "bytes": 68,
+            "sha256": "f3c9f75f396658d0bf4922ace5bdcb54a2a61822de455e17fdf1b791793615a3",
+            "matches_original_bytes": true
+          },
+          {
+            "filename": "notes.fmunknownext",
+            "content_type": "application/octet-stream",
+            "bytes": 256,
+            "sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880",
+            "matches_original_bytes": true
+          }
+        ],
+        "wire_7bit": true,
+        "raw_message": "attachments-cc-spanish.eml"
+      }
+    ],
+    "result": "pass"
+  },
+  {
+    "name": "stdin-spanish-c-locale",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "contact@example.test",
+      "Cuestionario de instalación: añada sus datos",
+      "-"
+    ],
+    "exit_code": 0,
+    "stdout": "sent to contact@example.test (attachments: 1)\n",
+    "stderr": "",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": true
+      },
+      {
+        "event": "DATA",
+        "bytes": 1626,
+        "delivered_to": [
+          "contact@example.test"
+        ]
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [
+      {
+        "delivered_to": [
+          "contact@example.test"
+        ],
+        "bytes": 1626,
+        "from": "Nombre del entorno <sender@example.test>",
+        "to": "contact@example.test",
+        "cc": null,
+        "subject": "Cuestionario de instalación: añada sus datos",
+        "content_type": "multipart/mixed",
+        "body": "Señora Muñoz:\nLe envío el cuestionario técnico. ¿Podría revisarlo?\n",
+        "attachments": [
+          {
+            "filename": "cuestionario técnico.pdf",
+            "content_type": "application/pdf",
+            "bytes": 617,
+            "sha256": "009caac265fd789d9ea869dfd6a60ba8e2dabc5bb739e110bbdef2b87084548d",
+            "matches_original_bytes": true
+          }
+        ],
+        "wire_7bit": true,
+        "raw_message": "stdin-spanish-c-locale.eml"
+      }
+    ],
+    "result": "pass"
+  },
+  {
+    "name": "plain-positional-compatibility",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--",
+      "contact@example.test",
+      "-dash subject",
+      "plain body"
+    ],
+    "exit_code": 0,
+    "stdout": "sent to contact@example.test (attachments: 0)\n",
+    "stderr": "",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": true
+      },
+      {
+        "event": "DATA",
+        "bytes": 225,
+        "delivered_to": [
+          "contact@example.test"
+        ]
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [
+      {
+        "delivered_to": [
+          "contact@example.test"
+        ],
+        "bytes": 225,
+        "from": "sender@example.test",
+        "to": "contact@example.test",
+        "cc": null,
+        "subject": "-dash subject",
+        "content_type": "text/plain",
+        "body": "plain body\n",
+        "attachments": [],
+        "wire_7bit": true,
+        "raw_message": "plain-positional-compatibility.eml"
+      }
+    ],
+    "result": "pass"
+  },
+  {
+    "name": "cap-total-above",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/a.bin",
+      "--attach",
+      ".mail-validation/files/b.bin",
+      "contact@example.test",
+      "Cap",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: attachments total 1100 bytes, above the FM_MAIL_MAX_ATTACH_BYTES cap of 1000 bytes\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "cap-total-exact",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/a.bin",
+      "--attach",
+      ".mail-validation/files/b.bin",
+      "contact@example.test",
+      "Cap",
+      "Body"
+    ],
+    "exit_code": 0,
+    "stdout": "sent to contact@example.test (attachments: 2)\n",
+    "stderr": "",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": true
+      },
+      {
+        "event": "DATA",
+        "bytes": 2261,
+        "delivered_to": [
+          "contact@example.test"
+        ]
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [
+      {
+        "delivered_to": [
+          "contact@example.test"
+        ],
+        "bytes": 2261,
+        "from": "sender@example.test",
+        "to": "contact@example.test",
+        "cc": null,
+        "subject": "Cap",
+        "content_type": "multipart/mixed",
+        "body": "Body\n",
+        "attachments": [
+          {
+            "filename": "a.bin",
+            "content_type": "application/octet-stream",
+            "bytes": 600,
+            "sha256": "ba35c170729417f1499e0886e7e12fcdb4ab00ad411110ae1e888c766d4ed70d",
+            "matches_original_bytes": true
+          },
+          {
+            "filename": "b.bin",
+            "content_type": "application/octet-stream",
+            "bytes": 500,
+            "sha256": "ba44b93823e5c24e99d64a916b3e53a97613d4c438c0c2896cadc2dd8195c14a",
+            "matches_original_bytes": true
+          }
+        ],
+        "wire_7bit": true,
+        "raw_message": "cap-total-exact.eml"
+      }
+    ],
+    "result": "pass"
+  },
+  {
+    "name": "cap-default-above",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/big.bin",
+      "contact@example.test",
+      "Default cap",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: attachments total 20971521 bytes, above the FM_MAIL_MAX_ATTACH_BYTES cap of 20971520 bytes\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "cap-invalid-0",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "contact@example.test",
+      "Bad cap",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: FM_MAIL_MAX_ATTACH_BYTES must be a positive integer, got: 0\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "cap-invalid-minus1",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "contact@example.test",
+      "Bad cap",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: FM_MAIL_MAX_ATTACH_BYTES must be a positive integer, got: -1\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "cap-invalid-20MB",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "contact@example.test",
+      "Bad cap",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: FM_MAIL_MAX_ATTACH_BYTES must be a positive integer, got: 20MB\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "attachment-missing",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--attach",
+      ".mail-validation/files/absent.pdf",
+      "contact@example.test",
+      "Bad file",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: attachment not found: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW75XNPRXZM6CDWSP26XMM/.mail-validation/files/absent.pdf\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "attachment-directory",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--attach",
+      ".mail-validation/files/folder",
+      "contact@example.test",
+      "Bad file",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: attachment is not a regular file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW75XNPRXZM6CDWSP26XMM/.mail-validation/files/folder\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "attachment-fifo",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--attach",
+      ".mail-validation/files/pipe.pdf",
+      "contact@example.test",
+      "Bad file",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: attachment is not a regular file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW75XNPRXZM6CDWSP26XMM/.mail-validation/files/pipe.pdf\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "attachment-unreadable",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--attach",
+      ".mail-validation/files/locked.pdf",
+      "contact@example.test",
+      "Bad file",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: attachment unreadable: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW75XNPRXZM6CDWSP26XMM/.mail-validation/files/locked.pdf\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "attach-missing-value",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail: --attach needs a value\nfm-mail.sh read\nfm-mail.sh send [--attach <path>]... [--cc <addr>]... <to> <subject> <body | ->\nfm-mail.sh poll\nfm-mail.sh status\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "cc-missing-value",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--cc"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail: --cc needs a value\nfm-mail.sh read\nfm-mail.sh send [--attach <path>]... [--cc <addr>]... <to> <subject> <body | ->\nfm-mail.sh poll\nfm-mail.sh status\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "unknown-option",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--bcc",
+      "copy-one@example.test",
+      "contact@example.test",
+      "Bad option",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail: unknown send option: --bcc\nfm-mail.sh read\nfm-mail.sh send [--attach <path>]... [--cc <addr>]... <to> <subject> <body | ->\nfm-mail.sh poll\nfm-mail.sh status\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "invalid-utf8-stdin",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "contact@example.test",
+      "Body encoding",
+      "-"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused: body is not valid UTF-8\n",
+    "smtp_events": [],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "reject-to",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--cc",
+      "copy-one@example.test",
+      "--cc",
+      "copy-two@example.test",
+      "contact@example.test",
+      "Refusal",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused recipients: contact@example.test\n",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": false
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-one@example.test",
+        "accepted": true
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-two@example.test",
+        "accepted": true
+      },
+      {
+        "event": "DATA",
+        "bytes": 1489,
+        "delivered_to": [
+          "copy-one@example.test",
+          "copy-two@example.test"
+        ]
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [
+      {
+        "delivered_to": [
+          "copy-one@example.test",
+          "copy-two@example.test"
+        ],
+        "bytes": 1489,
+        "from": "sender@example.test",
+        "to": "contact@example.test",
+        "cc": "copy-one@example.test, copy-two@example.test",
+        "subject": "Refusal",
+        "content_type": "multipart/mixed",
+        "body": "Body\n",
+        "attachments": [
+          {
+            "filename": "cuestionario técnico.pdf",
+            "content_type": "application/pdf",
+            "bytes": 617,
+            "sha256": "009caac265fd789d9ea869dfd6a60ba8e2dabc5bb739e110bbdef2b87084548d",
+            "matches_original_bytes": true
+          }
+        ],
+        "wire_7bit": true,
+        "raw_message": "reject-to.eml"
+      }
+    ],
+    "result": "pass"
+  },
+  {
+    "name": "reject-cc",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--cc",
+      "copy-one@example.test",
+      "--cc",
+      "copy-two@example.test",
+      "contact@example.test",
+      "Refusal",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused recipients: copy-one@example.test\n",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": true
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-one@example.test",
+        "accepted": false
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-two@example.test",
+        "accepted": true
+      },
+      {
+        "event": "DATA",
+        "bytes": 1489,
+        "delivered_to": [
+          "contact@example.test",
+          "copy-two@example.test"
+        ]
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [
+      {
+        "delivered_to": [
+          "contact@example.test",
+          "copy-two@example.test"
+        ],
+        "bytes": 1489,
+        "from": "sender@example.test",
+        "to": "contact@example.test",
+        "cc": "copy-one@example.test, copy-two@example.test",
+        "subject": "Refusal",
+        "content_type": "multipart/mixed",
+        "body": "Body\n",
+        "attachments": [
+          {
+            "filename": "cuestionario técnico.pdf",
+            "content_type": "application/pdf",
+            "bytes": 617,
+            "sha256": "009caac265fd789d9ea869dfd6a60ba8e2dabc5bb739e110bbdef2b87084548d",
+            "matches_original_bytes": true
+          }
+        ],
+        "wire_7bit": true,
+        "raw_message": "reject-cc.eml"
+      }
+    ],
+    "result": "pass"
+  },
+  {
+    "name": "reject-both-copies",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--cc",
+      "copy-one@example.test",
+      "--cc",
+      "copy-two@example.test",
+      "contact@example.test",
+      "Refusal",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused recipients: copy-one@example.test, copy-two@example.test\n",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": true
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-one@example.test",
+        "accepted": false
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-two@example.test",
+        "accepted": false
+      },
+      {
+        "event": "DATA",
+        "bytes": 1489,
+        "delivered_to": [
+          "contact@example.test"
+        ]
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [
+      {
+        "delivered_to": [
+          "contact@example.test"
+        ],
+        "bytes": 1489,
+        "from": "sender@example.test",
+        "to": "contact@example.test",
+        "cc": "copy-one@example.test, copy-two@example.test",
+        "subject": "Refusal",
+        "content_type": "multipart/mixed",
+        "body": "Body\n",
+        "attachments": [
+          {
+            "filename": "cuestionario técnico.pdf",
+            "content_type": "application/pdf",
+            "bytes": 617,
+            "sha256": "009caac265fd789d9ea869dfd6a60ba8e2dabc5bb739e110bbdef2b87084548d",
+            "matches_original_bytes": true
+          }
+        ],
+        "wire_7bit": true,
+        "raw_message": "reject-both-copies.eml"
+      }
+    ],
+    "result": "pass"
+  },
+  {
+    "name": "reject-all",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "--attach",
+      ".mail-validation/files/cuestionario técnico.pdf",
+      "--cc",
+      "copy-one@example.test",
+      "--cc",
+      "copy-two@example.test",
+      "contact@example.test",
+      "Refusal",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused recipients: contact@example.test, copy-one@example.test, copy-two@example.test\n",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": false
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-one@example.test",
+        "accepted": false
+      },
+      {
+        "event": "RCPT",
+        "recipient": "copy-two@example.test",
+        "accepted": false
+      },
+      {
+        "event": "RSET"
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  },
+  {
+    "name": "reject-sole-recipient",
+    "command": [
+      "bash",
+      "bin/fm-mail.sh",
+      "send",
+      "contact@example.test",
+      "Refusal",
+      "Body"
+    ],
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "fm-mail send refused recipients: contact@example.test\n",
+    "smtp_events": [
+      {
+        "event": "connect"
+      },
+      {
+        "event": "EHLO",
+        "features": [
+          "AUTH PLAIN"
+        ],
+        "8BITMIME": false,
+        "SMTPUTF8": false
+      },
+      {
+        "event": "AUTH",
+        "credentials": "verified disposable credentials; redacted"
+      },
+      {
+        "event": "MAIL",
+        "argument": "FROM:<sender@example.test>"
+      },
+      {
+        "event": "RCPT",
+        "recipient": "contact@example.test",
+        "accepted": false
+      },
+      {
+        "event": "RSET"
+      },
+      {
+        "event": "QUIT"
+      }
+    ],
+    "endpoint_errors": [],
+    "messages": [],
+    "result": "pass"
+  }
+]

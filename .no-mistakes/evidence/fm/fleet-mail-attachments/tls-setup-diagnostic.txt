@@ -1,0 +1,6 @@
+Initial setup attempt with /usr/bin/python3:
+LibreSSL 2.8.3
+DefaultVerifyPaths(cafile='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5MW75XNPRXZM6CDWSP26XMM/.mail-validation/cert.pem', capath='/private/etc/ssl/certs', openssl_cafile_env='SSL_CERT_FILE', openssl_cafile='/private/etc/ssl/cert.pem', openssl_capath_env='SSL_CERT_DIR', openssl_capath='/private/etc/ssl/certs')
+{'x509': 128, 'crl': 0, 'x509_ca': 128}
+The local certificate was not loaded. The first send correctly refused an untrusted TLS peer. No SMTP message was sent.
+Workaround: download a disposable Python runtime within the worktree and repeat with SSL_CERT_FILE.
