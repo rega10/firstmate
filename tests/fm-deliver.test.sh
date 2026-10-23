@@ -44,7 +44,7 @@ if [ -n "${FM_DELIVER_TEST_MAIL_FAIL:-}" ]; then
   echo "fm-mail send refused recipients: $to" >&2
   exit 1
 fi
-echo "sent to $to (attachments: $attachments)"
+echo "sent to $to (attachments: $attachments) message-id: <delivery-test@example.net>"
 SH
 chmod +x "$BIN/fm-mail.sh"
 DELIVER="$BIN/fm-deliver.sh"
@@ -135,7 +135,7 @@ test_external_needs_confirmation() {
   expect_code 3 "$rc" "an external send without a confirmation"
   assert_contains "$(cat "$TMP_ROOT/err")" "the confirmation is missing" "the refusal names the missing confirmation"
   assert_absent "$CAPTURE/argv" "no mail is sent without the confirmation"
-  for words_text in "OK" "sure" "no, don't send it" "send items"; do
+  for words_text in "OK" "sure" "no, don't send it" "Should I say send it?" "yes, send later" "please send it" "send items"; do
     printf '%s\n' "$words_text" > "$words/weak"
     deliver "$home" site-it-lead "$home/data/report/report.pdf" --order-file "$words/order" \
       --confirm-file "$words/weak"
@@ -182,7 +182,7 @@ report.pdf, plan.png" "$(cat "$CAPTURE/stdin")" "the default covering text is in
   assert_equals "mándale el reporte a José" "$(last_log "$home" 'd["order"]')" "the log quotes the order exactly"
   assert_equals "Sí, envía." "$(last_log "$home" 'd["confirmation"]')" "the log quotes the confirmation exactly"
   assert_equals "sent" "$(last_log "$home" 'd["result"]')" "the log records the result"
-  assert_equals "sent to j***@example.com (attachments: 2)" "$(last_log "$home" 'd["detail"]')" \
+  assert_equals "sent to j***@example.com (attachments: 2) message-id: <delivery-test@example.net>" "$(last_log "$home" 'd["detail"]')" \
     "the log keeps the mail plane's sent line with the address masked"
   assert_contains "$(last_log "$home" 'd["at"]')" "Z" "the log time is UTC"
   assert_equals "at,contact_id,channel,masked_address,files,mode,order,confirmation,result,detail" \
@@ -201,13 +201,13 @@ test_internal_sends_on_order_alone() {
   local home words rc
   home=$(new_home internal)
   words="$TMP_ROOT/internal-words"
-  printf 'Quarterly numbers\nSecond line.\n' > "$words/note"
+  printf 'Quarterly numbers\nSecond line.\n' > "$home/data/report/note.txt"
   deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" \
-    --note-file "$words/note" --subject "Q3 report"
+    --note-file "$home/data/report/note.txt"
   rc=$?
   expect_code 0 "$rc" "an internal send without a confirmation"
   assert_contains "$(cat "$TMP_ROOT/out")" "sent: Maria Lopez email m***@example.org 1 file(s) 26 bytes" "the receipt"
-  assert_contains "$(cat "$CAPTURE/argv")" "Q3 report" "--subject replaces the default subject"
+  assert_contains "$(cat "$CAPTURE/argv")" "Document: report.pdf" "a custom note keeps the generated subject"
   assert_equals "Quarterly numbers
 Second line." "$(cat "$CAPTURE/stdin")" "--note-file is the covering text"
   assert_equals "None" "$(last_log "$home" 'd["confirmation"]')" "no confirmation is logged as null"
@@ -353,16 +353,176 @@ test_usage_errors() {
   deliver "$home" maria-lopez "$home/data/report/report.pdf"
   rc=$?
   expect_code 1 "$rc" "a send without --order-file"
-  : > "$TMP_ROOT/usage-words/empty"
-  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$TMP_ROOT/usage-words/empty"
-  rc=$?
-  expect_code 1 "$rc" "an empty order file"
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$TMP_ROOT/usage-words/order" --subject "Custom"
+  expect_code 1 "$?" "the removed subject option is refused"
+  assert_absent "$CAPTURE/argv" "a subject override sends nothing"
   lines=$(log_lines "$home")
   assert_equals "0" "$lines" "a usage error writes no log line"
   FM_HOME="$home" "$DELIVER" --help > "$TMP_ROOT/out" 2>&1
   expect_code 0 "$?" "--help"
   assert_contains "$(cat "$TMP_ROOT/out")" "av inject +FM_MAIL_PASS -- bin/fm-deliver.sh" "--help shows how to run a real send"
   pass "fm-deliver: usage errors exit 1 without a log line"
+}
+
+test_covering_note_preflight() {
+  local home words note path expected
+  home=$(new_home notes)
+  words="$TMP_ROOT/notes-words"
+  mkdir -p "$home/projects" "$home/data/report/state" "$home/data/outbound"
+  for path in "$home/.env" "$home/config/account.txt" "$home/state/record.txt" \
+    "$home/projects/readme.txt" "$words/outside.txt" "$home/data/top.txt" \
+    "$home/data/outbound/note.txt" "$home/data/report/state/note.txt" \
+    "$home/data/report/.env" "$home/data/report/.env.local"; do
+    printf 'private covering text\n' > "$path"
+    ln -sf "$path" "$home/data/report/link.txt"
+    for note in "$path" "$home/data/report/link.txt"; do
+      deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --note-file "$note"
+      expect_code 5 "$?" "a forbidden covering note: $note"
+      assert_absent "$CAPTURE/argv" "a forbidden covering note sends nothing"
+      assert_equals "refused" "$(last_log "$home" 'd["result"]')" "a note refusal is logged"
+      assert_no_grep "private covering text" "$home/data/outbound/sends.jsonl" "the log omits note contents"
+    done
+  done
+  note="$home/data/report/note.txt"
+  for expected in 'password=LEAKEDVALUE' 'ghp_LEAKEDVALUE' '-----BEGIN PRIVATE KEY-----'; do
+    printf '%s\n' "$expected" > "$note"
+    deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --note-file "$note"
+    expect_code 5 "$?" "a secret in a covering note"
+    assert_absent "$CAPTURE/argv" "a secret in a note sends nothing"
+    assert_not_contains "$(cat "$TMP_ROOT/err")" "$expected" "the refusal omits matched bytes"
+  done
+  for path in empty invalid; do
+    if [ "$path" = empty ]; then
+      : > "$note"
+    else
+      printf '\377' > "$note"
+    fi
+    deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --note-file "$note"
+    expect_code 5 "$?" "a $path covering note"
+    assert_absent "$CAPTURE/argv" "an unusable note sends nothing"
+  done
+  printf 'password=LEAKEDVALUE\n' > "$note"
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --note-file "$note" --dry-run
+  expect_code 5 "$?" "a dry run also scans the covering note"
+  printf 'A safe covering note.\n' > "$note"
+  ln -sf "$note" "$home/data/report/safe-link.txt"
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --note-file "$home/data/report/safe-link.txt"
+  expect_code 0 "$?" "a safe covering note symlink"
+  assert_equals "A safe covering note." "$(cat "$CAPTURE/stdin")" "the checked note becomes the body"
+  FM_DELIVER_MAX_BYTES=26 deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --note-file "$home/data/report/report.pdf"
+  expect_code 0 "$?" "a note exactly at the cap is allowed"
+  printf 'This note is longer than the byte cap.\n' > "$note"
+  FM_DELIVER_MAX_BYTES=26 deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --note-file "$note"
+  expect_code 5 "$?" "a covering note above the cap"
+  assert_absent "$CAPTURE/argv" "an oversized note sends nothing"
+  pass "fm-deliver: covering notes pass location, content, and readability checks"
+}
+
+test_decoded_document_scan() {
+  local home words ext kind expected rc
+  home=$(new_home decoded)
+  words="$TMP_ROOT/decoded-words"
+  python3 - "$home/data/report" <<'PYDOC'
+import pathlib, sys, zipfile, zlib
+root = pathlib.Path(sys.argv[1])
+for ext in ('docx', 'xlsx'):
+    for kind in ('safe', 'leak'):
+        with zipfile.ZipFile(root / (kind + '.' + ext), 'w', zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr('document.xml', '<document>Safe first member</document>')
+            archive.writestr('extra/content.bin', b'password=LEAKEDVALUE' if kind == 'leak' else b'Safe last member')
+    (root / ('broken.' + ext)).write_bytes(b'not a ZIP archive')
+for kind in ('safe', 'leak', 'broken'):
+    data = b'%PDF-1.4\n'
+    for index in range(2):
+        text = b'password=LEAKEDVALUE' if kind == 'leak' and index else b'Safe text'
+        payload = b'not deflated' if kind == 'broken' and index else zlib.compress(text)
+        filter_name = b'/FlateDecode' if index == 0 else b'[/FlateDecode]'
+        data += (b'%d 0 obj\n<< /Length %d /Filter ' % (index + 1, len(payload)) + filter_name
+                 + b' /DecodeParms << /Predictor 1 >> >>\nstream\r\n' + payload + b'\r\nendstream\nendobj\n')
+    (root / (kind + '.pdf')).write_bytes(data + b'%%EOF\n')
+PYDOC
+  for ext in docx xlsx pdf; do
+    for kind in leak broken safe; do
+      deliver "$home" maria-lopez "$home/data/report/$kind.$ext" --order-file "$words/order"
+      rc=$?
+      if [ "$kind" = safe ]; then
+        expect_code 0 "$rc" "a safe $ext document"
+        assert_present "$CAPTURE/argv" "a safe $ext document reaches the mail plane"
+      else
+        expect_code 5 "$rc" "a $kind $ext document"
+        if [ "$kind" = leak ]; then
+          expected="matches the secret pattern password="
+        else
+          expected="cannot decode document content"
+        fi
+        assert_contains "$(cat "$TMP_ROOT/err")" "$expected" "the document refusal names its cause"
+        assert_absent "$CAPTURE/argv" "an unsafe $ext document sends nothing"
+        assert_equals "refused" "$(last_log "$home" 'd["result"]')" "a document refusal is logged"
+      fi
+    done
+  done
+  assert_no_grep 'LEAKEDVALUE' "$home/data/outbound/sends.jsonl" "the log omits decoded secret bytes"
+  pass "fm-deliver: the scan checks every archive member and PDF deflate stream"
+}
+
+test_input_failures_are_logged() {
+  local home words field path expected before rc cap
+  home=$(new_home logged-inputs)
+  words="$TMP_ROOT/logged-inputs-words"
+  for field in order confirm note; do
+    for path in missing empty invalid; do
+      if [ "$path" = empty ]; then
+        : > "$words/$path"
+        : > "$home/data/report/$path.txt"
+      elif [ "$path" = invalid ]; then
+        printf '\377' > "$words/$path"
+        printf '\377' > "$home/data/report/$path.txt"
+      fi
+      before=$(log_lines "$home")
+      case "$field" in
+        order) deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/$path" ;;
+        confirm) deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --confirm-file "$words/$path" ;;
+        note) deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --note-file "$home/data/report/$path.txt" ;;
+      esac
+      rc=$?
+      if [ "$field" = note ]; then expected=5; else expected=1; fi
+      expect_code "$expected" "$rc" "an unusable $field file"
+      assert_equals "$((before + 1))" "$(log_lines "$home")" "each input failure adds exactly one log line"
+      assert_absent "$CAPTURE/argv" "an input failure sends nothing"
+      assert_contains "$(last_log "$home" 'd["detail"]')" "$path" "the logged error identifies the failed input"
+    done
+  done
+  for cap in invalid 0 -1; do
+    before=$(log_lines "$home")
+    FM_DELIVER_MAX_BYTES="$cap" deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
+    expect_code 1 "$?" "an invalid delivery cap"
+    FM_MAIL_MAX_ATTACH_BYTES="$cap" deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
+    expect_code 1 "$?" "an invalid attachment cap"
+    assert_equals "$((before + 2))" "$(log_lines "$home")" "each invalid cap adds one log line"
+    assert_equals "error" "$(last_log "$home" 'd["result"]')" "an invalid cap logs an error"
+    assert_absent "$CAPTURE/argv" "an invalid cap sends nothing"
+  done
+  pass "fm-deliver: file-read and cap errors enter the log boundary"
+}
+
+test_complete_confirmations() {
+  local home words trust text
+  home=$(new_home complete-confirmations)
+  words="$TMP_ROOT/complete-confirmations-words"
+  for trust in maria-lopez site-it-lead; do
+    for text in 'YES, SEND!' 'Send it.' 'Sí, envía.'; do
+      printf '%s\n' "$text" > "$words/confirm"
+      deliver "$home" "$trust" "$home/data/report/report.pdf" --order-file "$words/order" --confirm-file "$words/confirm"
+      expect_code 0 "$?" "an accepted complete confirmation"
+      assert_present "$CAPTURE/argv" "an accepted complete confirmation sends"
+      assert_equals "$text" "$(last_log "$home" 'd["confirmation"]')" "the log keeps the original confirmation"
+    done
+    printf 'Should I say send it?\n' > "$words/confirm"
+    deliver "$home" "$trust" "$home/data/report/report.pdf" --order-file "$words/order" --confirm-file "$words/confirm"
+    expect_code 3 "$?" "an in-sentence confirmation is refused for every trust level"
+    assert_absent "$CAPTURE/argv" "an in-sentence confirmation sends nothing"
+  done
+  pass "fm-deliver: only a complete normalized confirmation permits a send"
 }
 
 test_unlisted_contact_refused
@@ -374,3 +534,7 @@ test_preflight_refusals
 test_dry_run_card
 test_mail_failure_and_channels
 test_usage_errors
+test_covering_note_preflight
+test_decoded_document_scan
+test_input_failures_are_logged
+test_complete_confirmations

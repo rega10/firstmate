@@ -36,7 +36,7 @@ import email.policy
 import smtplib
 from email.header import decode_header, make_header
 from email.message import EmailMessage
-from email.utils import formataddr, formatdate
+from email.utils import formataddr, formatdate, make_msgid
 
 USER = os.environ['FM_MAIL_USER']
 PW = os.environ['FM_MAIL_PASS']
@@ -258,6 +258,7 @@ def cmd_send(to, subj, body, attach_paths=(), ccs=()):
             m['Cc'] = ', '.join(ccs)
         m['Subject'] = subj
         m['Date'] = formatdate(localtime=True)
+        m['Message-ID'] = make_msgid()
         m.set_content(body)
         for filename, maintype, subtype, data in attachments:
             m.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
@@ -272,7 +273,7 @@ def cmd_send(to, subj, body, attach_paths=(), ccs=()):
         if refused:
             print('fm-mail send refused recipients:', ', '.join(refused), file=sys.stderr)
             return 1
-        print('sent to', to, '(attachments: %d)' % len(attachments))
+        print('sent to', to, '(attachments: %d)' % len(attachments), 'message-id:', m['Message-ID'])
         return 0
     except Exception as e:
         print('fm-mail send error:', e)

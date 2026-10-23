@@ -5,7 +5,7 @@
 # Usage:
 #   fm-deliver.sh <contact-id> <file>... --order-file <path>
 #                 [--confirm-file <path>] [--note-file <path>]
-#                 [--subject <text>] [--allow-away] [--dry-run]
+#                 [--allow-away] [--dry-run]
 #
 #   <contact-id>        An id in the contact book (bin/fm-contacts.sh). Any
 #                       other value, a raw address included, is refused.
@@ -14,8 +14,6 @@
 #                       external contact.
 #   --note-file         The covering text; without it a short default in the
 #                       contact's language names the files.
-#   --subject           The subject; default "Documento: <first file>" (es)
-#                       or "Document: <first file>" (en).
 #   --allow-away        Send although away or quiet mode is active; only when
 #                       the owner's away words name this send.
 #   --dry-run           Run every check, print the confirmation card, and
@@ -55,7 +53,7 @@ usage() {
   cat <<'EOF'
 fm-deliver.sh <contact-id> <file>... --order-file <path>
               [--confirm-file <path>] [--note-file <path>]
-              [--subject <text>] [--allow-away] [--dry-run]
+              [--allow-away] [--dry-run]
 
 Sends the files to one listed contact on the first preferred channel that has
 an address (email today), after the preflight, and appends one line to

@@ -47,7 +47,8 @@ A send needs the captain's confirmation when any of these is true:
 For a `self` or `internal` contact with an unambiguous person and file, the order alone is enough.
 
 To collect a confirmation, run the send with `--dry-run`, show the captain the confirmation card it prints, and wait.
-Only "yes, send", "send it", or "sí, envía" confirms, with any capitals or accents.
+Only the complete normalized answer "yes, send", "send it", or "sí, envía" confirms, ignoring case, accents, and punctuation.
+An answer containing additional words does not confirm.
 "OK", "sure", "vale", silence, and every other answer are not a confirmation: ask again or drop the send.
 Write the captain's exact confirmation words to a confirm file and pass it with `--confirm-file`, for every send that needed a confirmation, internal ones included.
 
@@ -59,10 +60,11 @@ Otherwise hold the send and tell the captain at return.
 
 ## 6. Run the send
 
-Run the real send only as `av inject +FM_MAIL_PASS -- bin/fm-deliver.sh <contact-id> <file>... --order-file <order> [--confirm-file <confirm>] [--note-file <note>] [--subject <text>]`.
+Run the real send only as `av inject +FM_MAIL_PASS -- bin/fm-deliver.sh <contact-id> <file>... --order-file <order> [--confirm-file <confirm>] [--note-file <note>]`.
 The captain approves the Vault prompt for it on the phone.
 Never read, print, store, or pass the password any other way.
-Write a covering note, when one helps, in the contact's language to a note file; without one the tool writes a short default.
+Write a covering note, when one helps, in the contact's language under the task's deliverable folder in `data/`; without one the tool writes a short default.
+The note must pass the same location checks and secret scan as attachments.
 
 ## 7. Reply
 

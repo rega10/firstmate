@@ -1817,20 +1817,21 @@ This section is the single owner of the tool's exit codes, the preflight rules, 
 
 ```sh
 av inject +FM_MAIL_PASS -- bin/fm-deliver.sh <contact-id> <file>... --order-file <path> \
-  [--confirm-file <path>] [--note-file <path>] [--subject <text>] [--allow-away] [--dry-run]
+  [--confirm-file <path>] [--note-file <path>] [--allow-away] [--dry-run]
 ```
 
 - `<contact-id>` must be an id in `data/contacts.json`; any other value, a raw address included, is refused, so a new address goes through the book's add flow first.
 - `--order-file` holds the captain's exact words that ordered this send and is required.
 - `--confirm-file` holds the captain's exact confirmation words.
   It is required for an `external` contact and optional for `self` and `internal` contacts.
-  When it is given, it must contain `yes, send`, `send it`, or `sí, envía` as whole words, compared without case or accents, and no negation such as `no`, `not`, `don't`, `never`, `nunca`, `cancel`, `stop`, or `wait`.
+  When it is given, its complete normalized text must equal an accepted form from the `outbound-send` skill, ignoring case, accents, and punctuation.
+  Additional words refuse the confirmation.
 - `--note-file` holds the covering text.
   Without it, the text is one line in the contact's language (`Le comparto el archivo adjunto.` or `Please find the file attached.`, plural for several files) and a line with the file names.
-- `--subject` replaces the default subject, `Documento: <first file name>` or `Document: <first file name>`.
 - `--dry-run` runs every check except the confirmation and prints the confirmation card: the recipient's name and role, whether a confirmation is required, the channel, the masked address, each file with its size, attachment or link, the subject, and the first line of the covering text.
   It sends nothing and writes no log line.
 
+The subject is `Documento: <first file name>` or `Document: <first file name>`, according to the contact's language.
 The first preferred channel that has an address is the channel.
 An email send runs `bin/fm-mail.sh send --attach <file>... -- <address> <subject> -` with the covering text on stdin and the environment passed through unchanged, so the password reaches the mail plane only through `av inject`.
 The tool never reads, prints, or logs `FM_MAIL_PASS`, and the address appears in no argv except that mail-plane call.
@@ -1858,12 +1859,18 @@ Every check runs before any network call, every problem is named, and any proble
 
 - Location: each file's real path, with symlinks resolved, must be inside a folder under `data/`, such as `data/<task>/`.
   A file directly in `data/`, in `data/outbound/`, or under any folder named `.env`, `config`, `state`, or `projects`, and anything under the home's `.env`, `config/`, `state/`, or `projects/`, is refused and never read.
+  Files named `.env` or beginning with `.env.` are also refused.
 - Type: each file must be a regular file ending in `.pdf`, `.png`, `.jpg`, `.jpeg`, `.docx`, or `.xlsx`, both as given and after symlinks.
   A `.md` file is refused with a message to render it to PDF first.
 - Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 20971520) and at most the mail plane's `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520).
 - Secrets: the raw bytes of each file must not contain `-----BEGIN`, `ghp_`, `github_pat_`, `AKIA`, `password=`, `FM_MAIL_PASS`, `xoxb-` or `xoxp-`, or `sk-` followed by 20 or more word characters, case-sensitive.
   A match names the pattern and the file, never the matched bytes.
-  Compressed content, such as most PDF text streams and every DOCX or XLSX file, is not decompressed, so the scan is a backstop to firstmate reading each file in full, not a proof.
+  The scan also checks every decoded ZIP member in DOCX and XLSX files and every PDF FlateDecode stream inflated with zlib.
+  A document decoding failure refuses the send.
+  This scan is a backstop to firstmate reading each file in full, not a proof.
+
+Covering notes must pass the same location checks and secret scan before they become the message body.
+They must be regular, non-empty UTF-8 files within the per-file size cap; their extension is unrestricted.
 
 Files above the attachment cap must go as a link.
 The tool does not make links today: firstmate uploads the file and sends the link in a covering note as a manual step, on the captain's own instruction.
@@ -1874,7 +1881,7 @@ Every attempt that passes argument parsing, refusals included, appends one JSON 
 The folder is created with mode 0700 and the file with mode 0600.
 
 ```json
-{"at": "2026-10-23T22:55:13Z", "contact_id": "site-it-lead", "channel": "email", "masked_address": "p***@example.com", "files": [{"name": "report.pdf", "sha256": "<hex>", "bytes": 48213}], "mode": "attachment", "order": "mándale el reporte a José", "confirmation": "sí, envía", "result": "sent", "detail": "sent to p***@example.com (attachments: 1)"}
+{"at": "2026-10-23T22:55:13Z", "contact_id": "site-it-lead", "channel": "email", "masked_address": "p***@example.com", "files": [{"name": "report.pdf", "sha256": "<hex>", "bytes": 48213}], "mode": "attachment", "order": "mándale el reporte a José", "confirmation": "sí, envía", "result": "sent", "detail": "sent to p***@example.com (attachments: 1) message-id: <unique-id@mail-host>"}
 ```
 
 | Field | Meaning |
@@ -1885,13 +1892,14 @@ The folder is created with mode 0700 and the file with mode 0600.
 | `masked_address` | The address masked as in the contact book's `list`, or `null`. |
 | `files` | One `{name, sha256, bytes}` per file; `sha256` and `bytes` are `null` for a file the location checks refused or could not read. |
 | `mode` | `attachment`, the only mode today. |
-| `order` | The captain's order words, exactly. |
+| `order` | The captain's order words, exactly, or `null` if the order file could not be read. |
 | `confirmation` | The captain's confirmation words exactly, or `null`. |
 | `result` | `sent`, `refused`, or `error`. |
 | `detail` | The mail plane's `sent to` line, the refusal reason, or the error, with the address masked. |
 
 The log never holds the full address, the covering text, a link URL, or any file content.
-The mail plane does not report the SMTP message id, so the log does not hold one.
+The mail plane sets a Message-ID header before sending and includes that identifier in the successful `sent to` line recorded in `detail`.
+File-read and cap-validation failures are logged after argument parsing; the log itself must be writable.
 
 ## Relay (.env)
 

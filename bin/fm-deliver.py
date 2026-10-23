@@ -21,6 +21,7 @@ import datetime
 import fcntl
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import re
@@ -28,6 +29,8 @@ import stat
 import subprocess
 import sys
 import unicodedata
+import zipfile
+import zlib
 
 EXIT_ERROR = 1
 EXIT_UNLISTED = 2
@@ -55,12 +58,6 @@ SECRET_PATTERNS = (
 # Accepted confirmations, already normalized: "yes, send", "send it", and
 # "sí, envía" (or "si, envia").
 CONFIRMATIONS = (('yes', 'send'), ('send', 'it'), ('si', 'envia'))
-# A confirmation that also holds one of these words is refused, so
-# "don't send it" never reads as "send it".
-NEGATIONS = frozenset((
-    'no', 'not', 'don', 'dont', 'never', 'nunca', 'cancel', 'cancela',
-    'stop', 'wait', 'espera',
-))
 DEFAULT_TEXT = {
     'es': ('Le comparto el archivo adjunto.', 'Le comparto los archivos adjuntos.', 'Documento'),
     'en': ('Please find the file attached.', 'Please find the files attached.', 'Document'),
@@ -94,7 +91,7 @@ def byte_cap(name):
     if raw == '':
         return DEFAULT_MAX_BYTES
     if not re.fullmatch(r'[0-9]+', raw) or int(raw) <= 0:
-        die('%s must be a positive integer, got: %s' % (name, raw))
+        raise Refusal(EXIT_ERROR, '%s must be a positive integer, got: %s' % (name, raw), 'error')
     return int(raw)
 
 
@@ -104,13 +101,17 @@ def read_text(label, path):
         with open(path, 'rb') as fh:
             raw = fh.read()
     except OSError as err:
-        die('cannot read %s %s: %s' % (label, path, err.strerror or err))
+        raise Refusal(EXIT_ERROR, 'cannot read %s %s: %s' % (label, path, err.strerror or err), 'error')
+    return decode_text(label, path, raw)
+
+
+def decode_text(label, path, raw):
     try:
         text = raw.decode('utf-8').rstrip('\r\n')
     except UnicodeDecodeError:
-        die('%s %s is not valid UTF-8' % (label, path))
+        raise Refusal(EXIT_ERROR, '%s %s is not valid UTF-8' % (label, path), 'error')
     if not text.strip():
-        die('%s %s is empty' % (label, path))
+        raise Refusal(EXIT_ERROR, '%s %s is empty' % (label, path), 'error')
     return text
 
 
@@ -122,14 +123,7 @@ def normalized_words(text):
 
 
 def accepted_confirmation(text):
-    words = normalized_words(text)
-    if NEGATIONS.intersection(words):
-        return False
-    for phrase in CONFIRMATIONS:
-        for i in range(len(words) - len(phrase) + 1):
-            if tuple(words[i:i + len(phrase)]) == phrase:
-                return True
-    return False
+    return tuple(normalized_words(text)) in CONFIRMATIONS
 
 
 def load_contacts_module(path):
@@ -152,15 +146,37 @@ def within(path, root):
 
 # --- preflight ----------------------------------------------------------------
 
-def check_file(given, home, data, read_limit):
-    """Check one file. Returns (record, problems): the log record (name, and
-    sha256 and bytes only for a file that passed the location checks) and the
-    list of named problems. File bytes are read only after the location checks
-    pass, so nothing from a never-sent folder is ever opened, and a file larger
-    than `read_limit` is sized but not read, because the size cap refuses it."""
+def decoded_contents(real, content):
+    yield content
+    extension = os.path.splitext(real)[1].lower()
+    if extension in ('.docx', '.xlsx'):
+        with zipfile.ZipFile(io.BytesIO(content)) as archive:
+            for member in archive.infolist():
+                yield archive.read(member)
+    elif extension == '.pdf':
+        for stream in re.finditer(
+                rb'<<((?:(?!\bendobj\b).)*?)>>\s*stream(?:\r\n|\n|\r)(.*?)endstream',
+                content, re.DOTALL):
+            if re.search(rb'/(?:FlateDecode|Fl)\b', stream[1]):
+                yield zlib.decompress(stream[2])
+
+
+def secret_problems(given, real, content):
+    matches = set()
+    try:
+        for decoded in decoded_contents(real, content):
+            for name, pattern in SECRET_PATTERNS:
+                if pattern.search(decoded):
+                    matches.add(name)
+    except (OSError, ValueError, RuntimeError, zipfile.BadZipFile, EOFError, zlib.error):
+        return ['%s: cannot decode document content for the secret scan' % given]
+    return ['%s: matches the secret pattern %s' % (given, name)
+            for name, _ in SECRET_PATTERNS if name in matches]
+
+
+def check_file(given, home, data, read_limit, is_note=False):
     real = os.path.realpath(given)
     record = {'name': os.path.basename(real), 'sha256': None, 'bytes': None}
-    shown = os.path.basename(given) or given
     if not os.path.lexists(given) or not os.path.exists(real):
         return record, ['%s: not found' % given]
     for folder in NEVER_SENT:
@@ -174,15 +190,19 @@ def check_file(given, home, data, read_limit):
         return record, ['%s: is a data/ bookkeeping file, not a data/<task>/ deliverable' % given]
     if parts[0] == 'outbound':
         return record, ['%s: is in the send log folder data/outbound/' % given]
+    if any(part.casefold() == '.env' or part.casefold().startswith('.env.') for part in parts):
+        return record, ['%s: is an .env source, which is never sent' % given]
     for part in parts[:-1]:
         if part.casefold() in NEVER_SENT:
             return record, ['%s: is under a %s folder, which is never sent' % (given, part)]
     problems = []
-    extensions = {os.path.splitext(shown)[1].lower(), os.path.splitext(real)[1].lower()}
-    if '.md' in extensions:
-        problems.append('%s: Markdown must be rendered to PDF first' % given)
-    elif not extensions.issubset(ALLOWED_EXTENSIONS):
-        problems.append('%s: file type not allowed; send only %s' % (given, ' '.join(ALLOWED_EXTENSIONS)))
+    if not is_note:
+        shown = os.path.basename(given) or given
+        extensions = {os.path.splitext(shown)[1].lower(), os.path.splitext(real)[1].lower()}
+        if '.md' in extensions:
+            problems.append('%s: Markdown must be rendered to PDF first' % given)
+        elif not extensions.issubset(ALLOWED_EXTENSIONS):
+            problems.append('%s: file type not allowed; send only %s' % (given, ' '.join(ALLOWED_EXTENSIONS)))
     try:
         st = os.stat(real)
     except OSError as err:
@@ -191,6 +211,8 @@ def check_file(given, home, data, read_limit):
         return record, problems + ['%s: not a regular file' % given]
     if st.st_size > read_limit:
         record['bytes'] = st.st_size
+        if is_note:
+            problems.append('%s: covering note is above the size cap of %d bytes' % (given, read_limit))
         return record, problems
     try:
         with open(real, 'rb') as fh:
@@ -200,9 +222,12 @@ def check_file(given, home, data, read_limit):
     record['sha256'] = hashlib.sha256(content).hexdigest()
     record['bytes'] = len(content)
     record['path'] = real
-    for name, pattern in SECRET_PATTERNS:
-        if pattern.search(content):
-            problems.append('%s: matches the secret pattern %s' % (given, name))
+    problems.extend(secret_problems(given, real, content))
+    if is_note and not problems:
+        try:
+            record['text'] = decode_text('note file', given, content)
+        except Refusal as refusal:
+            problems.append(refusal.reason)
     return record, problems
 
 
@@ -319,17 +344,12 @@ def parse(argv):
     parser.add_argument('--order-file', required=True)
     parser.add_argument('--confirm-file')
     parser.add_argument('--note-file')
-    parser.add_argument('--subject')
     parser.add_argument('--allow-away', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
-    args = parser.parse_intermixed_args(argv)
-    if args.subject is not None and (
-            not args.subject.strip() or any(unicodedata.category(c) == 'Cc' for c in args.subject)):
-        die('--subject must be one non-empty line')
-    return args
+    return parser.parse_intermixed_args(argv)
 
 
-def attempt(args, config, confirmation, note, entry):
+def attempt(args, config, confirmation, entry):
     """Run the checks and the send, filling `entry` as facts become known.
     Returns the receipt line (None for a dry run), or raises Refusal."""
     home, data, mail, contacts, max_bytes, attach_cap = config
@@ -338,6 +358,11 @@ def attempt(args, config, confirmation, note, entry):
     # confirmation, and away checks.
     records, problems, total = preflight(args.files, home, data, max_bytes, attach_cap)
     entry['files'] = [{k: r[k] for k in ('name', 'sha256', 'bytes')} for r in records]
+    note = None
+    if args.note_file:
+        note_record, found = check_file(args.note_file, home, data, min(max_bytes, attach_cap), is_note=True)
+        problems.extend(found)
+        note = note_record.get('text')
     try:
         book = contacts.load(os.path.join(data, 'contacts.json'))
     except contacts.ContactError as err:
@@ -371,7 +396,7 @@ def attempt(args, config, confirmation, note, entry):
         raise Refusal(EXIT_PREFLIGHT, 'preflight refused the send: ' + '; '.join(problems))
     names = [r['name'] for r in records]
     body = covering_text(contact, names, note)
-    subject = args.subject or '%s: %s' % (DEFAULT_TEXT[contact['language']][2], names[0])
+    subject = '%s: %s' % (DEFAULT_TEXT[contact['language']][2], names[0])
     if args.dry_run:
         print_card(contact, channel, entry['masked_address'], records, subject, body, needs_confirmation)
         return None
@@ -388,21 +413,11 @@ def main(argv):
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
     args = parse(argv)
-    order = read_text('order file', args.order_file)
-    confirmation = read_text('confirm file', args.confirm_file) if args.confirm_file else None
-    note = read_text('note file', args.note_file) if args.note_file else None
-    config = (
-        env_path('FM_DELIVER_HOME'),
-        env_path('FM_DELIVER_DATA'),
-        env_path('FM_DELIVER_MAIL'),
-        load_contacts_module(env_path('FM_DELIVER_CONTACTS_PY')),
-        byte_cap('FM_DELIVER_MAX_BYTES'),
-        byte_cap('FM_MAIL_MAX_ATTACH_BYTES'),
-    )
+    data = env_path('FM_DELIVER_DATA')
     log_fd = None
     if not args.dry_run:
         try:
-            log_fd = open_log(config[1])
+            log_fd = open_log(data)
         except OSError as err:
             die('cannot open the send log: %s' % (err.strerror or err))
     entry = {
@@ -413,14 +428,25 @@ def main(argv):
         'files': [{'name': os.path.basename(os.path.realpath(f)), 'sha256': None, 'bytes': None}
                   for f in args.files],
         'mode': 'attachment',
-        'order': order,
-        'confirmation': confirmation,
+        'order': None,
+        'confirmation': None,
         'result': None,
         'detail': None,
     }
     code = 0
     try:
-        receipt = attempt(args, config, confirmation, note, entry)
+        entry['order'] = read_text('order file', args.order_file)
+        if args.confirm_file:
+            entry['confirmation'] = read_text('confirm file', args.confirm_file)
+        config = (
+            env_path('FM_DELIVER_HOME'),
+            data,
+            env_path('FM_DELIVER_MAIL'),
+            load_contacts_module(env_path('FM_DELIVER_CONTACTS_PY')),
+            byte_cap('FM_DELIVER_MAX_BYTES'),
+            byte_cap('FM_MAIL_MAX_ATTACH_BYTES'),
+        )
+        receipt = attempt(args, config, entry['confirmation'], entry)
     except Refusal as refusal:
         entry['result'] = refusal.result
         entry['detail'] = refusal.reason
