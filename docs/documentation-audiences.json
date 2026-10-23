@@ -237,6 +237,10 @@
       "audience": "agent-runtime"
     },
     {
+      "path": ".agents/skills/outbound-send/SKILL.md",
+      "audience": "agent-runtime"
+    },
+    {
       "path": ".agents/skills/process-event-sources/SKILL.md",
       "audience": "agent-runtime"
     },

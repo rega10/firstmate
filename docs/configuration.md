@@ -1807,6 +1807,92 @@ This suffix rule also applies to iMessage email addresses.
 If no preferred channel has an address, `masked_address` is `null` in `resolve`, and `list` shows `-`.
 Only `show <id>` and `add` print a full entry.
 
+## Outbound send (data/outbound/sends.jsonl)
+
+The send tool (`bin/fm-deliver.sh`) sends files to one contact from the contact book on the contact's preferred channel, after a preflight, and appends every attempt to the send log.
+Email through the mail plane is the only channel implemented today.
+This section is the single owner of the tool's exit codes, the preflight rules, the away rule, and the log format; the script's header and `--help` own its flags, and the agent-only `outbound-send` skill owns when firstmate collects the captain's confirmation.
+
+**Command**
+
+```sh
+av inject +FM_MAIL_PASS -- bin/fm-deliver.sh <contact-id> <file>... --order-file <path> \
+  [--confirm-file <path>] [--note-file <path>] [--subject <text>] [--allow-away] [--dry-run]
+```
+
+- `<contact-id>` must be an id in `data/contacts.json`; any other value, a raw address included, is refused, so a new address goes through the book's add flow first.
+- `--order-file` holds the captain's exact words that ordered this send and is required.
+- `--confirm-file` holds the captain's exact confirmation words.
+  It is required for an `external` contact and optional for `self` and `internal` contacts.
+  When it is given, it must contain `yes, send`, `send it`, or `sí, envía` as whole words, compared without case or accents, and no negation such as `no`, `not`, `don't`, `never`, `nunca`, `cancel`, `stop`, or `wait`.
+- `--note-file` holds the covering text.
+  Without it, the text is one line in the contact's language (`Le comparto el archivo adjunto.` or `Please find the file attached.`, plural for several files) and a line with the file names.
+- `--subject` replaces the default subject, `Documento: <first file name>` or `Document: <first file name>`.
+- `--dry-run` runs every check except the confirmation and prints the confirmation card: the recipient's name and role, whether a confirmation is required, the channel, the masked address, each file with its size, attachment or link, the subject, and the first line of the covering text.
+  It sends nothing and writes no log line.
+
+The first preferred channel that has an address is the channel.
+An email send runs `bin/fm-mail.sh send --attach <file>... -- <address> <subject> -` with the covering text on stdin and the environment passed through unchanged, so the password reaches the mail plane only through `av inject`.
+The tool never reads, prints, or logs `FM_MAIL_PASS`, and the address appears in no argv except that mail-plane call.
+On success it prints one receipt line, `sent: <contact name> <channel> <masked address> <n> file(s) <total bytes> bytes`.
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | Sent, or the dry run passed. |
+| 1 | A usage or configuration error, or an unreadable contact book. |
+| 2 | The contact id is not in the book. |
+| 3 | The confirmation is missing or not accepted. |
+| 4 | Away or quiet mode is active and `--allow-away` was not passed. |
+| 5 | The preflight refused the send. |
+| 6 | No preferred channel has an address, or the channel is not implemented. |
+| 7 | The mail plane failed; the recipient may already have the message, so a retry can deliver a duplicate. |
+
+**Away and quiet mode**
+
+The tool refuses with exit 4 while `state/.afk-contract` or `state/.afk` exists, unless `--allow-away` is passed.
+Firstmate passes it only when the captain's away words name that specific send, or for the captain's own `self` contact.
+
+**Preflight**
+
+Every check runs before any network call, every problem is named, and any problem refuses the whole send with exit 5.
+
+- Location: each file's real path, with symlinks resolved, must be inside a folder under `data/`, such as `data/<task>/`.
+  A file directly in `data/`, in `data/outbound/`, or under any folder named `.env`, `config`, `state`, or `projects`, and anything under the home's `.env`, `config/`, `state/`, or `projects/`, is refused and never read.
+- Type: each file must be a regular file ending in `.pdf`, `.png`, `.jpg`, `.jpeg`, `.docx`, or `.xlsx`, both as given and after symlinks.
+  A `.md` file is refused with a message to render it to PDF first.
+- Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 20971520) and at most the mail plane's `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520).
+- Secrets: the raw bytes of each file must not contain `-----BEGIN`, `ghp_`, `github_pat_`, `AKIA`, `password=`, `FM_MAIL_PASS`, `xoxb-` or `xoxp-`, or `sk-` followed by 20 or more word characters, case-sensitive.
+  A match names the pattern and the file, never the matched bytes.
+  Compressed content, such as most PDF text streams and every DOCX or XLSX file, is not decompressed, so the scan is a backstop to firstmate reading each file in full, not a proof.
+
+Files above the attachment cap must go as a link.
+The tool does not make links today: firstmate uploads the file and sends the link in a covering note as a manual step, on the captain's own instruction.
+
+**Send log**
+
+Every attempt that passes argument parsing, refusals included, appends one JSON line to `data/outbound/sends.jsonl`; a dry run and a usage error write none.
+The folder is created with mode 0700 and the file with mode 0600.
+
+```json
+{"at": "2026-10-23T22:55:13Z", "contact_id": "site-it-lead", "channel": "email", "masked_address": "p***@example.com", "files": [{"name": "report.pdf", "sha256": "<hex>", "bytes": 48213}], "mode": "attachment", "order": "mándale el reporte a José", "confirmation": "sí, envía", "result": "sent", "detail": "sent to p***@example.com (attachments: 1)"}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `at` | UTC time of the attempt. |
+| `contact_id` | The id as given. |
+| `channel` | The chosen channel, or `null` before one is known. |
+| `masked_address` | The address masked as in the contact book's `list`, or `null`. |
+| `files` | One `{name, sha256, bytes}` per file; `sha256` and `bytes` are `null` for a file the location checks refused or could not read. |
+| `mode` | `attachment`, the only mode today. |
+| `order` | The captain's order words, exactly. |
+| `confirmation` | The captain's confirmation words exactly, or `null`. |
+| `result` | `sent`, `refused`, or `error`. |
+| `detail` | The mail plane's `sent to` line, the refusal reason, or the error, with the address masked. |
+
+The log never holds the full address, the covering text, a link URL, or any file content.
+The mail plane does not report the SMTP message id, so the log does not hold one.
+
 ## Relay (.env)
 
 Relay lets a firstmate instance answer public mentions and act on normal reversible mention requests through firstmate's normal lifecycle.
