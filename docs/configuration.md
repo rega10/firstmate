@@ -1680,7 +1680,9 @@ The per-poll wake cap bounds the wakes of one `poll` run; header fetches scan a 
 `send [--attach <path>]... [--cc <addr>]... <to> <subject> <body | ->` sends one plain-text message, and a `-` body reads stdin.
 Options come before the positionals, and `--` ends them.
 Each `--attach` adds one file as an attachment, typed from its file extension and sent as `application/octet-stream` when the extension is unknown; the message is then multipart/mixed with the text body first.
-Each `--cc` adds one address to the `Cc` header, and the message goes to every To and Cc recipient.
+Each `--cc` adds one address to the `Cc` header and the SMTP envelope.
+If SMTP refuses any recipient, `send` lists the refused addresses on stderr and exits 1 without resending or printing the success line.
+Other recipients may already have received the message, so retrying the whole send can deliver duplicates.
 `FM_MAIL_FROM_NAME`, when set, makes the From header that display name plus `FM_MAIL_USER`; when unset, From is the bare account.
 Subjects, bodies, display names, and attachment names are UTF-8 and are encoded 7-bit safe, so accented text survives any relay.
 

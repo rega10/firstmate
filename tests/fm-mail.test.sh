@@ -150,11 +150,17 @@ class FakeSMTP(smtplib.SMTP):
     def login(self, user, password):
         pass
     def sendmail(self, from_addr, to_addrs, msg, mail_options=(), rcpt_options=()):
+        with open(os.path.join(CAP, 'send-attempts'), 'a') as f:
+            f.write('send\n')
         with open(os.path.join(CAP, 'rcpt'), 'w') as f:
             f.write('\n'.join(to_addrs) + '\n')
         with open(os.path.join(CAP, 'message.eml'), 'wb') as f:
             f.write(msg if isinstance(msg, bytes) else msg.encode('ascii'))
-        return {}
+        refused = {addr: (550, b'rejected') for addr in to_addrs
+                   if addr in os.environ.get('FM_MAIL_TEST_REFUSED', '').split(',')}
+        if refused and len(refused) == len(to_addrs):
+            raise smtplib.SMTPRecipientsRefused(refused)
+        return refused
 
 smtplib.SMTP_SSL = FakeSMTP
 spec = importlib.util.spec_from_file_location('fm_mail', sys.argv[1])
@@ -289,6 +295,42 @@ test_send_cc_reaches_every_recipient() {
 first-cc@example.com
 second-cc@example.com" "$(cat "$dir/rcpt")" "the envelope reaches every To and Cc recipient"
   pass "fm-mail: send --cc sets the Cc header and delivers to every recipient"
+}
+
+test_send_reports_refused_recipients() {
+  local dir refused addr err rc i=0
+  for refused in to@example.com first-cc@example.com \
+    first-cc@example.com,second-cc@example.com \
+    to@example.com,first-cc@example.com,second-cc@example.com; do
+    i=$((i + 1))
+    dir=$(send_fixture "send-refused-$i")
+    printf '%%PDF-1.4 form\n' > "$dir/form.pdf"
+    rc=0
+    FM_MAIL_TEST_REFUSED="$refused" send_run "$dir" "$HOME_DIR" \
+      --attach "$dir/form.pdf" --cc first-cc@example.com --cc second-cc@example.com \
+      to@example.com "With copies" "Body" >"$dir/out" 2>"$dir/err" || rc=$?
+    expect_code 1 "$rc" "any refused recipient must fail the send"
+    err=$(cat "$dir/err")
+    assert_contains "$err" "fm-mail send refused recipients:" "stderr reports SMTP refusal"
+    for addr in to@example.com first-cc@example.com second-cc@example.com; do
+      case ",$refused," in
+        *",$addr,"*) assert_contains "$err" "$addr" "stderr names each refused recipient" ;;
+        *) assert_not_contains "$err" "$addr" "stderr does not log accepted recipients" ;;
+      esac
+    done
+    assert_equals "" "$(cat "$dir/out")" "a refused send prints no success line"
+    assert_equals "send" "$(cat "$dir/send-attempts")" "a refused send is never resent"
+    assert_not_contains "$err" "test-pass" "refusal output never prints the password"
+  done
+  dir=$(send_fixture send-refused-plain)
+  rc=0
+  FM_MAIL_TEST_REFUSED=to@example.com send_run "$dir" "$HOME_DIR" \
+    to@example.com "Plain" "Body" >"$dir/out" 2>"$dir/err" || rc=$?
+  expect_code 1 "$rc" "complete refusal without Cc or attachments must fail"
+  assert_contains "$(cat "$dir/err")" "to@example.com" "stderr names the refused sole recipient"
+  assert_equals "" "$(cat "$dir/out")" "complete refusal prints no success line"
+  assert_equals "send" "$(cat "$dir/send-attempts")" "complete refusal is never resent"
+  pass "fm-mail: SMTP refusal names refused recipients and fails without resending"
 }
 
 test_send_from_display_name() {
@@ -2905,6 +2947,7 @@ test_send_plain_message_unchanged
 test_send_one_attachment
 test_send_two_attachments_with_mime_types
 test_send_cc_reaches_every_recipient
+test_send_reports_refused_recipients
 test_send_from_display_name
 test_send_utf8_subject_and_body
 test_send_refuses_above_size_cap

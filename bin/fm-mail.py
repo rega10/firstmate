@@ -265,7 +265,13 @@ def cmd_send(to, subj, body, attach_paths=(), ccs=()):
             s.login(USER, PW)
             # send_message takes the envelope recipients from the To and Cc
             # headers, so every Cc recipient receives the message.
-            s.send_message(m)
+            try:
+                refused = s.send_message(m)
+            except smtplib.SMTPRecipientsRefused as e:
+                refused = e.recipients
+        if refused:
+            print('fm-mail send refused recipients:', ', '.join(refused), file=sys.stderr)
+            return 1
         print('sent to', to, '(attachments: %d)' % len(attachments))
         return 0
     except Exception as e:
