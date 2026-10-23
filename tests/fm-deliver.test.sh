@@ -312,7 +312,7 @@ test_dry_run_card() {
   expect_code 0 "$rc" "a dry run for an external contact before the confirmation"
   out=$(cat "$TMP_ROOT/out")
   assert_contains "$out" "recipient: José Pérez - Site IT, location team" "the card names the recipient and role"
-  assert_contains "$out" "confirmation: required, external contact" "the card says a confirmation is needed"
+  assert_not_contains "$out" "confirmation:" "the card leaves the confirmation decision to the skill"
   assert_contains "$out" "channel: email" "the card names the channel"
   assert_contains "$out" "address: j***@example.com" "the card masks the address"
   assert_contains "$out" "file: report.pdf - 26 bytes" "the card lists each file with its size"
@@ -322,6 +322,10 @@ test_dry_run_card() {
   assert_not_contains "$out" "jose.perez@example.com" "the card never shows the full address"
   assert_absent "$CAPTURE/argv" "a dry run sends nothing"
   assert_absent "$home/data/outbound/sends.jsonl" "a dry run writes no log line"
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --dry-run
+  expect_code 0 "$?" "a dry run for a newly added internal contact"
+  assert_not_contains "$(cat "$TMP_ROOT/out")" "confirmation:" "an internal card gives no trust-only verdict"
+  assert_contains "$(cat "$TMP_ROOT/out")" "recipient: Maria Lopez - Finance" "the internal card retains the recipient"
   deliver "$home" site-it-lead "$home/data/report/report.md" --order-file "$words/order" --dry-run
   expect_code 5 "$?" "a dry run still runs the preflight"
   pass "fm-deliver: --dry-run prints the confirmation card without sending or logging"
@@ -525,6 +529,102 @@ test_complete_confirmations() {
   pass "fm-deliver: only a complete normalized confirmation permits a send"
 }
 
+test_stored_address_must_be_one_mailbox() {
+  local home words mode
+  home=$(new_home single-mailbox)
+  words="$TMP_ROOT/single-mailbox-words"
+  FM_HOME="$home" "$CONTACTS" add --id multiple --name Multiple --role Ops --trust internal \
+    --language en --email 'ops@example.com,postmaster' --added-by test > "$TMP_ROOT/out" 2> "$TMP_ROOT/err"
+  expect_code 1 "$?" "the add flow refuses multiple mailboxes"
+  python3 - "$home/data/contacts.json" <<'PYBOOK'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+book = json.loads(path.read_text())
+next(c for c in book['contacts'] if c['id'] == 'maria-lopez')['email'] = 'ops@example.com,postmaster'
+path.write_text(json.dumps(book))
+PYBOOK
+  for mode in preview send; do
+    if [ "$mode" = preview ]; then
+      deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" --dry-run
+    else
+      deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
+    fi
+    expect_code 1 "$?" "$mode refuses a stored comma-separated address"
+    assert_contains "$(cat "$TMP_ROOT/err")" "email must be one mailbox" "the refusal names the mailbox validation"
+    assert_equals "" "$(cat "$TMP_ROOT/out")" "a malformed address produces no preview or receipt"
+    assert_absent "$CAPTURE/argv" "a malformed address never reaches the mail plane"
+  done
+  assert_equals "error" "$(last_log "$home" 'd["result"]')" "the failed send is logged"
+  assert_no_grep 'ops@example.com' "$home/data/outbound/sends.jsonl" "the error log omits the full malformed address"
+  pass "fm-deliver: invalid stored mailboxes stop previews and sends"
+}
+
+test_pdf_filter_representations() {
+  local home words kind representation expected rc
+  home=$(new_home pdf-filters)
+  words="$TMP_ROOT/pdf-filters-words"
+  python3 - "$home/data/report" <<'PYPDF'
+import pathlib, sys, zlib
+root = pathlib.Path(sys.argv[1])
+filters = {
+    'name': (b'/FlateDecode', b''),
+    'array': (b'[/FlateDecode]', b''),
+    'indirect-name': (b'9 0 R', b'9 0 obj\n/FlateDecode\nendobj\n'),
+    'indirect-array': (b'9 0 R', b'9 0 obj\n[/FlateDecode]\nendobj\n'),
+    'escaped-name': (b'/Flate#44ecode', b''),
+    'escaped-indirect': (b'9 0 R', b'9 0 obj\n[/Flate#44ecode]\nendobj\n'),
+    'missing-object': (b'9 0 R', b''),
+    'nested-reference': (b'9 0 R', b'9 0 obj\n10 0 R\nendobj\n10 0 obj\n/FlateDecode\nendobj\n'),
+    'indirect-array-entry': (b'[9 0 R]', b'9 0 obj\n/FlateDecode\nendobj\n'),
+    'other-filter': (b'/ASCII85Decode', b''),
+    'chain': (b'[/FlateDecode /FlateDecode]', b''),
+    'indirect-chain': (b'9 0 R', b'9 0 obj\n[/FlateDecode /FlateDecode]\nendobj\n'),
+    'invalid-value': (b'null', b''),
+    'missing-filter': (None, b''),
+    'other-generation': (b'9 1 R', b'9 1 obj\n/FlateDecode\nendobj\n'),
+    'nested-filter': (b'/ASCII85Decode /DecodeParms << /Filter /FlateDecode >>', b''),
+}
+for name, (filter_value, extra) in filters.items():
+    for kind in ('safe', 'leak'):
+        payload = zlib.compress(b'password=LEAKEDVALUE' if kind == 'leak' else b'Safe document')
+        key = b'/Fil#74er' if name == 'escaped-name' else b'/Filter'
+        field = b'' if filter_value is None else key + b' ' + filter_value
+        document = (b'%%PDF-1.4\n1 0 obj\n<< /Length %d ' % len(payload) + field
+                    + b' >>\nstream\n' + payload + b'\nendstream\nendobj\n' + extra + b'%%EOF\n')
+        (root / (kind + '-' + name + '.pdf')).write_bytes(document)
+PYPDF
+  for representation in name array indirect-name indirect-array escaped-name escaped-indirect \
+    missing-object nested-reference indirect-array-entry other-filter chain indirect-chain invalid-value missing-filter other-generation nested-filter; do
+    for kind in safe leak; do
+      deliver "$home" maria-lopez "$home/data/report/$kind-$representation.pdf" --order-file "$words/order"
+      rc=$?
+      case "$representation" in
+        name|array|indirect-name|indirect-array|escaped-name|escaped-indirect)
+          if [ "$kind" = safe ]; then
+            expect_code 0 "$rc" "a safe PDF with $representation Filter"
+            assert_present "$CAPTURE/argv" "a supported PDF reaches the mail plane"
+            continue
+          fi
+          expected="matches the secret pattern password=" ;;
+        *) expected="PDF stream" ;;
+      esac
+      expect_code 5 "$rc" "a refused $kind PDF with $representation Filter"
+      assert_contains "$(cat "$TMP_ROOT/err")" "$expected" "the refusal names the stream problem"
+      assert_absent "$CAPTURE/argv" "an unsafe or unsupported PDF sends nothing"
+      assert_equals "refused" "$(last_log "$home" 'd["result"]')" "a PDF refusal is logged"
+    done
+  done
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" \
+    --note-file "$home/data/report/leak-indirect-name.pdf"
+  expect_code 5 "$?" "a covering note also scans an indirect PDF Filter"
+  assert_contains "$(cat "$TMP_ROOT/err")" "matches the secret pattern password=" "the note scan finds the decoded secret"
+  assert_absent "$CAPTURE/argv" "a leaking note sends nothing"
+  deliver "$home" maria-lopez "$home/data/report/safe-missing-object.pdf" --order-file "$words/order" --dry-run
+  expect_code 5 "$?" "a preview also refuses unresolved PDF filters"
+  assert_no_grep 'LEAKEDVALUE' "$home/data/outbound/sends.jsonl" "the log omits decoded secret bytes"
+  pass "fm-deliver: PDF filters resolve through the supported representations or refuse"
+}
+
 test_unlisted_contact_refused
 test_external_needs_confirmation
 test_external_with_confirmation_sends
@@ -538,3 +638,5 @@ test_covering_note_preflight
 test_decoded_document_scan
 test_input_failures_are_logged
 test_complete_confirmations
+test_stored_address_must_be_one_mailbox
+test_pdf_filter_representations

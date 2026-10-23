@@ -146,6 +146,51 @@ def within(path, root):
 
 # --- preflight ----------------------------------------------------------------
 
+def pdf_tokens(value):
+    tokens = re.findall(
+        rb'%[^\r\n]*|\((?:\\.|[^\\()])*\)|<[^<>]*>|<<|>>|'
+        rb'/[^\x00\s()<>\[\]{}/%]+|[^\x00\s()<>\[\]{}/%]+|[^\x00\s]', value)
+    return [re.sub(rb'#([0-9a-fA-F]{2})', lambda m: bytes([int(m[1], 16)]), token)
+            if token.startswith(b'/') else token
+            for token in tokens if not token.startswith(b'%')]
+
+
+def check_pdf_filter(dictionary, content):
+    tokens = pdf_tokens(dictionary)
+    depth = 0
+    positions = []
+    for index, token in enumerate(tokens):
+        if token in (b'<<', b'['):
+            depth += 1
+        elif token in (b'>>', b']'):
+            depth -= 1
+        elif depth == 0 and token == b'/Filter':
+            positions.append(index + 1)
+        elif token in (b'(', b')'):
+            raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter cannot be resolved')
+    if len(positions) != 1 or positions[0] == len(tokens):
+        raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter cannot be resolved')
+    value = tokens[positions[0]:]
+    if (len(value) >= 3 and value[0].isdigit()
+            and value[1].isdigit() and value[2] == b'R'):
+        if value[1] != b'0':
+            raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter reference must have generation 0')
+        objects = re.findall(rb'(?<!\S)' + value[0] + rb'\s+0\s+obj\b(.*?)\bendobj\b',
+                             content, re.DOTALL)
+        if len(objects) != 1:
+            raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter reference cannot be resolved')
+        value = pdf_tokens(objects[0])
+    elif value[0] == b'[':
+        try:
+            value = value[:value.index(b']') + 1]
+        except ValueError:
+            raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter array cannot be resolved')
+    else:
+        value = value[:1]
+    if value not in ([b'/FlateDecode'], [b'[', b'/FlateDecode', b']']):
+        raise Refusal(EXIT_PREFLIGHT, 'PDF stream uses an unsupported Filter or filter chain')
+
+
 def decoded_contents(real, content):
     yield content
     extension = os.path.splitext(real)[1].lower()
@@ -155,10 +200,12 @@ def decoded_contents(real, content):
                 yield archive.read(member)
     elif extension == '.pdf':
         for stream in re.finditer(
-                rb'<<((?:(?!\bendobj\b).)*?)>>\s*stream(?:\r\n|\n|\r)(.*?)endstream',
+                rb'(?:<<((?:(?!\bendobj\b).)*?)>>\s*)?\bstream(?:\r\n|\n|\r)(.*?)endstream',
                 content, re.DOTALL):
-            if re.search(rb'/(?:FlateDecode|Fl)\b', stream[1]):
-                yield zlib.decompress(stream[2])
+            if stream[1] is None:
+                raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter dictionary cannot be resolved')
+            check_pdf_filter(stream[1], content)
+            yield zlib.decompress(stream[2])
 
 
 def secret_problems(given, real, content):
@@ -168,6 +215,8 @@ def secret_problems(given, real, content):
             for name, pattern in SECRET_PATTERNS:
                 if pattern.search(decoded):
                     matches.add(name)
+    except Refusal as refusal:
+        return ['%s: %s' % (given, refusal.reason)]
     except (OSError, ValueError, RuntimeError, zipfile.BadZipFile, EOFError, zlib.error):
         return ['%s: cannot decode document content for the secret scan' % given]
     return ['%s: matches the secret pattern %s' % (given, name)
@@ -268,13 +317,9 @@ def mask_in(text, address, masked):
     return re.sub(re.escape(address), lambda _: masked, text, flags=re.IGNORECASE)
 
 
-def print_card(contact, channel, masked, records, subject, body, needs_confirmation):
+def print_card(contact, channel, masked, records, subject, body):
     print('confirmation card (dry run, nothing sent)')
     print('recipient: %s - %s' % (contact['name'], contact['role']))
-    if needs_confirmation:
-        print('confirmation: required, %s contact' % contact['trust'])
-    else:
-        print('confirmation: not required by trust (%s)' % contact['trust'])
     print('channel: %s' % channel)
     print('address: %s' % masked)
     for record in records:
@@ -398,7 +443,7 @@ def attempt(args, config, confirmation, entry):
     body = covering_text(contact, names, note)
     subject = '%s: %s' % (DEFAULT_TEXT[contact['language']][2], names[0])
     if args.dry_run:
-        print_card(contact, channel, entry['masked_address'], records, subject, body, needs_confirmation)
+        print_card(contact, channel, entry['masked_address'], records, subject, body)
         return None
     entry['detail'] = send_email(mail, contact['email'], entry['masked_address'],
                                  subject, body, records)

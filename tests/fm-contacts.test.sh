@@ -388,6 +388,48 @@ test_help_and_usage() {
   pass "fm-contacts: --help and usage errors"
 }
 
+test_single_mailbox_addresses() {
+  local home field address command
+  local command_args=()
+  home=$(new_home single-mailbox)
+  for field in email imessage; do
+    for address in 'ops@example.com,postmaster' 'ops@example.com;postmaster' \
+      'ops @example.com' 'ops@example.com postmaster' '<ops@example.com>' \
+      'ops@example.com>' 'ops@@example.com' '@example.com' 'ops@example' \
+      $'ops@example.com\npostmaster' $'ops@example.com\tpostmaster'; do
+      contacts "$home" add --id recipient --name Recipient --role Ops --trust internal \
+        --language en "--$field" "$address" --added-by test
+      expect_code 1 "$?" "add refuses an invalid $field mailbox"
+      assert_absent "$home/data/contacts.json" "a mailbox refusal does not store the contact"
+    done
+  done
+  seed_book "$home"
+  cp "$home/data/contacts.json" "$TMP_ROOT/single-mailbox-valid.json"
+  for field in email imessage; do
+    cp "$TMP_ROOT/single-mailbox-valid.json" "$home/data/contacts.json"
+    python3 - "$home/data/contacts.json" "$field" <<'PYBOOK'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+book = json.loads(path.read_text())
+book['contacts'][0][sys.argv[2]] = 'ops@example.com,postmaster'
+path.write_text(json.dumps(book))
+PYBOOK
+    for command in list show resolve add; do
+      case "$command" in
+        list) command_args=(list) ;;
+        show) command_args=(show site-it-lead) ;;
+        resolve) command_args=(resolve José) ;;
+        add) command_args=(add --id other --name Other --role Ops --trust internal --language en --email other@example.com --added-by test) ;;
+      esac
+      contacts "$home" "${command_args[@]}"
+      expect_code 1 "$?" "$command refuses a stored comma-separated $field address"
+      assert_contains "$(cat "$TMP_ROOT/err")" "$field must" "the error names the invalid field"
+      assert_equals "4" "$(json_field "$home/data/contacts.json" 'len(d["contacts"])')" "a refused load leaves the book unchanged"
+    done
+  done
+  pass "fm-contacts: add and every reader require a single email mailbox"
+}
+
 test_add_stores_entry
 test_add_validation_failures
 test_preferred_allows_absent_addresses
@@ -401,3 +443,4 @@ test_resolve_ignores_ids
 test_missing_book_is_empty
 test_refuses_unsupported_version
 test_help_and_usage
+test_single_mailbox_addresses

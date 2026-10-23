@@ -1751,7 +1751,7 @@ A missing file is an empty book, and a book whose `version` is not `1`, or that 
 | `trust` | `self`, `internal`, or `external` (below). |
 | `language` | `es` or `en`, the language of the covering text. |
 | `preferred` | Ordered channel names from `email`, `telegram`, `imessage`, `whatsapp`; a channel may have a null address. A sender uses the first preferred channel that has an address and works today. Without `--preferred`, `add` lists the channels that have an address in that order. |
-| `email` | One address with exactly one `@` and a dotted domain, or `null`. |
+| `email` | One mailbox with exactly one `@`, a non-empty local part, and a dotted domain, or `null`; commas, semicolons, whitespace, and angle brackets are refused on add and load. |
 | `telegram_chat_id` | Numeric chat id as a string, or `null`. |
 | `imessage` | An email address or a `+<digits>` phone number, or `null`. |
 | `whatsapp` | A `+<digits>` phone number, or `null`. |
@@ -1828,7 +1828,7 @@ av inject +FM_MAIL_PASS -- bin/fm-deliver.sh <contact-id> <file>... --order-file
   Additional words refuse the confirmation.
 - `--note-file` holds the covering text.
   Without it, the text is one line in the contact's language (`Le comparto el archivo adjunto.` or `Please find the file attached.`, plural for several files) and a line with the file names.
-- `--dry-run` runs every check except the confirmation and prints the confirmation card: the recipient's name and role, whether a confirmation is required, the channel, the masked address, each file with its size, attachment or link, the subject, and the first line of the covering text.
+- `--dry-run` runs every check except the confirmation and prints the confirmation card: the recipient's name and role, the channel, the masked address, each file with its size, attachment or link, the subject, and the first line of the covering text.
   It sends nothing and writes no log line.
 
 The subject is `Documento: <first file name>` or `Document: <first file name>`, according to the contact's language.
@@ -1865,7 +1865,10 @@ Every check runs before any network call, every problem is named, and any proble
 - Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 20971520) and at most the mail plane's `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520).
 - Secrets: the raw bytes of each file must not contain `-----BEGIN`, `ghp_`, `github_pat_`, `AKIA`, `password=`, `FM_MAIL_PASS`, `xoxb-` or `xoxp-`, or `sk-` followed by 20 or more word characters, case-sensitive.
   A match names the pattern and the file, never the matched bytes.
-  The scan also checks every decoded ZIP member in DOCX and XLSX files and every PDF FlateDecode stream inflated with zlib.
+  The scan also checks every decoded ZIP member in DOCX and XLSX files.
+  PDF streams must have exactly one FlateDecode filter, specified as a direct name, an array containing that name, or a single-level reference (`N 0 R`) to a name or array object.
+  PDF names with hexadecimal escapes are decoded before comparison.
+  The scan inflates each supported stream with zlib; missing or unresolved filters, other filters, and filter chains refuse the file with a named preflight failure.
   A document decoding failure refuses the send.
   This scan is a backstop to firstmate reading each file in full, not a proof.
 

@@ -46,6 +46,7 @@ A send needs the captain's confirmation when any of these is true:
 
 For a `self` or `internal` contact with an unambiguous person and file, the order alone is enough.
 
+Use the rules above to decide whether a confirmation is needed; the card does not make that decision.
 To collect a confirmation, run the send with `--dry-run`, show the captain the confirmation card it prints, and wait.
 Only the complete normalized answer "yes, send", "send it", or "sí, envía" confirms, ignoring case, accents, and punctuation.
 An answer containing additional words does not confirm.

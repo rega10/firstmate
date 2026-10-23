@@ -182,7 +182,8 @@ def check_text(label, value, required=True):
 
 
 def valid_email(value):
-    if not isinstance(value, str) or any(c.isspace() for c in value) or value.count('@') != 1:
+    if (not isinstance(value, str) or value.count('@') != 1
+            or any(c.isspace() or c in ',;<>\r\n' for c in value)):
         return False
     local, domain = value.split('@')
     return bool(local) and '.' in domain and not domain.startswith('.') and not domain.endswith('.')
@@ -218,13 +219,13 @@ def validate_contact(contact, where):
         if contact['language'] not in LANGUAGES:
             raise ContactError('language must be one of %s, got %r' % ('|'.join(LANGUAGES), contact['language']))
         if contact['email'] is not None and not valid_email(contact['email']):
-            raise ContactError('email must look like name@domain.tld with exactly one @, got %r' % (contact['email'],))
+            raise ContactError('email must be one mailbox like name@domain.tld with exactly one @ and no separators, whitespace, or brackets')
         tg = contact['telegram_chat_id']
         if tg is not None and (not isinstance(tg, str) or not TELEGRAM_RE.match(tg)):
             raise ContactError('telegram_chat_id must be a numeric chat id string, got %r' % (tg,))
         im = contact['imessage']
         if im is not None and not (valid_email(im) or (isinstance(im, str) and PHONE_RE.match(im))):
-            raise ContactError('imessage must be an email or a +<digits> phone number, got %r' % (im,))
+            raise ContactError('imessage must be one email mailbox or a +<digits> phone number')
         wa = contact['whatsapp']
         if wa is not None and (not isinstance(wa, str) or not PHONE_RE.match(wa)):
             raise ContactError('whatsapp must be a +<digits> phone number, got %r' % (wa,))
