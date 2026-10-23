@@ -78,6 +78,7 @@ Each effective `FM_HOME` contains private operational directories.
 - Project and secondmate registries.
 - Captain preferences and optional shared captain preferences.
 - Learnings, backlog, briefs, scout reports, and the optional per-task no-mistakes pipeline-spend ledger.
+- The contact book for outbound sends, `data/contacts.json` ([Contact book](#contact-book-datacontactsjson)).
 - Explicitly installed content-addressed extension packages under `data/extensions/packages/`.
 
 `state/` holds runtime records:
@@ -1706,6 +1707,105 @@ A fail-closed poll that already queued a wake, and a timeout, always print so th
 
 `FM_MAIL_CHECK_BUDGET` (default 15, valid 5..25) bounds one standing poll and is cut down to fit `FM_CHECK_TIMEOUT`.
 `bin/fm-mail-check.sh disarm` removes the standing check.
+
+## Contact book (data/contacts.json)
+
+The contact book (`bin/fm-contacts.sh`) lists the people firstmate may send to, so a spoken "send it to <person>" resolves to exactly one listed contact or to a question for the captain, and never to an address outside the book.
+It only stores and resolves contacts; it never sends on any channel.
+This section is the single owner of the book's schema, the trust meanings, the resolve tiers and exit codes, and the masking rule; the script's header and `--help` own its flags.
+
+**Schema**
+
+The book is `$FM_HOME/data/contacts.json`, home-private and gitignored, written atomically as pretty-printed UTF-8 JSON with mode 0600.
+A missing file is an empty book, and a book whose `version` is not `1`, or that holds an invalid entry or duplicate id, is refused rather than read.
+
+```json
+{
+  "version": 1,
+  "contacts": [
+    {
+      "id": "site-it-lead",
+      "name": "Example Person",
+      "aliases": ["example", "ejemplo", "the site IT lead", "el de sistemas"],
+      "role": "Site IT, location team",
+      "trust": "external",
+      "language": "es",
+      "preferred": ["email"],
+      "email": "person@example.com",
+      "telegram_chat_id": null,
+      "imessage": null,
+      "whatsapp": null,
+      "added": "2026-10-23",
+      "added_by": "captain words: add Example Person, site IT, email person@example.com"
+    }
+  ]
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Unique lowercase slug (`a-z`, `0-9`, single inner dashes). |
+| `name` | Display name, accents kept. |
+| `aliases` | The spellings voice dictation actually produces, including nicknames and Spanish forms. |
+| `role` | Free text that tells namesakes apart. |
+| `trust` | `self`, `internal`, or `external` (below). |
+| `language` | `es` or `en`, the language of the covering text. |
+| `preferred` | Ordered channel names from `email`, `telegram`, `imessage`, `whatsapp`; a channel may have a null address. A sender uses the first preferred channel that has an address and works today. Without `--preferred`, `add` lists the channels that have an address in that order. |
+| `email` | One address with exactly one `@` and a dotted domain, or `null`. |
+| `telegram_chat_id` | Numeric chat id as a string, or `null`. |
+| `imessage` | An email address or a `+<digits>` phone number, or `null`. |
+| `whatsapp` | A `+<digits>` phone number, or `null`. |
+| `added` | The `YYYY-MM-DD` date `add` stored the entry. |
+| `added_by` | The captain's words that asked for the entry. |
+
+Every entry needs at least one address and a unique id; entries may share addresses on any channel.
+
+**Adding a contact**
+
+Before invoking `add`, firstmate reads the proposed entry back to the captain: name, aliases, channel, masked address, language, and trust.
+Firstmate invokes `add` only after the captain says yes and records the captain's words that asked for the entry in `added_by`.
+The command saves immediately without an interactive confirmation prompt.
+
+**Trust**
+
+- `self` is the captain's own addresses; the captain is contact `me` with explicit aliases such as `"me"` and `"mi"`, so "send it to me" needs no special case.
+- `internal` is the captain's own team.
+- `external` is anyone else.
+
+Trust is the input to the send confirmation rule, which belongs to the sending surface, not to the book.
+
+**Resolve**
+
+`resolve <spoken words>...` joins its arguments and normalizes them: lowercase, accents removed through NFKD, punctuation turned into word breaks, and the words `el`, `la`, and `the` dropped.
+Each contact's `name` and `aliases` are normalized the same way and scored in tiers:
+
+- `exact`: the normalized query equals a normalized name or alias.
+- `prefix`: every query word is a prefix of a distinct word of one name or alias, in the same order.
+- `fuzzy`: the Levenshtein distance to one name or alias is 2 or less.
+
+Each contact keeps its best tier, and `distance` is the edit distance to the candidate that gave it.
+Resolution is a cascade: when any contact matches exactly, only exact matches are listed, and otherwise every prefix and fuzzy match is listed.
+Output is one JSON object, `{"query", "normalized", "matches": [{"id", "name", "role", "tier", "distance", "masked_address"}]}`, with matches sorted by tier, then distance, then id.
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | Exactly one exact match: use that contact. |
+| 2 | No match: ask the captain for the address. |
+| 3 | A fuzzy, prefix, or ambiguous result: ask the captain to confirm or choose. |
+| 1 | An error: usage, validation, or an unreadable or refused book. |
+
+The caller, not the book, decides what to ask.
+When multiple contacts match, the caller presents them as a numbered list with each contact's name, role, and masked address.
+
+**Masking**
+
+`list` and `resolve` never print a full address.
+Both select the first channel in `preferred` that has an address, without checking channel availability.
+A masked email is the first character of the local part, `***`, and then `@` and the domain, such as `p***@example.com`.
+Other channels show `***` and the last three characters, such as `***901`; addresses of three characters or fewer hide the first character and show the rest.
+This suffix rule also applies to iMessage email addresses.
+If no preferred channel has an address, `masked_address` is `null` in `resolve`, and `list` shows `-`.
+Only `show <id>` and `add` print a full entry.
 
 ## Relay (.env)
 
