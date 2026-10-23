@@ -48,8 +48,8 @@
 #
 # Deployment - credentials and endpoints are read from the environment,
 # filling missing keys from the gitignored $FM_HOME/.env (same convention
-# as the Relay/FMX token; env wins). Add these four required values, plus
-# the optional ports and timeout:
+# as the Relay/FMX token; env wins). Configure the four required values and
+# optional settings below:
 #   FM_MAIL_USER=<imap/smtp account>
 #   FM_MAIL_PASS=<password>
 #   FM_IMAP_HOST=<imap host>

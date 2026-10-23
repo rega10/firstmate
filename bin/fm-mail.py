@@ -263,8 +263,8 @@ def cmd_send(to, subj, body, attach_paths=(), ccs=()):
             m.add_attachment(data, maintype=maintype, subtype=subtype, filename=filename)
         with smtplib.SMTP_SSL(STH, STP, context=CTX, timeout=MAIL_TIMEOUT) as s:
             s.login(USER, PW)
-            # send_message takes the envelope recipients from the To and Cc
-            # headers, so every Cc recipient receives the message.
+            # Let send_message derive the envelope from both recipient headers;
+            # explicitly passing only To here would silently discard Cc recipients.
             try:
                 refused = s.send_message(m)
             except smtplib.SMTPRecipientsRefused as e:
