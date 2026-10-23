@@ -1646,7 +1646,7 @@ Arm the check once per home with `bin/fm-tool-update-check.sh arm`.
 
 ## Mail plane (.env)
 
-The mail plane (bin/fm-mail.sh) reads unseen IMAP messages and sends one SMTP message.
+The mail plane (bin/fm-mail.sh) reads unseen IMAP messages and sends one plain-text SMTP message, optionally with Cc recipients and file attachments.
 
 **Polling and delivery guarantees**
 
@@ -1672,8 +1672,24 @@ FM_IMAP_HOST=   # IMAP server hostname
 FM_SMTP_HOST=   # SMTP server hostname
 ```
 
-`FM_IMAP_PORT` (default 993), `FM_SMTP_PORT` (default 465), `FM_MAIL_TIMEOUT` (default 20 seconds), and `FM_MAIL_POLL_MAX_WAKES` (default 20, valid 1..200) are optional.
+`FM_IMAP_PORT` (default 993), `FM_SMTP_PORT` (default 465), `FM_MAIL_TIMEOUT` (default 20 seconds), `FM_MAIL_POLL_MAX_WAKES` (default 20, valid 1..200), `FM_MAIL_FROM_NAME` (no default), and `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520, valid positive integer) are optional.
 The per-poll wake cap bounds the wakes of one `poll` run; header fetches scan a larger bounded window of new unseen uids plus already-surfaced retry-set uids, so a flood or large backlog still makes bounded progress every poll, keeping the durable wake queue bounded without ever dropping mail.
+
+**Sending mail**
+
+`send [--attach <path>]... [--cc <addr>]... <to> <subject> <body | ->` sends one plain-text message, and a `-` body reads stdin.
+Options come before the positionals, and `--` ends them.
+Each `--attach` adds one file as an attachment, typed from its file extension; the message is then multipart/mixed with the text body first.
+Unknown types and files with a recognized compression encoding, such as `.gz`, use `application/octet-stream`.
+Each `--cc` adds one address to the `Cc` header and the SMTP envelope.
+If SMTP refuses any recipient, `send` lists the refused addresses on stderr and exits 1 without resending or printing the success line.
+Other recipients may already have received the message, so retrying the whole send can deliver duplicates.
+`FM_MAIL_FROM_NAME`, when set, makes the From header that display name plus `FM_MAIL_USER`; when unset, From is the bare account.
+Subjects, bodies, display names, and attachment names are UTF-8 and are encoded 7-bit safe, so accented text survives any relay.
+
+Attachments are checked before any network call.
+A missing, unreadable, or non-regular file refuses the send with exit 1, and so does a total attachment size above `FM_MAIL_MAX_ATTACH_BYTES` or an invalid cap value; a send without attachments ignores the cap.
+The cap counts file bytes; base64 encoding makes the message on the wire about a third larger, so set the cap to at most about three quarters of the provider's message size limit.
 
 **Unfetchable headers**
 

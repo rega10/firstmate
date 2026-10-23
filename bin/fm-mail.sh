@@ -10,9 +10,16 @@
 # Subcommands:
 #   read                 List unseen INBOX mail as a compact digest (From /
 #                        Date / Subject / first line).
-#   send <to> <subject> <body | ->
-#                        Send one message. A "-" body reads plain text from
-#                        stdin.
+#   send [--attach <path>]... [--cc <addr>]... <to> <subject> <body | ->
+#                        Send one plain-text UTF-8 message. A "-" body reads
+#                        plain text from stdin. --attach (repeatable) adds a
+#                        file as an attachment, with its MIME type from the
+#                        file extension; --cc (repeatable) adds a Cc
+#                        recipient. Options come before the positionals, and
+#                        "--" ends them. A missing, unreadable, or
+#                        non-regular attachment, or attachments above the
+#                        total size cap, refuse the send with exit 1 before
+#                        any network call.
 #   poll                 Surface UNSEEN mail this home has not yet woken as a
 #                        `check` wake so firstmate answers it concisely. IMAP
 #                        \Seen mail never wakes a poll, no message is ever
@@ -41,8 +48,8 @@
 #
 # Deployment - credentials and endpoints are read from the environment,
 # filling missing keys from the gitignored $FM_HOME/.env (same convention
-# as the Relay/FMX token; env wins). Add these four required values, plus
-# the optional ports and timeout:
+# as the Relay/FMX token; env wins). Configure the four required values and
+# optional settings below:
 #   FM_MAIL_USER=<imap/smtp account>
 #   FM_MAIL_PASS=<password>
 #   FM_IMAP_HOST=<imap host>
@@ -50,6 +57,8 @@
 #   FM_SMTP_HOST=<smtp host>
 #   FM_SMTP_PORT=<smtp port>     (default 465, implicit TLS)
 #   FM_MAIL_TIMEOUT=<seconds>    (default 20; IMAP/SMTP socket timeout)
+#   FM_MAIL_FROM_NAME=<name>     (optional From display name for send)
+#   FM_MAIL_MAX_ATTACH_BYTES=<n> (default 20971520; total attachment cap)
 # FM_HOME falls back to the repo root when unset. This script carries no secret
 # and no default endpoint that could resolve against a wrong home; FM_MAIL_USER,
 # FM_MAIL_PASS, FM_IMAP_HOST, and FM_SMTP_HOST are always required, and
@@ -175,13 +184,15 @@ run_py() {
   FM_MAIL_CURSOR="$CURSOR" FM_MAIL_RETRY="$RETRY" \
   FM_MAIL_RETRY_POS="$RETRY_POS" FM_MAIL_TURN="$TURN" \
   FM_MAIL_POLL_MAX_WAKES="$MAIL_MAX_WAKES" \
+  FM_MAIL_FROM_NAME="${FM_MAIL_FROM_NAME:-}" \
+  FM_MAIL_MAX_ATTACH_BYTES="${FM_MAIL_MAX_ATTACH_BYTES:-}" \
     "$PY" "$PY_BIN" "$@"
 }
 
 usage() {
   cat <<'EOF'
 fm-mail.sh read
-fm-mail.sh send <to> <subject> <body | ->
+fm-mail.sh send [--attach <path>]... [--cc <addr>]... <to> <subject> <body | ->
 fm-mail.sh poll
 fm-mail.sh status
 EOF
@@ -621,9 +632,38 @@ case "${1:-}" in
     run_py read
     ;;
   send)
-    to="${2:-}"
-    subj="${3:-}"
-    body="${4:--}"
+    shift
+    # Options are parsed before the positionals and forwarded to the engine,
+    # which checks attachments and the size cap before any network call.
+    send_opts=()
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        --attach|--cc)
+          if [ "$#" -lt 2 ] || [ -z "$2" ]; then
+            echo "fm-mail: $1 needs a value" >&2
+            usage >&2
+            exit 1
+          fi
+          send_opts+=("$1" "$2")
+          shift 2
+          ;;
+        --)
+          shift
+          break
+          ;;
+        -?*)
+          echo "fm-mail: unknown send option: $1" >&2
+          usage >&2
+          exit 1
+          ;;
+        *)
+          break
+          ;;
+      esac
+    done
+    to="${1:-}"
+    subj="${2:-}"
+    body="${3:--}"
     if [ -z "$to" ] || [ -z "$subj" ]; then
       usage
       exit 1
@@ -631,7 +671,7 @@ case "${1:-}" in
     if [ "$body" = "-" ]; then
       body="$(cat)"
     fi
-    printf '%s' "$body" | run_py send "$to" "$subj" "-"
+    printf '%s' "$body" | run_py send ${send_opts[@]+"${send_opts[@]}"} -- "$to" "$subj" "-"
     ;;
   status)
     echo "mail account: $FM_MAIL_USER"
