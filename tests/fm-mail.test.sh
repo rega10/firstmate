@@ -220,6 +220,21 @@ send_run() {
     "$MAIL" send "$@"
 }
 
+assert_message_id() {
+  local dir=$1 out=$2 message_id
+  message_id=$(python3 - "$dir/message.eml" <<'PYID'
+import email, email.policy, re, sys
+with open(sys.argv[1], 'rb') as source:
+    message = email.message_from_binary_file(source, policy=email.policy.default)
+identifiers = message.get_all('Message-ID', [])
+assert len(identifiers) == 1, identifiers
+assert re.fullmatch(r'<[^<>\s@]+@[^<>\s@]+>', str(identifiers[0])), identifiers
+print(identifiers[0])
+PYID
+  ) || fail "the sent message must contain one valid Message-ID"
+  assert_contains "$out" "message-id: $message_id" "the sent line reports the transmitted Message-ID"
+}
+
 test_send_plain_message_unchanged() {
   local dir out rc=0 info
   dir=$(send_fixture send-plain)
@@ -227,6 +242,7 @@ test_send_plain_message_unchanged() {
   expect_code 0 "$rc" "a plain send without options must succeed"
   assert_contains "$out" "sent to to@example.com (attachments: 0)" "plain send reports the recipient and no attachments"
   assert_not_contains "$out" "test-pass" "send output never prints the password"
+  assert_message_id "$dir" "$out"
   info=$(send_inspect "$dir")
   assert_contains "$info" "content-type: text/plain" "a send without attachments stays a single text/plain message"
   assert_contains "$info" "from: sender@example.com" "without FM_MAIL_FROM_NAME the From header is the bare account"
@@ -252,6 +268,7 @@ test_send_one_attachment() {
     contact@example.com "Site questionnaire" "Please fill this in." 2>&1) || rc=$?
   expect_code 0 "$rc" "a send with one attachment must succeed"
   assert_contains "$out" "sent to contact@example.com (attachments: 1)" "the sent line carries the attachment count"
+  assert_message_id "$dir" "$out"
   info=$(send_inspect "$dir" "$files")
   assert_contains "$info" "content-type: multipart/mixed" "an attachment makes the message multipart/mixed"
   assert_contains "$info" "body 0: text/plain Please fill this in." "the plain-text body is the first part"
@@ -272,6 +289,7 @@ test_send_two_attachments_with_mime_types() {
     --attach "$files/notes.fmunknownext" contact@example.com "Two files" "See attached." 2>&1) || rc=$?
   expect_code 0 "$rc" "a send with several attachments must succeed"
   assert_contains "$out" "(attachments: 3)" "the sent line counts every attachment"
+  assert_message_id "$dir" "$out"
   info=$(send_inspect "$dir" "$files")
   assert_contains "$info" "body 0: text/plain See attached." "the plain-text body stays first"
   assert_contains "$info" "attachment 1: application/pdf form.pdf" "the first attachment keeps the PDF type"
@@ -289,6 +307,7 @@ test_send_cc_reaches_every_recipient() {
   expect_code 0 "$rc" "a send with --cc must succeed"
   assert_contains "$out" "sent to to@example.com (attachments: 0)" "the sent line still names only the To recipient"
   assert_not_contains "$out" "first-cc@example.com" "the sent line does not log Cc addresses"
+  assert_message_id "$dir" "$out"
   info=$(send_inspect "$dir")
   assert_contains "$info" "cc: first-cc@example.com, second-cc@example.com" "the Cc header lists every --cc address"
   assert_equals "to@example.com
@@ -341,6 +360,7 @@ test_send_from_display_name() {
   printf 'FM_MAIL_FROM_NAME="Oficina Técnica Núñez"\n' > "$home/.env"
   out=$(send_run "$dir" "$home" to@example.com "Named" "Body" 2>&1) || rc=$?
   expect_code 0 "$rc" "a send with a display name from .env must succeed"
+  assert_message_id "$dir" "$out"
   info=$(send_inspect "$dir")
   assert_contains "$info" "from: Oficina Técnica Núñez <sender@example.com>" "the .env display name and the account form the From header"
   assert_contains "$info" "wire: 7bit" "a UTF-8 display name is encoded for the wire"
@@ -357,6 +377,7 @@ test_send_utf8_subject_and_body() {
   out=$(printf 'Señora Muñoz: le envío el cuestionario técnico. ¿Podría revisarlo?\n' | \
     LC_ALL=C send_run "$dir" "$HOME_DIR" to@example.com "Cuestionario de instalación: añada sus datos" - 2>&1) || rc=$?
   expect_code 0 "$rc" "a send with UTF-8 subject and body must succeed under the C locale"
+  assert_message_id "$dir" "$out"
   info=$(send_inspect "$dir")
   assert_contains "$info" "subject: Cuestionario de instalación: añada sus datos" "the accented subject survives"
   assert_contains "$info" "body 0: text/plain Señora Muñoz: le envío el cuestionario técnico. ¿Podría revisarlo?" "the accented body survives"
