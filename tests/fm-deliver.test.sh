@@ -70,6 +70,10 @@ case "${FM_DELIVER_TEST_SHARE_FAIL:-}:$1" in
     exit 0
     ;;
 esac
+if [ "$1" = copy ]; then
+  mkdir -p "$cap/../bucket/$3"
+  cp "$2" "$cap/../bucket/$3"
+fi
 if [ "$1" = link ]; then
   echo "rclone notice"
   echo "https://share.example.net/signed/$2?X-Amz-Signature=fake"
@@ -147,12 +151,19 @@ today_folder() {
   python3 -I -c 'import datetime; print(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))'
 }
 
+link_folder() {
+  local digest
+  digest=$(python3 -I -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "$3")
+  printf 'outbound/%s/%s/%s-%s/\n' "$(today_folder)" "$1" "$2" "$digest"
+}
+
 test_link_mode_sends_links() {
-  local home words rc expires folder url
+  local home words rc expires folder other_folder url
   home=$(new_home link)
   words="$TMP_ROOT/link-words"
   expires=$(expires_on)
-  folder="outbound/$(today_folder)/site-it-lead/"
+  folder=$(link_folder site-it-lead 1 "$home/data/report/report.pdf")
+  other_folder=$(link_folder site-it-lead 2 "$home/data/report/plan.png")
   url="https://share.example.net/signed"
   FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" site-it-lead \
     "$home/data/report/report.pdf" "$home/data/report/plan.png" \
@@ -163,9 +174,9 @@ test_link_mode_sends_links() {
     "$(cat "$TMP_ROOT/out")" "the receipt says link and the expiry date"
   assert_equals "copy $home/data/report/report.pdf $folder
 link ${folder}report.pdf --expire 168h
-copy $home/data/report/plan.png $folder
-link ${folder}plan.png --expire 168h" "$(cat "$CAPTURE/share-argv")" \
-    "each file is uploaded to outbound/<date>/<contact-id>/ and linked for 168h"
+copy $home/data/report/plan.png $other_folder
+link ${other_folder}plan.png --expire 168h" "$(cat "$CAPTURE/share-argv")" \
+    "each file is uploaded to its indexed hash folder and linked for 168h"
   assert_present "$CAPTURE/share-env-arrived" "the sharing command gets the environment unchanged"
   assert_equals "send
 --
@@ -175,7 +186,7 @@ Documento: report.pdf
   assert_equals "Le comparto los archivos en estos enlaces.
 
 report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - El enlace vence el $expires.
-plan.png (12 bytes): $url/${folder}plan.png?X-Amz-Signature=fake - El enlace vence el $expires." \
+plan.png (12 bytes): $url/${other_folder}plan.png?X-Amz-Signature=fake - El enlace vence el $expires." \
     "$(cat "$CAPTURE/stdin")" "the Spanish body lists each file with its size, link, and expiry"
   assert_equals "link" "$(last_log "$home" 'd["mode"]')" "the log records the link mode"
   assert_equals "$expires $expires" "$(last_log "$home" '" ".join(f["link_expires"] for f in d["files"])')" \
@@ -184,6 +195,7 @@ plan.png (12 bytes): $url/${folder}plan.png?X-Amz-Signature=fake - El enlace ven
     "a link file entry holds exactly the documented fields"
   assert_equals "sent" "$(last_log "$home" 'd["result"]')" "the link send is logged as sent"
   assert_no_grep "share.example.net" "$home/data/outbound/sends.jsonl" "the log never holds the link URL"
+  folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
   printf 'FM_DELIVER_SHARE_CMD=config/share.sh\nFM_MAIL_MAX_ATTACH_BYTES=20\n' > "$home/.env"
   cp "$SHARE" "$home/config/share.sh"
   deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
@@ -191,7 +203,7 @@ plan.png (12 bytes): $url/${folder}plan.png?X-Amz-Signature=fake - El enlace ven
   expect_code 0 "$rc" "the share command and the cap come from .env, relative to the home"
   assert_equals "Please find the file at this link.
 
-report.pdf (26 bytes): $url/outbound/$(today_folder)/maria-lopez/report.pdf?X-Amz-Signature=fake - The link expires on $expires." \
+report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - The link expires on $expires." \
     "$(cat "$CAPTURE/stdin")" "the English body has the link and the expiry sentence"
   printf 'Here is the report.\n' > "$home/data/report/note.txt"
   deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" \
@@ -199,7 +211,7 @@ report.pdf (26 bytes): $url/outbound/$(today_folder)/maria-lopez/report.pdf?X-Am
   expect_code 0 "$?" "a link send with a covering note"
   assert_equals "Here is the report.
 
-report.pdf (26 bytes): $url/outbound/$(today_folder)/maria-lopez/report.pdf?X-Amz-Signature=fake - The link expires on $expires." \
+report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - The link expires on $expires." \
     "$(cat "$CAPTURE/stdin")" "the note comes before the link lines"
   FM_MAIL_MAX_ATTACH_BYTES=30 deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
   expect_code 0 "$?" "a set at or below the cap"
@@ -217,7 +229,7 @@ test_link_mode_needs_share_command() {
     "$home/data/report/plan.png" --order-file "$words/order"
   rc=$?
   expect_code 5 "$rc" "an oversized set without a sharing command"
-  assert_contains "$(cat "$TMP_ROOT/err")" "cannot go as a link because FM_DELIVER_SHARE_CMD is not set" \
+  assert_contains "$(cat "$TMP_ROOT/err")" "cannot go as a link because $home/config/fm-share-b2.sh is not an executable file" \
     "the refusal names the missing sharing command"
   assert_absent "$CAPTURE/argv" "an oversized set without a sharing command sends nothing"
   printf '#!/bin/sh\n' > "$TMP_ROOT/not-executable.sh"
@@ -228,7 +240,23 @@ test_link_mode_needs_share_command() {
   assert_contains "$(cat "$TMP_ROOT/err")" "is not an executable file" "the refusal names the unusable sharing command"
   assert_absent "$CAPTURE/argv" "an unusable sharing command sends nothing"
   assert_equals "refused" "$(last_log "$home" 'd["result"]')" "the refusal is logged"
-  pass "fm-deliver: an oversized set is refused when no usable sharing command is set"
+  cp "$SHARE" "$home/config/fm-share-b2.sh"
+  python3 -I - "$home/data/report/report.pdf" <<'PYFILE'
+import sys
+with open(sys.argv[1], 'wb') as file:
+    file.write(b'%PDF-1.4 large report\n')
+    file.truncate(25 * 1048576)
+PYFILE
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
+  expect_code 0 "$?" "an unset override uses the executable default for a 25 MiB file"
+  assert_present "$CAPTURE/share-argv" "the default wrapper uploads and signs the file"
+  assert_equals "link" "$(last_log "$home" 'd["mode"]')" "the default caps allow a 25 MiB link send"
+  assert_contains "$(cat "$CAPTURE/stdin")" "report.pdf (25.0 MB): https://" "the default wrapper's link reaches the body"
+  FM_DELIVER_SHARE_CMD="$TMP_ROOT/not-executable.sh" deliver "$home" maria-lopez \
+    "$home/data/report/report.pdf" --order-file "$words/order"
+  expect_code 0 "$?" "an unusable override falls back to the executable default"
+  assert_present "$CAPTURE/share-argv" "the default wrapper works when the override is unusable"
+  pass "fm-deliver: link mode uses the default wrapper or refuses when neither command is executable"
 }
 
 test_link_mode_share_failure() {
@@ -278,19 +306,51 @@ test_link_mode_preflight_and_dry_run() {
   expect_code 5 "$?" "a file above the attachment cap is still scanned"
   assert_contains "$(cat "$TMP_ROOT/err")" "matches the secret pattern password=" "the scan reads a file headed for a link"
   assert_absent "$CAPTURE/share-argv" "a preflight refusal uploads nothing"
-  mkdir -p "$home/data/other"
-  cp "$home/data/report/report.pdf" "$home/data/other/report.pdf"
-  FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
-    "$home/data/report/report.pdf" "$home/data/other/report.pdf" --order-file "$words/order"
-  expect_code 5 "$?" "two files with one name in a link send"
-  assert_contains "$(cat "$TMP_ROOT/err")" "report.pdf: two files share this name" "the refusal names the shared file name"
-  assert_absent "$CAPTURE/share-argv" "a shared file name uploads nothing"
   FM_DELIVER_MAX_BYTES=30 FM_MAIL_MAX_ATTACH_BYTES=20 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
     "$home/data/report/report.pdf" "$home/data/report/plan.png" --order-file "$words/order"
   expect_code 5 "$?" "a link send above FM_DELIVER_MAX_BYTES"
   assert_contains "$(cat "$TMP_ROOT/err")" "above the FM_DELIVER_MAX_BYTES cap of 30 bytes" "the total cap still bounds a link send"
   assert_absent "$CAPTURE/share-argv" "a set above the total cap uploads nothing"
   pass "fm-deliver: link mode runs the preflight first, and a dry run uploads nothing"
+}
+
+test_link_destinations_preserve_content() {
+  local home words first_folder second_folder replacement_folder
+  home=$(new_home linkpaths)
+  words="$TMP_ROOT/linkpaths-words"
+  mkdir -p "$home/data/other"
+  cp "$home/data/report/report.pdf" "$home/data/other/report.pdf"
+  first_folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
+  second_folder=$(link_folder maria-lopez 2 "$home/data/other/report.pdf")
+  FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
+    "$home/data/report/report.pdf" "$home/data/other/report.pdf" --order-file "$words/order"
+  expect_code 0 "$?" "two same-name files with identical contents can go as links"
+  assert_equals "copy $home/data/report/report.pdf $first_folder
+link ${first_folder}report.pdf --expire 168h
+copy $home/data/other/report.pdf $second_folder
+link ${second_folder}report.pdf --expire 168h" "$(cat "$CAPTURE/share-argv")" \
+    "the file index isolates equal basenames even with equal hashes"
+  assert_contains "$(cat "$CAPTURE/stdin")" "report.pdf (26 bytes): https://share.example.net/signed/${first_folder}report.pdf?" \
+    "the first link keeps its displayed filename"
+  assert_contains "$(cat "$CAPTURE/stdin")" "report.pdf (26 bytes): https://share.example.net/signed/${second_folder}report.pdf?" \
+    "the second link keeps its displayed filename"
+  assert_equals "report.pdf report.pdf" "$(last_log "$home" '" ".join(f["name"] for f in d["files"])')" \
+    "the log retains both filenames"
+  printf '%%PDF-1.4 replacement report with different contents\n' > "$home/data/report/report.pdf"
+  replacement_folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
+  FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
+    "$home/data/report/report.pdf" --order-file "$words/order"
+  expect_code 0 "$?" "a later send of changed contents succeeds"
+  assert_not_contains "$replacement_folder" "$first_folder" "changed contents get a different object path"
+  cmp "$home/data/other/report.pdf" "$TMP_ROOT/bucket/${first_folder}report.pdf" \
+    || fail "a later send replaced the first link's contents"
+  cmp "$home/data/report/report.pdf" "$TMP_ROOT/bucket/${replacement_folder}report.pdf" \
+    || fail "the later link does not serve the replacement contents"
+  assert_contains "$(cat "$CAPTURE/stdin")" "https://share.example.net/signed/${replacement_folder}report.pdf?" \
+    "the later message links its own uploaded contents"
+  assert_equals "$(basename "${replacement_folder%/}" | cut -d- -f2)" \
+    "$(last_log "$home" 'd["files"][0]["sha256"]')" "the log hash matches the linked upload"
+  pass "fm-deliver: same-name files have isolated links and later sends preserve earlier contents"
 }
 
 test_unlisted_contact_refused() {
@@ -471,7 +531,7 @@ test_preflight_refusals() {
     "$home/data/report/report.pdf"
   assert_equals "26 None" "$(last_log "$home" '"%s %s" % (d["files"][0]["bytes"], d["files"][0]["sha256"])')" \
     "a file above the cap is sized but never read"
-  FM_MAIL_MAX_ATTACH_BYTES=30 expect_preflight "$home" "cannot go as a link because FM_DELIVER_SHARE_CMD is not set" \
+  FM_MAIL_MAX_ATTACH_BYTES=30 expect_preflight "$home" "cannot go as a link because $home/config/fm-share-b2.sh is not an executable file" \
     "$home/data/report/report.pdf" "$home/data/report/plan.png"
   for pattern in "private-key header|-----BEGIN RSA PRIVATE KEY-----" "ghp_ token|ghp_LEAKEDVALUE" \
     "github_pat_ token|github_pat_LEAKEDVALUE" "AKIA key id|AKIALEAKEDVALUE" "password=|password=LEAKEDVALUE" \
@@ -813,6 +873,7 @@ PYPDF
 }
 
 test_link_mode_sends_links
+test_link_destinations_preserve_content
 test_link_mode_needs_share_command
 test_link_mode_share_failure
 test_link_mode_preflight_and_dry_run

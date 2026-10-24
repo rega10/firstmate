@@ -1863,9 +1863,9 @@ Every check runs before any network call, every problem is named, and any proble
   Files named `.env` or beginning with `.env.` are also refused.
 - Type: each file must be a regular file ending in `.pdf`, `.png`, `.jpg`, `.jpeg`, `.docx`, or `.xlsx`, both as given and after symlinks.
   A `.md` file is refused with a message to render it to PDF first.
-- Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 104857600).
-  A set above the mail plane's `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520) goes in link mode, or is refused when no usable sharing command is set; without one, a file above the attachment cap is sized but never read.
-  A link send also refuses two files with the same name.
+- Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 104857600 bytes, raised from 20 MiB to 100 MiB to allow link delivery).
+  A set above the mail plane's `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520) goes in link mode, or is refused when no usable sharing command exists; without one, a file above the attachment cap is sized but never read.
+  Files with the same name use separate destination folders in link mode.
 - Secrets: the raw bytes of each file must not contain `-----BEGIN`, `ghp_`, `github_pat_`, `AKIA`, `password=`, `FM_MAIL_PASS`, `xoxb-` or `xoxp-`, or `sk-` followed by 20 or more word characters, case-sensitive.
   A match names the pattern and the file, never the matched bytes.
   The scan also checks every decoded ZIP member in DOCX and XLSX files.
@@ -1881,12 +1881,15 @@ They must be regular, non-empty UTF-8 files within the per-file size cap; their 
 **Link mode**
 
 When the files together exceed `FM_MAIL_MAX_ATTACH_BYTES`, and only then, the tool sends each file as a signed link that works for 7 days instead of attaching it.
-`FM_DELIVER_SHARE_CMD`, from the environment or the home's `.env` (the environment wins, as for `FM_DELIVER_MAX_BYTES` and `FM_MAIL_MAX_ATTACH_BYTES`), names the sharing command: an executable path, relative to the home unless absolute.
-The sharing command is home-private and not part of this repository; for example, `config/fm-share-b2.sh` uploads to a private Backblaze B2 bucket.
+The sharing command defaults to the home-private `$FM_HOME/config/fm-share-b2.sh`, which uploads to a private Backblaze B2 bucket and is not part of this repository.
+`FM_DELIVER_SHARE_CMD`, from the environment or the home's `.env` (the environment wins, as for `FM_DELIVER_MAX_BYTES` and `FM_MAIL_MAX_ATTACH_BYTES`), optionally overrides it with an executable path, relative to the home unless absolute.
+If the override is unusable, the tool tries the default wrapper.
 It must accept `copy <file> <folder/>` and `link <folder/file> --expire <duration>`, and `link` must print the signed URL as its last non-empty stdout line.
-When the variable is unset or does not name an executable file, an oversized send is refused with exit 5.
+When neither the override nor the default wrapper is an executable file, an oversized send is refused with exit 5.
 
-After every check passes, the tool runs, for each file, `<share-cmd> copy <file> outbound/<YYYYMMDD>/<contact-id>/` and then `<share-cmd> link outbound/<YYYYMMDD>/<contact-id>/<file name> --expire 168h`, with the UTC date, the environment unchanged, and the command's stderr shown to the caller.
+After every check passes, each file gets the folder `outbound/<YYYYMMDD>/<contact-id>/<index>-<sha256>/`, with the UTC date, the file's one-based position in the send, and its full SHA-256 hash.
+The tool runs `<share-cmd> copy <file> <folder/>` and then `<share-cmd> link <folder/file name> --expire 168h`, with the environment unchanged and the command's stderr shown to the caller.
+The index isolates files with the same name, and the hash prevents later sends with different contents from replacing an earlier link's object.
 A non-zero exit, or a last line that is not one `https://` URL, logs `result: error` and exits 7 before any mail is sent.
 The mail then goes through `bin/fm-mail.sh send -- <address> <subject> -` with no attachments, and its body is the covering text, a blank line, and one line per file: `<file name> (<size>): <link> - El enlace vence el <YYYY-MM-DD>.` for a Spanish contact or `... - The link expires on <YYYY-MM-DD>.` for an English one, where the date is the UTC date 7 days after the send.
 

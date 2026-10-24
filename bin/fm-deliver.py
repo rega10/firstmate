@@ -296,15 +296,16 @@ def check_file(given, home, data, read_limit, is_note=False):
 
 
 def share_command(home):
-    """The FM_DELIVER_SHARE_CMD path (relative to the home) and why it is
-    unusable, or None when it is an executable file."""
+    """Resolve an executable override or the home-private sharing wrapper."""
     raw = os.environ.get('FM_DELIVER_SHARE_CMD', '')
-    if not raw:
-        return None, 'FM_DELIVER_SHARE_CMD is not set'
-    path = raw if os.path.isabs(raw) else os.path.join(home, raw)
-    if not os.path.isfile(path) or not os.access(path, os.X_OK):
-        return path, 'FM_DELIVER_SHARE_CMD %s is not an executable file' % raw
-    return path, None
+    default = os.path.join(home, 'config', 'fm-share-b2.sh')
+    candidates = [raw if os.path.isabs(raw) else os.path.join(home, raw)] if raw else []
+    candidates.append(default)
+    for path in candidates:
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return path, None
+    label = 'FM_DELIVER_SHARE_CMD %s or %s' % (raw, default) if raw else default
+    return None, '%s is not an executable file' % label
 
 
 def preflight(files, home, data, max_bytes, attach_cap, share_problem):
@@ -331,9 +332,6 @@ def preflight(files, home, data, max_bytes, attach_cap, share_problem):
                             % (total, attach_cap, share_problem))
         else:
             mode = 'link'
-            names = [r['name'] for r in records]
-            for name in sorted(set(n for n in names if names.count(n) > 1)):
-                problems.append('%s: two files share this name; a link send needs distinct file names' % name)
     return records, problems, total, mode
 
 
@@ -530,9 +528,10 @@ def attempt(args, config, confirmation, entry):
         return None
     attachments = [r['path'] for r in records]
     if mode == 'link':
-        folder = 'outbound/%s/%s/' % (now.strftime('%Y%m%d'), contact['id'])
         links = []
-        for record, logged in zip(records, entry['files']):
+        for index, (record, logged) in enumerate(zip(records, entry['files']), start=1):
+            folder = 'outbound/%s/%s/%d-%s/' % (
+                now.strftime('%Y%m%d'), contact['id'], index, record['sha256'])
             links.append(share_link(share, folder, record))
             logged['link_expires'] = expires
         body = link_body(contact, body, records, links, expires)
