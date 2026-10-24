@@ -1834,7 +1834,7 @@ av inject +FM_MAIL_PASS -- bin/fm-deliver.sh <contact-id> <file>... --order-file
 The subject is `Documento: <first file name>` or `Document: <first file name>`, according to the contact's language.
 The first preferred channel that has an address is the channel.
 If that channel is not implemented, the tool refuses instead of trying a later preferred channel.
-An email send runs `bin/fm-mail.sh send --attach <file>... -- <address> <subject> -` with the covering text on stdin and the environment passed through unchanged, so the password reaches the mail plane only through `av inject`.
+In attachment mode, an email send runs `bin/fm-mail.sh send --attach <file>... -- <address> <subject> -` with the covering text on stdin and the environment passed through unchanged, so the password reaches the mail plane only through `av inject`.
 The tool never reads, prints, or logs `FM_MAIL_PASS`, and the address appears in no argv except that mail-plane call.
 On success it prints one receipt line, `sent: <contact name> <channel> <masked address> <n> file(s) <total bytes> bytes`, followed by ` by link, expires <YYYY-MM-DD>` with the latest per-file expiry date for a link send.
 
@@ -1865,7 +1865,6 @@ Every check runs before any network call, every problem is named, and any proble
   A `.md` file is refused with a message to render it to PDF first.
 - Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 104857600 bytes, raised from 20 MiB to 100 MiB to allow link delivery).
   A set above the mail plane's `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520) goes in link mode, or is refused when no usable sharing command exists; without one, a file above the attachment cap is sized but never read.
-  Files with the same name use separate destination folders in link mode.
 - Secrets: the raw bytes of each file must not contain `-----BEGIN`, `ghp_`, `github_pat_`, `AKIA`, `password=`, `FM_MAIL_PASS`, `xoxb-` or `xoxp-`, or `sk-` followed by 20 or more word characters, case-sensitive.
   A match names the pattern and the file, never the matched bytes.
   The scan also checks every decoded ZIP member in DOCX and XLSX files.
@@ -1898,7 +1897,8 @@ Each file's expiry date is the UTC date 7 days after its link command returns, a
 A dry-run card shows the planned expiry date, 7 days after the card is generated.
 
 The caller still runs `av inject +FM_MAIL_PASS -- bin/fm-deliver.sh ...`.
-The sharing command receives its own credentials through its own `av inject` shebang, which raises its own Vault prompt on each run, so a link send of n files costs 1 + 2n prompts.
+The default wrapper receives its own credentials only through its `av inject` shebang, which raises a Vault prompt on each run, so a link send of n files costs 1 + 2n prompts.
+The wrapper must be blessed again in Vault after every edit.
 
 **Send log**
 

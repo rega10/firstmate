@@ -16,7 +16,7 @@
 # rules, link mode, the log format, and away-mode enforcement. Standard library
 # only, so it runs under the system Python 3.9 with `python3 -I`. It never reads
 # FM_MAIL_PASS: the environment passes through to fm-mail.sh and to the
-# FM_DELIVER_SHARE_CMD sharing command unchanged.
+# sharing command unchanged.
 import argparse
 import datetime
 import fcntl

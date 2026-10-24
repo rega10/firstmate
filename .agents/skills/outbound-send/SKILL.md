@@ -72,5 +72,5 @@ The note must pass the same location checks and secret scan as attachments.
 When the tool exits 0, reply to the captain with its receipt line.
 When it refuses, tell the captain what it refused and why, and ask what to do.
 Never work around a refusal, for example by copying a file into `data/`, renaming it, or editing it to pass the secret scan, without the captain's word.
-Files above the mail attachment cap go as signed 7-day links through the home's default sharing wrapper or an optional override, with more Vault prompts for the captain (see "Link mode" in [Outbound send](../../../docs/configuration.md#outbound-send-dataoutboundsendsjsonl)); without an executable sharing command the tool refuses them.
+For files above the mail attachment cap, follow "Link mode" in [Outbound send](../../../docs/configuration.md#outbound-send-dataoutboundsendsjsonl).
 When the mail plane fails, report the error and do not retry on your own, because the recipient may already have the message.
