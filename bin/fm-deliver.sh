@@ -22,21 +22,29 @@
 #
 # Exit codes: 0 sent (or dry run passed), 1 usage or configuration error,
 # 2 contact not in the book, 3 confirmation missing, 4 away or quiet mode,
-# 5 preflight refused, 6 no implemented channel, 7 the mail plane failed.
+# 5 preflight refused, 6 no implemented channel, 7 the mail plane or the
+# sharing command failed.
 #
 # Email goes through bin/fm-mail.sh with the environment passed through
 # unchanged, so the password arrives only through
 # `av inject +FM_MAIL_PASS -- bin/fm-deliver.sh ...`; this tool never reads,
-# prints, or logs it. Every attempt that passed argument parsing appends one
+# prints, or logs it. Files that together exceed the attachment cap go as
+# signed 7-day links in the mail body, made by the home-private sharing
+# wrapper or FM_DELIVER_SHARE_CMD override, with the environment unchanged.
+# Every attempt that passed argument parsing appends one
 # JSON line to $FM_HOME/data/outbound/sends.jsonl (FM_DATA_OVERRIDE replaces
 # $FM_HOME/data). docs/configuration.md "Outbound send" owns the preflight
-# rules, the log format, and away-mode enforcement; the agent-only
+# rules, link mode, the log format, and away-mode enforcement; the agent-only
 # `outbound-send` skill owns confirmation and away authorization rules.
 #
-# Optional environment: FM_DELIVER_MAX_BYTES (default 20971520, total file
-# bytes of one send) and FM_MAIL_MAX_ATTACH_BYTES (the mail plane's
-# attachment cap, default 20971520). FM_HOME falls back to the repo root when
-# unset.
+# Optional settings, from the environment or else the home's .env (env wins):
+# FM_DELIVER_MAX_BYTES (default 104857600, total file bytes of one send),
+# FM_MAIL_MAX_ATTACH_BYTES (the mail plane's attachment cap, default
+# 20971520), and FM_DELIVER_SHARE_CMD (an optional executable override for
+# link mode, relative to FM_HOME unless absolute). Without a usable override,
+# link mode uses $FM_HOME/config/fm-share-b2.sh; if neither is executable,
+# an oversized send is refused with exit 5.
+# FM_HOME falls back to the repo root when unset.
 #
 # The work is delegated to bin/fm-deliver.py (Python 3 standard library only),
 # run isolated with `python3 -I` so no ambient Python path or module shadows it.
@@ -57,11 +65,14 @@ fm-deliver.sh <contact-id> <file>... --order-file <path>
 
 Sends the files to one listed contact on the first preferred channel that has
 an address (email today), after the preflight, and appends one line to
-data/outbound/sends.jsonl. Run a real send as
+data/outbound/sends.jsonl. Files above the mail attachment cap go as signed
+7-day links made by $FM_HOME/config/fm-share-b2.sh, with FM_DELIVER_SHARE_CMD
+as an optional executable override. Run a real send as
   av inject +FM_MAIL_PASS -- bin/fm-deliver.sh ...
 Exit codes: 0 sent or dry run passed, 1 usage or configuration error,
 2 contact not listed, 3 confirmation missing, 4 away or quiet mode,
-5 preflight refused, 6 no implemented channel, 7 the mail plane failed.
+5 preflight refused, 6 no implemented channel, 7 the mail plane or the
+sharing command failed.
 EOF
 }
 
@@ -98,6 +109,18 @@ if fm_afk_contract_present "$STATE"; then
 elif [ -e "$STATE/.afk" ]; then
   AWAY="$STATE/.afk"
 fi
+
+# Non-secret settings: the environment wins, and the home's .env fills the rest.
+# shellcheck source=bin/fm-env-lib.sh
+. "$SCRIPT_DIR/fm-env-lib.sh"
+for key in FM_DELIVER_MAX_BYTES FM_MAIL_MAX_ATTACH_BYTES FM_DELIVER_SHARE_CMD; do
+  if [ -z "${!key:-}" ]; then
+    value="$(fmx_env_get "$key" "$FM_HOME/.env")"
+    if [ -n "$value" ]; then
+      export "$key=$value"
+    fi
+  fi
+done
 
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 FM_DELIVER_HOME="$FM_HOME" \

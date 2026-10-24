@@ -13,9 +13,10 @@
 #   FM_DELIVER_CONTACTS_PY   bin/fm-contacts.py, whose reader and masking this
 #                            engine reuses so the book schema has one owner
 # docs/configuration.md "Outbound send" owns the exit codes, the preflight
-# rules, the log format, and away-mode enforcement. Standard library only, so it runs
-# under the system Python 3.9 with `python3 -I`. It never reads FM_MAIL_PASS:
-# the environment passes through to fm-mail.sh unchanged.
+# rules, link mode, the log format, and away-mode enforcement. Standard library
+# only, so it runs under the system Python 3.9 with `python3 -I`. It never reads
+# FM_MAIL_PASS: the environment passes through to fm-mail.sh and to the
+# sharing command unchanged.
 import argparse
 import datetime
 import fcntl
@@ -28,6 +29,7 @@ import re
 import stat
 import subprocess
 import sys
+import tempfile
 import unicodedata
 import zipfile
 import zlib
@@ -40,7 +42,11 @@ EXIT_PREFLIGHT = 5
 EXIT_CHANNEL = 6
 EXIT_SEND = 7
 
-DEFAULT_MAX_BYTES = 20971520
+DEFAULT_MAX_BYTES = 104857600
+DEFAULT_ATTACH_BYTES = 20971520
+# A signed link works for 7 days, the longest an S3 presigned link allows.
+LINK_EXPIRE = '168h'
+LINK_DAYS = 7
 ALLOWED_EXTENSIONS = ('.pdf', '.png', '.jpg', '.jpeg', '.docx', '.xlsx')
 # Home folders whose contents never go out, also refused as any folder name
 # inside data/.
@@ -61,6 +67,14 @@ CONFIRMATIONS = (('yes', 'send'), ('send', 'it'), ('si', 'envia'))
 DEFAULT_TEXT = {
     'es': ('Le comparto el archivo adjunto.', 'Le comparto los archivos adjuntos.', 'Documento'),
     'en': ('Please find the file attached.', 'Please find the files attached.', 'Document'),
+}
+# Link mode: the default covering text for one and for several files, and the
+# expiry sentence that ends each file line.
+LINK_TEXT = {
+    'es': ('Le comparto el archivo en este enlace.', 'Le comparto los archivos en estos enlaces.',
+           'El enlace vence el %s.'),
+    'en': ('Please find the file at this link.', 'Please find the files at these links.',
+           'The link expires on %s.'),
 }
 
 
@@ -86,10 +100,10 @@ def env_path(name):
     return value
 
 
-def byte_cap(name):
+def byte_cap(name, default):
     raw = os.environ.get(name, '')
     if raw == '':
-        return DEFAULT_MAX_BYTES
+        return default
     if not re.fullmatch(r'[0-9]+', raw) or int(raw) <= 0:
         raise Refusal(EXIT_ERROR, '%s must be a positive integer, got: %s' % (name, raw), 'error')
     return int(raw)
@@ -133,9 +147,11 @@ def load_contacts_module(path):
     return module
 
 
-def human_size(n):
+def human_size(n, exact=True):
     for unit, size in (('MB', 1048576), ('KB', 1024)):
         if n >= size:
+            if not exact:
+                return '%.1f %s' % (n / size, unit)
             return '%.1f %s (%d bytes)' % (n / size, unit, n)
     return '%d bytes' % n
 
@@ -271,6 +287,7 @@ def check_file(given, home, data, read_limit, is_note=False):
     record['sha256'] = hashlib.sha256(content).hexdigest()
     record['bytes'] = len(content)
     record['path'] = real
+    record['content'] = content
     problems.extend(secret_problems(given, real, content))
     if is_note and not problems:
         try:
@@ -280,30 +297,66 @@ def check_file(given, home, data, read_limit, is_note=False):
     return record, problems
 
 
-def preflight(files, home, data, max_bytes, attach_cap):
+def share_command(home):
+    """Resolve an executable override or the home-private sharing wrapper."""
+    raw = os.environ.get('FM_DELIVER_SHARE_CMD', '')
+    default = os.path.join(home, 'config', 'fm-share-b2.sh')
+    candidates = [raw if os.path.isabs(raw) else os.path.join(home, raw)] if raw else []
+    candidates.append(default)
+    for path in candidates:
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            return path, None
+    label = 'FM_DELIVER_SHARE_CMD %s or %s' % (raw, default) if raw else default
+    return None, '%s is not an executable file' % label
+
+
+def preflight(files, home, data, max_bytes, attach_cap, share_problem):
+    """Check every file. Returns the records, the problems, the total bytes,
+    and the mode: `link` when the total is above the attachment cap and the
+    sharing command is usable."""
     records, problems = [], []
+    # Without a sharing command nothing above the attachment cap can go out,
+    # so no file above it is read.
+    read_limit = max_bytes if share_problem is None else min(max_bytes, attach_cap)
     for given in files:
-        record, found = check_file(given, home, data, min(max_bytes, attach_cap))
+        record, found = check_file(given, home, data, read_limit)
         records.append(record)
         problems.extend(found)
     total = sum(r['bytes'] or 0 for r in records)
+    mode = 'attachment'
     if total > max_bytes:
         problems.append('the files total %d bytes, above the FM_DELIVER_MAX_BYTES cap of %d bytes'
                         % (total, max_bytes))
     if total > attach_cap:
-        problems.append('the files total %d bytes, above the mail attachment cap of %d bytes'
-                        ' (FM_MAIL_MAX_ATTACH_BYTES); send them as a link instead, a manual step today'
-                        % (total, attach_cap))
-    return records, problems, total
+        if share_problem is not None:
+            problems.append('the files total %d bytes, above the mail attachment cap of %d bytes'
+                            ' (FM_MAIL_MAX_ATTACH_BYTES), and they cannot go as a link because %s'
+                            % (total, attach_cap, share_problem))
+        else:
+            mode = 'link'
+    return records, problems, total, mode
 
 
 # --- the send -----------------------------------------------------------------
 
-def covering_text(contact, names, note):
+def covering_text(contact, names, note, mode):
     if note is not None:
         return note
+    if mode == 'link':
+        one, many, _ = LINK_TEXT[contact['language']]
+        return one if len(names) == 1 else many
     one, many, _ = DEFAULT_TEXT[contact['language']]
     return '%s\n%s' % (one if len(names) == 1 else many, ', '.join(names))
+
+
+def link_body(contact, text, records, links):
+    """The covering text, then one line per file with its size, link, and
+    the expiry date in the contact's language."""
+    lines = ['%s (%s): %s - %s' % (
+        r['name'], human_size(r['bytes'], exact=False), link,
+        LINK_TEXT[contact['language']][2] % r['link_expires'])
+             for r, link in zip(records, links)]
+    return '%s\n\n%s' % (text, '\n'.join(lines))
 
 
 def first_line(text):
@@ -317,22 +370,59 @@ def mask_in(text, address, masked):
     return re.sub(re.escape(address), lambda _: masked, text, flags=re.IGNORECASE)
 
 
-def print_card(contact, channel, masked, records, subject, body):
+def print_card(contact, channel, masked, records, delivery, subject, body):
     print('confirmation card (dry run, nothing sent)')
     print('recipient: %s - %s' % (contact['name'], contact['role']))
     print('channel: %s' % channel)
     print('address: %s' % masked)
     for record in records:
         print('file: %s - %s' % (record['name'], human_size(record['bytes'])))
-    print('delivery: attachment')
+    print('delivery: %s' % delivery)
     print('subject: %s' % subject)
     print('covering text: %s' % first_line(body))
 
 
-def send_email(mail, address, masked, subject, body, records):
+def run_share(share, argv):
+    """Run the sharing command with the environment unchanged and stderr
+    shown to the caller; return its stdout, or raise a send error."""
+    try:
+        done = subprocess.run([share] + argv, stdout=subprocess.PIPE)
+    except OSError as err:
+        raise Refusal(EXIT_SEND, 'cannot run the sharing command before any mail was sent: %s'
+                      % (err.strerror or err), 'error')
+    if done.returncode != 0:
+        raise Refusal(EXIT_SEND, 'the sharing command failed: %s exited %d before any mail was sent'
+                      % (argv[0], done.returncode), 'error')
+    return done.stdout.decode('utf-8', 'replace')
+
+
+def share_link(share, folder, record):
+    """Upload one file and return its signed link and expiry date."""
+    try:
+        with tempfile.TemporaryDirectory(prefix='fm-deliver-') as directory:
+            snapshot = os.path.join(directory, record['name'])
+            fd = os.open(snapshot, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, 'wb') as fh:
+                fh.write(record['content'])
+            run_share(share, ['copy', snapshot, folder])
+    except OSError as err:
+        raise Refusal(EXIT_SEND, 'cannot snapshot %s before any mail was sent: %s'
+                      % (record['name'], err.strerror or err), 'error')
+    out = run_share(share, ['link', folder + record['name'], '--expire', LINK_EXPIRE])
+    expires = (datetime.datetime.now(datetime.timezone.utc)
+               + datetime.timedelta(days=LINK_DAYS)).strftime('%Y-%m-%d')
+    lines = [line.strip() for line in out.splitlines() if line.strip()]
+    link = lines[-1] if lines else ''
+    if not re.fullmatch(r'https://\S+', link):
+        raise Refusal(EXIT_SEND, 'the sharing command failed: link printed no https:// link for %s'
+                      ' before any mail was sent' % record['name'], 'error')
+    return link, expires
+
+
+def send_email(mail, address, masked, subject, body, attachments):
     argv = [mail, 'send']
-    for record in records:
-        argv += ['--attach', record['path']]
+    for path in attachments:
+        argv += ['--attach', path]
     argv += ['--', address, subject, '-']
     try:
         done = subprocess.run(argv, input=body.encode('utf-8'), stdout=subprocess.PIPE,
@@ -398,11 +488,13 @@ def attempt(args, config, confirmation, entry):
     """Run the checks and the send, filling `entry` as facts become known.
     Returns the receipt line (None for a dry run), or raises Refusal."""
     home, data, mail, contacts, max_bytes, attach_cap = config
+    share, share_problem = share_command(home)
     # After input and cap validation, collect file metadata before recipient
     # checks so later refusals retain it. Report preflight problems only after
     # the contact, channel, confirmation, and away checks.
-    records, problems, total = preflight(args.files, home, data, max_bytes, attach_cap)
+    records, problems, total, mode = preflight(args.files, home, data, max_bytes, attach_cap, share_problem)
     entry['files'] = [{k: r[k] for k in ('name', 'sha256', 'bytes')} for r in records]
+    entry['mode'] = mode
     note = None
     if args.note_file:
         note_record, found = check_file(args.note_file, home, data, min(max_bytes, attach_cap), is_note=True)
@@ -440,16 +532,32 @@ def attempt(args, config, confirmation, entry):
     if problems:
         raise Refusal(EXIT_PREFLIGHT, 'preflight refused the send: ' + '; '.join(problems))
     names = [r['name'] for r in records]
-    body = covering_text(contact, names, note)
+    body = covering_text(contact, names, note, mode)
     subject = '%s: %s' % (DEFAULT_TEXT[contact['language']][2], names[0])
+    now = datetime.datetime.now(datetime.timezone.utc)
     if args.dry_run:
-        print_card(contact, channel, entry['masked_address'], records, subject, body)
+        expires = (now + datetime.timedelta(days=LINK_DAYS)).strftime('%Y-%m-%d')
+        delivery = 'link, expires %s' % expires if mode == 'link' else 'attachment'
+        print_card(contact, channel, entry['masked_address'], records, delivery, subject, body)
         return None
+    attachments = [r['path'] for r in records]
+    if mode == 'link':
+        links = []
+        for index, (record, logged) in enumerate(zip(records, entry['files']), start=1):
+            folder = 'outbound/%s/%s/%d-%s/' % (
+                now.strftime('%Y%m%d'), contact['id'], index, record['sha256'])
+            link, expires = share_link(share, folder, record)
+            links.append(link)
+            logged['link_expires'] = expires
+        body = link_body(contact, body, entry['files'], links)
+        expires = max(logged['link_expires'] for logged in entry['files'])
+        attachments = []
     entry['detail'] = send_email(mail, contact['email'], entry['masked_address'],
-                                 subject, body, records)
+                                 subject, body, attachments)
     entry['result'] = 'sent'
-    return 'sent: %s %s %s %d file(s) %d bytes' % (contact['name'], channel, entry['masked_address'],
-                                                  len(records), total)
+    return 'sent: %s %s %s %d file(s) %d bytes%s' % (
+        contact['name'], channel, entry['masked_address'], len(records), total,
+        ' by link, expires %s' % expires if mode == 'link' else '')
 
 
 def main(argv):
@@ -488,8 +596,8 @@ def main(argv):
             data,
             env_path('FM_DELIVER_MAIL'),
             load_contacts_module(env_path('FM_DELIVER_CONTACTS_PY')),
-            byte_cap('FM_DELIVER_MAX_BYTES'),
-            byte_cap('FM_MAIL_MAX_ATTACH_BYTES'),
+            byte_cap('FM_DELIVER_MAX_BYTES', DEFAULT_MAX_BYTES),
+            byte_cap('FM_MAIL_MAX_ATTACH_BYTES', DEFAULT_ATTACH_BYTES),
         )
         receipt = attempt(args, config, entry['confirmation'], entry)
     except Refusal as refusal:
