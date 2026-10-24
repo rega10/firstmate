@@ -1,0 +1,24 @@
+From: sender@example.test
+To: internal@example.test
+Subject: Document: report.pdf
+Date: Fri, 23 Oct 2026 21:28:16 -0500
+Message-ID: <179280889602.83682.9633621548771106949@rg-mac-mini.local>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============3745955621367787070=="
+
+--===============3745955621367787070==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Please find the file attached.
+report.pdf
+
+--===============3745955621367787070==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="report.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQgc2FmZSByZXBvcnQgQQo=
+
+--===============3745955621367787070==--

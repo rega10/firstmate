@@ -1,0 +1,25 @@
+From: sender@example.test
+To: external@example.test
+Subject: Documento: report.pdf
+Date: Fri, 23 Oct 2026 21:28:15 -0500
+Message-ID: <179280889549.83595.18136536218722584320@rg-mac-mini.local>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Le comparto los archivos en estos enlaces.
+
+report.pdf (23 bytes): https://127.0.0.1:51210/private/outbound/20261024/exte=
+rnal/1-c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd/repor=
+t.pdf?X-Amz-Algorithm=3DAWS4-HMAC-SHA256&X-Amz-Credential=3Ddisposable-access=
+%2F20261024%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=3D20261024T022815Z&X-A=
+mz-Expires=3D604800&X-Amz-SignedHeaders=3Dhost&x-id=3DGetObject&X-Amz-Signatu=
+re=3D35afc66fc738502d22f121589492ee0c5249a9fc597c9f484e2ebfad10532cec - El en=
+lace vence el 2026-10-31.
+report.pdf (23 bytes): https://127.0.0.1:51210/private/outbound/20261024/exte=
+rnal/2-c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd/repor=
+t.pdf?X-Amz-Algorithm=3DAWS4-HMAC-SHA256&X-Amz-Credential=3Ddisposable-access=
+%2F20261024%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=3D20261024T022815Z&X-A=
+mz-Expires=3D604800&X-Amz-SignedHeaders=3Dhost&x-id=3DGetObject&X-Amz-Signatu=
+re=3D87b871edfccbb60efb0f4e8128384819cb280ac7570eeb6850f86c55f9304ea7 - El en=
+lace vence el 2026-10-31.

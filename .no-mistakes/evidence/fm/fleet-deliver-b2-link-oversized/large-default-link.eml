@@ -1,0 +1,18 @@
+From: sender@example.test
+To: internal@example.test
+Subject: Document: large.pdf
+Date: Fri, 23 Oct 2026 21:28:15 -0500
+Message-ID: <179280889518.83565.525032364417182748@rg-mac-mini.local>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Please find the file at this link.
+
+large.pdf (25.0 MB): https://127.0.0.1:51210/private/outbound/20261024/intern=
+al/1-ccbad1c324647a5d2a520dd4266f329ae0b6ce918fd0fe2bb1a2a68cf9604988/large.p=
+df?X-Amz-Algorithm=3DAWS4-HMAC-SHA256&X-Amz-Credential=3Ddisposable-access%2F=
+20261024%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=3D20261024T022815Z&X-Amz-=
+Expires=3D604800&X-Amz-SignedHeaders=3Dhost&x-id=3DGetObject&X-Amz-Signature=
+=3Dc6cba750e4cdee7040df0325365fef29da76c155b70ec9648fc0462ee73ec2a0 - The lin=
+k expires on 2026-10-31.

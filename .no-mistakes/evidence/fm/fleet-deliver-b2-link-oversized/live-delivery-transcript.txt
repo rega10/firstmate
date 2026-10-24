@@ -1,0 +1,98 @@
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/large.pdf' --order-file '<lab>/order'
+exit: 0
+sent: Internal Tester email i***@example.test 1 file(s) 26214400 bytes by link, expires 2026-10-31
+
+Downloaded large.pdf: 26214400 bytes, SHA256 ccbad1c324647a5d2a520dd4266f329ae0b6ce918fd0fe2bb1a2a68cf9604988; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+Verified: A 25 MiB file uses the default executable wrapper, arrives by email without attachments, and downloads with a private seven-day signature.
+$ bin/fm-deliver.sh external '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order' --confirm-file '<lab>/confirm'
+exit: 0
+sent: External Tester email e***@example.test 2 file(s) 46 bytes by link, expires 2026-10-31
+
+Downloaded report.pdf: 23 bytes, SHA256 c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+Downloaded report.pdf: 23 bytes, SHA256 c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+Verified: Two files with identical names and contents receive distinct links and Spanish expiry lines.
+$ bin/fm-deliver.sh external '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order' --confirm-file '<lab>/confirm'
+exit: 0
+sent: External Tester email e***@example.test 2 file(s) 46 bytes by link, expires 2026-10-31
+
+Downloaded report.pdf: 23 bytes, SHA256 c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+Downloaded report.pdf: 23 bytes, SHA256 c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+Verified: Source mutation during upload cannot change scanned bytes, hashes, sizes, or earlier linked content; private snapshots are removed.
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' --order-file '<lab>/order'
+exit: 0
+sent: Internal Tester email i***@example.test 1 file(s) 50 bytes by link, expires 2026-10-31
+
+Downloaded report.pdf: 50 bytes, SHA256 27809a09babd1737d719894f055a0dc23462c38a421ac1106c411db0e0e44823; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+Verified: A later same-day send of changed content leaves earlier links unchanged.
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' --order-file '<lab>/order'
+exit: 0
+sent: Internal Tester email i***@example.test 1 file(s) 23 bytes
+
+Verified: A file exactly at the attachment cap remains an attachment with unchanged bytes.
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' --order-file '<lab>/order' --note-file '<lab>/home/data/one/note.txt'
+exit: 0
+sent: Internal Tester email i***@example.test 1 file(s) 23 bytes by link, expires 2026-10-31
+
+Downloaded report.pdf: 23 bytes, SHA256 c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' --order-file '<lab>/order'
+exit: 0
+sent: Internal Tester email i***@example.test 1 file(s) 23 bytes
+
+Verified: Home settings support a relative override and custom note, while environment settings take priority.
+$ bin/fm-deliver.sh external '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order' --dry-run
+exit: 0
+confirmation card (dry run, nothing sent)
+recipient: External Tester - Disposable recipient
+channel: email
+address: e***@example.test
+file: report.pdf - 23 bytes
+file: report.pdf - 23 bytes
+delivery: link, expires 2026-10-31
+subject: Documento: report.pdf
+covering text: Le comparto los archivos en estos enlaces.
+
+Verified: An oversized dry run shows planned link delivery and expiry without uploading, emailing, or logging.
+$ bin/fm-deliver.sh external '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order'
+exit: 3
+fm-deliver: the confirmation is missing: contact external is external, so --confirm-file with the owner's "yes, send", "send it", or "sí, envía" is required
+
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order'
+exit: 5
+fm-deliver: preflight refused the send: the files total 46 bytes, above the FM_DELIVER_MAX_BYTES cap of 40 bytes
+
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order'
+exit: 5
+fm-deliver: preflight refused the send: the files total 46 bytes, above the mail attachment cap of 30 bytes (FM_MAIL_MAX_ATTACH_BYTES), and they cannot go as a link because /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NT0QTKZT9EZX3RGMR8DB01/.tmp-deliver-live/home/config/fm-share-b2.sh is not an executable file
+
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/secret.pdf' --order-file '<lab>/order'
+exit: 5
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NT0QTKZT9EZX3RGMR8DB01/.tmp-deliver-live/home/data/one/secret.pdf: matches the secret pattern password=
+
+Verified: Missing confirmation, the total size cap, a missing wrapper, and secret scanning all prevent uploads and mail.
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order'
+exit: 7
+2026/10/23 21:28:16 NOTICE: Failed to link: Local file system at /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5NT0QTKZT9EZX3RGMR8DB01/.tmp-deliver-live/home/data/one doesn't support public links
+fm-deliver: the sharing command failed: link exited 1 before any mail was sent
+
+Verified: A real rclone signing failure returns exit 7, records the error, and sends no email.
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order'
+exit: 0
+sent: Internal Tester email i***@example.test 2 file(s) 46 bytes by link, expires 2026-10-31
+
+Downloaded report.pdf: 23 bytes, SHA256 c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+Downloaded report.pdf: 23 bytes, SHA256 c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd; signed lifetime 604800 seconds; unsigned and tampered requests rejected.
+Verified: An unusable override falls back to the executable default wrapper.
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order'
+exit: 7
+fm-deliver: the mail plane failed: fm-mail send error: [Errno 60] Operation timed out
+
+Verified: An SMTP connection failure returns exit 7 and records a masked error without signed URLs.
+$ bin/fm-deliver.sh internal '<lab>/home/data/one/report.pdf' '<lab>/home/data/two/report.pdf' --order-file '<lab>/order'
+exit: 7
+2026/10/23 21:28:25 ERROR : Attempt 1/1 failed with 1 errors and: operation error S3: HeadObject, exceeded maximum number of attempts, 1, https response error StatusCode: 0, RequestID: , HostID: , request send failed, Head "https://127.0.0.1:51210/private/outbound/20261024/internal/1-c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd/report.pdf": dial tcp 127.0.0.1:51210: connect: connection refused
+2026/10/23 21:28:25 NOTICE: Failed to copy: operation error S3: HeadObject, exceeded maximum number of attempts, 1, https response error StatusCode: 0, RequestID: , HostID: , request send failed, Head "https://127.0.0.1:51210/private/outbound/20261024/internal/1-c6918d63c7085c1fe0bbe3905a5316568b5d2892ce3591b6f891742fddf5b3bd/report.pdf": dial tcp 127.0.0.1:51210: connect: connection refused
+fm-deliver: the sharing command failed: copy exited 5 before any mail was sent
+
+Verified: An unavailable upload endpoint returns exit 7, sends no email, and removes the private snapshot.
+Verified: The private audit log records attachment/link mode and per-file expiry without URLs, file contents, or passwords.
+All 8 messages traversed the real fm-mail.sh/fm-mail.py TLS SMTP path. Real rclone uploaded, signed, and served the linked objects.

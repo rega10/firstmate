@@ -1,0 +1,9 @@
+confirmation card (dry run, nothing sent)
+recipient: External Tester - Disposable recipient
+channel: email
+address: e***@example.test
+file: report.pdf - 23 bytes
+file: report.pdf - 23 bytes
+delivery: link, expires 2026-10-31
+subject: Documento: report.pdf
+covering text: Le comparto los archivos en estos enlaces.

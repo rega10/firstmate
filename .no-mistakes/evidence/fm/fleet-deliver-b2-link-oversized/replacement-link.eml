@@ -1,0 +1,18 @@
+From: sender@example.test
+To: internal@example.test
+Subject: Document: report.pdf
+Date: Fri, 23 Oct 2026 21:28:15 -0500
+Message-ID: <179280889591.83660.12713819164173968704@rg-mac-mini.local>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Please find the file at this link.
+
+report.pdf (50 bytes): https://127.0.0.1:51210/private/outbound/20261024/inte=
+rnal/1-27809a09babd1737d719894f055a0dc23462c38a421ac1106c411db0e0e44823/repor=
+t.pdf?X-Amz-Algorithm=3DAWS4-HMAC-SHA256&X-Amz-Credential=3Ddisposable-access=
+%2F20261024%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=3D20261024T022815Z&X-A=
+mz-Expires=3D604800&X-Amz-SignedHeaders=3Dhost&x-id=3DGetObject&X-Amz-Signatu=
+re=3Dfd4e07daa0ad818157b6d7eeaa95c10b2306c4dd92960ccda2e6e74ec57697ae - The l=
+ink expires on 2026-10-31.
