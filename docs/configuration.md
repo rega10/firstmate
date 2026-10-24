@@ -1812,7 +1812,7 @@ Only `show <id>` and `add` print a full entry.
 
 The send tool (`bin/fm-deliver.sh`) sends files to one contact from the contact book on the contact's preferred channel, after a preflight, and appends every attempt to the send log.
 Email through the mail plane is the only channel implemented today.
-This section is the single owner of the tool's exit codes, preflight rules, away-mode enforcement, and log format; the script's header and `--help` own its flags, and the agent-only [`outbound-send` skill](../.agents/skills/outbound-send/SKILL.md) owns the confirmation and away authorization rules.
+This section is the single owner of the tool's exit codes, preflight rules, link mode, away-mode enforcement, and log format; the script's header and `--help` own its flags, and the agent-only [`outbound-send` skill](../.agents/skills/outbound-send/SKILL.md) owns the confirmation and away authorization rules.
 
 **Command**
 
@@ -1827,16 +1827,16 @@ av inject +FM_MAIL_PASS -- bin/fm-deliver.sh <contact-id> <file>... --order-file
   The tool requires it for an `external` contact and validates any supplied confirmation against the [skill's accepted answers](../.agents/skills/outbound-send/SKILL.md#4-when-a-confirmation-is-needed).
   The skill governs firstmate's additional confirmation requirements.
 - `--note-file` holds the covering text.
-  Without it, the text is one line in the contact's language (`Le comparto el archivo adjunto.` or `Please find the file attached.`, plural for several files) and a line with the file names.
-- `--dry-run` runs every check except the confirmation and prints the confirmation card: the recipient's name and role, the channel, the masked address, each file with its size, attachment delivery, the subject, and the first line of the covering text.
-  It sends nothing and writes no log line.
+  Without it, the text is one line in the contact's language (`Le comparto el archivo adjunto.` or `Please find the file attached.`, plural for several files) and a line with the file names; a link send uses `Le comparto el archivo en este enlace.` or `Please find the file at this link.` (plural for several files) and no names line.
+- `--dry-run` runs every check except the confirmation and prints the confirmation card: the recipient's name and role, the channel, the masked address, each file with its size, the delivery (`attachment`, or `link, expires <YYYY-MM-DD>`), the subject, and the first line of the covering text.
+  It uploads nothing, sends nothing, and writes no log line.
 
 The subject is `Documento: <first file name>` or `Document: <first file name>`, according to the contact's language.
 The first preferred channel that has an address is the channel.
 If that channel is not implemented, the tool refuses instead of trying a later preferred channel.
 An email send runs `bin/fm-mail.sh send --attach <file>... -- <address> <subject> -` with the covering text on stdin and the environment passed through unchanged, so the password reaches the mail plane only through `av inject`.
 The tool never reads, prints, or logs `FM_MAIL_PASS`, and the address appears in no argv except that mail-plane call.
-On success it prints one receipt line, `sent: <contact name> <channel> <masked address> <n> file(s) <total bytes> bytes`.
+On success it prints one receipt line, `sent: <contact name> <channel> <masked address> <n> file(s) <total bytes> bytes`, followed by ` by link, expires <YYYY-MM-DD>` for a link send.
 
 | Exit | Meaning |
 | --- | --- |
@@ -1847,7 +1847,7 @@ On success it prints one receipt line, `sent: <contact name> <channel> <masked a
 | 4 | Away or quiet mode is active and `--allow-away` was not passed. |
 | 5 | The preflight refused the send. |
 | 6 | No preferred channel has an address, or the channel is not implemented. |
-| 7 | The mail plane failed; the recipient may already have the message, so a retry can deliver a duplicate. |
+| 7 | The mail plane or the sharing command failed. After a mail-plane failure the recipient may already have the message, so a retry can deliver a duplicate; after a sharing failure no mail was sent, but files already uploaded stay in the bucket. |
 
 **Away and quiet mode**
 
@@ -1863,7 +1863,9 @@ Every check runs before any network call, every problem is named, and any proble
   Files named `.env` or beginning with `.env.` are also refused.
 - Type: each file must be a regular file ending in `.pdf`, `.png`, `.jpg`, `.jpeg`, `.docx`, or `.xlsx`, both as given and after symlinks.
   A `.md` file is refused with a message to render it to PDF first.
-- Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 20971520) and at most the mail plane's `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520).
+- Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 104857600).
+  A set above the mail plane's `FM_MAIL_MAX_ATTACH_BYTES` (default 20971520) goes in link mode, or is refused when no usable sharing command is set; without one, a file above the attachment cap is sized but never read.
+  A link send also refuses two files with the same name.
 - Secrets: the raw bytes of each file must not contain `-----BEGIN`, `ghp_`, `github_pat_`, `AKIA`, `password=`, `FM_MAIL_PASS`, `xoxb-` or `xoxp-`, or `sk-` followed by 20 or more word characters, case-sensitive.
   A match names the pattern and the file, never the matched bytes.
   The scan also checks every decoded ZIP member in DOCX and XLSX files.
@@ -1876,8 +1878,20 @@ Every check runs before any network call, every problem is named, and any proble
 Covering notes must pass the same location checks and secret scan before they become the message body.
 They must be regular, non-empty UTF-8 files within the per-file size cap; their extension is unrestricted.
 
-Files above the attachment cap must go as a link.
-The tool refuses these files and does not make or send links today; link delivery is a manual step outside this tool, on the captain's own instruction.
+**Link mode**
+
+When the files together exceed `FM_MAIL_MAX_ATTACH_BYTES`, and only then, the tool sends each file as a signed link that works for 7 days instead of attaching it.
+`FM_DELIVER_SHARE_CMD`, from the environment or the home's `.env` (the environment wins, as for `FM_DELIVER_MAX_BYTES` and `FM_MAIL_MAX_ATTACH_BYTES`), names the sharing command: an executable path, relative to the home unless absolute.
+The sharing command is home-private and not part of this repository; for example, `config/fm-share-b2.sh` uploads to a private Backblaze B2 bucket.
+It must accept `copy <file> <folder/>` and `link <folder/file> --expire <duration>`, and `link` must print the signed URL as its last non-empty stdout line.
+When the variable is unset or does not name an executable file, an oversized send is refused with exit 5.
+
+After every check passes, the tool runs, for each file, `<share-cmd> copy <file> outbound/<YYYYMMDD>/<contact-id>/` and then `<share-cmd> link outbound/<YYYYMMDD>/<contact-id>/<file name> --expire 168h`, with the UTC date, the environment unchanged, and the command's stderr shown to the caller.
+A non-zero exit, or a last line that is not one `https://` URL, logs `result: error` and exits 7 before any mail is sent.
+The mail then goes through `bin/fm-mail.sh send -- <address> <subject> -` with no attachments, and its body is the covering text, a blank line, and one line per file: `<file name> (<size>): <link> - El enlace vence el <YYYY-MM-DD>.` for a Spanish contact or `... - The link expires on <YYYY-MM-DD>.` for an English one, where the date is the UTC date 7 days after the send.
+
+The caller still runs `av inject +FM_MAIL_PASS -- bin/fm-deliver.sh ...`.
+The sharing command receives its own credentials through its own `av inject` shebang, which raises its own Vault prompt on each run, so a link send of n files costs 1 + 2n prompts.
 
 **Send log**
 
@@ -1894,8 +1908,8 @@ The folder is created with mode 0700 and the file with mode 0600.
 | `contact_id` | The id as given. |
 | `channel` | The chosen channel, or `null` before one is known. |
 | `masked_address` | The address masked as in the contact book's `list`, or `null`. |
-| `files` | One `{name, sha256, bytes}` per file. Metadata not yet collected is `null`; a file above the per-file read cap has its size but no hash. |
-| `mode` | `attachment`, the only mode today. |
+| `files` | One `{name, sha256, bytes}` per file, plus `link_expires`, the link's UTC expiry date, once a link send has made that file's link. Metadata not yet collected is `null`; a file above the per-file read cap has its size but no hash. |
+| `mode` | `attachment`, or `link` for a set above the attachment cap that can go as links. |
 | `order` | The captain's order words with trailing CR/LF characters removed, or `null` if the order file could not be read or decoded, or was empty. |
 | `confirmation` | The captain's confirmation words with trailing CR/LF characters removed, or `null` when absent, unreadable, undecodable, empty, or not yet read. |
 | `result` | `sent`, `refused`, or `error`. |
