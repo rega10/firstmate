@@ -56,7 +56,14 @@ cat > "$SHARE" <<'SH'
 # Stub sharing command: append one line per call with its argv, then upload
 # or print a fake signed link, or fail as FM_DELIVER_TEST_SHARE_FAIL says.
 cap="$FM_DELIVER_TEST_CAPTURE"
-printf '%s\n' "$*" >> "$cap/share-argv"
+if [ "$1" = copy ]; then
+  printf 'copy %s %s\n' "${2##*/}" "$3" >> "$cap/share-argv"
+  printf '%s\n' "$2" >> "$cap/share-sources"
+  python3 -I -c 'import os, sys; p = sys.argv[1]; print("%o %o" % (os.stat(p).st_mode & 0o777, os.stat(os.path.dirname(p)).st_mode & 0o777))' \
+    "$2" >> "$cap/share-modes"
+else
+  printf '%s\n' "$*" >> "$cap/share-argv"
+fi
 if [ "${FM_MAIL_PASS:-}" = test-secret-pass-value ]; then
   echo yes > "$cap/share-env-arrived"
 fi
@@ -71,10 +78,20 @@ case "${FM_DELIVER_TEST_SHARE_FAIL:-}:$1" in
     ;;
 esac
 if [ "$1" = copy ]; then
+  if [ -n "${FM_DELIVER_TEST_REWRITE_DIR:-}" ]; then
+    printf '%%PDF-1.4 changed report password=UNSCANNED\n' > "$FM_DELIVER_TEST_REWRITE_DIR/report.pdf"
+    printf '\211PNG changed plan password=UNSCANNED\n' > "$FM_DELIVER_TEST_REWRITE_DIR/plan.png"
+  fi
   mkdir -p "$cap/../bucket/$3"
   cp "$2" "$cap/../bucket/$3"
 fi
 if [ "$1" = link ]; then
+  if [ -n "${FM_DELIVER_TEST_CLOCK:-}" ]; then
+    case "$2" in
+      */report.pdf) echo '2030-11-01T00:01:00+00:00' ;;
+      */plan.png) echo '2030-11-02T00:01:00+00:00' ;;
+    esac > "$FM_DELIVER_TEST_CLOCK"
+  fi
   echo "rclone notice"
   echo "https://share.example.net/signed/$2?X-Amz-Signature=fake"
   echo
@@ -172,9 +189,9 @@ test_link_mode_sends_links() {
   expect_code 0 "$rc" "files above the attachment cap go as links"
   assert_equals "sent: José Pérez email j***@example.com 2 file(s) 38 bytes by link, expires $expires" \
     "$(cat "$TMP_ROOT/out")" "the receipt says link and the expiry date"
-  assert_equals "copy $home/data/report/report.pdf $folder
+  assert_equals "copy report.pdf $folder
 link ${folder}report.pdf --expire 168h
-copy $home/data/report/plan.png $other_folder
+copy plan.png $other_folder
 link ${other_folder}plan.png --expire 168h" "$(cat "$CAPTURE/share-argv")" \
     "each file is uploaded to its indexed hash folder and linked for 168h"
   assert_present "$CAPTURE/share-env-arrived" "the sharing command gets the environment unchanged"
@@ -260,7 +277,7 @@ PYFILE
 }
 
 test_link_mode_share_failure() {
-  local home words rc failure expected
+  local home words rc failure expected snapshot
   home=$(new_home linkfail)
   words="$TMP_ROOT/linkfail-words"
   for failure in copy link badurl; do
@@ -281,6 +298,10 @@ test_link_mode_share_failure() {
     assert_equals "error" "$(last_log "$home" 'd["result"]')" "the sharing failure is logged as an error ($failure)"
     assert_contains "$(last_log "$home" 'd["detail"]')" "$expected" "the log names the failed step ($failure)"
     assert_equals "link" "$(last_log "$home" 'd["mode"]')" "the failed attempt logs the link mode ($failure)"
+    while IFS= read -r snapshot; do
+      assert_absent "$snapshot" "a sharing failure removes the snapshot ($failure)"
+      assert_absent "$(dirname "$snapshot")" "a sharing failure removes the snapshot directory ($failure)"
+    done < "$CAPTURE/share-sources"
   done
   assert_no_grep "share.example.net" "$home/data/outbound/sends.jsonl" "the log never holds a printed URL"
   pass "fm-deliver: a sharing command failure exits 7, is logged, and sends no mail"
@@ -325,9 +346,9 @@ test_link_destinations_preserve_content() {
   FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
     "$home/data/report/report.pdf" "$home/data/other/report.pdf" --order-file "$words/order"
   expect_code 0 "$?" "two same-name files with identical contents can go as links"
-  assert_equals "copy $home/data/report/report.pdf $first_folder
+  assert_equals "copy report.pdf $first_folder
 link ${first_folder}report.pdf --expire 168h
-copy $home/data/other/report.pdf $second_folder
+copy report.pdf $second_folder
 link ${second_folder}report.pdf --expire 168h" "$(cat "$CAPTURE/share-argv")" \
     "the file index isolates equal basenames even with equal hashes"
   assert_contains "$(cat "$CAPTURE/stdin")" "report.pdf (26 bytes): https://share.example.net/signed/${first_folder}report.pdf?" \
@@ -351,6 +372,99 @@ link ${second_folder}report.pdf --expire 168h" "$(cat "$CAPTURE/share-argv")" \
   assert_equals "$(basename "${replacement_folder%/}" | cut -d- -f2)" \
     "$(last_log "$home" 'd["files"][0]["sha256"]')" "the log hash matches the linked upload"
   pass "fm-deliver: same-name files have isolated links and later sends preserve earlier contents"
+}
+
+test_link_upload_uses_scanned_bytes() {
+  local home words first_folder second_folder snapshot
+  home=$(new_home linksnapshot)
+  words="$TMP_ROOT/linksnapshot-words"
+  cp "$home/data/report/report.pdf" "$TMP_ROOT/original-report.pdf"
+  cp "$home/data/report/plan.png" "$TMP_ROOT/original-plan.png"
+  first_folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
+  second_folder=$(link_folder maria-lopez 2 "$home/data/report/plan.png")
+  FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
+    "$home/data/report/report.pdf" "$home/data/report/plan.png" --order-file "$words/order"
+  expect_code 0 "$?" "the original file set goes as links"
+  FM_DELIVER_TEST_REWRITE_DIR="$home/data/report" FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" \
+    deliver "$home" maria-lopez "$home/data/report/report.pdf" "$home/data/report/plan.png" --order-file "$words/order"
+  expect_code 0 "$?" "source changes during copy do not change the scanned uploads"
+  assert_contains "$(cat "$home/data/report/report.pdf")" "password=UNSCANNED" "the first source changed during copy"
+  assert_contains "$(cat "$home/data/report/plan.png")" "password=UNSCANNED" "a later source changed before its upload"
+  cmp "$TMP_ROOT/original-report.pdf" "$TMP_ROOT/bucket/${first_folder}report.pdf" \
+    || fail "the report upload differs from its scanned bytes"
+  cmp "$TMP_ROOT/original-plan.png" "$TMP_ROOT/bucket/${second_folder}plan.png" \
+    || fail "the later upload differs from its scanned bytes"
+  assert_equals "38" "$(last_log "$home" 'sum(f["bytes"] for f in d["files"])')" "the log sizes describe the uploaded snapshots"
+  assert_equals "$(basename "${first_folder%/}" | cut -d- -f2)" \
+    "$(last_log "$home" 'd["files"][0]["sha256"]')" "the report hash describes the uploaded snapshot"
+  assert_equals "$(basename "${second_folder%/}" | cut -d- -f2)" \
+    "$(last_log "$home" 'd["files"][1]["sha256"]')" "the later hash describes the uploaded snapshot"
+  assert_contains "$(cat "$CAPTURE/stdin")" "report.pdf (26 bytes):" "the report line uses the scanned size"
+  assert_contains "$(cat "$CAPTURE/stdin")" "plan.png (12 bytes):" "the later line uses the scanned size"
+  assert_equals "600 700
+600 700" "$(cat "$CAPTURE/share-modes")" "snapshots and their directories are private"
+  while IFS= read -r snapshot; do
+    assert_absent "$snapshot" "a successful copy removes the snapshot"
+    assert_absent "$(dirname "$snapshot")" "a successful copy removes the snapshot directory"
+  done < "$CAPTURE/share-sources"
+  assert_no_grep "UNSCANNED" "$home/data/outbound/sends.jsonl" "the log omits the changed source contents"
+  pass "fm-deliver: uploads use private snapshots of the scanned bytes despite source changes"
+}
+
+test_link_expiry_follows_signing() {
+  local home words driver clock contact expiry_sentence
+  local -a clock_env
+  home=$(new_home linkclock)
+  words="$TMP_ROOT/linkclock-words"
+  driver="$TMP_ROOT/link-clock.py"
+  clock="$TMP_ROOT/link-clock"
+  cat > "$driver" <<'PYCLOCK'
+import datetime
+import os
+import pathlib
+import runpy
+import sys
+from unittest.mock import patch
+
+class Clock(datetime.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return cls.fromisoformat(pathlib.Path(os.environ['FM_DELIVER_TEST_CLOCK']).read_text().strip()).astimezone(tz)
+
+script, *args = sys.argv[1:]
+sys.argv = [script, *args]
+with patch.object(datetime, 'datetime', Clock):
+    runpy.run_path(script, run_name='__main__')
+PYCLOCK
+  clock_env=(
+    "FM_DELIVER_HOME=$home" "FM_DELIVER_DATA=$home/data" "FM_DELIVER_AWAY="
+    "FM_DELIVER_MAIL=$BIN/fm-mail.sh" "FM_DELIVER_CONTACTS_PY=$ROOT/bin/fm-contacts.py"
+    "FM_DELIVER_SHARE_CMD=$SHARE" "FM_MAIL_MAX_ATTACH_BYTES=30"
+    "FM_DELIVER_TEST_CAPTURE=$CAPTURE" "FM_DELIVER_TEST_CLOCK=$clock"
+  )
+  for contact in maria-lopez site-it-lead; do
+    rm -f "$CAPTURE"/*
+    echo '2030-10-31T23:59:00+00:00' > "$clock"
+    env "${clock_env[@]}" python3 -I "$driver" "$ROOT/bin/fm-deliver.py" "$contact" \
+      "$home/data/report/report.pdf" "$home/data/report/plan.png" \
+      --order-file "$words/order" --dry-run > "$TMP_ROOT/out" 2> "$TMP_ROOT/err"
+    expect_code 0 "$?" "a dry run before midnight ($contact)"
+    assert_contains "$(cat "$TMP_ROOT/out")" "delivery: link, expires 2030-11-07" "the dry-run card shows the planned expiry"
+    assert_absent "$CAPTURE/share-argv" "a dry run does not sign links"
+    env "${clock_env[@]}" python3 -I "$driver" "$ROOT/bin/fm-deliver.py" "$contact" \
+      "$home/data/report/report.pdf" "$home/data/report/plan.png" \
+      --order-file "$words/order" --confirm-file "$words/confirm" > "$TMP_ROOT/out" 2> "$TMP_ROOT/err"
+    expect_code 0 "$?" "signing commands finish on different UTC dates ($contact)"
+    assert_equals "2030-11-08 2030-11-09" \
+      "$(last_log "$home" '" ".join(f["link_expires"] for f in d["files"])')" "each file logs its own expiry"
+    expiry_sentence='The link expires on'
+    [ "$contact" != site-it-lead ] || expiry_sentence='El enlace vence el'
+    assert_contains "$(sed -n '3p' "$CAPTURE/stdin")" "$expiry_sentence 2030-11-08." "the report body line uses its signing date"
+    assert_contains "$(sed -n '4p' "$CAPTURE/stdin")" "$expiry_sentence 2030-11-09." "the later body line uses its signing date"
+    assert_contains "$(cat "$TMP_ROOT/out")" "by link, expires 2030-11-09" "the receipt uses the latest expiry"
+    assert_no_grep "share.example.net" "$home/data/outbound/sends.jsonl" "the log stores dates without URLs"
+  done
+  pass "fm-deliver: each link expires seven days after signing and the receipt uses the latest date"
 }
 
 test_unlisted_contact_refused() {
@@ -874,6 +988,8 @@ PYPDF
 
 test_link_mode_sends_links
 test_link_destinations_preserve_content
+test_link_upload_uses_scanned_bytes
+test_link_expiry_follows_signing
 test_link_mode_needs_share_command
 test_link_mode_share_failure
 test_link_mode_preflight_and_dry_run

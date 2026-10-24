@@ -29,6 +29,7 @@ import re
 import stat
 import subprocess
 import sys
+import tempfile
 import unicodedata
 import zipfile
 import zlib
@@ -286,6 +287,7 @@ def check_file(given, home, data, read_limit, is_note=False):
     record['sha256'] = hashlib.sha256(content).hexdigest()
     record['bytes'] = len(content)
     record['path'] = real
+    record['content'] = content
     problems.extend(secret_problems(given, real, content))
     if is_note and not problems:
         try:
@@ -347,11 +349,12 @@ def covering_text(contact, names, note, mode):
     return '%s\n%s' % (one if len(names) == 1 else many, ', '.join(names))
 
 
-def link_body(contact, text, records, links, expires):
+def link_body(contact, text, records, links):
     """The covering text, then one line per file with its size, link, and
     the expiry date in the contact's language."""
-    expiry = LINK_TEXT[contact['language']][2] % expires
-    lines = ['%s (%s): %s - %s' % (r['name'], human_size(r['bytes'], exact=False), link, expiry)
+    lines = ['%s (%s): %s - %s' % (
+        r['name'], human_size(r['bytes'], exact=False), link,
+        LINK_TEXT[contact['language']][2] % r['link_expires'])
              for r, link in zip(records, links)]
     return '%s\n\n%s' % (text, '\n'.join(lines))
 
@@ -394,15 +397,26 @@ def run_share(share, argv):
 
 
 def share_link(share, folder, record):
-    """Upload one file to the folder and return its signed link."""
-    run_share(share, ['copy', record['path'], folder])
+    """Upload one file and return its signed link and expiry date."""
+    try:
+        with tempfile.TemporaryDirectory(prefix='fm-deliver-') as directory:
+            snapshot = os.path.join(directory, record['name'])
+            fd = os.open(snapshot, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, 'wb') as fh:
+                fh.write(record['content'])
+            run_share(share, ['copy', snapshot, folder])
+    except OSError as err:
+        raise Refusal(EXIT_SEND, 'cannot snapshot %s before any mail was sent: %s'
+                      % (record['name'], err.strerror or err), 'error')
     out = run_share(share, ['link', folder + record['name'], '--expire', LINK_EXPIRE])
+    expires = (datetime.datetime.now(datetime.timezone.utc)
+               + datetime.timedelta(days=LINK_DAYS)).strftime('%Y-%m-%d')
     lines = [line.strip() for line in out.splitlines() if line.strip()]
     link = lines[-1] if lines else ''
     if not re.fullmatch(r'https://\S+', link):
         raise Refusal(EXIT_SEND, 'the sharing command failed: link printed no https:// link for %s'
                       ' before any mail was sent' % record['name'], 'error')
-    return link
+    return link, expires
 
 
 def send_email(mail, address, masked, subject, body, attachments):
@@ -521,9 +535,9 @@ def attempt(args, config, confirmation, entry):
     body = covering_text(contact, names, note, mode)
     subject = '%s: %s' % (DEFAULT_TEXT[contact['language']][2], names[0])
     now = datetime.datetime.now(datetime.timezone.utc)
-    expires = (now + datetime.timedelta(days=LINK_DAYS)).strftime('%Y-%m-%d')
-    delivery = 'link, expires %s' % expires if mode == 'link' else 'attachment'
     if args.dry_run:
+        expires = (now + datetime.timedelta(days=LINK_DAYS)).strftime('%Y-%m-%d')
+        delivery = 'link, expires %s' % expires if mode == 'link' else 'attachment'
         print_card(contact, channel, entry['masked_address'], records, delivery, subject, body)
         return None
     attachments = [r['path'] for r in records]
@@ -532,9 +546,11 @@ def attempt(args, config, confirmation, entry):
         for index, (record, logged) in enumerate(zip(records, entry['files']), start=1):
             folder = 'outbound/%s/%s/%d-%s/' % (
                 now.strftime('%Y%m%d'), contact['id'], index, record['sha256'])
-            links.append(share_link(share, folder, record))
+            link, expires = share_link(share, folder, record)
+            links.append(link)
             logged['link_expires'] = expires
-        body = link_body(contact, body, records, links, expires)
+        body = link_body(contact, body, entry['files'], links)
+        expires = max(logged['link_expires'] for logged in entry['files'])
         attachments = []
     entry['detail'] = send_email(mail, contact['email'], entry['masked_address'],
                                  subject, body, attachments)

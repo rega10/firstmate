@@ -1836,7 +1836,7 @@ The first preferred channel that has an address is the channel.
 If that channel is not implemented, the tool refuses instead of trying a later preferred channel.
 An email send runs `bin/fm-mail.sh send --attach <file>... -- <address> <subject> -` with the covering text on stdin and the environment passed through unchanged, so the password reaches the mail plane only through `av inject`.
 The tool never reads, prints, or logs `FM_MAIL_PASS`, and the address appears in no argv except that mail-plane call.
-On success it prints one receipt line, `sent: <contact name> <channel> <masked address> <n> file(s) <total bytes> bytes`, followed by ` by link, expires <YYYY-MM-DD>` for a link send.
+On success it prints one receipt line, `sent: <contact name> <channel> <masked address> <n> file(s) <total bytes> bytes`, followed by ` by link, expires <YYYY-MM-DD>` with the latest per-file expiry date for a link send.
 
 | Exit | Meaning |
 | --- | --- |
@@ -1888,10 +1888,14 @@ It must accept `copy <file> <folder/>` and `link <folder/file> --expire <duratio
 When neither the override nor the default wrapper is an executable file, an oversized send is refused with exit 5.
 
 After every check passes, each file gets the folder `outbound/<YYYYMMDD>/<contact-id>/<index>-<sha256>/`, with the UTC date, the file's one-based position in the send, and its full SHA-256 hash.
+The tool reads each file once into memory for the scan and hash, then uploads those same bytes from a private temporary snapshot with the original file name.
+The tool removes the snapshot after the copy command, including on failure; attachment mode continues to pass the original paths to the mail plane.
 The tool runs `<share-cmd> copy <file> <folder/>` and then `<share-cmd> link <folder/file name> --expire 168h`, with the environment unchanged and the command's stderr shown to the caller.
 The index isolates files with the same name, and the hash prevents later sends with different contents from replacing an earlier link's object.
 A non-zero exit, or a last line that is not one `https://` URL, logs `result: error` and exits 7 before any mail is sent.
-The mail then goes through `bin/fm-mail.sh send -- <address> <subject> -` with no attachments, and its body is the covering text, a blank line, and one line per file: `<file name> (<size>): <link> - El enlace vence el <YYYY-MM-DD>.` for a Spanish contact or `... - The link expires on <YYYY-MM-DD>.` for an English one, where the date is the UTC date 7 days after the send.
+The mail then goes through `bin/fm-mail.sh send -- <address> <subject> -` with no attachments, and its body is the covering text, a blank line, and one line per file: `<file name> (<size>): <link> - El enlace vence el <YYYY-MM-DD>.` for a Spanish contact or `... - The link expires on <YYYY-MM-DD>.` for an English one.
+Each file's expiry date is the UTC date 7 days after its link command returns, and that same date goes into its log entry.
+A dry-run card shows the planned expiry date, 7 days after the card is generated.
 
 The caller still runs `av inject +FM_MAIL_PASS -- bin/fm-deliver.sh ...`.
 The sharing command receives its own credentials through its own `av inject` shebang, which raises its own Vault prompt on each run, so a link send of n files costs 1 + 2n prompts.
