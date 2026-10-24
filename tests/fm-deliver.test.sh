@@ -132,11 +132,18 @@ add_contact() {
 # the environment, stdout to $TMP_ROOT/out and stderr to $TMP_ROOT/err; return
 # its exit code. Each call starts with an empty capture directory.
 deliver() {
-  local home=$1
+  local home=$1 rc
   shift
   rm -f "$CAPTURE"/*
+  DELIVERY_BEFORE=$(delivery_dates)
   FM_HOME="$home" FM_MAIL_PASS="$PASS_VALUE" FM_DELIVER_TEST_CAPTURE="$CAPTURE" \
     "$DELIVER" "$@" >"$TMP_ROOT/out" 2>"$TMP_ROOT/err"
+  rc=$?
+  DELIVERY_AFTER=$(delivery_dates)
+  if [ "$rc" -eq 0 ] && [ -f "$CAPTURE/share-argv" ]; then
+    assert_link_dates "$home"
+  fi
+  return "$rc"
 }
 
 # last_log <home> <python expression over d>: one value from the last log line.
@@ -159,34 +166,56 @@ mode_of() {
   python3 -I -c 'import os, sys; print(oct(os.stat(sys.argv[1]).st_mode & 0o777)[2:])' "$1"
 }
 
-# expires_on: the UTC date 7 days from now, the expiry of a fresh link.
-expires_on() {
-  python3 -I -c 'import datetime; print((datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)).strftime("%Y-%m-%d"))'
+delivery_dates() {
+  python3 -I -c 'import datetime
+now = datetime.datetime.now(datetime.timezone.utc)
+print(now.strftime("%Y%m%d"), (now + datetime.timedelta(days=7)).strftime("%Y-%m-%d"))'
 }
 
-today_folder() {
-  python3 -I -c 'import datetime; print(datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))'
+assert_link_dates() {
+  python3 -I - "$1/data/outbound/sends.jsonl" "$CAPTURE/share-argv" "$DELIVERY_BEFORE" "$DELIVERY_AFTER" <<'PYDATES' \
+    || fail "link dates fall outside the delivery window"
+import json
+import sys
+
+log, calls, before, after = sys.argv[1:]
+before_day, before_expiry = before.split()
+after_day, after_expiry = after.split()
+with open(log, encoding='utf-8') as file:
+    entry = json.loads(file.read().splitlines()[-1])
+assert before_day <= entry['at'][:10].replace('-', '') <= after_day
+for record in entry['files']:
+    assert before_expiry <= record['link_expires'] <= after_expiry
+with open(calls, encoding='utf-8') as file:
+    for line in file:
+        if line.startswith('copy '):
+            day = line.split()[-1].split('/')[1]
+            assert before_day <= day <= after_day
+PYDATES
 }
 
 link_folder() {
-  local digest
+  local digest day
   digest=$(python3 -I -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "$3")
-  printf 'outbound/%s/%s/%s-%s/\n' "$(today_folder)" "$1" "$2" "$digest"
+  day=$(awk -v ordinal="$2" '$1 == "copy" && ++n == ordinal {split($NF, parts, "/"); print parts[2]}' "$CAPTURE/share-argv")
+  printf 'outbound/%s/%s/%s-%s/\n' "$day" "$1" "$2" "$digest"
 }
 
 test_link_mode_sends_links() {
-  local home words rc expires folder other_folder url
+  local home words rc expires first_expiry other_expiry folder other_folder url
   home=$(new_home link)
   words="$TMP_ROOT/link-words"
-  expires=$(expires_on)
-  folder=$(link_folder site-it-lead 1 "$home/data/report/report.pdf")
-  other_folder=$(link_folder site-it-lead 2 "$home/data/report/plan.png")
   url="https://share.example.net/signed"
   FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" site-it-lead \
     "$home/data/report/report.pdf" "$home/data/report/plan.png" \
     --order-file "$words/order" --confirm-file "$words/confirm"
   rc=$?
   expect_code 0 "$rc" "files above the attachment cap go as links"
+  folder=$(link_folder site-it-lead 1 "$home/data/report/report.pdf")
+  other_folder=$(link_folder site-it-lead 2 "$home/data/report/plan.png")
+  first_expiry=$(last_log "$home" 'd["files"][0]["link_expires"]')
+  other_expiry=$(last_log "$home" 'd["files"][1]["link_expires"]')
+  expires=$(last_log "$home" 'max(f["link_expires"] for f in d["files"])')
   assert_equals "sent: José Pérez email j***@example.com 2 file(s) 38 bytes by link, expires $expires" \
     "$(cat "$TMP_ROOT/out")" "the receipt says link and the expiry date"
   assert_equals "copy report.pdf $folder
@@ -202,22 +231,21 @@ Documento: report.pdf
 -" "$(cat "$CAPTURE/argv")" "a link send attaches nothing"
   assert_equals "Le comparto los archivos en estos enlaces.
 
-report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - El enlace vence el $expires.
-plan.png (12 bytes): $url/${other_folder}plan.png?X-Amz-Signature=fake - El enlace vence el $expires." \
+report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - El enlace vence el $first_expiry.
+plan.png (12 bytes): $url/${other_folder}plan.png?X-Amz-Signature=fake - El enlace vence el $other_expiry." \
     "$(cat "$CAPTURE/stdin")" "the Spanish body lists each file with its size, link, and expiry"
   assert_equals "link" "$(last_log "$home" 'd["mode"]')" "the log records the link mode"
-  assert_equals "$expires $expires" "$(last_log "$home" '" ".join(f["link_expires"] for f in d["files"])')" \
-    "each logged file has its link expiry date"
   assert_equals "name,sha256,bytes,link_expires" "$(last_log "$home" '",".join(d["files"][0])')" \
     "a link file entry holds exactly the documented fields"
   assert_equals "sent" "$(last_log "$home" 'd["result"]')" "the link send is logged as sent"
   assert_no_grep "share.example.net" "$home/data/outbound/sends.jsonl" "the log never holds the link URL"
-  folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
   printf 'FM_DELIVER_SHARE_CMD=config/share.sh\nFM_MAIL_MAX_ATTACH_BYTES=20\n' > "$home/.env"
   cp "$SHARE" "$home/config/share.sh"
   deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
   rc=$?
   expect_code 0 "$rc" "the share command and the cap come from .env, relative to the home"
+  folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
+  expires=$(last_log "$home" 'd["files"][0]["link_expires"]')
   assert_equals "Please find the file at this link.
 
 report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - The link expires on $expires." \
@@ -226,6 +254,8 @@ report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - The link 
   deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" \
     --note-file "$home/data/report/note.txt"
   expect_code 0 "$?" "a link send with a covering note"
+  folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
+  expires=$(last_log "$home" 'd["files"][0]["link_expires"]')
   assert_equals "Here is the report.
 
 report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - The link expires on $expires." \
@@ -316,7 +346,10 @@ test_link_mode_preflight_and_dry_run() {
   rc=$?
   expect_code 0 "$rc" "a dry run for an oversized set"
   out=$(cat "$TMP_ROOT/out")
-  assert_contains "$out" "delivery: link, expires $(expires_on)" "the card says link and the expiry date"
+  case "$out" in
+    *"delivery: link, expires ${DELIVERY_BEFORE#* }"*|*"delivery: link, expires ${DELIVERY_AFTER#* }"*) ;;
+    *) fail "the card expiry falls outside the delivery window" ;;
+  esac
   assert_contains "$out" "covering text: Le comparto los archivos en estos enlaces." "the card shows the link covering text"
   assert_absent "$CAPTURE/share-argv" "a dry run uploads nothing"
   assert_absent "$CAPTURE/argv" "a dry run sends nothing"
@@ -341,11 +374,11 @@ test_link_destinations_preserve_content() {
   words="$TMP_ROOT/linkpaths-words"
   mkdir -p "$home/data/other"
   cp "$home/data/report/report.pdf" "$home/data/other/report.pdf"
-  first_folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
-  second_folder=$(link_folder maria-lopez 2 "$home/data/other/report.pdf")
   FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
     "$home/data/report/report.pdf" "$home/data/other/report.pdf" --order-file "$words/order"
   expect_code 0 "$?" "two same-name files with identical contents can go as links"
+  first_folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
+  second_folder=$(link_folder maria-lopez 2 "$home/data/other/report.pdf")
   assert_equals "copy report.pdf $first_folder
 link ${first_folder}report.pdf --expire 168h
 copy report.pdf $second_folder
@@ -358,10 +391,10 @@ link ${second_folder}report.pdf --expire 168h" "$(cat "$CAPTURE/share-argv")" \
   assert_equals "report.pdf report.pdf" "$(last_log "$home" '" ".join(f["name"] for f in d["files"])')" \
     "the log retains both filenames"
   printf '%%PDF-1.4 replacement report with different contents\n' > "$home/data/report/report.pdf"
-  replacement_folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
   FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
     "$home/data/report/report.pdf" --order-file "$words/order"
   expect_code 0 "$?" "a later send of changed contents succeeds"
+  replacement_folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
   assert_not_contains "$replacement_folder" "$first_folder" "changed contents get a different object path"
   cmp "$home/data/other/report.pdf" "$TMP_ROOT/bucket/${first_folder}report.pdf" \
     || fail "a later send replaced the first link's contents"
@@ -380,14 +413,14 @@ test_link_upload_uses_scanned_bytes() {
   words="$TMP_ROOT/linksnapshot-words"
   cp "$home/data/report/report.pdf" "$TMP_ROOT/original-report.pdf"
   cp "$home/data/report/plan.png" "$TMP_ROOT/original-plan.png"
-  first_folder=$(link_folder maria-lopez 1 "$home/data/report/report.pdf")
-  second_folder=$(link_folder maria-lopez 2 "$home/data/report/plan.png")
   FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" deliver "$home" maria-lopez \
     "$home/data/report/report.pdf" "$home/data/report/plan.png" --order-file "$words/order"
   expect_code 0 "$?" "the original file set goes as links"
   FM_DELIVER_TEST_REWRITE_DIR="$home/data/report" FM_MAIL_MAX_ATTACH_BYTES=30 FM_DELIVER_SHARE_CMD="$SHARE" \
     deliver "$home" maria-lopez "$home/data/report/report.pdf" "$home/data/report/plan.png" --order-file "$words/order"
   expect_code 0 "$?" "source changes during copy do not change the scanned uploads"
+  first_folder=$(link_folder maria-lopez 1 "$TMP_ROOT/original-report.pdf")
+  second_folder=$(link_folder maria-lopez 2 "$TMP_ROOT/original-plan.png")
   assert_contains "$(cat "$home/data/report/report.pdf")" "password=UNSCANNED" "the first source changed during copy"
   assert_contains "$(cat "$home/data/report/plan.png")" "password=UNSCANNED" "a later source changed before its upload"
   cmp "$TMP_ROOT/original-report.pdf" "$TMP_ROOT/bucket/${first_folder}report.pdf" \
@@ -455,6 +488,9 @@ PYCLOCK
       "$home/data/report/report.pdf" "$home/data/report/plan.png" \
       --order-file "$words/order" --confirm-file "$words/confirm" > "$TMP_ROOT/out" 2> "$TMP_ROOT/err"
     expect_code 0 "$?" "signing commands finish on different UTC dates ($contact)"
+    DELIVERY_BEFORE='20301031 2030-11-07'
+    DELIVERY_AFTER='20301102 2030-11-09'
+    assert_link_dates "$home"
     assert_equals "2030-11-08 2030-11-09" \
       "$(last_log "$home" '" ".join(f["link_expires"] for f in d["files"])')" "each file logs its own expiry"
     expiry_sentence='The link expires on'
