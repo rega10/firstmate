@@ -312,9 +312,18 @@ test_successor_left_at_the_turn_survives_the_hook_process_group_teardown() {
 # If the at-turn hand-back cannot publish downtime, the healthy successor
 # cannot turn that undelivered close into a silent Stop-hook success.
 test_claude_stop_hook_notifies_when_at_turn_downtime_write_fails() {
-  local home real_mktemp
+  local home real_mktemp real_head
   home=$(make_primary_home hook-turns-main-only-write-fails)
   turn_main_only_at_second_offer "$home" quiet
+  # A fast first close can precede the host's readiness output. Suppress that
+  # optional line so the explicit failure must be handled even without output.
+  real_head=$(command -v head)
+  cat > "$home/fakebin/head" <<SH
+#!/usr/bin/env bash
+case "\$*" in *'/state/.supervision-host-arm.'*) exit 0 ;; esac
+exec "$real_head" "\$@"
+SH
+  chmod +x "$home/fakebin/head"
   real_mktemp=$(command -v mktemp)
   cat > "$home/fakebin/mktemp" <<SH
 #!/usr/bin/env bash
@@ -330,7 +339,8 @@ SH
   wait_until 150 watcher_live "$home" || fail "hook write failure: no watcher started"
   append_status "$home" 'step one'
   wait_until 250 hook_exited "$home" || fail "hook write failure: the Stop hook did not finish"
-  [ "$(cat "$home/offer-count" 2>/dev/null)" -ge 2 ] || fail "fixture: the close did not turn main-only at its turn"
+  expect_code 1 "$(grep -c $'\tstart\t' "$home/state/.supervision-host.log")" "the failed hand-back must not retry the host"
+  expect_code 2 "$(cat "$home/offer-count")" "the failed hand-back must not start another host"
   watcher_live "$home" || fail "fixture: the write failure must leave a healthy successor"
   assert_re 'pass-through[[:space:]]+downtime-unrestored' "$home/state/.supervision-host.log" "fixture: downtime publication did not fail"
   assert_re '^(pending|announced):handling:' "$home/state/.watcher-down" "fixture: the marker unexpectedly became downtime"
