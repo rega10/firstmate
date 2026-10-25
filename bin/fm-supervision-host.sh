@@ -21,19 +21,23 @@
 # FM_SUPERVISION_HOST_PRIMARY, which the engine carries as the primary pin.
 #
 # OUTPUT, the contract every owner reads. The first cycle's status line
-# ("watcher: started ..." or "watcher: attached ...") is printed as soon as the
-# arm prints it, so an owner that waits for arm readiness sees it at once;
+# ("watcher: started ..." or "watcher: attached ...") is streamed when the
+# host's poll observes it, so a close can precede that readiness output;
 # everything else is printed in one write when the host exits: the close as
 # the arm printed it (without that status line), then any "supervision-host:"
 # lines. A "supervision-host:" line is a wake in its own right (the park
 # boundary prints nothing else); "supervision-host stood down: ..." means this
 # session or generation no longer owns supervision and the owner stands down
-# silently; an exit status above 128, or no output at all, means the host
-# itself died and the owner retries it. Any other close is judged exactly as
-# the arm's. --restart starts the first cycle with fm-watch-arm.sh --restart,
-# and an FM_WATCH_PREDECESSOR_ARM_PID the owner passes reaches that first
-# cycle only, for owners that start their own successor after every close
-# (OpenCode, omp).
+# silently; an exit status above 128, or no output at all with exit status 0,
+# means the host itself died and the owner retries it. Any other nonzero exit
+# status is the host's own failure and never means it died, even with no
+# output: an attended close that turns main-only at its turn withholds its
+# close when downtime restoration fails, so it prints nothing when the arm
+# closed before its status line was streamed.
+# Any other close is judged exactly as the arm's. --restart starts the first
+# cycle with fm-watch-arm.sh --restart, and an FM_WATCH_PREDECESSOR_ARM_PID
+# the owner passes reaches that first cycle only, for owners that start their
+# own successor after every close (OpenCode, omp).
 #
 # THE LOOP. It owns watcher cycles through bin/fm-watch-arm.sh. The posture is
 # the away-posture record state/.afk-contract, read at every close and again

@@ -80,15 +80,17 @@
 #     the harness delivers the collected stderr only on exit 2, so an owned
 #     terminal commit decides the exit. Markerless outcomes commit with the
 #     ledger write; the failure notice additionally requires its marker write.
-#     A refused generation exits 0 silently even after printing. A close that
-#     reports no actionable reason is benign when a live identity-matched
-#     watcher still has a fresh beacon.
-#   - Failure handling: a typed failure is rechecked against the same live,
-#     fresh watcher predicate and retried a bounded number of times in this
-#     hook. Only an exhausted failure with no verified watcher emits one
-#     last-resort notice per failure episode; later consecutive failures still
+#     A refused generation exits 0 silently even after printing. A plain-arm
+#     close that reports no actionable reason is benign when a live
+#     identity-matched watcher still has a fresh beacon.
+#   - Failure handling: a plain-arm typed failure is rechecked against the
+#     same live, fresh watcher predicate and retried a bounded number of times
+#     in this hook. An exhausted plain-arm failure with no verified watcher
+#     emits one last-resort notice per failure episode; later failures still
 #     exit 2 to guarantee the next Stop-owned retry without repeating notice,
 #     until the synchronous guard has consumed its attended fail-open.
+#     docs/supervision-host.md "Failure direction" owns the failed hand-back
+#     exception for host mode.
 #
 # The epoch ledger state/.claude-autoarm-epoch records the latest claim
 # generation and outcome, and binds rewake outcomes to the session-lock pid and
@@ -443,6 +445,14 @@ while [ "$attempt" -lt "$AUTOARM_ATTEMPTS" ]; do
       rm -f "$OUT" 2>/dev/null || true
       exit 0
     fi
+    # A failed hand-back cannot be dismissed just because its successor
+    # watcher is healthy: the close is still undelivered. Its exit status
+    # alone decides, because it may print nothing when it closed before the
+    # host streamed the first cycle's status line; retrying it would take
+    # over the successor and park with the close still undelivered.
+    if [ "$HOST_RC" -gt 0 ] && [ "$HOST_RC" -le 128 ]; then
+      break
+    fi
     # A host that died without a close may have left its cycle running with
     # no owner to deliver the close; retrying lets the next host stop what it
     # left and own a fresh cycle, which the healthy-watcher predicate cannot.
@@ -452,9 +462,6 @@ while [ "$attempt" -lt "$AUTOARM_ATTEMPTS" ]; do
       OUT=
       continue
     fi
-    # A failed hand-back cannot be dismissed just because its successor
-    # watcher is healthy: the close is still undelivered.
-    [ "$HOST_RC" -eq 0 ] || break
   fi
 
   # A non-actionable close is benign when another verified watcher already owns
