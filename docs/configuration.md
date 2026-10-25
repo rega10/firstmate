@@ -1858,9 +1858,12 @@ The [skill's away and quiet rules](../.agents/skills/outbound-send/SKILL.md#5-aw
 
 Every check runs before any network call, every problem is named, and any problem refuses the whole send with exit 5.
 
-- Location: each file's real path, with symlinks resolved, must be inside a folder under `data/`, such as `data/<task>/`.
+- Location: each file's real path, with symlinks resolved, must be inside a folder under `data/` of this home or of a local second mate home registered in this home's `data/secondmates.md`, such as `<home>/data/<task>/`.
+  The rules below apply relative to the home that holds the file, and this home's own `.env`, `config/`, `state/`, and `projects/` are refused wherever the file comes from.
   A file directly in `data/`, in `data/outbound/`, or under any folder named `.env`, `config`, `state`, or `projects`, and anything under the home's `.env`, `config/`, `state/`, or `projects/`, is refused and never read.
   Files named `.env` or beginning with `.env.` are also refused.
+  A path under a remote second mate's `home:` is refused with the second mate's id and host, because that home is on another machine.
+  The registry is read with `bin/fm-secondmate-registry-lib.sh`; when it cannot be used, for example because an entry is malformed, every file outside this home's `data/` is refused with the registry error.
 - Type: each file must be a regular file ending in `.pdf`, `.png`, `.jpg`, `.jpeg`, `.docx`, or `.xlsx`, both as given and after symlinks.
   A `.md` file is refused with a message to render it to PDF first.
 - Size: the files together must be at most `FM_DELIVER_MAX_BYTES` (default 104857600 bytes, raised from 20 MiB to 100 MiB to allow link delivery).
@@ -1906,7 +1909,7 @@ Every attempt that passes argument parsing, refusals included, appends one JSON 
 The folder is created with mode 0700 and the file with mode 0600.
 
 ```json
-{"at": "2026-10-23T22:55:13Z", "contact_id": "site-it-lead", "channel": "email", "masked_address": "p***@example.com", "files": [{"name": "report.pdf", "sha256": "<hex>", "bytes": 48213}], "mode": "attachment", "order": "mándale el reporte a José", "confirmation": "sí, envía", "result": "sent", "detail": "sent to p***@example.com (attachments: 1) message-id: <unique-id@mail-host>"}
+{"at": "2026-10-23T22:55:13Z", "contact_id": "site-it-lead", "channel": "email", "masked_address": "p***@example.com", "files": [{"name": "report.pdf", "sha256": "<hex>", "bytes": 48213, "home": "/Users/me/firstmate", "secondmate": null}], "mode": "attachment", "order": "mándale el reporte a José", "confirmation": "sí, envía", "result": "sent", "detail": "sent to p***@example.com (attachments: 1) message-id: <unique-id@mail-host>"}
 ```
 
 | Field | Meaning |
@@ -1915,7 +1918,7 @@ The folder is created with mode 0700 and the file with mode 0600.
 | `contact_id` | The id as given. |
 | `channel` | The chosen channel, or `null` before one is known. |
 | `masked_address` | The address masked as in the contact book's `list`, or `null`. |
-| `files` | One `{name, sha256, bytes}` per file, plus `link_expires`, the link's UTC expiry date, once a link send has made that file's link. Metadata not yet collected is `null`; a file above the per-file read cap has its size but no hash. |
+| `files` | One `{name, sha256, bytes, home, secondmate}` per file, plus `link_expires`, the link's UTC expiry date, once a link send has made that file's link. `home` is the home the file came from, this home's path or the registered `home:` of a second mate, and `secondmate` is that second mate's id or `null` for this home; both are `null` when the location check refused the file. Metadata not yet collected is `null`; a file above the per-file read cap has its size but no hash. |
 | `mode` | `attachment`, or `link` for a set above the attachment cap that can go as links. |
 | `order` | The captain's order words with trailing CR/LF characters removed, or `null` if the order file could not be read or decoded, or was empty. |
 | `confirmation` | The captain's confirmation words with trailing CR/LF characters removed, or `null` when absent, unreadable, undecodable, empty, or not yet read. |

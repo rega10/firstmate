@@ -31,6 +31,9 @@
 # prints, or logs it. Files that together exceed the attachment cap go as
 # signed 7-day links in the mail body, made by the home-private sharing
 # wrapper or FM_DELIVER_SHARE_CMD override, with the environment unchanged.
+# Files may come from data/<task>/ of this home or of a local second mate home
+# registered in data/secondmates.md, under the same preflight rules; a remote
+# second mate's home is on another machine and is refused.
 # Every attempt that passed argument parsing appends one
 # JSON line to $FM_HOME/data/outbound/sends.jsonl (FM_DATA_OVERRIDE replaces
 # $FM_HOME/data). docs/configuration.md "Outbound send" owns the preflight
@@ -65,9 +68,11 @@ fm-deliver.sh <contact-id> <file>... --order-file <path>
 
 Sends the files to one listed contact on the first preferred channel that has
 an address (email today), after the preflight, and appends one line to
-data/outbound/sends.jsonl. Files above the mail attachment cap go as signed
-7-day links made by $FM_HOME/config/fm-share-b2.sh, with FM_DELIVER_SHARE_CMD
-as an optional executable override. Run a real send as
+data/outbound/sends.jsonl. Each file must be in a data/<task>/ folder of this
+home or of a local second mate home registered in data/secondmates.md; the
+log records the home each file came from. Files above the mail attachment cap
+go as signed 7-day links made by $FM_HOME/config/fm-share-b2.sh, with
+FM_DELIVER_SHARE_CMD as an optional executable override. Run a real send as
   av inject +FM_MAIL_PASS -- bin/fm-deliver.sh ...
 Exit codes: 0 sent or dry run passed, 1 usage or configuration error,
 2 contact not listed, 3 confirmation missing, 4 away or quiet mode,
@@ -123,8 +128,38 @@ for key in FM_DELIVER_MAX_BYTES FM_MAIL_MAX_ATTACH_BYTES FM_DELIVER_SHARE_CMD; d
 done
 
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
+
+# Registered second mate homes, parsed by the one registry parser and handed to
+# the engine as one tab-separated "id, placement, host, home" line per mate. An
+# unusable registry is handed over as its error, so a file outside this home is
+# refused rather than guessed about.
+# shellcheck source=bin/fm-secondmate-registry-lib.sh
+. "$SCRIPT_DIR/fm-secondmate-registry-lib.sh"
+REGISTRY="$DATA/secondmates.md"
+SECONDMATES=""
+REGISTRY_ERROR=""
+if [ -e "$REGISTRY" ] || [ -L "$REGISTRY" ]; then
+  if ! secondmate_registry_validate_bindings "$REGISTRY" secondmate_registry_path_key; then
+    REGISTRY_ERROR="$SECONDMATE_REGISTRY_ERROR"
+  else
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in "- "*) ;; *) continue ;; esac
+      if ! secondmate_registry_parse_line "$line"; then
+        REGISTRY_ERROR="malformed secondmate registry entry: $line"
+        SECONDMATES=""
+        break
+      fi
+      placement=local
+      [ "$SECONDMATE_REGISTRY_REMOTE" -eq 0 ] || placement=remote
+      SECONDMATES+="$SECONDMATE_REGISTRY_ID"$'\t'"$placement"$'\t'"$SECONDMATE_REGISTRY_HOST"$'\t'"$SECONDMATE_REGISTRY_HOME"$'\n'
+    done < "$REGISTRY"
+  fi
+fi
+
 FM_DELIVER_HOME="$FM_HOME" \
 FM_DELIVER_DATA="$DATA" \
+FM_DELIVER_SECONDMATES="$SECONDMATES" \
+FM_DELIVER_REGISTRY_ERROR="$REGISTRY_ERROR" \
 FM_DELIVER_AWAY="$AWAY" \
 FM_DELIVER_MAIL="$SCRIPT_DIR/fm-mail.sh" \
 FM_DELIVER_CONTACTS_PY="$SCRIPT_DIR/fm-contacts.py" \
