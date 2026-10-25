@@ -8,6 +8,10 @@
 #   FM_DELIVER_HOME          the home whose .env, config/, state/, and
 #                            projects/ are never sent
 #   FM_DELIVER_DATA          the home's data directory (book, deliverables, log)
+#   FM_DELIVER_SECONDMATES   one "id<TAB>home" line per registered local
+#                            second mate, parsed by the wrapper
+#                            with bin/fm-secondmate-registry-lib.sh
+#   FM_DELIVER_REGISTRY_ERROR why the registry could not be used, or empty
 #   FM_DELIVER_AWAY          the away or quiet record path, or empty
 #   FM_DELIVER_MAIL          bin/fm-mail.sh
 #   FM_DELIVER_CONTACTS_PY   bin/fm-contacts.py, whose reader and masking this
@@ -47,6 +51,8 @@ DEFAULT_ATTACH_BYTES = 20971520
 # A signed link works for 7 days, the longest an S3 presigned link allows.
 LINK_EXPIRE = '168h'
 LINK_DAYS = 7
+# Each file's send log fields; link mode adds link_expires.
+LOGGED_FILE_FIELDS = ('name', 'sha256', 'bytes', 'home', 'secondmate')
 ALLOWED_EXTENSIONS = ('.pdf', '.png', '.jpg', '.jpeg', '.docx', '.xlsx')
 # Home folders whose contents never go out, also refused as any folder name
 # inside data/.
@@ -239,27 +245,66 @@ def secret_problems(given, real, content):
             for name, _ in SECRET_PATTERNS if name in matches]
 
 
-def check_file(given, home, data, read_limit, is_note=False):
-    real = os.path.realpath(given)
-    record = {'name': os.path.basename(real), 'sha256': None, 'bytes': None}
+def second_mates():
+    """The registered local second mates as (id, home) tuples."""
+    mates = []
+    for line in os.environ.get('FM_DELIVER_SECONDMATES', '').splitlines():
+        if line:
+            mate_id, home = line.split('\t')
+            mates.append((mate_id, home))
+    return mates
+
+
+def location_problem(given, real, homes, mates, registry_error):
+    """Find the home that holds the file and check the location rules against
+    it. Returns (source, problem): source is (home, mate id or None, data
+    folder, label) once the file is in some home's data/<task>/."""
+    this_home, this_data = homes
+    owner = next((m for m in mates if within(real, os.path.realpath(m[1]))), None)
+    if owner is None and not within(real, os.path.realpath(this_data)) and registry_error:
+        return None, ('%s: is outside data/, and the second mate registry cannot be used'
+                      ' to check second mate homes: %s' % (given, registry_error))
     if not os.path.lexists(given) or not os.path.exists(real):
-        return record, ['%s: not found' % given]
+        return None, '%s: not found' % given
     for folder in NEVER_SENT:
-        if within(real, os.path.realpath(os.path.join(home, folder))):
-            return record, ['%s: is under the home %s, which is never sent' % (given, folder)]
-    data_real = os.path.realpath(data)
+        if within(real, os.path.realpath(os.path.join(this_home, folder))):
+            return None, '%s: is under the home %s, which is never sent' % (given, folder)
+    if owner is None:
+        source = (this_home, None, this_data, '')
+    else:
+        source = (owner[1], owner[0], os.path.join(owner[1], 'data'), ' of second mate %s' % owner[0])
+        for folder in NEVER_SENT:
+            if within(real, os.path.realpath(os.path.join(owner[1], folder))):
+                return None, ('%s: is under the home %s of second mate %s, which is never sent'
+                              % (given, folder, owner[0]))
+    data_real, label = os.path.realpath(source[2]), source[3]
     if not within(real, data_real):
-        return record, ['%s: is outside data/; only data/<task>/ deliverables are sent' % given]
+        if owner is None:
+            return None, ('%s: is outside data/ of this home and of every registered local second'
+                          ' mate home; only data/<task>/ deliverables are sent' % given)
+        return None, ('%s: is outside data/%s; only data/<task>/ deliverables are sent'
+                      % (given, label))
     parts = os.path.relpath(real, data_real).split(os.sep)
     if len(parts) < 2:
-        return record, ['%s: is a data/ bookkeeping file, not a data/<task>/ deliverable' % given]
+        return None, '%s: is a data/ bookkeeping file%s, not a data/<task>/ deliverable' % (given, label)
     if parts[0] == 'outbound':
-        return record, ['%s: is in the send log folder data/outbound/' % given]
+        return None, '%s: is in the send log folder data/outbound/%s' % (given, label)
     if any(part.casefold() == '.env' or part.casefold().startswith('.env.') for part in parts):
-        return record, ['%s: is an .env source, which is never sent' % given]
+        return None, '%s: is an .env source, which is never sent' % given
     for part in parts[:-1]:
         if part.casefold() in NEVER_SENT:
-            return record, ['%s: is under a %s folder, which is never sent' % (given, part)]
+            return None, '%s: is under a %s folder, which is never sent' % (given, part)
+    return source, None
+
+
+def check_file(given, homes, mates, registry_error, read_limit, is_note=False):
+    real = os.path.realpath(given)
+    record = {'name': os.path.basename(real), 'sha256': None, 'bytes': None,
+              'home': None, 'secondmate': None}
+    source, problem = location_problem(given, real, homes, mates, registry_error)
+    if problem:
+        return record, [problem]
+    record['home'], record['secondmate'] = source[0], source[1]
     problems = []
     if not is_note:
         shown = os.path.basename(given) or given
@@ -310,7 +355,7 @@ def share_command(home):
     return None, '%s is not an executable file' % label
 
 
-def preflight(files, home, data, max_bytes, attach_cap, share_problem):
+def preflight(files, homes, mates, registry_error, max_bytes, attach_cap, share_problem):
     """Check every file. Returns the records, the problems, the total bytes,
     and the mode: `link` when the total is above the attachment cap and the
     sharing command is usable."""
@@ -319,7 +364,7 @@ def preflight(files, home, data, max_bytes, attach_cap, share_problem):
     # so no file above it is read.
     read_limit = max_bytes if share_problem is None else min(max_bytes, attach_cap)
     for given in files:
-        record, found = check_file(given, home, data, read_limit)
+        record, found = check_file(given, homes, mates, registry_error, read_limit)
         records.append(record)
         problems.extend(found)
     total = sum(r['bytes'] or 0 for r in records)
@@ -492,12 +537,17 @@ def attempt(args, config, confirmation, entry):
     # After input and cap validation, collect file metadata before recipient
     # checks so later refusals retain it. Report preflight problems only after
     # the contact, channel, confirmation, and away checks.
-    records, problems, total, mode = preflight(args.files, home, data, max_bytes, attach_cap, share_problem)
-    entry['files'] = [{k: r[k] for k in ('name', 'sha256', 'bytes')} for r in records]
+    homes = (home, data)
+    mates = second_mates()
+    registry_error = os.environ.get('FM_DELIVER_REGISTRY_ERROR', '')
+    records, problems, total, mode = preflight(args.files, homes, mates, registry_error,
+                                               max_bytes, attach_cap, share_problem)
+    entry['files'] = [{k: r[k] for k in LOGGED_FILE_FIELDS} for r in records]
     entry['mode'] = mode
     note = None
     if args.note_file:
-        note_record, found = check_file(args.note_file, home, data, min(max_bytes, attach_cap), is_note=True)
+        note_record, found = check_file(args.note_file, homes, mates, registry_error,
+                                        min(max_bytes, attach_cap), is_note=True)
         problems.extend(found)
         note = note_record.get('text')
     try:
@@ -578,7 +628,7 @@ def main(argv):
         'contact_id': args.contact_id,
         'channel': None,
         'masked_address': None,
-        'files': [{'name': os.path.basename(os.path.realpath(f)), 'sha256': None, 'bytes': None}
+        'files': [dict({k: None for k in LOGGED_FILE_FIELDS}, name=os.path.basename(os.path.realpath(f)))
                   for f in args.files],
         'mode': 'attachment',
         'order': None,

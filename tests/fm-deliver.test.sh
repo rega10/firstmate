@@ -235,7 +235,7 @@ report.pdf (26 bytes): $url/${folder}report.pdf?X-Amz-Signature=fake - El enlace
 plan.png (12 bytes): $url/${other_folder}plan.png?X-Amz-Signature=fake - El enlace vence el $other_expiry." \
     "$(cat "$CAPTURE/stdin")" "the Spanish body lists each file with its size, link, and expiry"
   assert_equals "link" "$(last_log "$home" 'd["mode"]')" "the log records the link mode"
-  assert_equals "name,sha256,bytes,link_expires" "$(last_log "$home" '",".join(d["files"][0])')" \
+  assert_equals "name,sha256,bytes,home,secondmate,link_expires" "$(last_log "$home" '",".join(d["files"][0])')" \
     "a link file entry holds exactly the documented fields"
   assert_equals "sent" "$(last_log "$home" 'd["result"]')" "the link send is logged as sent"
   assert_no_grep "share.example.net" "$home/data/outbound/sends.jsonl" "the log never holds the link URL"
@@ -580,7 +580,7 @@ report.pdf, plan.png" "$(cat "$CAPTURE/stdin")" "the default covering text is in
   assert_equals "sent to j***@example.com (attachments: 2) message-id: <delivery-test@example.net>" "$(last_log "$home" 'd["detail"]')" \
     "the log keeps the mail plane's sent line with the address masked"
   assert_contains "$(last_log "$home" 'd["at"]')" "Z" "the log time is UTC"
-  assert_equals "name,sha256,bytes" "$(last_log "$home" '",".join(d["files"][0])')" \
+  assert_equals "name,sha256,bytes,home,secondmate" "$(last_log "$home" '",".join(d["files"][0])')" \
     "an attachment file entry has no link expiry"
   assert_equals "at,contact_id,channel,masked_address,files,mode,order,confirmation,result,detail" \
     "$(last_log "$home" '",".join(d)')" "the log line holds exactly the documented fields"
@@ -697,6 +697,98 @@ test_preflight_refusals() {
   deliver "$home" maria-lopez "$home/data/report/short.pdf" --order-file "$TMP_ROOT/preflight-words/order"
   expect_code 0 "$?" "sk- with fewer than 20 word characters is not a secret"
   pass "fm-deliver: the preflight refuses each unsafe file before any send"
+}
+
+# secondmate_refused <home> <message> <file>: a send of <file> is refused by
+# the preflight with <message>, nothing is sent, and the file is never read.
+secondmate_refused() {
+  local home=$1 message=$2 file=$3
+  deliver "$home" maria-lopez "$file" --order-file "$TMP_ROOT/secondmate-words/order"
+  expect_code 5 "$?" "second mate preflight: $message"
+  assert_contains "$(cat "$TMP_ROOT/err")" "$message" "the refusal names the problem: $message"
+  assert_absent "$CAPTURE/argv" "a refused second mate file sends nothing: $message"
+  assert_equals "refused None None" "$(last_log "$home" '"%s %s %s" % (d["result"], d["files"][0]["sha256"], d["files"][0]["home"])')" \
+    "a refused second mate file is logged, never read, and has no home: $message"
+}
+
+test_secondmate_home_deliverables() {
+  local home mate remote stranger words pdf_sha registry
+  home=$(new_home secondmate)
+  words="$TMP_ROOT/secondmate-words"
+  mate="$TMP_ROOT/docs-mate-home"
+  remote="$TMP_ROOT/far-mate-home"
+  stranger="$TMP_ROOT/stranger-home"
+  registry="$home/data/secondmates.md"
+  mkdir -p "$mate/data/brief" "$mate/data/outbound" "$mate/config" "$mate/state" "$stranger/data/brief" "$remote/data/brief"
+  printf -- '- docs-mate - Writes the documents. (home: %s; scope: documents and reports; projects: ; added 2026-10-24)\n' \
+    "$mate" > "$registry"
+  printf -- '- far-mate - Runs on another machine. (host: farbox; root: /srv/fm; home: %s; scope: remote work; projects: ; added 2026-10-24)\n' \
+    "$remote" >> "$registry"
+  printf '%%PDF-1.4 mate brief\n' > "$mate/data/brief/brief.pdf"
+  printf 'The brief from the documents mate.\n' > "$mate/data/brief/note.txt"
+  deliver "$home" maria-lopez "$mate/data/brief/brief.pdf" --order-file "$words/order" \
+    --note-file "$mate/data/brief/note.txt"
+  expect_code 0 "$?" "a file in a registered local second mate's data/<task>/"
+  assert_contains "$(cat "$CAPTURE/argv")" "$mate/data/brief/brief.pdf" "the mate's file reaches the mail plane"
+  assert_equals "The brief from the documents mate." "$(cat "$CAPTURE/stdin")" "a covering note from the mate's data/<task>/ is accepted"
+  pdf_sha=$(python3 -I -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' \
+    "$mate/data/brief/brief.pdf")
+  assert_equals "$pdf_sha $mate docs-mate" \
+    "$(last_log "$home" '"%s %s %s" % (d["files"][0]["sha256"], d["files"][0]["home"], d["files"][0]["secondmate"])')" \
+    "the log records the second mate home the file came from"
+  assert_absent "$mate/data/outbound/sends.jsonl" "the send log stays in this home"
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
+  expect_code 0 "$?" "a file in this home's data/<task>/ still sends"
+  assert_equals "$home None" "$(last_log "$home" '"%s %s" % (d["files"][0]["home"], d["files"][0]["secondmate"])')" \
+    "the log records this home for its own files"
+
+  printf '%%PDF-1.4 do not read\n' > "$mate/data/outbound/old.pdf"
+  secondmate_refused "$home" "is in the send log folder data/outbound/ of second mate docs-mate" "$mate/data/outbound/old.pdf"
+  printf '%%PDF-1.4 do not read\n' > "$mate/config/x.pdf"
+  secondmate_refused "$home" "is under the home config of second mate docs-mate" "$mate/config/x.pdf"
+  ln -s "$mate/config/x.pdf" "$mate/data/brief/cfg.pdf"
+  secondmate_refused "$home" "is under the home config of second mate docs-mate" "$mate/data/brief/cfg.pdf"
+  printf '%%PDF-1.4 do not read\n' > "$mate/state/x.pdf"
+  secondmate_refused "$home" "is under the home state of second mate docs-mate" "$mate/state/x.pdf"
+  printf 'X=1\n' > "$mate/.env"
+  ln -s "$mate/.env" "$mate/data/brief/env.pdf"
+  secondmate_refused "$home" "is under the home .env of second mate docs-mate" "$mate/data/brief/env.pdf"
+  secondmate_refused "$home" "is under the home .env of second mate docs-mate" "$mate/.env"
+  printf '%%PDF-1.4 do not read\n' > "$mate/data/top.pdf"
+  secondmate_refused "$home" "is a data/ bookkeeping file of second mate docs-mate" "$mate/data/top.pdf"
+  printf '%%PDF-1.4 do not read\n' > "$mate/loose.pdf"
+  secondmate_refused "$home" "is outside data/ of second mate docs-mate" "$mate/loose.pdf"
+  printf '# Brief\n' > "$mate/data/brief/brief.md"
+  deliver "$home" maria-lopez "$mate/data/brief/brief.md" --order-file "$words/order"
+  expect_code 5 "$?" "a second mate's Markdown file"
+  assert_contains "$(cat "$TMP_ROOT/err")" "Markdown must be rendered to PDF first" "the mate's .md file is refused like this home's"
+  printf '%%PDF-1.4\npassword=LEAKEDVALUE\n' > "$mate/data/brief/leak.pdf"
+  deliver "$home" maria-lopez "$mate/data/brief/leak.pdf" --order-file "$words/order"
+  expect_code 5 "$?" "a secret in a second mate's file"
+  assert_contains "$(cat "$TMP_ROOT/err")" "matches the secret pattern password=" "the mate's file gets the secret scan"
+
+  printf '%%PDF-1.4 do not read\n' > "$remote/data/brief/brief.pdf"
+  secondmate_refused "$home" "is outside data/ of this home and of every registered local second mate home" "$remote/data/brief/brief.pdf"
+  deliver "$home" maria-lopez "$remote/data/brief/brief.pdf" --order-file "$words/order" --dry-run
+  expect_code 5 "$?" "a preview refuses a remote registration's file"
+  assert_contains "$(cat "$TMP_ROOT/err")" "is outside data/ of this home and of every registered local second mate home" \
+    "a preview uses the ordinary outside-data refusal"
+  printf 'Remote covering note.\n' > "$remote/data/brief/note.txt"
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" \
+    --note-file "$remote/data/brief/note.txt"
+  expect_code 5 "$?" "a covering note under a remote registration's home"
+  assert_contains "$(cat "$TMP_ROOT/err")" "is outside data/ of this home and of every registered local second mate home" \
+    "a covering note uses the ordinary outside-data refusal"
+  assert_absent "$CAPTURE/argv" "a refused remote covering note sends nothing"
+  printf '%%PDF-1.4 do not read\n' > "$stranger/data/brief/brief.pdf"
+  secondmate_refused "$home" "is outside data/" "$stranger/data/brief/brief.pdf"
+
+  printf -- '- broken-mate - no route suffix\n' >> "$registry"
+  secondmate_refused "$home" "the second mate registry cannot be used to check second mate homes: malformed secondmate registry entry: - broken-mate - no route suffix" \
+    "$mate/data/brief/brief.pdf"
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order"
+  expect_code 0 "$?" "an unusable registry does not block this home's own files"
+  pass "fm-deliver: registered local second mate homes send from data/<task>/ under the same preflight"
 }
 
 test_dry_run_card() {
@@ -1035,6 +1127,7 @@ test_external_with_confirmation_sends
 test_internal_sends_on_order_alone
 test_away_mode_refuses_unless_allowed
 test_preflight_refusals
+test_secondmate_home_deliverables
 test_dry_run_card
 test_mail_failure_and_channels
 test_usage_errors
