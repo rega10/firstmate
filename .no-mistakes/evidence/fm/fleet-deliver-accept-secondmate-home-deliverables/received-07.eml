@@ -1,0 +1,25 @@
+From: sender@example.test
+To: captain@example.test
+Subject: Document: own.pdf
+Date: Sun, 25 Oct 2026 09:46:12 -0500
+Message-ID: <179293957274.65516.275022519985163240@rg-mac-mini.local>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============4156456045438076009=="
+
+--===============4156456045438076009==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Please find the file attached.
+own.pdf
+
+--===============4156456045438076009==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="own.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyA+PgplbmRvYmoKJSVFT0YKcHJpbWFy
+eSByZXBvcnQK
+
+--===============4156456045438076009==--

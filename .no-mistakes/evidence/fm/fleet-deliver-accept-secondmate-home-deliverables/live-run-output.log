@@ -1,0 +1,352 @@
+TLS trust diagnostic: DefaultVerifyPaths(cafile='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/smtp.crt', capath='/private/etc/ssl/certs', openssl_cafile_env='SSL_CERT_FILE', openssl_cafile='/private/etc/ssl/cert.pem', openssl_capath_env='SSL_CERT_DIR', openssl_capath='/private/etc/ssl/certs')
+{'x509': 1, 'crl': 0, 'x509_ca': 1}
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/smtp.crt
+
+
+CASE: Base version accepts primary report
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/base-bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --dry-run
+exit=0
+stdout: confirmation card (dry run, nothing sent)
+recipient: Captain Test - Owner
+channel: email
+address: c***@example.test
+file: own.pdf - 66 bytes
+delivery: attachment
+subject: Document: own.pdf
+covering text: Please find the file attached.
+stderr: 
+
+CASE: Base version reproduces refusal of registered second mate report
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/base-bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --dry-run
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/; only data/<task>/ deliverables are sent
+
+
+CASE: Preview accepts registered second mate PDF and covering note
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --dry-run --note-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/note.txt
+exit=0
+stdout: confirmation card (dry run, nothing sent)
+recipient: Captain Test - Owner
+channel: email
+address: c***@example.test
+file: report.pdf - 51 bytes
+delivery: attachment
+subject: Document: report.pdf
+covering text: The report from the second mate.
+stderr: 
+
+CASE: Send registered second mate PDF directly to self
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --note-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/note.txt
+exit=0
+stdout: sent: Captain Test email c***@example.test 1 file(s) 51 bytes
+stderr: 
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": "eadef7418e14af08d4dab416d408d94121199f49e60eed1caa7a6bec3b16ebe0", "bytes": 51, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "sent", "detail": "sent to c***@example.test (attachments: 1) message-id: <179293957017.63984.12509231157267744336@rg-mac-mini.local>"}
+SMTP recipient received the original PDF bytes and covering note; primary log records the registered source; no copy exists in primary data/task/.
+
+CASE: Mixed send preserves primary and second mate source homes
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=0
+stdout: sent: Captain Test email c***@example.test 2 file(s) 117 bytes
+stderr: 
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "own.pdf", "sha256": "636d96d4bc7d0c869d3253abf5635b59cf5c3f5b81118846c83be08ff817a110", "bytes": 66, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary", "secondmate": null}, {"name": "report.pdf", "sha256": "eadef7418e14af08d4dab416d408d94121199f49e60eed1caa7a6bec3b16ebe0", "bytes": 51, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "sent", "detail": "sent to c***@example.test (attachments: 2) message-id: <179293957029.64017.2921090900514142159@rg-mac-mini.local>"}
+
+CASE: Safe symlink resolves to registered deliverable
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/safe-link.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=0
+stdout: sent: Captain Test email c***@example.test 1 file(s) 51 bytes
+stderr: 
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": "eadef7418e14af08d4dab416d408d94121199f49e60eed1caa7a6bec3b16ebe0", "bytes": 51, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "sent", "detail": "sent to c***@example.test (attachments: 1) message-id: <179293957039.64051.10598331097932550438@rg-mac-mini.local>"}
+
+CASE: Refuse second mate home config
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/config/private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/config/private.pdf: is under the home config of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/config/private.pdf: is under the home config of second mate documents-mate, which is never sent"}
+
+CASE: Refuse symlink to second mate config
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/config-link.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/config-link.pdf: is under the home config of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/config-link.pdf: is under the home config of second mate documents-mate, which is never sent"}
+
+CASE: Refuse second mate home state
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/state/private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/state/private.pdf: is under the home state of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/state/private.pdf: is under the home state of second mate documents-mate, which is never sent"}
+
+CASE: Refuse symlink to second mate state
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/state-link.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/state-link.pdf: is under the home state of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/state-link.pdf: is under the home state of second mate documents-mate, which is never sent"}
+
+CASE: Refuse second mate home projects
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/projects/private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/projects/private.pdf: is under the home projects of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/projects/private.pdf: is under the home projects of second mate documents-mate, which is never sent"}
+
+CASE: Refuse symlink to second mate projects
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/projects-link.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/projects-link.pdf: is under the home projects of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/projects-link.pdf: is under the home projects of second mate documents-mate, which is never sent"}
+
+CASE: Refuse second mate home .env
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/.env --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/.env: is under the home .env of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": ".env", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/.env: is under the home .env of second mate documents-mate, which is never sent"}
+
+CASE: Refuse symlink to second mate .env
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/env-link.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/env-link.pdf: is under the home .env of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": ".env", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/env-link.pdf: is under the home .env of second mate documents-mate, which is never sent"}
+
+CASE: Refuse nested .env directory
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/.env/private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/.env/private.pdf: is an .env source, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/.env/private.pdf: is an .env source, which is never sent"}
+
+CASE: Refuse nested config directory
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/config/private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/config/private.pdf: is under a config folder, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:10Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/config/private.pdf: is under a config folder, which is never sent"}
+
+CASE: Refuse nested state directory
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/state/private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/state/private.pdf: is under a state folder, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/state/private.pdf: is under a state folder, which is never sent"}
+
+CASE: Refuse nested projects directory
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/projects/private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/projects/private.pdf: is under a projects folder, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/projects/private.pdf: is under a projects folder, which is never sent"}
+
+CASE: Refuse top-level data file
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/top.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/top.pdf: is a data/ bookkeeping file of second mate documents-mate, not a data/<task>/ deliverable
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "top.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/top.pdf: is a data/ bookkeeping file of second mate documents-mate, not a data/<task>/ deliverable"}
+
+CASE: Refuse outbound file
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/outbound/old.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/outbound/old.pdf: is in the send log folder data/outbound/ of second mate documents-mate
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "old.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/outbound/old.pdf: is in the send log folder data/outbound/ of second mate documents-mate"}
+
+CASE: Refuse .env-prefixed file
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/.env.private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/.env.private.pdf: is an .env source, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": ".env.private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/.env.private.pdf: is an .env source, which is never sent"}
+
+CASE: Refuse forbidden FIFO without opening or blocking
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/config/no-read.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/config/no-read.pdf: is under the home config of second mate documents-mate, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "no-read.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/config/no-read.pdf: is under the home config of second mate documents-mate, which is never sent"}
+
+CASE: Refuse primary config from second mate alias
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/config/private.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/config/private.pdf: is under the home config, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/config/private.pdf: is under the home config, which is never sent"}
+
+CASE: Refuse symlink to primary config
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/primary-config.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/primary-config.pdf: is under the home config, which is never sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "private.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/primary-config.pdf: is under the home config, which is never sent"}
+
+CASE: Refuse second mate Markdown with PDF instruction
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.md --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.md: Markdown must be rendered to PDF first
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.md", "sha256": "497b7725a00101d6cf82489ef502fb0918962b10aaa7279962ab5ec3edc62533", "bytes": 9, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.md: Markdown must be rendered to PDF first"}
+
+CASE: Refuse Markdown disguised as PDF symlink
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/hidden-md.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/hidden-md.pdf: Markdown must be rendered to PDF first
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.md", "sha256": "497b7725a00101d6cf82489ef502fb0918962b10aaa7279962ab5ec3edc62533", "bytes": 9, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/hidden-md.pdf: Markdown must be rendered to PDF first"}
+
+CASE: Refuse secret in second mate PDF
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/leak.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/leak.pdf: matches the secret pattern password=
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "leak.pdf", "sha256": "d893b57a5679c69b4a25c95aacba060214eb060aae0b3617215ca92d1d94699b", "bytes": 76, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/leak.pdf: matches the secret pattern password="}
+
+CASE: Refuse secret in second mate covering note
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --note-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/leak-note.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/leak-note.txt: matches the secret pattern password=
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": "eadef7418e14af08d4dab416d408d94121199f49e60eed1caa7a6bec3b16ebe0", "bytes": 51, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/leak-note.txt: matches the secret pattern password="}
+
+CASE: Enforce total size cap on second mate report
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: the files total 51 bytes, above the FM_DELIVER_MAX_BYTES cap of 8 bytes
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": null, "bytes": 51, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: the files total 51 bytes, above the FM_DELIVER_MAX_BYTES cap of 8 bytes"}
+
+CASE: Refuse nonregular second mate attachment
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/directory.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/directory.pdf: not a regular file
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "directory.pdf", "sha256": null, "bytes": null, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate", "secondmate": "documents-mate"}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/directory.pdf: not a regular file"}
+
+CASE: Refuse remote registration attachment
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "remote.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent"}
+
+CASE: Refuse remote registration preview
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --dry-run
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+
+CASE: Refuse remote registration note
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --note-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "own.pdf", "sha256": "636d96d4bc7d0c869d3253abf5635b59cf5c3f5b81118846c83be08ff817a110", "bytes": 66, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary", "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent"}
+
+CASE: Refuse unregistered home attachment
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/stranger/data/task/stranger.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/stranger/data/task/stranger.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+persisted send record: {"at": "2026-10-25T14:46:11Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "stranger.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/stranger/data/task/stranger.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent"}
+
+CASE: Refuse unregistered home preview
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/stranger/data/task/stranger.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --dry-run
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/stranger/data/task/stranger.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+
+CASE: Refuse unregistered home note
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt --note-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/stranger/data/task/stranger.pdf
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/stranger/data/task/stranger.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "own.pdf", "sha256": "636d96d4bc7d0c869d3253abf5635b59cf5c3f5b81118846c83be08ff817a110", "bytes": 66, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary", "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/stranger/data/task/stranger.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent"}
+
+CASE: Refuse registered-home symlink to remote-only file
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/remote-alias.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/remote-alias.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "remote.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/remote-alias.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent"}
+
+CASE: Refuse mate file with malformed registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/, and the second mate registry cannot be used to check second mate homes: malformed secondmate registry entry: - broken - no route
+
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/, and the second mate registry cannot be used to check second mate homes: malformed secondmate registry entry: - broken - no route"}
+
+CASE: Preserve primary delivery with malformed registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=0
+stdout: sent: Captain Test email c***@example.test 1 file(s) 66 bytes
+stderr: 
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "own.pdf", "sha256": "636d96d4bc7d0c869d3253abf5635b59cf5c3f5b81118846c83be08ff817a110", "bytes": 66, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary", "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "sent", "detail": "sent to c***@example.test (attachments: 1) message-id: <179293957229.65362.13671969594101607922@rg-mac-mini.local>"}
+
+CASE: Refuse mate file with duplicate binding registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/, and the second mate registry cannot be used to check second mate homes: duplicate secondmate home assignment: local:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate: documents-mate, other-id
+
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/, and the second mate registry cannot be used to check second mate homes: duplicate secondmate home assignment: local:/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate: documents-mate, other-id"}
+
+CASE: Preserve primary delivery with duplicate binding registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=0
+stdout: sent: Captain Test email c***@example.test 1 file(s) 66 bytes
+stderr: 
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "own.pdf", "sha256": "636d96d4bc7d0c869d3253abf5635b59cf5c3f5b81118846c83be08ff817a110", "bytes": 66, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary", "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "sent", "detail": "sent to c***@example.test (attachments: 1) message-id: <179293957245.65413.4702127473058214067@rg-mac-mini.local>"}
+
+CASE: Refuse mate file with relative-home registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/, and the second mate registry cannot be used to check second mate homes: unsafe non-absolute secondmate home for documents-mate: relative-home
+
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/, and the second mate registry cannot be used to check second mate homes: unsafe non-absolute secondmate home for documents-mate: relative-home"}
+
+CASE: Preserve primary delivery with relative-home registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=0
+stdout: sent: Captain Test email c***@example.test 1 file(s) 66 bytes
+stderr: 
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "own.pdf", "sha256": "636d96d4bc7d0c869d3253abf5635b59cf5c3f5b81118846c83be08ff817a110", "bytes": 66, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary", "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "sent", "detail": "sent to c***@example.test (attachments: 1) message-id: <179293957260.65456.12775392378821445964@rg-mac-mini.local>"}
+
+CASE: Refuse mate file with symlinked registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/, and the second mate registry cannot be used to check second mate homes: secondmate registry is unavailable or unsafe: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/secondmates.md
+
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/, and the second mate registry cannot be used to check second mate homes: secondmate registry is unavailable or unsafe: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/secondmates.md"}
+
+CASE: Preserve primary delivery with symlinked registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=0
+stdout: sent: Captain Test email c***@example.test 1 file(s) 66 bytes
+stderr: 
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "own.pdf", "sha256": "636d96d4bc7d0c869d3253abf5635b59cf5c3f5b81118846c83be08ff817a110", "bytes": 66, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary", "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "sent", "detail": "sent to c***@example.test (attachments: 1) message-id: <179293957274.65516.275022519985163240@rg-mac-mini.local>"}
+
+CASE: Refuse mate file with missing registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "report.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/documents mate/data/task/report.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent"}
+
+CASE: Preserve primary delivery with missing registry
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary/data/task/own.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=0
+stdout: sent: Captain Test email c***@example.test 1 file(s) 66 bytes
+stderr: 
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "own.pdf", "sha256": "636d96d4bc7d0c869d3253abf5635b59cf5c3f5b81118846c83be08ff817a110", "bytes": 66, "home": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/primary", "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "sent", "detail": "sent to c***@example.test (attachments: 1) message-id: <179293957288.65553.358480019730945056@rg-mac-mini.local>"}
+
+CASE: Remote-only registry grants no local access
+$ bin/fm-deliver.sh captain /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf --order-file /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/order.txt
+exit=5
+stdout: stderr: fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent
+
+persisted send record: {"at": "2026-10-25T14:46:12Z", "contact_id": "captain", "channel": "email", "masked_address": "c***@example.test", "files": [{"name": "remote.pdf", "sha256": null, "bytes": null, "home": null, "secondmate": null}], "mode": "attachment", "order": "Send the second mate report to me.", "confirmation": null, "result": "refused", "detail": "preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5SQHXVYA7SER61GYZGDEJ9M/.validation-tmp/deliver-live-dyt7lffl/remote/data/task/remote.pdf: is outside data/ of this home and of every registered local second mate home; only data/<task>/ deliverables are sent"}
+
+All live CLI scenarios passed. SMTP messages received: 8.

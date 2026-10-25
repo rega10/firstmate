@@ -1,0 +1,242 @@
+[
+  {
+    "name": "Base version accepts primary report",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Base version reproduces refusal of registered second mate report",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Preview accepts registered second mate PDF and covering note",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Send registered second mate PDF directly to self",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Mixed send preserves primary and second mate source homes",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Safe symlink resolves to registered deliverable",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse second mate home config",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse symlink to second mate config",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse second mate home state",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse symlink to second mate state",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse second mate home projects",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse symlink to second mate projects",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse second mate home .env",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse symlink to second mate .env",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse nested .env directory",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse nested config directory",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse nested state directory",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse nested projects directory",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse top-level data file",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse outbound file",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse .env-prefixed file",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse forbidden FIFO without opening or blocking",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse primary config from second mate alias",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse symlink to primary config",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse second mate Markdown with PDF instruction",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse Markdown disguised as PDF symlink",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse secret in second mate PDF",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse secret in second mate covering note",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Enforce total size cap on second mate report",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse nonregular second mate attachment",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse remote registration attachment",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse remote registration preview",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse remote registration note",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse unregistered home attachment",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse unregistered home preview",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse unregistered home note",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse registered-home symlink to remote-only file",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse mate file with malformed registry",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Preserve primary delivery with malformed registry",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse mate file with duplicate binding registry",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Preserve primary delivery with duplicate binding registry",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse mate file with relative-home registry",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Preserve primary delivery with relative-home registry",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse mate file with symlinked registry",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Preserve primary delivery with symlinked registry",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Refuse mate file with missing registry",
+    "exit": 5,
+    "result": "pass"
+  },
+  {
+    "name": "Preserve primary delivery with missing registry",
+    "exit": 0,
+    "result": "pass"
+  },
+  {
+    "name": "Remote-only registry grants no local access",
+    "exit": 5,
+    "result": "pass"
+  }
+]

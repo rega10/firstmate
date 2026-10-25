@@ -1,0 +1,23 @@
+ok - fm-deliver: a set above the attachment cap goes as signed 7-day links in the body
+ok - fm-deliver: same-name files have isolated links and later sends preserve earlier contents
+ok - fm-deliver: uploads use private snapshots of the scanned bytes despite source changes
+ok - fm-deliver: each link expires seven days after signing and the receipt uses the latest date
+ok - fm-deliver: link mode uses the default wrapper or refuses when neither command is executable
+ok - fm-deliver: a sharing command failure exits 7, is logged, and sends no mail
+ok - fm-deliver: link mode runs the preflight first, and a dry run uploads nothing
+ok - fm-deliver: an unlisted contact or a raw address is refused
+ok - fm-deliver: an external contact needs an accepted confirmation
+ok - fm-deliver: an external send with a confirmation goes out, logs, and prints a receipt
+ok - fm-deliver: an internal contact needs only the order
+ok - fm-deliver: away or quiet mode refuses a send unless --allow-away is passed
+ok - fm-deliver: the preflight refuses each unsafe file before any send
+ok - fm-deliver: registered local second mate homes send from data/<task>/ under the same preflight
+ok - fm-deliver: --dry-run prints the confirmation card without sending or logging
+ok - fm-deliver: a mail failure exits 7 and an unimplemented channel exits 6, both logged
+ok - fm-deliver: usage errors exit 1 without a log line
+ok - fm-deliver: covering notes pass location, content, and readability checks
+ok - fm-deliver: the scan checks every archive member and PDF deflate stream
+ok - fm-deliver: file-read and cap errors enter the log boundary
+ok - fm-deliver: only a complete normalized confirmation permits a send
+ok - fm-deliver: invalid stored mailboxes stop previews and sends
+ok - fm-deliver: PDF filters resolve through the supported representations or refuse
