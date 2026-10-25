@@ -8,8 +8,8 @@
 #   FM_DELIVER_HOME          the home whose .env, config/, state/, and
 #                            projects/ are never sent
 #   FM_DELIVER_DATA          the home's data directory (book, deliverables, log)
-#   FM_DELIVER_SECONDMATES   one "id<TAB>local|remote<TAB>host<TAB>home" line
-#                            per registered second mate, parsed by the wrapper
+#   FM_DELIVER_SECONDMATES   one "id<TAB>home" line per registered local
+#                            second mate, parsed by the wrapper
 #                            with bin/fm-secondmate-registry-lib.sh
 #   FM_DELIVER_REGISTRY_ERROR why the registry could not be used, or empty
 #   FM_DELIVER_AWAY          the away or quiet record path, or empty
@@ -246,12 +246,12 @@ def secret_problems(given, real, content):
 
 
 def second_mates():
-    """The registered second mates as (id, placement, host, home) tuples."""
+    """The registered local second mates as (id, home) tuples."""
     mates = []
     for line in os.environ.get('FM_DELIVER_SECONDMATES', '').splitlines():
         if line:
-            mate_id, placement, host, home = line.split('\t')
-            mates.append((mate_id, placement, host, home))
+            mate_id, home = line.split('\t')
+            mates.append((mate_id, home))
     return mates
 
 
@@ -260,17 +260,10 @@ def location_problem(given, real, homes, mates, registry_error):
     it. Returns (source, problem): source is (home, mate id or None, data
     folder, label) once the file is in some home's data/<task>/."""
     this_home, this_data = homes
-    local = [m for m in mates if m[1] == 'local']
-    owner = next((m for m in local if within(real, os.path.realpath(m[3]))), None)
-    if owner is None and not within(real, os.path.realpath(this_data)):
-        if registry_error:
-            return None, ('%s: is outside data/, and the second mate registry cannot be used'
-                          ' to check second mate homes: %s' % (given, registry_error))
-        for mate_id, placement, host, home in mates:
-            if placement == 'remote' and (within(real, home) or within(os.path.abspath(given), home)):
-                return None, ('%s: is under the home of remote second mate %s (host %s), which is'
-                              ' on another machine; only files on this machine are sent'
-                              % (given, mate_id, host))
+    owner = next((m for m in mates if within(real, os.path.realpath(m[1]))), None)
+    if owner is None and not within(real, os.path.realpath(this_data)) and registry_error:
+        return None, ('%s: is outside data/, and the second mate registry cannot be used'
+                      ' to check second mate homes: %s' % (given, registry_error))
     if not os.path.lexists(given) or not os.path.exists(real):
         return None, '%s: not found' % given
     for folder in NEVER_SENT:
@@ -279,9 +272,9 @@ def location_problem(given, real, homes, mates, registry_error):
     if owner is None:
         source = (this_home, None, this_data, '')
     else:
-        source = (owner[3], owner[0], os.path.join(owner[3], 'data'), ' of second mate %s' % owner[0])
+        source = (owner[1], owner[0], os.path.join(owner[1], 'data'), ' of second mate %s' % owner[0])
         for folder in NEVER_SENT:
-            if within(real, os.path.realpath(os.path.join(owner[3], folder))):
+            if within(real, os.path.realpath(os.path.join(owner[1], folder))):
                 return None, ('%s: is under the home %s of second mate %s, which is never sent'
                               % (given, folder, owner[0]))
     data_real, label = os.path.realpath(source[2]), source[3]

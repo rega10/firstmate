@@ -1862,7 +1862,7 @@ Every check runs before any network call, every problem is named, and any proble
   The rules below apply relative to the home that holds the file, and this home's own `.env`, `config/`, `state/`, and `projects/` are refused wherever the file comes from.
   A file directly in `data/`, in `data/outbound/`, or under any folder named `.env`, `config`, `state`, or `projects`, and anything under the home's `.env`, `config/`, `state/`, or `projects/`, is refused and never read.
   Files named `.env` or beginning with `.env.` are also refused.
-  A path under a remote second mate's `home:` is refused with the second mate's id and host, because that home is on another machine.
+  Remote registrations grant no access to files on this machine.
   The registry is read with `bin/fm-secondmate-registry-lib.sh`; when it cannot be used, for example because an entry is malformed, every file outside this home's `data/` is refused with the registry error.
 - Type: each file must be a regular file ending in `.pdf`, `.png`, `.jpg`, `.jpeg`, `.docx`, or `.xlsx`, both as given and after symlinks.
   A `.md` file is refused with a message to render it to PDF first.

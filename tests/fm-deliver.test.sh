@@ -719,7 +719,7 @@ test_secondmate_home_deliverables() {
   remote="$TMP_ROOT/far-mate-home"
   stranger="$TMP_ROOT/stranger-home"
   registry="$home/data/secondmates.md"
-  mkdir -p "$mate/data/brief" "$mate/data/outbound" "$mate/config" "$mate/state" "$stranger/data/brief"
+  mkdir -p "$mate/data/brief" "$mate/data/outbound" "$mate/config" "$mate/state" "$stranger/data/brief" "$remote/data/brief"
   printf -- '- docs-mate - Writes the documents. (home: %s; scope: documents and reports; projects: ; added 2026-10-24)\n' \
     "$mate" > "$registry"
   printf -- '- far-mate - Runs on another machine. (host: farbox; root: /srv/fm; home: %s; scope: remote work; projects: ; added 2026-10-24)\n' \
@@ -767,7 +767,19 @@ test_secondmate_home_deliverables() {
   expect_code 5 "$?" "a secret in a second mate's file"
   assert_contains "$(cat "$TMP_ROOT/err")" "matches the secret pattern password=" "the mate's file gets the secret scan"
 
-  secondmate_refused "$home" "is under the home of remote second mate far-mate (host farbox)" "$remote/data/brief/brief.pdf"
+  printf '%%PDF-1.4 do not read\n' > "$remote/data/brief/brief.pdf"
+  secondmate_refused "$home" "is outside data/ of this home and of every registered local second mate home" "$remote/data/brief/brief.pdf"
+  deliver "$home" maria-lopez "$remote/data/brief/brief.pdf" --order-file "$words/order" --dry-run
+  expect_code 5 "$?" "a preview refuses a remote registration's file"
+  assert_contains "$(cat "$TMP_ROOT/err")" "is outside data/ of this home and of every registered local second mate home" \
+    "a preview uses the ordinary outside-data refusal"
+  printf 'Remote covering note.\n' > "$remote/data/brief/note.txt"
+  deliver "$home" maria-lopez "$home/data/report/report.pdf" --order-file "$words/order" \
+    --note-file "$remote/data/brief/note.txt"
+  expect_code 5 "$?" "a covering note under a remote registration's home"
+  assert_contains "$(cat "$TMP_ROOT/err")" "is outside data/ of this home and of every registered local second mate home" \
+    "a covering note uses the ordinary outside-data refusal"
+  assert_absent "$CAPTURE/argv" "a refused remote covering note sends nothing"
   printf '%%PDF-1.4 do not read\n' > "$stranger/data/brief/brief.pdf"
   secondmate_refused "$home" "is outside data/" "$stranger/data/brief/brief.pdf"
 

@@ -32,8 +32,7 @@
 # signed 7-day links in the mail body, made by the home-private sharing
 # wrapper or FM_DELIVER_SHARE_CMD override, with the environment unchanged.
 # Files may come from data/<task>/ of this home or of a local second mate home
-# registered in data/secondmates.md, under the same preflight rules; a remote
-# second mate's home is on another machine and is refused.
+# registered in data/secondmates.md, under the same preflight rules.
 # Every attempt that passed argument parsing appends one
 # JSON line to $FM_HOME/data/outbound/sends.jsonl (FM_DATA_OVERRIDE replaces
 # $FM_HOME/data). docs/configuration.md "Outbound send" owns the preflight
@@ -129,8 +128,8 @@ done
 
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 
-# Registered second mate homes, parsed by the one registry parser and handed to
-# the engine as one tab-separated "id, placement, host, home" line per mate. An
+# Registered local second mate homes, parsed by the one registry parser and handed to
+# the engine as one tab-separated "id, home" line per mate. An
 # unusable registry is handed over as its error, so a file outside this home is
 # refused rather than guessed about.
 # shellcheck source=bin/fm-secondmate-registry-lib.sh
@@ -149,9 +148,8 @@ if [ -e "$REGISTRY" ] || [ -L "$REGISTRY" ]; then
         SECONDMATES=""
         break
       fi
-      placement=local
-      [ "$SECONDMATE_REGISTRY_REMOTE" -eq 0 ] || placement=remote
-      SECONDMATES+="$SECONDMATE_REGISTRY_ID"$'\t'"$placement"$'\t'"$SECONDMATE_REGISTRY_HOST"$'\t'"$SECONDMATE_REGISTRY_HOME"$'\n'
+      [ "$SECONDMATE_REGISTRY_REMOTE" -eq 0 ] || continue
+      SECONDMATES+="$SECONDMATE_REGISTRY_ID"$'\t'"$SECONDMATE_REGISTRY_HOME"$'\n'
     done < "$REGISTRY"
   fi
 fi
