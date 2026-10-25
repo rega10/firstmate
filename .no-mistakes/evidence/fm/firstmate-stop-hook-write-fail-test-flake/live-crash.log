@@ -1,0 +1,13 @@
+Primary READY; real host 68140 owns watcher 68356
+Killed host 68140; retry host 68519
+Stop hook exited 2; watcher alive=True
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5RY5MARE76ZFRVNY0JA28KP/.l/bin/fm-claude-stop-autoarm.sh: line 474: 68140 Killed: 9                  FM_SUPERVISION_HOST_AUTOARM_GEN=$MY_GEN FM_SUPERVISION_HOST_OWNER_PID=$$ FM_SUPERVISION_HOST_PRIMARY=claude FM_GUARD_GRACE="$GRACE" "$SCRIPT_DIR/fm-supervision-host.sh" park > "${OUT:-/dev/null}" 2>&1
+/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M5RY5MARE76ZFRVNY0JA28KP/.l/bin/fm-claude-stop-autoarm.sh: line 474: 68519 Killed: 9                  FM_SUPERVISION_HOST_AUTOARM_GEN=$MY_GEN FM_SUPERVISION_HOST_OWNER_PID=$$ FM_SUPERVISION_HOST_PRIMARY=claude FM_GUARD_GRACE="$GRACE" "$SCRIPT_DIR/fm-supervision-host.sh" park > "${OUT:-/dev/null}" 2>&1
+firstmate watcher auto-arm FAILED - the Stop-owned automatic supervision mechanism is broken after 2 bounded attempts, and no live watcher with a fresh beacon was verified.
+The supervision host (docs/supervision-host.md) ran these cycles; its last one exited 137 without a wake.
+Do not launch a manual background arm from this notice; investigate the automatic Stop hook and watcher startup before ending blind.
+
+1792912910	start	gen=host-68140-1792912910	primary=claude
+1792912911	start	gen=host-68519-1792912910	primary=claude
+
+PASS crash

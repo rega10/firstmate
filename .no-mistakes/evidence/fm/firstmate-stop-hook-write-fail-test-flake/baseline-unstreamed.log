@@ -1,0 +1,23 @@
+not ok - fixture (unstreamed): the write failure must leave a healthy successor
+
+state/.supervision-host.log
+1792912430	start	gen=host-6262-1792912430	primary=claude
+1792912433	pass-through	attended	main-only	signal: /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-supervision-host.GjJnGm/hook-turns-main-only-write-fails-unstreamed/state/demo.status
+1792912434	pass-through	downtime-unrestored	signal: /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-supervision-host.GjJnGm/hook-turns-main-only-write-fails-unstreamed/state/demo.status
+1792912434	start	gen=host-9736-1792912434	primary=claude
+1792912434	take-over	arm=8979
+1792912466	pass-through	a close without a wake
+
+state/.claude-autoarm-epoch
+epoch=1 owner_pid=5860 outcome=failed updated_at=1792912466
+Sun Oct 25 02:13:50 2026     bash /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-supervision-host.GjJnGm/hook-turns-main-only-write-fails-unstreamed/bin/fm-claude-stop-autoarm.sh
+
+hook.err
+firstmate watcher auto-arm FAILED - the Stop-owned automatic supervision mechanism is broken after 2 bounded attempts, and no live watcher with a fresh beacon was verified.
+watcher: already running pid 9008
+watcher: FAILED - cycle ended without an actionable reason
+The supervision host (docs/supervision-host.md) ran these cycles; its last one exited 0 without a wake.
+Do not launch a manual background arm from this notice; investigate the automatic Stop hook and watcher startup before ending blind.
+
+hook.rc
+2
