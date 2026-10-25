@@ -310,10 +310,20 @@ test_successor_left_at_the_turn_survives_the_hook_process_group_teardown() {
 }
 
 # If the at-turn hand-back cannot publish downtime, the healthy successor
-# cannot turn that undelivered close into a silent Stop-hook success.
-test_claude_stop_hook_notifies_when_at_turn_downtime_write_fails() {
-  local home real_mktemp
-  home=$(make_primary_home hook-turns-main-only-write-fails)
+# cannot turn that undelivered close into a silent Stop-hook success. The host
+# streams the first cycle's status line on its own poll, so the close can land
+# before it (CI 2026-10-23): the failed hand-back then prints nothing at all,
+# and its exit status alone must keep the hook from retrying the host, which
+# would take over the successor and park with the close undelivered. Each
+# ordering is forced: "streamed" sends the wake only after the hook captured
+# the status line, and "unstreamed" blinds the host's readiness read.
+hook_captured_ready_line() {  # <home>
+  grep -Eqs '^watcher: (started|attached) ' "$1"/state/.claude-autoarm-output.*
+}
+
+assert_claude_stop_hook_notifies_when_at_turn_downtime_write_fails() {
+  local order=$1 home real_mktemp real_head
+  home=$(make_primary_home "hook-turns-main-only-write-fails-$order")
   turn_main_only_at_second_offer "$home" quiet
   real_mktemp=$(command -v mktemp)
   cat > "$home/fakebin/mktemp" <<SH
@@ -325,19 +335,48 @@ esac
 exec "$real_mktemp" "\$@"
 SH
   chmod +x "$home/fakebin/mktemp"
+  if [ "$order" = unstreamed ]; then
+    real_head=$(command -v head)
+    cat > "$home/fakebin/head" <<SH
+#!/usr/bin/env bash
+case "\$*" in *'/state/.supervision-host-arm.'*) exit 0 ;; esac
+exec "$real_head" "\$@"
+SH
+    chmod +x "$home/fakebin/head"
+  fi
   start_hook_session "$home"
   turn_end "$home"
-  wait_until 150 watcher_live "$home" || fail "hook write failure: no watcher started"
+  wait_until 150 watcher_live "$home" || fail "hook write failure ($order): no watcher started"
+  if [ "$order" = streamed ]; then
+    wait_until 150 hook_captured_ready_line "$home" \
+      || fail "hook write failure ($order): the host never streamed the first cycle's status line"
+  fi
   append_status "$home" 'step one'
-  wait_until 250 hook_exited "$home" || fail "hook write failure: the Stop hook did not finish"
-  [ "$(cat "$home/offer-count" 2>/dev/null)" -ge 2 ] || fail "fixture: the close did not turn main-only at its turn"
-  watcher_live "$home" || fail "fixture: the write failure must leave a healthy successor"
-  assert_re 'pass-through[[:space:]]+downtime-unrestored' "$home/state/.supervision-host.log" "fixture: downtime publication did not fail"
-  assert_re '^(pending|announced):handling:' "$home/state/.watcher-down" "fixture: the marker unexpectedly became downtime"
-  expect_code 2 "$(cat "$home/hook.rc")" "the Stop hook must notify main instead of dropping the close"
-  assert_grep 'firstmate watcher auto-arm FAILED' "$home/hook.err" "main must receive the failure notification"
-  assert_re 'outcome=failed ' "$home/state/.claude-autoarm-epoch" "the failure must be committed"
+  wait_until 250 hook_exited "$home" \
+    || fail "hook write failure ($order): the Stop hook did not finish: $(cat "$home/state/.supervision-host.log")"
+  expect_code 2 "$(cat "$home/offer-count" 2>/dev/null)" "fixture ($order): the close did not turn main-only at its turn"
+  watcher_live "$home" || fail "fixture ($order): the write failure must leave a healthy successor"
+  assert_re 'pass-through[[:space:]]+downtime-unrestored' "$home/state/.supervision-host.log" "fixture ($order): downtime publication did not fail"
+  assert_re '^(pending|announced):handling:' "$home/state/.watcher-down" "fixture ($order): the marker unexpectedly became downtime"
+  if [ "$order" = streamed ]; then
+    assert_re '^watcher: (started|attached) ' "$home/hook.err" "fixture ($order): the failure notice must carry the streamed status line"
+  else
+    assert_no_re '^watcher: (started|attached) ' "$home/hook.err" "fixture ($order): the host still streamed its status line"
+  fi
+  expect_code 1 "$(grep -c $'\tstart\t' "$home/state/.supervision-host.log")" "the failed hand-back ($order) must not retry the host"
+  expect_code 2 "$(cat "$home/hook.rc")" "the Stop hook must notify main instead of dropping the close ($order)"
+  assert_grep 'firstmate watcher auto-arm FAILED' "$home/hook.err" "main must receive the failure notification ($order)"
+  assert_re 'outcome=failed ' "$home/state/.claude-autoarm-epoch" "the failure must be committed ($order)"
+}
+
+test_claude_stop_hook_notifies_when_at_turn_downtime_write_fails() {
+  assert_claude_stop_hook_notifies_when_at_turn_downtime_write_fails streamed
   pass "host+hook: failed at-turn downtime write notifies main despite a healthy successor"
+}
+
+test_claude_stop_hook_notifies_when_at_turn_downtime_write_fails_before_the_status_line() {
+  assert_claude_stop_hook_notifies_when_at_turn_downtime_write_fails unstreamed
+  pass "host+hook: a failed at-turn hand-back that printed nothing notifies main instead of retrying the host"
 }
 
 # The successor a pass-through leaves closes while main's rewoken turn is still
@@ -556,6 +595,7 @@ test_claude_stop_hook_runs_the_host_without_the_file_and_off_opts_out
 test_claude_stop_hook_delivers_a_close_that_turns_main_only_at_its_turn
 test_successor_left_at_the_turn_survives_the_hook_process_group_teardown
 test_claude_stop_hook_notifies_when_at_turn_downtime_write_fails
+test_claude_stop_hook_notifies_when_at_turn_downtime_write_fails_before_the_status_line
 test_successor_close_during_main_turn_is_delivered_at_the_next_turn_end
 test_pass_through_successor_survives_the_hook_process_group_teardown
 test_next_park_takes_over_the_cycle_a_pass_through_left_for_main

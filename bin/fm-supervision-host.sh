@@ -28,12 +28,15 @@
 # lines. A "supervision-host:" line is a wake in its own right (the park
 # boundary prints nothing else); "supervision-host stood down: ..." means this
 # session or generation no longer owns supervision and the owner stands down
-# silently; an exit status above 128, or no output at all, means the host
-# itself died and the owner retries it. Any other close is judged exactly as
-# the arm's. --restart starts the first cycle with fm-watch-arm.sh --restart,
-# and an FM_WATCH_PREDECESSOR_ARM_PID the owner passes reaches that first
-# cycle only, for owners that start their own successor after every close
-# (OpenCode, omp).
+# silently; an exit status above 128, or no output at all with exit status 0,
+# means the host itself died and the owner retries it. Any other nonzero exit
+# status is the host's own failure and never means it died, even with no
+# output: a hand-back that could not restore downtime withholds its close, so
+# it prints nothing when the arm closed before its status line was streamed.
+# Any other close is judged exactly as the arm's. --restart starts the first
+# cycle with fm-watch-arm.sh --restart, and an FM_WATCH_PREDECESSOR_ARM_PID
+# the owner passes reaches that first cycle only, for owners that start their
+# own successor after every close (OpenCode, omp).
 #
 # THE LOOP. It owns watcher cycles through bin/fm-watch-arm.sh. The posture is
 # the away-posture record state/.afk-contract, read at every close and again

@@ -1450,6 +1450,9 @@ SH
       crash)
         printf 'kill -KILL "$$"\n'
         ;;
+      silent-failure)
+        printf 'exit 1\n'
+        ;;
     esac
     printf 'exit 0\n'
   } > "$dir/bin/fm-supervision-host.sh"
@@ -1666,6 +1669,26 @@ test_host_crash_is_retried_then_reported() {
   pass "auto-arm: a host that died without a close is retried, then reported as a failure"
 }
 
+# A failed hand-back withholds its close, so a host whose arm closed before it
+# streamed the first cycle's status line exits nonzero with no output at all.
+# That exit status is the host's own failure, not a death: retrying would start
+# a host that takes over the successor and parks with the close undelivered.
+test_host_silent_failure_is_reported_without_a_retry() {
+  local dir out status
+  dir=$(make_primary_dir "$TMP_ROOT/host-silent-failure")
+  mkdir -p "$dir/config"
+  rm -f "$dir/config/supervision-host-off"
+  : > "$dir/state/task.meta"
+  write_host_fixture "$dir" silent-failure
+  out=$(run_autoarm "$dir" 2>/dev/null); status=$?
+  expect_code 2 "$status" "a failed host hand-back with no output must notify"
+  [ "$(wc -l < "$dir/state/host-ran" | tr -d ' ')" -eq 1 ] || fail "a failed host hand-back with no output was retried"
+  assert_contains "$out" "auto-arm FAILED" "a failed host hand-back with no output must deliver the failure notice"
+  assert_contains "$out" "The supervision host (docs/supervision-host.md) ran these cycles; its last one exited 1 without a wake." \
+    "the failure notice must name the host and its exit"
+  pass "auto-arm: a failed host hand-back with no output is reported without a retry"
+}
+
 # A model running the hook by hand mid-turn (for example to read its help) is a
 # tool process under the lock-owning session with no Stop payload. Any argument
 # must print help or refuse before anything is armed, since the host or arm it
@@ -1773,6 +1796,7 @@ test_host_benign_rewake_refusal_opens_no_failure_episode
 test_host_lost_handback_notifies_once_per_episode
 test_host_lost_announced_handback_notifies_once_per_episode
 test_host_crash_is_retried_then_reported
+test_host_silent_failure_is_reported_without_a_retry
 test_arguments_never_arm
 test_fm_lock_status_still_works_with_shared_lib
 test_stands_down_only_on_pi_code_transcript_path
