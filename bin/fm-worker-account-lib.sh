@@ -173,15 +173,11 @@ fm_worker_account_pi_provider() {
 
 # fm_worker_account_login_name <USER|LOGNAME>
 # Prints the caller's value for that variable when set; otherwise the account's
-# login name from `id -un`, or the HOME basename only if `id -un` fails. The
+# login name from `id -un`, or empty if `id -un` fails. The
 # answer never depends on what the caller happens to export.
 fm_worker_account_login_name() {
-  local value=${!1:-} home=${HOME:-}
+  local value=${!1:-}
   [ -n "$value" ] || value=$(id -un 2>/dev/null) || value=
-  if [ -z "$value" ]; then
-    home=${home%/}
-    value=${home##*/}
-  fi
   printf '%s\n' "$value"
 }
 

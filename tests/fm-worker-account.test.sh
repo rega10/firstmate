@@ -428,7 +428,7 @@ scrubbed_check() {
 }
 
 test_check_answers_truly_for_a_scrubbed_caller() {
-  local out rc me
+  local out rc me harness
   me=$(id -un)
   new_check_case scrubbed-claude
   out=$(scrubbed_check claude); rc=$?
@@ -446,12 +446,15 @@ test_check_answers_truly_for_a_scrubbed_caller() {
   expect_code 0 "$rc" "a caller with its own names should pass: $out"
   assert_grep "USER=caller-user LOGNAME=caller-logname " "$CASE/seen" "the caller's own names should win over the derived one"
 
-  new_check_case id-fails
-  printf '#!/bin/sh\nexit 1\n' > "$CASE/stub/id"
-  chmod +x "$CASE/stub/id"
-  out=$(scrubbed_check claude); rc=$?
-  expect_code 0 "$rc" "a failed id lookup should fall back to the home directory name: $out"
-  assert_grep "USER=account-home LOGNAME=account-home " "$CASE/seen" "the fallback should be the home directory name"
+  for harness in claude pi; do
+    new_check_case "id-fails-$harness"
+    printf '#!/bin/sh\nprintf "invalid-login\\n"\nexit 1\n' > "$CASE/stub/id"
+    chmod +x "$CASE/stub/id"
+    out=$(scrubbed_check "$harness"); rc=$?
+    expect_code 1 "$rc" "a failed id lookup should leave the probe signed out: $out"
+    assert_contains "$out" "not signed in" "the probe should report the account refusal"
+    assert_grep "USER= LOGNAME=" "$CASE/seen" "a failed lookup must leave both names empty"
+  done
   pass "the sign-in check supplies USER and LOGNAME whatever the caller exports"
 }
 
