@@ -1,0 +1,89 @@
+
+SCENARIO: claude - scrubbed caller
+Real runner: /opt/homebrew/bin/claude
+Observed probe environment: {"ANTHROPIC_API_KEY": null, "CLAUDE_CODE_OAUTH_TOKEN": null, "CLAUDE_CONFIG_DIR": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root", "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/home", "LOGNAME": "rega1011", "OPENAI_API_KEY": null, "PI_CODING_AGENT_DIR": null, "TMPDIR": null, "USER": "rega1011"}
+Real runner response: {
+  "loggedIn": true,
+  "authMethod": "api_key_helper",
+  "apiProvider": "firstParty",
+  "analyticsDisabled": false,
+  "projectsDirectory": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root/projects",
+  "configDirectory": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root",
+  "apiKeySource": "apiKeyHelper"
+}
+Firstmate exit: 0
+Firstmate output: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root	/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root
+
+SCENARIO: claude - incorrect caller names
+Real runner: /opt/homebrew/bin/claude
+Observed probe environment: {"ANTHROPIC_API_KEY": null, "CLAUDE_CODE_OAUTH_TOKEN": null, "CLAUDE_CONFIG_DIR": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root", "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/home", "LOGNAME": "rega1011", "OPENAI_API_KEY": null, "PI_CODING_AGENT_DIR": null, "TMPDIR": null, "USER": "rega1011"}
+Real runner response: {
+  "loggedIn": true,
+  "authMethod": "api_key_helper",
+  "apiProvider": "firstParty",
+  "analyticsDisabled": false,
+  "projectsDirectory": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root/projects",
+  "configDirectory": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root",
+  "apiKeySource": "apiKeyHelper"
+}
+Firstmate exit: 0
+Firstmate output: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root	/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root
+
+SCENARIO: claude - empty root with ambient credentials
+Real runner: /opt/homebrew/bin/claude
+Observed probe environment: {"ANTHROPIC_API_KEY": null, "CLAUDE_CODE_OAUTH_TOKEN": null, "CLAUDE_CONFIG_DIR": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/empty", "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/home", "LOGNAME": "rega1011", "OPENAI_API_KEY": null, "PI_CODING_AGENT_DIR": null, "TMPDIR": null, "USER": "rega1011"}
+Real runner response: {
+  "loggedIn": false,
+  "authMethod": "none",
+  "apiProvider": "firstParty",
+  "analyticsDisabled": false,
+  "projectsDirectory": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/empty/projects",
+  "configDirectory": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/empty"
+}
+Firstmate exit: 1
+Firstmate output: error: config/claude-account pins Claude workers to /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/empty, which is not signed in (claude auth status); sign in with CLAUDE_CONFIG_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/empty claude, then /login, or change the pin
+
+SCENARIO: claude - failed identity lookup with caller names
+Real runner: /opt/homebrew/bin/claude
+Observed probe environment: {"ANTHROPIC_API_KEY": null, "CLAUDE_CODE_OAUTH_TOKEN": null, "CLAUDE_CONFIG_DIR": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root", "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/home", "LOGNAME": "", "OPENAI_API_KEY": null, "PI_CODING_AGENT_DIR": null, "TMPDIR": null, "USER": ""}
+Real runner response: {
+  "loggedIn": true,
+  "authMethod": "api_key_helper",
+  "apiProvider": "firstParty",
+  "analyticsDisabled": false,
+  "projectsDirectory": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root/projects",
+  "configDirectory": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root",
+  "apiKeySource": "apiKeyHelper"
+}
+Firstmate exit: 0
+Firstmate output: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root	/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/claude/root
+Required refusal: FAIL - Firstmate accepted the pin after id -un failed
+
+SCENARIO: pi - scrubbed caller
+Real runner: /Users/rega1011/.nvm/versions/node/v24.20.0/bin/pi
+Observed probe environment: {"ANTHROPIC_API_KEY": null, "CLAUDE_CODE_OAUTH_TOKEN": null, "CLAUDE_CONFIG_DIR": null, "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/home", "LOGNAME": "rega1011", "OPENAI_API_KEY": null, "PI_CODING_AGENT_DIR": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root", "TMPDIR": null, "USER": "rega1011"}
+Real runner response: {"status":"ready","provider":"openai","authType":"api_key"}
+Firstmate exit: 0
+Firstmate output: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root	/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root	openai
+
+SCENARIO: pi - incorrect caller names
+Real runner: /Users/rega1011/.nvm/versions/node/v24.20.0/bin/pi
+Observed probe environment: {"ANTHROPIC_API_KEY": null, "CLAUDE_CODE_OAUTH_TOKEN": null, "CLAUDE_CONFIG_DIR": null, "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/home", "LOGNAME": "rega1011", "OPENAI_API_KEY": null, "PI_CODING_AGENT_DIR": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root", "TMPDIR": null, "USER": "rega1011"}
+Real runner response: {"status":"ready","provider":"openai","authType":"api_key"}
+Firstmate exit: 0
+Firstmate output: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root	/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root	openai
+
+SCENARIO: pi - empty root with ambient credentials
+Real runner: /Users/rega1011/.nvm/versions/node/v24.20.0/bin/pi
+Observed probe environment: {"ANTHROPIC_API_KEY": null, "CLAUDE_CODE_OAUTH_TOKEN": null, "CLAUDE_CONFIG_DIR": null, "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/home", "LOGNAME": "rega1011", "OPENAI_API_KEY": null, "PI_CODING_AGENT_DIR": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/empty", "TMPDIR": null, "USER": "rega1011"}
+Real runner response: {"status":"not_ready","provider":"openai","reason":"credentials_not_configured"}
+Firstmate exit: 1
+Firstmate output: error: config/pi-account pins Pi workers to /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/empty, which is not signed in for provider 'openai' (not_ready credentials_not_configured); sign in with PI_CODING_AGENT_DIR=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/empty pi, then /login, or change the pin
+
+SCENARIO: pi - failed identity lookup with caller names
+Real runner: /Users/rega1011/.nvm/versions/node/v24.20.0/bin/pi
+Observed probe environment: {"ANTHROPIC_API_KEY": null, "CLAUDE_CODE_OAUTH_TOKEN": null, "CLAUDE_CONFIG_DIR": null, "HOME": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/home", "LOGNAME": "", "OPENAI_API_KEY": null, "PI_CODING_AGENT_DIR": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root", "TMPDIR": null, "USER": ""}
+Real runner response: {"status":"ready","provider":"openai","authType":"api_key"}
+Firstmate exit: 0
+Firstmate output: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root	/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6AVPYQX4TA829F2KK7P268C/.test-phase-tmp/real-account-checks/pi/root	openai
+Required refusal: FAIL - Firstmate accepted the pin after id -un failed
