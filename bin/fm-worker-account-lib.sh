@@ -35,9 +35,12 @@
 # leading CLAUDE_CONFIG_DIR or shed-credential assignment would override the
 # pin; a home with config/claude-account refuses such a command.
 #
-# The sign-in check asks the runner itself, with only HOME, PATH, TMPDIR,
-# USER, LOGNAME, and the selected root in its environment, so a credential
-# variable left in the caller cannot answer for a root that has no login:
+# The sign-in check asks the runner itself, with only HOME, PATH, TMPDIR when
+# set, USER, LOGNAME, and the selected root in its environment, so a credential
+# variable left in the caller cannot answer for a root that has no login. USER
+# and LOGNAME are always supplied, derived by fm_worker_account_login_name,
+# because Claude Code on macOS reports a signed-in root as
+# signed out without them and bin/fm-remote-job-worker.sh's children have none:
 #   Claude: `claude auth status`, which exits 0 only when signed in.
 #   Pi:     `pi auth check --provider <p> --json --no-refresh`; status "ready"
 #           passes. `pi auth check` loads no extensions, so it answers
@@ -47,9 +50,12 @@
 #           a root can authenticate; a row whose provider column is exactly
 #           <p> passes. --no-refresh keeps the check from rewriting a root's
 #           tokens while other workers use them.
+# An unavailable login name refuses before either runner is invoked.
 # A pinned Claude launch also unsets the environment credentials Claude ranks
 # above the root's stored login, so an ambient API key or token cannot outrank
-# the pin. Pi ranks a root's stored credentials above environment variables,
+# the pin, and supplies the same USER and LOGNAME, because a Herdr pane inherits
+# its server's birth environment, which is scrubbed when the remote job worker
+# started that server. Pi ranks a root's stored credentials above environment variables,
 # and the check refuses a provider the root has not stored, so a pinned Pi
 # launch unsets nothing.
 
@@ -166,15 +172,27 @@ fm_worker_account_pi_provider() {
   esac
 }
 
+# fm_worker_account_login_name
+# Prints the account's login name from `id -un`, or empty if `id -un` fails.
+fm_worker_account_login_name() {
+  local value
+  value=$(id -un 2>/dev/null) || value=
+  printf '%s\n' "$value"
+}
+
 # fm_worker_account_check <harness> <declared> <root> <executable> [<provider>]
 # Returns 0 only when the runner's own check says the selected root is signed
 # in for this launch; otherwise prints one error and returns 1.
 fm_worker_account_check() {
-  local harness=$1 declared=$2 root=$3 executable=$4 provider=${5:-} out verdict name
+  local harness=$1 declared=$2 root=$3 executable=$4 provider=${5:-} out verdict login_name
   local -a clean=(env -i "HOME=${HOME:-}" "PATH=${PATH:-}")
-  for name in TMPDIR USER LOGNAME; do
-    [ -z "${!name:-}" ] || clean+=("$name=${!name}")
-  done
+  [ -z "${TMPDIR:-}" ] || clean+=("TMPDIR=$TMPDIR")
+  login_name=$(fm_worker_account_login_name)
+  if [ -z "$login_name" ]; then
+    echo "error: cannot check pinned $harness account: id -un did not return a login name" >&2
+    return 1
+  fi
+  clean+=("USER=$login_name" "LOGNAME=$login_name")
   case "$harness" in
   claude)
     [ -z "$root" ] || clean+=("CLAUDE_CONFIG_DIR=$root")

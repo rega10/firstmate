@@ -33,6 +33,8 @@ if [ "\${1:-}" = auth ] && [ "\${2:-}" = status ]; then
 fi
 {
   printf 'CLAUDE_CONFIG_DIR=%s\n' "\${CLAUDE_CONFIG_DIR-unset}"
+  printf 'USER=%s\n' "\${USER-unset}"
+  printf 'LOGNAME=%s\n' "\${LOGNAME-unset}"
   printf 'ANTHROPIC_API_KEY=%s\n' "\${ANTHROPIC_API_KEY-unset}"
   printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "\${CLAUDE_CODE_OAUTH_TOKEN-unset}"
   printf 'CLAUDE_CODE_USE_BEDROCK=%s\n' "\${CLAUDE_CODE_USE_BEDROCK-unset}"
@@ -388,6 +390,119 @@ test_local_secondmate_reads_the_launching_home_pin() {
   pass "a local secondmate reads the launching home's pin and its own home's file is never inherited over"
 }
 
+# new_check_case <name> -> sets CASE CHECK_HOME CHECK_ROOT and two stub runners:
+# claude and pi answer signed in regardless of USER and LOGNAME, and record
+# what they received. Firstmate must enforce identity-lookup refusal itself.
+# A credential variable reaching the stub is recorded too.
+new_check_case() {
+  CASE="$TMP_ROOT/$1"
+  CHECK_HOME="$CASE/account-home"
+  CHECK_ROOT="$CASE/root"
+  mkdir -p "$CASE/stub" "$CHECK_HOME" "$CHECK_ROOT"
+  cat > "$CASE/stub/claude" <<SH
+#!/usr/bin/env bash
+printf 'USER=%s LOGNAME=%s API=%s OAUTH=%s ROOT=%s\\n' "\${USER-unset}" "\${LOGNAME-unset}" \\
+  "\${ANTHROPIC_API_KEY-unset}" "\${CLAUDE_CODE_OAUTH_TOKEN-unset}" "\${CLAUDE_CONFIG_DIR-unset}" > '$CASE/seen'
+exit 0
+SH
+  cat > "$CASE/stub/pi" <<SH
+#!/usr/bin/env bash
+printf 'USER=%s LOGNAME=%s\\n' "\${USER-unset}" "\${LOGNAME-unset}" > '$CASE/seen'
+printf '{"status":"ready"}\\n'
+SH
+  chmod +x "$CASE/stub/claude" "$CASE/stub/pi"
+}
+
+# scrubbed_check <harness> [VAR=value...]: run the real check from a caller whose
+# environment holds only HOME, PATH, and the named variables, as the remote job
+# worker's children do.
+scrubbed_check() {
+  local harness=$1
+  shift
+  # shellcheck disable=SC2016  # The inner shell expands these.
+  env -i HOME="$CHECK_HOME" PATH="$CASE/stub:$PATH" "$@" bash -c '
+    . "$0"
+    fm_worker_account_check "$@"
+  ' "$ROOT/bin/fm-worker-account-lib.sh" "$harness" "$CHECK_ROOT" "$CHECK_ROOT" "$CASE/stub/${harness}" openai 2>&1
+}
+
+test_check_answers_truly_for_a_scrubbed_caller() {
+  local out rc me harness
+  me=$(id -un)
+  new_check_case scrubbed-claude
+  out=$(scrubbed_check claude); rc=$?
+  expect_code 0 "$rc" "a scrubbed caller must still get the signed-in answer: $out"
+  assert_grep "USER=$me LOGNAME=$me " "$CASE/seen" "the probe should derive both names from the account"
+  assert_grep "ROOT=$CHECK_ROOT" "$CASE/seen" "the probe should still select the pinned root"
+
+  new_check_case scrubbed-pi
+  out=$(scrubbed_check pi); rc=$?
+  expect_code 0 "$rc" "the Pi check shares the same probe environment: $out"
+  assert_grep "USER=$me LOGNAME=$me" "$CASE/seen" "the Pi probe should derive both names from the account"
+
+  for harness in claude pi; do
+    new_check_case "caller-names-$harness"
+    out=$(scrubbed_check "$harness" USER=caller-user LOGNAME=caller-logname); rc=$?
+    expect_code 0 "$rc" "a caller with its own names should pass using the account's login: $out"
+    assert_grep "USER=$me LOGNAME=$me" "$CASE/seen" "the account's login should replace both caller names"
+  done
+
+  for harness in claude pi; do
+    new_check_case "id-fails-$harness"
+    printf '#!/bin/sh\nprintf "invalid-login\\n"\nexit 1\n' > "$CASE/stub/id"
+    chmod +x "$CASE/stub/id"
+    out=$(scrubbed_check "$harness"); rc=$?
+    expect_code 1 "$rc" "a failed id lookup must refuse even when the runner would accept empty names: $out"
+    assert_contains "$out" "id -un" "the refusal should identify the failed login lookup"
+    assert_absent "$CASE/seen" "a failed lookup must refuse before running the sign-in check"
+    out=$(scrubbed_check "$harness" USER=caller-user LOGNAME=caller-logname); rc=$?
+    expect_code 1 "$rc" "caller names must not bypass a failed id lookup: $out"
+    assert_contains "$out" "id -un" "the refusal should identify the failed login lookup despite supplied caller names"
+    assert_absent "$CASE/seen" "caller names must not let the runner bypass a failed lookup"
+  done
+  pass "the sign-in check supplies USER and LOGNAME whatever the caller exports"
+}
+
+test_check_still_withholds_caller_credentials() {
+  local out rc
+  new_check_case withheld
+  out=$(scrubbed_check claude ANTHROPIC_API_KEY=caller-key CLAUDE_CODE_OAUTH_TOKEN=caller-token); rc=$?
+  expect_code 0 "$rc" "the stub should accept the check without caller credentials: $out"
+  assert_grep "API=unset OAUTH=unset " "$CASE/seen" "a caller credential must not reach the sign-in check"
+  pass "a credential the caller exports is still not forwarded to the sign-in check"
+}
+
+test_pinned_claude_launch_supplies_login_names() {
+  local out rc me id caller
+  me=$(id -un)
+  for id in root ordinary; do
+    for caller in scrubbed supplied; do
+      new_case "login-names-$id-$caller" claude
+      if [ "$id" = root ]; then
+        signed_in_claude_root "$CASE/work"
+        printf '%s\n' "$CASE/work" > "$HOME_DIR/config/claude-account"
+      else
+        signed_in_claude_root "$HOME_DIR/user-home/.claude"
+        printf 'ordinary\n' > "$HOME_DIR/config/claude-account"
+      fi
+      out=$(
+        if [ "$caller" = scrubbed ]; then
+          unset USER LOGNAME
+        else
+          export USER=caller-user LOGNAME=caller-logname
+        fi
+        spawn_ship "acct-names-$id-$caller"
+      ); rc=$?
+      expect_code 0 "$rc" "a pinned spawn from a $caller caller should succeed: $out"
+      run_pane
+      assert_grep "USER=$me" "$CASE/claude-worker" "the agent should receive the account's login ($id pin, $caller caller)"
+      assert_grep "LOGNAME=$me" "$CASE/claude-worker" "both names should use the account's login ($id pin, $caller caller)"
+      assert_grep "ANTHROPIC_API_KEY=unset" "$CASE/claude-worker" "the launch should keep shedding credentials ($id pin)"
+    done
+  done
+  pass "a pinned Claude launch carries USER and LOGNAME into a pane born without them"
+}
+
 test_absent_pin_keeps_the_launch_unchanged
 test_claude_pin_selects_the_root_and_sheds_ambient_credentials
 test_claude_pin_refuses_a_signed_out_root_despite_an_ambient_login
@@ -401,5 +516,8 @@ test_raw_claude_command_receives_the_pin
 test_raw_claude_account_override_refuses_under_a_pin
 test_raw_claude_account_override_is_kept_without_a_pin
 test_local_secondmate_reads_the_launching_home_pin
+test_check_answers_truly_for_a_scrubbed_caller
+test_check_still_withholds_caller_credentials
+test_pinned_claude_launch_supplies_login_names
 
 echo "# all fm-worker-account tests passed"
