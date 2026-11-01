@@ -391,9 +391,9 @@ test_local_secondmate_reads_the_launching_home_pin() {
 }
 
 # new_check_case <name> -> sets CASE CHECK_HOME CHECK_ROOT and two stub runners:
-# claude and pi answer signed in only when USER and LOGNAME both reach them, and
-# record what they received. A credential variable reaching the stub is recorded
-# too, so the mirror case can prove it never arrives.
+# claude and pi answer signed in regardless of USER and LOGNAME, and record
+# what they received. Firstmate must enforce identity-lookup refusal itself.
+# A credential variable reaching the stub is recorded too.
 new_check_case() {
   CASE="$TMP_ROOT/$1"
   CHECK_HOME="$CASE/account-home"
@@ -403,12 +403,11 @@ new_check_case() {
 #!/usr/bin/env bash
 printf 'USER=%s LOGNAME=%s API=%s OAUTH=%s ROOT=%s\\n' "\${USER-unset}" "\${LOGNAME-unset}" \\
   "\${ANTHROPIC_API_KEY-unset}" "\${CLAUDE_CODE_OAUTH_TOKEN-unset}" "\${CLAUDE_CONFIG_DIR-unset}" > '$CASE/seen'
-[ -n "\${USER:-}" ] && [ -n "\${LOGNAME:-}" ]
+exit 0
 SH
   cat > "$CASE/stub/pi" <<SH
 #!/usr/bin/env bash
 printf 'USER=%s LOGNAME=%s\\n' "\${USER-unset}" "\${LOGNAME-unset}" > '$CASE/seen'
-[ -n "\${USER:-}" ] && [ -n "\${LOGNAME:-}" ] || exit 1
 printf '{"status":"ready"}\\n'
 SH
   chmod +x "$CASE/stub/claude" "$CASE/stub/pi"
@@ -453,13 +452,13 @@ test_check_answers_truly_for_a_scrubbed_caller() {
     printf '#!/bin/sh\nprintf "invalid-login\\n"\nexit 1\n' > "$CASE/stub/id"
     chmod +x "$CASE/stub/id"
     out=$(scrubbed_check "$harness"); rc=$?
-    expect_code 1 "$rc" "a failed id lookup should leave the probe signed out: $out"
-    assert_contains "$out" "not signed in" "the probe should report the account refusal"
-    assert_grep "USER= LOGNAME=" "$CASE/seen" "a failed lookup must leave both names empty"
+    expect_code 1 "$rc" "a failed id lookup must refuse even when the runner would accept empty names: $out"
+    assert_contains "$out" "id -un" "the refusal should identify the failed login lookup"
+    assert_absent "$CASE/seen" "a failed lookup must refuse before running the sign-in check"
     out=$(scrubbed_check "$harness" USER=caller-user LOGNAME=caller-logname); rc=$?
     expect_code 1 "$rc" "caller names must not bypass a failed id lookup: $out"
-    assert_contains "$out" "not signed in" "the probe should refuse despite supplied caller names"
-    assert_grep "USER= LOGNAME=" "$CASE/seen" "a failed lookup must ignore supplied caller names"
+    assert_contains "$out" "id -un" "the refusal should identify the failed login lookup despite supplied caller names"
+    assert_absent "$CASE/seen" "caller names must not let the runner bypass a failed lookup"
   done
   pass "the sign-in check supplies USER and LOGNAME whatever the caller exports"
 }
@@ -468,7 +467,7 @@ test_check_still_withholds_caller_credentials() {
   local out rc
   new_check_case withheld
   out=$(scrubbed_check claude ANTHROPIC_API_KEY=caller-key CLAUDE_CODE_OAUTH_TOKEN=caller-token); rc=$?
-  expect_code 0 "$rc" "the stub signs in on the login names alone: $out"
+  expect_code 0 "$rc" "the stub should accept the check without caller credentials: $out"
   assert_grep "API=unset OAUTH=unset " "$CASE/seen" "a caller credential must not reach the sign-in check"
   pass "a credential the caller exports is still not forwarded to the sign-in check"
 }

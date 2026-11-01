@@ -50,6 +50,7 @@
 #           a root can authenticate; a row whose provider column is exactly
 #           <p> passes. --no-refresh keeps the check from rewriting a root's
 #           tokens while other workers use them.
+# An unavailable login name refuses before either runner is invoked.
 # A pinned Claude launch also unsets the environment credentials Claude ranks
 # above the root's stored login, so an ambient API key or token cannot outrank
 # the pin, and supplies the same USER and LOGNAME, because a Herdr pane inherits
@@ -187,6 +188,10 @@ fm_worker_account_check() {
   local -a clean=(env -i "HOME=${HOME:-}" "PATH=${PATH:-}")
   [ -z "${TMPDIR:-}" ] || clean+=("TMPDIR=$TMPDIR")
   login_name=$(fm_worker_account_login_name)
+  if [ -z "$login_name" ]; then
+    echo "error: cannot check pinned $harness account: id -un did not return a login name" >&2
+    return 1
+  fi
   clean+=("USER=$login_name" "LOGNAME=$login_name")
   case "$harness" in
   claude)

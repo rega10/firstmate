@@ -33,6 +33,28 @@ mkdir -p "$HOME"
 unset CLAUDE_CONFIG_DIR PI_CODING_AGENT_DIR ANTHROPIC_API_KEY OPENAI_API_KEY FM_LIVE_EXT_KEY
 CHECKED=
 
+# A signed-in runner may accept empty USER and LOGNAME, so Firstmate must
+# refuse a failed identity lookup before trusting the runner's sign-in answer.
+assert_failed_login_refuses() {
+  local harness=$1 root=$2 exe=$3 config out rc
+  config="$TMP_ROOT/$harness-config"
+  mkdir -p "$config" "$TMP_ROOT/failed-id"
+  case "$harness" in
+    claude) printf '%s\n' "$root" > "$config/claude-account" ;;
+    *) printf '%s\nopenai\n' "$root" > "$config/pi-account" ;;
+  esac
+  fm_worker_account_select "$harness" "$config" openai/gpt-5.5 "$exe" >/dev/null ||
+    fail "$harness: the authenticated root must pass before testing identity lookup failure"
+  printf '#!/bin/sh\nprintf "invalid-login\\n"\nexit 1\n' > "$TMP_ROOT/failed-id/id"
+  chmod +x "$TMP_ROOT/failed-id/id"
+  # shellcheck disable=SC2016  # The inner shell expands these.
+  out=$(env -i HOME="$HOME" PATH="$TMP_ROOT/failed-id:$PATH" USER=caller-user LOGNAME=caller-logname \
+    bash -c '. "$1"; fm_worker_account_select "$2" "$3" openai/gpt-5.5 "$4"' \
+    bash "$ROOT/bin/fm-worker-account-lib.sh" "$harness" "$config" "$exe" 2>&1); rc=$?
+  expect_code 1 "$rc" "$harness: failed identity lookup must refuse an authenticated root despite caller names: $out"
+  assert_contains "$out" "id -un" "$harness: the refusal must identify the failed identity lookup"
+}
+
 claude_live_cases() {
   local version empty helper
   version=$(claude --version 2>/dev/null | head -1)
@@ -49,6 +71,7 @@ claude_live_cases() {
   fi
   fm_worker_account_check claude "$helper" "$helper" claude ||
     fail "claude $version: the pin check refused a root whose apiKeyHelper signs it in"
+  assert_failed_login_refuses claude "$helper" claude
   pass "claude $version: the pin check accepts a signed-in root and refuses an empty one despite an ambient API key"
   CHECKED="$CHECKED claude"
 }
@@ -93,6 +116,7 @@ pi_live_cases() {
   fi
   fm_worker_account_check "$exe" "$stored" "$stored" "$exe" openai ||
     fail "$exe $version: the pin check refused a root holding a stored API key for its provider"
+  assert_failed_login_refuses "$exe" "$stored" "$exe"
 
   out=$(env -i HOME="$HOME" PATH="$PATH" PI_CODING_AGENT_DIR="$ext" \
     "$exe" auth check --provider fm-live-ext --json --no-refresh 2>/dev/null </dev/null)

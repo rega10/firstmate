@@ -674,6 +674,7 @@ None of these three runs ever answered its dialog (Escape only, never Enter), so
 `tests/fm-worker-account-live-e2e.test.sh` asks the real installed runners about synthetic roots that need no login and no network, under a throwaway `HOME`.
 A Claude root whose `settings.json` names an `apiKeyHelper` reports `loggedIn: true`, a Pi root holding a stored API key reports `ready`, and a provider registered by an extension in the Pi root's `extensions/` answers `pi auth check` with `not_ready`/`provider_not_found` while `pi --list-models` lists it.
 Each refusal is paired with the divergence it depends on: the same runner, given `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or the extension's key variable, answers signed in for the empty root, so the refusal proves the check's cleared environment.
+The guard also proves each authenticated root passes selection, then requires selection to refuse when `id -un` fails despite supplied caller names.
 Replacing `env -i` with `env` in the check makes the guard fail on the Claude refusal.
 
 Verified 2026-11-01 on Claude Code 2.1.316 and pi 0.87.1 on macOS 26.6.2 (Darwin 25.6.0); pi-signed was not installed.
@@ -701,7 +702,7 @@ Measured 2026-11-01 on a macOS remote host with Claude Code 2.1.316, running `cl
 | The same plus `TMPDIR` or `SHELL` | `loggedIn: true` |
 | Full environment | `loggedIn: true` |
 
-`tests/fm-worker-account.test.sh` pins the supplied environment with a stub runner that signs in only when both variables arrive.
+`tests/fm-worker-account.test.sh` asserts the supplied environment recorded by stub runners and requires identity-lookup failures to refuse before invoking them.
 
 ## Secondmate busy contract
 
