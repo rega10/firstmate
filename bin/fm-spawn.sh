@@ -5746,13 +5746,16 @@ esac
 # A home's worker account pin replaces that forwarding: the launch names the
 # pinned root (or unsets the variable for the ordinary Claude account) and
 # sheds the environment credentials Claude ranks above the root's login.
+# It also names USER and LOGNAME (bin/fm-worker-account-lib.sh header). They
+# follow every env -u because env stops reading options at its first assignment.
 if [ -n "$WORKER_ACCOUNT" ]; then
   case "$HARNESS" in
   claude)
+    WORKER_ACCOUNT_LOGIN="USER=$(shell_quote "$(fm_worker_account_login_name USER)") LOGNAME=$(shell_quote "$(fm_worker_account_login_name LOGNAME)")"
     if [ -n "$WORKER_ACCOUNT_ROOT" ]; then
-      LAUNCH="$(fm_worker_account_claude_shed) CLAUDE_CONFIG_DIR=$(shell_quote "$WORKER_ACCOUNT_ROOT") $LAUNCH"
+      LAUNCH="$(fm_worker_account_claude_shed) $WORKER_ACCOUNT_LOGIN CLAUDE_CONFIG_DIR=$(shell_quote "$WORKER_ACCOUNT_ROOT") $LAUNCH"
     else
-      LAUNCH="$(fm_worker_account_claude_shed) -u CLAUDE_CONFIG_DIR $LAUNCH"
+      LAUNCH="$(fm_worker_account_claude_shed) -u CLAUDE_CONFIG_DIR $WORKER_ACCOUNT_LOGIN $LAUNCH"
     fi
     ;;
   pi | pi-signed)

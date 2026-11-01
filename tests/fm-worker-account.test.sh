@@ -33,6 +33,8 @@ if [ "\${1:-}" = auth ] && [ "\${2:-}" = status ]; then
 fi
 {
   printf 'CLAUDE_CONFIG_DIR=%s\n' "\${CLAUDE_CONFIG_DIR-unset}"
+  printf 'USER=%s\n' "\${USER-unset}"
+  printf 'LOGNAME=%s\n' "\${LOGNAME-unset}"
   printf 'ANTHROPIC_API_KEY=%s\n' "\${ANTHROPIC_API_KEY-unset}"
   printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "\${CLAUDE_CODE_OAUTH_TOKEN-unset}"
   printf 'CLAUDE_CODE_USE_BEDROCK=%s\n' "\${CLAUDE_CODE_USE_BEDROCK-unset}"
@@ -388,6 +390,102 @@ test_local_secondmate_reads_the_launching_home_pin() {
   pass "a local secondmate reads the launching home's pin and its own home's file is never inherited over"
 }
 
+# new_check_case <name> -> sets CASE CHECK_HOME CHECK_ROOT and two stub runners:
+# claude and pi answer signed in only when USER and LOGNAME both reach them, and
+# record what they received. A credential variable reaching the stub is recorded
+# too, so the mirror case can prove it never arrives.
+new_check_case() {
+  CASE="$TMP_ROOT/$1"
+  CHECK_HOME="$CASE/account-home"
+  CHECK_ROOT="$CASE/root"
+  mkdir -p "$CASE/stub" "$CHECK_HOME" "$CHECK_ROOT"
+  cat > "$CASE/stub/claude" <<SH
+#!/usr/bin/env bash
+printf 'USER=%s LOGNAME=%s API=%s OAUTH=%s ROOT=%s\\n' "\${USER-unset}" "\${LOGNAME-unset}" \\
+  "\${ANTHROPIC_API_KEY-unset}" "\${CLAUDE_CODE_OAUTH_TOKEN-unset}" "\${CLAUDE_CONFIG_DIR-unset}" > '$CASE/seen'
+[ -n "\${USER:-}" ] && [ -n "\${LOGNAME:-}" ]
+SH
+  cat > "$CASE/stub/pi" <<SH
+#!/usr/bin/env bash
+printf 'USER=%s LOGNAME=%s\\n' "\${USER-unset}" "\${LOGNAME-unset}" > '$CASE/seen'
+[ -n "\${USER:-}" ] && [ -n "\${LOGNAME:-}" ] || exit 1
+printf '{"status":"ready"}\\n'
+SH
+  chmod +x "$CASE/stub/claude" "$CASE/stub/pi"
+}
+
+# scrubbed_check <harness> [VAR=value...]: run the real check from a caller whose
+# environment holds only HOME, PATH, and the named variables, as the remote job
+# worker's children do.
+scrubbed_check() {
+  local harness=$1
+  shift
+  # shellcheck disable=SC2016  # The inner shell expands these.
+  env -i HOME="$CHECK_HOME" PATH="$CASE/stub:$PATH" "$@" bash -c '
+    . "$0"
+    fm_worker_account_check "$@"
+  ' "$ROOT/bin/fm-worker-account-lib.sh" "$harness" "$CHECK_ROOT" "$CHECK_ROOT" "$CASE/stub/${harness}" openai 2>&1
+}
+
+test_check_answers_truly_for_a_scrubbed_caller() {
+  local out rc me
+  me=$(id -un)
+  new_check_case scrubbed-claude
+  out=$(scrubbed_check claude); rc=$?
+  expect_code 0 "$rc" "a scrubbed caller must still get the signed-in answer: $out"
+  assert_grep "USER=$me LOGNAME=$me " "$CASE/seen" "the probe should derive both names from the account"
+  assert_grep "ROOT=$CHECK_ROOT" "$CASE/seen" "the probe should still select the pinned root"
+
+  new_check_case scrubbed-pi
+  out=$(scrubbed_check pi); rc=$?
+  expect_code 0 "$rc" "the Pi check shares the same probe environment: $out"
+  assert_grep "USER=$me LOGNAME=$me" "$CASE/seen" "the Pi probe should derive both names from the account"
+
+  new_check_case caller-names
+  out=$(scrubbed_check claude USER=caller-user LOGNAME=caller-logname); rc=$?
+  expect_code 0 "$rc" "a caller with its own names should pass: $out"
+  assert_grep "USER=caller-user LOGNAME=caller-logname " "$CASE/seen" "the caller's own names should win over the derived one"
+
+  new_check_case id-fails
+  printf '#!/bin/sh\nexit 1\n' > "$CASE/stub/id"
+  chmod +x "$CASE/stub/id"
+  out=$(scrubbed_check claude); rc=$?
+  expect_code 0 "$rc" "a failed id lookup should fall back to the home directory name: $out"
+  assert_grep "USER=account-home LOGNAME=account-home " "$CASE/seen" "the fallback should be the home directory name"
+  pass "the sign-in check supplies USER and LOGNAME whatever the caller exports"
+}
+
+test_check_still_withholds_caller_credentials() {
+  local out rc
+  new_check_case withheld
+  out=$(scrubbed_check claude ANTHROPIC_API_KEY=caller-key CLAUDE_CODE_OAUTH_TOKEN=caller-token); rc=$?
+  expect_code 0 "$rc" "the stub signs in on the login names alone: $out"
+  assert_grep "API=unset OAUTH=unset " "$CASE/seen" "a caller credential must not reach the sign-in check"
+  pass "a credential the caller exports is still not forwarded to the sign-in check"
+}
+
+test_pinned_claude_launch_supplies_login_names() {
+  local out rc me id
+  me=$(id -un)
+  for id in root ordinary; do
+    new_case "login-names-$id" claude
+    if [ "$id" = root ]; then
+      signed_in_claude_root "$CASE/work"
+      printf '%s\n' "$CASE/work" > "$HOME_DIR/config/claude-account"
+    else
+      signed_in_claude_root "$HOME_DIR/user-home/.claude"
+      printf 'ordinary\n' > "$HOME_DIR/config/claude-account"
+    fi
+    out=$(unset USER LOGNAME; spawn_ship "acct-names-$id"); rc=$?
+    expect_code 0 "$rc" "a pinned spawn from a scrubbed caller should succeed: $out"
+    run_pane
+    assert_grep "USER=$me" "$CASE/claude-worker" "a pane without USER should still give the agent one ($id pin)"
+    assert_grep "LOGNAME=$me" "$CASE/claude-worker" "a pane without LOGNAME should still give the agent one ($id pin)"
+    assert_grep "ANTHROPIC_API_KEY=unset" "$CASE/claude-worker" "the launch should keep shedding credentials ($id pin)"
+  done
+  pass "a pinned Claude launch carries USER and LOGNAME into a pane born without them"
+}
+
 test_absent_pin_keeps_the_launch_unchanged
 test_claude_pin_selects_the_root_and_sheds_ambient_credentials
 test_claude_pin_refuses_a_signed_out_root_despite_an_ambient_login
@@ -401,5 +499,8 @@ test_raw_claude_command_receives_the_pin
 test_raw_claude_account_override_refuses_under_a_pin
 test_raw_claude_account_override_is_kept_without_a_pin
 test_local_secondmate_reads_the_launching_home_pin
+test_check_answers_truly_for_a_scrubbed_caller
+test_check_still_withholds_caller_credentials
+test_pinned_claude_launch_supplies_login_names
 
 echo "# all fm-worker-account tests passed"

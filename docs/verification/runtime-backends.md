@@ -676,20 +676,32 @@ A Claude root whose `settings.json` names an `apiKeyHelper` reports `loggedIn: t
 Each refusal is paired with the divergence it depends on: the same runner, given `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or the extension's key variable, answers signed in for the empty root, so the refusal proves the check's cleared environment.
 Replacing `env -i` with `env` in the check makes the guard fail on the Claude refusal.
 
-Verified 2026-09-22 on Claude Code 2.1.278 and pi 0.86.1 on Linux; pi-signed was not installed.
+Verified 2026-11-01 on Claude Code 2.1.316 and pi 0.87.1 on macOS 26.6.2 (Darwin 25.6.0); pi-signed was not installed.
 
 ```sh
 bash tests/fm-worker-account-live-e2e.test.sh
 ```
 
 ```
-ok - claude 2.1.278 (Claude Code): the pin check accepts a signed-in root and refuses an empty one despite an ambient API key
-ok - pi 0.86.1: the pin check reads auth check and the model listing, and refuses what only an ambient credential signs in
+ok - claude 2.1.316 (Claude Code): the pin check accepts a signed-in root and refuses an empty one despite an ambient API key
+ok - pi 0.87.1: the pin check reads auth check and the model listing, and refuses what only an ambient credential signs in
 skip-runner: pi-signed is not installed, so its pin check was not exercised
 # worker account live guard checked: claude pi
 ```
 
 The guard submits no prompt and spends no tokens, so it runs by default wherever a runner is installed; rerun it after every Claude or Pi upgrade.
+
+Its synthetic roots need no keychain, so it cannot observe the macOS login-name sensitivity behind the check's always-supplied `USER` and `LOGNAME`.
+Measured 2026-11-01 on a macOS remote host with Claude Code 2.1.316, running `claude auth status` for a keychain-signed-in root in the `gui/501` launchd domain:
+
+| Environment | Result |
+| --- | --- |
+| `env -i HOME PATH CLAUDE_CONFIG_DIR` | `loggedIn: false` |
+| `env -i HOME PATH USER LOGNAME CLAUDE_CONFIG_DIR` | `loggedIn: true` |
+| The same plus `TMPDIR` or `SHELL` | `loggedIn: true` |
+| Full environment | `loggedIn: true` |
+
+`tests/fm-worker-account.test.sh` pins the supplied environment with a stub runner that signs in only when both variables arrive.
 
 ## Secondmate busy contract
 
