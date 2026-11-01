@@ -441,10 +441,12 @@ test_check_answers_truly_for_a_scrubbed_caller() {
   expect_code 0 "$rc" "the Pi check shares the same probe environment: $out"
   assert_grep "USER=$me LOGNAME=$me" "$CASE/seen" "the Pi probe should derive both names from the account"
 
-  new_check_case caller-names
-  out=$(scrubbed_check claude USER=caller-user LOGNAME=caller-logname); rc=$?
-  expect_code 0 "$rc" "a caller with its own names should pass: $out"
-  assert_grep "USER=caller-user LOGNAME=caller-logname " "$CASE/seen" "the caller's own names should win over the derived one"
+  for harness in claude pi; do
+    new_check_case "caller-names-$harness"
+    out=$(scrubbed_check "$harness" USER=caller-user LOGNAME=caller-logname); rc=$?
+    expect_code 0 "$rc" "a caller with its own names should pass using the account's login: $out"
+    assert_grep "USER=$me LOGNAME=$me" "$CASE/seen" "the account's login should replace both caller names"
+  done
 
   for harness in claude pi; do
     new_check_case "id-fails-$harness"
@@ -454,6 +456,10 @@ test_check_answers_truly_for_a_scrubbed_caller() {
     expect_code 1 "$rc" "a failed id lookup should leave the probe signed out: $out"
     assert_contains "$out" "not signed in" "the probe should report the account refusal"
     assert_grep "USER= LOGNAME=" "$CASE/seen" "a failed lookup must leave both names empty"
+    out=$(scrubbed_check "$harness" USER=caller-user LOGNAME=caller-logname); rc=$?
+    expect_code 1 "$rc" "caller names must not bypass a failed id lookup: $out"
+    assert_contains "$out" "not signed in" "the probe should refuse despite supplied caller names"
+    assert_grep "USER= LOGNAME=" "$CASE/seen" "a failed lookup must ignore supplied caller names"
   done
   pass "the sign-in check supplies USER and LOGNAME whatever the caller exports"
 }
@@ -468,23 +474,32 @@ test_check_still_withholds_caller_credentials() {
 }
 
 test_pinned_claude_launch_supplies_login_names() {
-  local out rc me id
+  local out rc me id caller
   me=$(id -un)
   for id in root ordinary; do
-    new_case "login-names-$id" claude
-    if [ "$id" = root ]; then
-      signed_in_claude_root "$CASE/work"
-      printf '%s\n' "$CASE/work" > "$HOME_DIR/config/claude-account"
-    else
-      signed_in_claude_root "$HOME_DIR/user-home/.claude"
-      printf 'ordinary\n' > "$HOME_DIR/config/claude-account"
-    fi
-    out=$(unset USER LOGNAME; spawn_ship "acct-names-$id"); rc=$?
-    expect_code 0 "$rc" "a pinned spawn from a scrubbed caller should succeed: $out"
-    run_pane
-    assert_grep "USER=$me" "$CASE/claude-worker" "a pane without USER should still give the agent one ($id pin)"
-    assert_grep "LOGNAME=$me" "$CASE/claude-worker" "a pane without LOGNAME should still give the agent one ($id pin)"
-    assert_grep "ANTHROPIC_API_KEY=unset" "$CASE/claude-worker" "the launch should keep shedding credentials ($id pin)"
+    for caller in scrubbed supplied; do
+      new_case "login-names-$id-$caller" claude
+      if [ "$id" = root ]; then
+        signed_in_claude_root "$CASE/work"
+        printf '%s\n' "$CASE/work" > "$HOME_DIR/config/claude-account"
+      else
+        signed_in_claude_root "$HOME_DIR/user-home/.claude"
+        printf 'ordinary\n' > "$HOME_DIR/config/claude-account"
+      fi
+      out=$(
+        if [ "$caller" = scrubbed ]; then
+          unset USER LOGNAME
+        else
+          export USER=caller-user LOGNAME=caller-logname
+        fi
+        spawn_ship "acct-names-$id-$caller"
+      ); rc=$?
+      expect_code 0 "$rc" "a pinned spawn from a $caller caller should succeed: $out"
+      run_pane
+      assert_grep "USER=$me" "$CASE/claude-worker" "the agent should receive the account's login ($id pin, $caller caller)"
+      assert_grep "LOGNAME=$me" "$CASE/claude-worker" "both names should use the account's login ($id pin, $caller caller)"
+      assert_grep "ANTHROPIC_API_KEY=unset" "$CASE/claude-worker" "the launch should keep shedding credentials ($id pin)"
+    done
   done
   pass "a pinned Claude launch carries USER and LOGNAME into a pane born without them"
 }

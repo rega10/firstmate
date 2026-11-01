@@ -5751,11 +5751,11 @@ esac
 if [ -n "$WORKER_ACCOUNT" ]; then
   case "$HARNESS" in
   claude)
-    WORKER_ACCOUNT_LOGIN="USER=$(shell_quote "$(fm_worker_account_login_name USER)") LOGNAME=$(shell_quote "$(fm_worker_account_login_name LOGNAME)")"
+    WORKER_ACCOUNT_LOGIN=$(shell_quote "$(fm_worker_account_login_name)")
     if [ -n "$WORKER_ACCOUNT_ROOT" ]; then
-      LAUNCH="$(fm_worker_account_claude_shed) $WORKER_ACCOUNT_LOGIN CLAUDE_CONFIG_DIR=$(shell_quote "$WORKER_ACCOUNT_ROOT") $LAUNCH"
+      LAUNCH="$(fm_worker_account_claude_shed) USER=$WORKER_ACCOUNT_LOGIN LOGNAME=$WORKER_ACCOUNT_LOGIN CLAUDE_CONFIG_DIR=$(shell_quote "$WORKER_ACCOUNT_ROOT") $LAUNCH"
     else
-      LAUNCH="$(fm_worker_account_claude_shed) -u CLAUDE_CONFIG_DIR $WORKER_ACCOUNT_LOGIN $LAUNCH"
+      LAUNCH="$(fm_worker_account_claude_shed) -u CLAUDE_CONFIG_DIR USER=$WORKER_ACCOUNT_LOGIN LOGNAME=$WORKER_ACCOUNT_LOGIN $LAUNCH"
     fi
     ;;
   pi | pi-signed)

@@ -38,8 +38,8 @@
 # The sign-in check asks the runner itself, with only HOME, PATH, TMPDIR when
 # set, USER, LOGNAME, and the selected root in its environment, so a credential
 # variable left in the caller cannot answer for a root that has no login. USER
-# and LOGNAME are always supplied, derived by fm_worker_account_login_name when
-# the caller has none, because Claude Code on macOS reports a signed-in root as
+# and LOGNAME are always supplied, derived by fm_worker_account_login_name,
+# because Claude Code on macOS reports a signed-in root as
 # signed out without them and bin/fm-remote-job-worker.sh's children have none:
 #   Claude: `claude auth status`, which exits 0 only when signed in.
 #   Pi:     `pi auth check --provider <p> --json --no-refresh`; status "ready"
@@ -171,13 +171,11 @@ fm_worker_account_pi_provider() {
   esac
 }
 
-# fm_worker_account_login_name <USER|LOGNAME>
-# Prints the caller's value for that variable when set; otherwise the account's
-# login name from `id -un`, or empty if `id -un` fails. The
-# answer never depends on what the caller happens to export.
+# fm_worker_account_login_name
+# Prints the account's login name from `id -un`, or empty if `id -un` fails.
 fm_worker_account_login_name() {
-  local value=${!1:-}
-  [ -n "$value" ] || value=$(id -un 2>/dev/null) || value=
+  local value
+  value=$(id -un 2>/dev/null) || value=
   printf '%s\n' "$value"
 }
 
@@ -185,12 +183,11 @@ fm_worker_account_login_name() {
 # Returns 0 only when the runner's own check says the selected root is signed
 # in for this launch; otherwise prints one error and returns 1.
 fm_worker_account_check() {
-  local harness=$1 declared=$2 root=$3 executable=$4 provider=${5:-} out verdict name
+  local harness=$1 declared=$2 root=$3 executable=$4 provider=${5:-} out verdict login_name
   local -a clean=(env -i "HOME=${HOME:-}" "PATH=${PATH:-}")
   [ -z "${TMPDIR:-}" ] || clean+=("TMPDIR=$TMPDIR")
-  for name in USER LOGNAME; do
-    clean+=("$name=$(fm_worker_account_login_name "$name")")
-  done
+  login_name=$(fm_worker_account_login_name)
+  clean+=("USER=$login_name" "LOGNAME=$login_name")
   case "$harness" in
   claude)
     [ -z "$root" ] || clean+=("CLAUDE_CONFIG_DIR=$root")
