@@ -178,6 +178,8 @@ def pdf_tokens(value):
 
 
 def check_pdf_filter(dictionary, content):
+    """Return True for a FlateDecode stream and False for a stream with no
+    Filter, whose bytes are stored raw; refuse every other Filter."""
     tokens = pdf_tokens(dictionary)
     depth = 0
     positions = []
@@ -190,6 +192,8 @@ def check_pdf_filter(dictionary, content):
             positions.append(index + 1)
         elif token in (b'(', b')'):
             raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter cannot be resolved')
+    if not positions:
+        return False
     if len(positions) != 1 or positions[0] == len(tokens):
         raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter cannot be resolved')
     value = tokens[positions[0]:]
@@ -211,6 +215,7 @@ def check_pdf_filter(dictionary, content):
         value = value[:1]
     if value not in ([b'/FlateDecode'], [b'[', b'/FlateDecode', b']']):
         raise Refusal(EXIT_PREFLIGHT, 'PDF stream uses an unsupported Filter or filter chain')
+    return True
 
 
 def decoded_contents(real, content):
@@ -226,8 +231,10 @@ def decoded_contents(real, content):
                 content, re.DOTALL):
             if stream[1] is None:
                 raise Refusal(EXIT_PREFLIGHT, 'PDF stream Filter dictionary cannot be resolved')
-            check_pdf_filter(stream[1], content)
-            yield zlib.decompress(stream[2])
+            if check_pdf_filter(stream[1], content):
+                yield zlib.decompress(stream[2])
+            else:
+                yield stream[2]
 
 
 def secret_problems(given, real, content):
