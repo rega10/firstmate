@@ -1,0 +1,35 @@
+From: owner@example.test
+To: owner@example.test
+Subject: Document: compressed-only.pdf
+Date: Sat, 07 Nov 2026 16:33:47 -0600
+Message-ID: <179409082714.47218.16998848030344828423@1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============3645773930500216822=="
+
+--===============3645773930500216822==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Please find the file attached.
+compressed-only.pdf
+
+--===============3645773930500216822==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="compressed-only.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjcKJeLjz9MKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4K
+ZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9Db3VudCAxIC9LaWRzIFs0IDAgUl0gPj4K
+ZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL0ZvbnQgL1N1YnR5cGUgL1R5cGUxIC9CYXNlRm9udCAv
+SGVsdmV0aWNhID4+CmVuZG9iago0IDAgb2JqCjw8IC9UeXBlIC9QYWdlIC9QYXJlbnQgMiAwIFIg
+L01lZGlhQm94IFswIDAgNjEyIDc5Ml0gL1Jlc291cmNlcyA8PCAvRm9udCA8PCAvRjEgMyAwIFIg
+Pj4gPj4gL0NvbnRlbnRzIDUgMCBSID4+CmVuZG9iago1IDAgb2JqCjw8IC9MZW5ndGggNjEgL0Zp
+bHRlciAvRmxhdGVEZWNvZGUgPj4Kc3RyZWFtCniccwpR0HczVDC0UAhJUzAxUDAH4pAUBY0AFzeF
+lNSczLLUokqFssSczJTEksz8PE2FkCwF1xAuAI6mD5IKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAg
+NgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDA2NCAwMDAw
+MCBuIAowMDAwMDAwMTIxIDAwMDAwIG4gCjAwMDAwMDAxOTEgMDAwMDAgbiAKMDAwMDAwMDMxNyAw
+MDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDYgL1Jvb3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjQ0OQol
+JUVPRgo=
+
+--===============3645773930500216822==--
