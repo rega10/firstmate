@@ -1,0 +1,156 @@
+$ bin/fm-contacts.sh add --id self-test --name Disposable Owner --role Test owner --trust self --language en --email owner@example.invalid --added-by Disposable live validation fixture
+exit: 0
+{
+  "id": "self-test",
+  "name": "Disposable Owner",
+  "aliases": [],
+  "role": "Test owner",
+  "trust": "self",
+  "language": "en",
+  "preferred": [
+    "email"
+  ],
+  "email": "owner@example.invalid",
+  "telegram_chat_id": null,
+  "imessage": null,
+  "whatsapp": null,
+  "added": "2026-11-07",
+  "added_by": "Disposable live validation fixture"
+}
+
+$ .tmp-pdf-live/baseline-bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/mixed-126.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/mixed-126.pdf: PDF stream Filter cannot be resolved
+$ .tmp-pdf-live/baseline-bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/flate-only.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 0
+confirmation card (dry run, nothing sent)
+recipient: Disposable Owner - Test owner
+channel: email
+address: o***@example.invalid
+file: flate-only.pdf - 488 bytes
+delivery: attachment
+subject: Document: flate-only.pdf
+covering text: Please find the file attached.
+
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/raw-only.pdf --order-file .tmp-pdf-live/order.txt
+exit: 0
+sent: Disposable Owner email o***@example.invalid 1 file(s) 466 bytes
+
+SMTP received one byte-identical PDF attachment; SHA-256: 6b4eec0c9b384ad180427e7868d64c9cc9dcaf338b27c807be807ae3d2f594f4
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/raw-only.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 0
+confirmation card (dry run, nothing sent)
+recipient: Disposable Owner - Test owner
+channel: email
+address: o***@example.invalid
+file: raw-only.pdf - 466 bytes
+delivery: attachment
+subject: Document: raw-only.pdf
+covering text: Please find the file attached.
+
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/mixed-126.pdf --order-file .tmp-pdf-live/order.txt
+exit: 0
+sent: Disposable Owner email o***@example.invalid 1 file(s) 15744 bytes
+
+SMTP received one byte-identical PDF attachment; SHA-256: a10356f62e75e6a8511bd4fffdaa95c82081c48ebb0455ede0c6323249709494
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/mixed-126.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 0
+confirmation card (dry run, nothing sent)
+recipient: Disposable Owner - Test owner
+channel: email
+address: o***@example.invalid
+file: mixed-126.pdf - 15.4 KB (15744 bytes)
+delivery: attachment
+subject: Document: mixed-126.pdf
+covering text: Please find the file attached.
+
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/flate-only.pdf --order-file .tmp-pdf-live/order.txt
+exit: 0
+sent: Disposable Owner email o***@example.invalid 1 file(s) 488 bytes
+
+SMTP received one byte-identical PDF attachment; SHA-256: 0cc0ed20ba9d9b5f10f2f9b9f76decab451d8db87198ffb2efb0de8987a1ec56
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/flate-only.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 0
+confirmation card (dry run, nothing sent)
+recipient: Disposable Owner - Test owner
+channel: email
+address: o***@example.invalid
+file: flate-only.pdf - 488 bytes
+delivery: attachment
+subject: Document: flate-only.pdf
+covering text: Please find the file attached.
+
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/secret-last-raw.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/secret-last-raw.pdf: matches the secret pattern password=
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/secret-last-raw.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/secret-last-raw.pdf: matches the secret pattern password=
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/secret-last-flate.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/secret-last-flate.pdf: matches the secret pattern password=
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/secret-last-flate.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/secret-last-flate.pdf: matches the secret pattern password=
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/unsupported.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/unsupported.pdf: PDF stream uses an unsupported Filter or filter chain
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/unsupported.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/unsupported.pdf: PDF stream uses an unsupported Filter or filter chain
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/chain.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/chain.pdf: PDF stream uses an unsupported Filter or filter chain
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/chain.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/chain.pdf: PDF stream uses an unsupported Filter or filter chain
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/repeated.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/repeated.pdf: PDF stream Filter cannot be resolved
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/repeated.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/repeated.pdf: PDF stream Filter cannot be resolved
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/empty.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/empty.pdf: PDF stream Filter cannot be resolved
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/empty.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/empty.pdf: PDF stream Filter cannot be resolved
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/unresolved.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/unresolved.pdf: PDF stream Filter reference cannot be resolved
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/unresolved.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/unresolved.pdf: PDF stream Filter reference cannot be resolved
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/corrupt-flate.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/corrupt-flate.pdf: cannot decode document content for the secret scan
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/corrupt-flate.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/corrupt-flate.pdf: cannot decode document content for the secret scan
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/missing-dictionary.pdf --order-file .tmp-pdf-live/order.txt
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/missing-dictionary.pdf: PDF stream Filter dictionary cannot be resolved
+$ bin/fm-deliver.sh self-test .tmp-pdf-live/home/data/report/missing-dictionary.pdf --order-file .tmp-pdf-live/order.txt --dry-run
+exit: 5
+
+fm-deliver: preflight refused the send: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M6VZP0K7G7CG8H82RP0EXCDC/.tmp-pdf-live/home/data/report/missing-dictionary.pdf: PDF stream Filter dictionary cannot be resolved
+All previews sent nothing and wrote no log entries. All rejected sends logged refusal. No secret value appeared in output or logs.

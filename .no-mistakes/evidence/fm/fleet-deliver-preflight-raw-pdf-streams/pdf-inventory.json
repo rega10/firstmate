@@ -1,0 +1,16 @@
+[
+  {
+    "file": "mixed-126.pdf",
+    "streams": 126,
+    "flate_streams": 122,
+    "raw_streams": 4,
+    "sha256": "a10356f62e75e6a8511bd4fffdaa95c82081c48ebb0455ede0c6323249709494"
+  },
+  {
+    "file": "raw-only.pdf",
+    "streams": 1,
+    "flate_streams": 0,
+    "raw_streams": 1,
+    "sha256": "6b4eec0c9b384ad180427e7868d64c9cc9dcaf338b27c807be807ae3d2f594f4"
+  }
+]

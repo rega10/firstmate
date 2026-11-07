@@ -1,0 +1,32 @@
+From: sender@example.invalid
+To: owner@example.invalid
+Subject: Document: flate-only.pdf
+Date: Sat, 07 Nov 2026 15:51:09 -0600
+Message-ID: <179408826981.35489.8014444175163382643@1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============2705743818536644125=="
+
+--===============2705743818536644125==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Please find the file attached.
+flate-only.pdf
+
+--===============2705743818536644125==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="flate-only.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4K
+ZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4K
+ZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAg
+MCAzMDAgMzAwXSAvUmVzb3VyY2VzIDw8ID4+IC9Db250ZW50cyA0IDAgUiA+PgplbmRvYmoKNCAw
+IG9iago8PCAvTGVuZ3RoIDI5IC9GaWx0ZXIgL0ZsYXRlRGVjb2RlID4+CnN0cmVhbQp4nCtUMFQw
+AMKidAVDAxAyBaOiVIU0hUAAXA0GVgplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA1CjAwMDAwMDAw
+MDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMDY0IDAwMDAwIG4gCjAwMDAw
+MDAxMjEgMDAwMDAgbiAKMDAwMDAwMDIyNSAwMDAwMCBuIAp0cmFpbGVyCjw8IC9TaXplIDUgL1Jv
+b3QgMSAwIFIgPj4Kc3RhcnR4cmVmCjMyNQolJUVPRgo=
+
+--===============2705743818536644125==--

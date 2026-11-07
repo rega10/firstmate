@@ -1,0 +1,32 @@
+From: sender@example.invalid
+To: owner@example.invalid
+Subject: Document: raw-only.pdf
+Date: Sat, 07 Nov 2026 15:51:09 -0600
+Message-ID: <179408826950.34860.13127887503767137410@1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============1701224414270520228=="
+
+--===============1701224414270520228==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Please find the file attached.
+raw-only.pdf
+
+--===============1701224414270520228==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="raw-only.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4K
+ZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4K
+ZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAg
+MCAzMDAgMzAwXSAvUmVzb3VyY2VzIDw8ID4+IC9Db250ZW50cyA0IDAgUiA+PgplbmRvYmoKNCAw
+IG9iago8PCAvTGVuZ3RoIDI3ICA+PgpzdHJlYW0KcSAwIDAgMSByZyAwIDAgMTAgMTAgcmUgZiBR
+CmVuZHN0cmVhbQplbmRvYmoKeHJlZgowIDUKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE1
+IDAwMDAwIG4gCjAwMDAwMDAwNjQgMDAwMDAgbiAKMDAwMDAwMDEyMSAwMDAwMCBuIAowMDAwMDAw
+MjI1IDAwMDAwIG4gCnRyYWlsZXIKPDwgL1NpemUgNSAvUm9vdCAxIDAgUiA+PgpzdGFydHhyZWYK
+MzAzCiUlRU9GCg==
+
+--===============1701224414270520228==--

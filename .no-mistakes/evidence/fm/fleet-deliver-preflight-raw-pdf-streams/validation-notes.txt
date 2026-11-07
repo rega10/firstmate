@@ -1,0 +1,7 @@
+Validation used generated, well-formed PDFs with xref tables, including a representative file with 122 FlateDecode streams and four raw Form XObjects. The original Chrome-generated deliverable was not supplied. The real fm-deliver.sh, fm-deliver.py, fm-mail.sh, and fm-mail.py ran unchanged against a disposable home and loopback TLS SMTP service. The receiver checked byte-identical MIME attachments. No real contact, credentials, or shared mail service was used.
+
+The system Python 3.9.6 did not load the certificate from SSL_CERT_FILE. The initial SMTP attempt therefore failed certificate verification. A standalone CPython 3.12.16 installed only in .tmp-pdf-live loaded the disposable certificate. All live scenarios passed on the repeated run with certificate verification enabled. The targeted tests/fm-deliver.test.sh also passed on the system Python.
+
+Setup commands: openssl req -x509 -newkey rsa:2048 -nodes -keyout .tmp-pdf-live/key.pem -out .tmp-pdf-live/cert.pem -days 1 -subj /CN=localhost -addext subjectAltName=DNS:localhost; download the aarch64-apple-darwin CPython 3.12 install_only_stripped archive from the latest astral-sh/python-build-standalone release; extract into .tmp-pdf-live; run .tmp-pdf-live/python/bin/python3 with drive-pdf-delivery.py.
+
+The disposable SMTP service stopped. The disposable home, baseline engine copy, certificate, private key, downloaded interpreter, archive, and generated fixtures were removed from the worktree after evidence capture. No source files changed.
