@@ -1070,25 +1070,36 @@ filters = {
     'indirect-chain': (b'9 0 R', b'9 0 obj\n[/FlateDecode /FlateDecode]\nendobj\n'),
     'invalid-value': (b'null', b''),
     'missing-filter': (None, b''),
+    'repeated-filter': (b'/FlateDecode /Filter /FlateDecode', b''),
+    'empty-filter': (b'', b''),
+    'mixed-raw': (b'/FlateDecode', b''),
     'other-generation': (b'9 1 R', b'9 1 obj\n/FlateDecode\nendobj\n'),
     'nested-filter': (b'/ASCII85Decode /DecodeParms << /Filter /FlateDecode >>', b''),
 }
 for name, (filter_value, extra) in filters.items():
     for kind in ('safe', 'leak'):
-        payload = zlib.compress(b'password=LEAKEDVALUE' if kind == 'leak' else b'Safe document')
+        text = b'password=LEAKEDVALUE' if kind == 'leak' else b'Safe document'
+        # A stream with no Filter stores its bytes raw, as Chrome writes small SVG
+        # form XObjects; mixed-raw pairs a safe FlateDecode stream with a raw one.
+        payload = text if filter_value is None else zlib.compress(b'Safe document' if name == 'mixed-raw' else text)
         key = b'/Fil#74er' if name == 'escaped-name' else b'/Filter'
         field = b'' if filter_value is None else key + b' ' + filter_value
         document = (b'%%PDF-1.4\n1 0 obj\n<< /Length %d ' % len(payload) + field
-                    + b' >>\nstream\n' + payload + b'\nendstream\nendobj\n' + extra + b'%%EOF\n')
+                    + b' >>\nstream\n' + payload + b'\nendstream\nendobj\n' + extra)
+        if name == 'mixed-raw':
+            document += (b'2 0 obj\n<< /Type /XObject /Subtype /Form /BBox [0 0 10 10] /Length %d >>\nstream\n'
+                         % len(text) + text + b'\nendstream\nendobj\n')
+        document += b'%%EOF\n'
         (root / (kind + '-' + name + '.pdf')).write_bytes(document)
 PYPDF
   for representation in name array indirect-name indirect-array escaped-name escaped-indirect \
-    missing-object nested-reference indirect-array-entry other-filter chain indirect-chain invalid-value missing-filter other-generation nested-filter; do
+    missing-filter mixed-raw missing-object nested-reference indirect-array-entry other-filter chain indirect-chain \
+    invalid-value repeated-filter empty-filter other-generation nested-filter; do
     for kind in safe leak; do
       deliver "$home" maria-lopez "$home/data/report/$kind-$representation.pdf" --order-file "$words/order"
       rc=$?
       case "$representation" in
-        name|array|indirect-name|indirect-array|escaped-name|escaped-indirect)
+        name|array|indirect-name|indirect-array|escaped-name|escaped-indirect|missing-filter|mixed-raw)
           if [ "$kind" = safe ]; then
             expect_code 0 "$rc" "a safe PDF with $representation Filter"
             assert_present "$CAPTURE/argv" "a supported PDF reaches the mail plane"
@@ -1111,7 +1122,7 @@ PYPDF
   deliver "$home" maria-lopez "$home/data/report/safe-missing-object.pdf" --order-file "$words/order" --dry-run
   expect_code 5 "$?" "a preview also refuses unresolved PDF filters"
   assert_no_grep 'LEAKEDVALUE' "$home/data/outbound/sends.jsonl" "the log omits decoded secret bytes"
-  pass "fm-deliver: PDF filters resolve through the supported representations or refuse"
+  pass "fm-deliver: PDF streams are raw or resolve to FlateDecode, and every other Filter refuses"
 }
 
 test_link_mode_sends_links

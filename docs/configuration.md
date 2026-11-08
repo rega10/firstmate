@@ -1874,9 +1874,9 @@ Every check runs before any network call, every problem is named, and any proble
 - Secrets: the raw bytes of each file must not contain `-----BEGIN`, `ghp_`, `github_pat_`, `AKIA`, `password=`, `FM_MAIL_PASS`, `xoxb-` or `xoxp-`, or `sk-` followed by 20 or more word characters, case-sensitive.
   A match names the pattern and the file, never the matched bytes.
   The scan also checks every decoded ZIP member in DOCX and XLSX files.
-  PDF streams must have exactly one FlateDecode filter, specified as a direct name, an array containing that name, or a single-level reference (`N 0 R`) to a name or array object.
+  A PDF stream dictionary must have either no `/Filter` entry or exactly one FlateDecode filter, specified as a direct name, an array containing that name, or a single-level reference (`N 0 R`) to a name or array object.
   PDF names with hexadecimal escapes are decoded before comparison.
-  The scan inflates each supported stream with zlib; missing or unresolved filters, other filters, and filter chains refuse the file with a named preflight failure.
+  The scan inflates each FlateDecode stream with zlib and scans a stream with no `/Filter` as its raw bytes; repeated, empty, or unresolved filters, other filters, filter chains, and unparseable stream dictionaries refuse the file with a named preflight failure.
   A document decoding failure refuses the send.
   This scan is a backstop to firstmate reading each file in full, not a proof.
 
