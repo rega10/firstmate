@@ -1,0 +1,33 @@
+BASELINE REPRODUCED: pre-change public poll returned the three-line interruption immediately, exit 1.
+Before stop: {"ok": true, "app": "lavish-axi", "version": "0.1.96", "state_id": "ed9030f9b7e651e5", "state_dir": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/lavish", "hosts": ["127.0.0.1"], "requested_hosts": ["127.0.0.1"], "listeners": [{"key": "e4fb1cf29e2df519", "label": "agent-listener"}, {"key": "db34da86a490032a", "label": "agent-listener"}, {"key": "cae43c815babb44a", "label": "agent-listener"}, {"key": "ba80f247464881fa", "label": "agent-listener"}, {"key": "155354b5f5267092", "label": "agent-listener"}, {"key": "c9d89c29fb6b40ac", "label": "agent-listener"}, {"key": "40f6ec55952ddb1d", "label": "agent-listener"}, {"key": "11e3f8cc70d67ffe", "label": "agent-listener"}, {"key": "c25dbaad7e568109", "label": "agent-listener"}]}
+QUIET RECOVERY: all 9 real listeners reconnected; zero new wake rows and zero captured results after stop.
+After restart: {"ok": true, "app": "lavish-axi", "version": "0.1.96", "state_id": "ed9030f9b7e651e5", "state_dir": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/lavish", "hosts": ["127.0.0.1"], "requested_hosts": ["127.0.0.1"], "listeners": [{"key": "cae43c815babb44a", "label": "agent-listener"}, {"key": "db34da86a490032a", "label": "agent-listener"}, {"key": "e4fb1cf29e2df519", "label": "agent-listener"}, {"key": "ba80f247464881fa", "label": "agent-listener"}, {"key": "155354b5f5267092", "label": "agent-listener"}, {"key": "c9d89c29fb6b40ac", "label": "agent-listener"}, {"key": "40f6ec55952ddb1d", "label": "agent-listener"}, {"key": "11e3f8cc70d67ffe", "label": "agent-listener"}, {"key": "c25dbaad7e568109", "label": "agent-listener"}]}
+POST prompts e4fb1cf29e2df519 {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-0", "at": "2026-11-12T07:58:21.876Z"}], "ack_ids": [], "chat_revision": 1}
+POST prompts db34da86a490032a {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-1", "at": "2026-11-12T07:58:23.703Z"}], "ack_ids": [], "chat_revision": 1}
+POST prompts cae43c815babb44a {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-2", "at": "2026-11-12T07:58:25.320Z"}], "ack_ids": [], "chat_revision": 1}
+POST prompts ba80f247464881fa {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-3", "at": "2026-11-12T07:58:26.935Z"}], "ack_ids": [], "chat_revision": 1}
+POST prompts 155354b5f5267092 {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-4", "at": "2026-11-12T07:58:28.633Z"}], "ack_ids": [], "chat_revision": 1}
+POST prompts c9d89c29fb6b40ac {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-5", "at": "2026-11-12T07:58:30.368Z"}], "ack_ids": [], "chat_revision": 1}
+POST prompts 40f6ec55952ddb1d {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-6", "at": "2026-11-12T07:58:31.986Z"}], "ack_ids": [], "chat_revision": 1}
+POST prompts 11e3f8cc70d67ffe {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-7", "at": "2026-11-12T07:58:33.777Z"}], "ack_ids": [], "chat_revision": 1}
+POST prompts c25dbaad7e568109 {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-8", "at": "2026-11-12T07:58:35.416Z"}], "ack_ids": [], "chat_revision": 1}
+FEEDBACK DELIVERY: all 9 review messages captured once and announced; final Send & End feedback retained its terminal marker.
+POST prompts 1077dc0c297c5781 {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "release conflict holder", "at": "2026-11-12T07:58:41.219Z"}], "ack_ids": [], "chat_revision": 1}
+UNRELATED ERROR: real LISTENER_ACTIVE conflict captured and announced without quiet retry.
+Real server interruption 1 completed
+Real server interruption 2 completed
+Real server interruption 3 completed
+Real server interruption 4 completed
+Real server interruption 5 completed
+Real server interruption 6 completed
+Real server interruption 7 completed
+Real server interruption 8 completed
+Real server interruption 9 completed
+Real server interruption 10 completed
+Real server interruption 11 completed
+Real server interruption 12 completed
+Real server interruption 13 completed
+RETRY BOUND: interruption 13 published exact vendor bytes once after 21.39 seconds; interruptions 1-12 stayed quiet.
+ALL LIVE SCENARIOS PASSED
+Isolated state and server cleaned up.
+Persisted wake queue: 11 rows for 11 source/sequence pairs (9 feedback, 1 listener conflict, 1 exhausted interruption). Unhandled results may be reannounced.

@@ -1,0 +1,479 @@
+$ lavish-axi --version
+exit=0
+0.1.96
+
+Lavish version: 0.1.96
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/baseline.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/baseline.html
+  url: "http://127.0.0.1:56415/session/1a5266aa1c502011"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/baseline.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/baseline.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/baseline.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/baseline.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/baseline.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/baseline.html
+exit=0
+lavish-1a5266aa1c502011
+
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+BASELINE REPRODUCED: pre-change public poll returned the three-line interruption immediately, exit 1.
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html
+  url: "http://127.0.0.1:56415/session/e4fb1cf29e2df519"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html
+exit=0
+lavish-e4fb1cf29e2df519
+
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html
+  url: "http://127.0.0.1:56415/session/db34da86a490032a"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html
+exit=0
+lavish-db34da86a490032a
+
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html
+  url: "http://127.0.0.1:56415/session/cae43c815babb44a"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html
+exit=0
+lavish-cae43c815babb44a
+
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html
+  url: "http://127.0.0.1:56415/session/ba80f247464881fa"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html
+exit=0
+lavish-ba80f247464881fa
+
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html
+  url: "http://127.0.0.1:56415/session/155354b5f5267092"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html
+exit=0
+lavish-155354b5f5267092
+
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html
+  url: "http://127.0.0.1:56415/session/c9d89c29fb6b40ac"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html
+exit=0
+lavish-c9d89c29fb6b40ac
+
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html
+  url: "http://127.0.0.1:56415/session/40f6ec55952ddb1d"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html
+exit=0
+lavish-40f6ec55952ddb1d
+
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html
+  url: "http://127.0.0.1:56415/session/11e3f8cc70d67ffe"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html
+exit=0
+lavish-11e3f8cc70d67ffe
+
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html
+  url: "http://127.0.0.1:56415/session/c25dbaad7e568109"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html
+exit=0
+lavish-c25dbaad7e568109
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html
+exit=0
+registered: lavish-e4fb1cf29e2df519 (lavish)
+armed: lavish-e4fb1cf29e2df519
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html
+exit=0
+registered: lavish-db34da86a490032a (lavish)
+armed: lavish-db34da86a490032a
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html
+exit=0
+registered: lavish-cae43c815babb44a (lavish)
+armed: lavish-cae43c815babb44a
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html
+exit=0
+registered: lavish-ba80f247464881fa (lavish)
+armed: lavish-ba80f247464881fa
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html
+exit=0
+registered: lavish-155354b5f5267092 (lavish)
+armed: lavish-155354b5f5267092
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html
+exit=0
+registered: lavish-c9d89c29fb6b40ac (lavish)
+armed: lavish-c9d89c29fb6b40ac
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html
+exit=0
+registered: lavish-40f6ec55952ddb1d (lavish)
+armed: lavish-40f6ec55952ddb1d
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html
+exit=0
+registered: lavish-11e3f8cc70d67ffe (lavish)
+armed: lavish-11e3f8cc70d67ffe
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html
+exit=0
+registered: lavish-c25dbaad7e568109 (lavish)
+armed: lavish-c25dbaad7e568109
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html
+
+Before stop: {"ok": true, "app": "lavish-axi", "version": "0.1.96", "state_id": "ed9030f9b7e651e5", "state_dir": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/lavish", "hosts": ["127.0.0.1"], "requested_hosts": ["127.0.0.1"], "listeners": [{"key": "e4fb1cf29e2df519", "label": "agent-listener"}, {"key": "db34da86a490032a", "label": "agent-listener"}, {"key": "cae43c815babb44a", "label": "agent-listener"}, {"key": "ba80f247464881fa", "label": "agent-listener"}, {"key": "155354b5f5267092", "label": "agent-listener"}, {"key": "c9d89c29fb6b40ac", "label": "agent-listener"}, {"key": "40f6ec55952ddb1d", "label": "agent-listener"}, {"key": "11e3f8cc70d67ffe", "label": "agent-listener"}, {"key": "c25dbaad7e568109", "label": "agent-listener"}]}
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+QUIET RECOVERY: all 9 real listeners reconnected; zero new wake rows and zero captured results after stop.
+After restart: {"ok": true, "app": "lavish-axi", "version": "0.1.96", "state_id": "ed9030f9b7e651e5", "state_dir": "/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/lavish", "hosts": ["127.0.0.1"], "requested_hosts": ["127.0.0.1"], "listeners": [{"key": "cae43c815babb44a", "label": "agent-listener"}, {"key": "db34da86a490032a", "label": "agent-listener"}, {"key": "e4fb1cf29e2df519", "label": "agent-listener"}, {"key": "ba80f247464881fa", "label": "agent-listener"}, {"key": "155354b5f5267092", "label": "agent-listener"}, {"key": "c9d89c29fb6b40ac", "label": "agent-listener"}, {"key": "40f6ec55952ddb1d", "label": "agent-listener"}, {"key": "11e3f8cc70d67ffe", "label": "agent-listener"}, {"key": "c25dbaad7e568109", "label": "agent-listener"}]}
+POST prompts e4fb1cf29e2df519 {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-0", "at": "2026-11-12T07:58:21.876Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-e4fb1cf29e2df519.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-e4fb1cf29e2df519 1
+exit=0
+handled: lavish-e4fb1cf29e2df519 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-0.html
+exit=0
+retired: lavish-e4fb1cf29e2df519
+
+POST prompts db34da86a490032a {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-1", "at": "2026-11-12T07:58:23.703Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-db34da86a490032a.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-db34da86a490032a 1
+exit=0
+handled: lavish-db34da86a490032a 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-1.html
+exit=0
+retired: lavish-db34da86a490032a
+
+POST prompts cae43c815babb44a {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-2", "at": "2026-11-12T07:58:25.320Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-cae43c815babb44a.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-cae43c815babb44a 1
+exit=0
+handled: lavish-cae43c815babb44a 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-2.html
+exit=0
+retired: lavish-cae43c815babb44a
+
+POST prompts ba80f247464881fa {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-3", "at": "2026-11-12T07:58:26.935Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-ba80f247464881fa.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-ba80f247464881fa 1
+exit=0
+handled: lavish-ba80f247464881fa 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-3.html
+exit=0
+retired: lavish-ba80f247464881fa
+
+POST prompts 155354b5f5267092 {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-4", "at": "2026-11-12T07:58:28.633Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-155354b5f5267092.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-155354b5f5267092 1
+exit=0
+handled: lavish-155354b5f5267092 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-4.html
+exit=0
+retired: lavish-155354b5f5267092
+
+POST prompts c9d89c29fb6b40ac {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-5", "at": "2026-11-12T07:58:30.368Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-c9d89c29fb6b40ac.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-c9d89c29fb6b40ac 1
+exit=0
+handled: lavish-c9d89c29fb6b40ac 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-5.html
+exit=0
+retired: lavish-c9d89c29fb6b40ac
+
+POST prompts 40f6ec55952ddb1d {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-6", "at": "2026-11-12T07:58:31.986Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-40f6ec55952ddb1d.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-40f6ec55952ddb1d 1
+exit=0
+handled: lavish-40f6ec55952ddb1d 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-6.html
+exit=0
+retired: lavish-40f6ec55952ddb1d
+
+POST prompts 11e3f8cc70d67ffe {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-7", "at": "2026-11-12T07:58:33.777Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-11e3f8cc70d67ffe.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-11e3f8cc70d67ffe 1
+exit=0
+handled: lavish-11e3f8cc70d67ffe 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-7.html
+exit=0
+retired: lavish-11e3f8cc70d67ffe
+
+POST prompts c25dbaad7e568109 {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "live-feedback-8", "at": "2026-11-12T07:58:35.416Z"}], "ack_ids": [], "chat_revision": 1}
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh classify /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-c25dbaad7e568109.1.result
+exit=0
+feedback
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh terminal /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/home/state/procevent-inbox/lavish-c25dbaad7e568109.1.result
+exit=0
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-c25dbaad7e568109 1
+exit=0
+handled: lavish-c25dbaad7e568109 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/board-8.html
+exit=0
+retired: lavish-c25dbaad7e568109
+
+FEEDBACK DELIVERY: all 9 review messages captured once and announced; final Send & End feedback retained its terminal marker.
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html
+  url: "http://127.0.0.1:56415/session/1077dc0c297c5781"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html
+exit=0
+lavish-1077dc0c297c5781
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html
+exit=0
+registered: lavish-1077dc0c297c5781 (lavish)
+armed: lavish-1077dc0c297c5781
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html
+
+Unrelated error result:
+error: "Lavish Editor already has an active poll listener (current listener: agent-listener; active for 874ms)"
+code: LISTENER_ACTIVE
+help[1]: Use --takeover only when you intend to displace the current listener
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-1077dc0c297c5781 1
+exit=0
+handled: lavish-1077dc0c297c5781 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/conflict.html
+exit=0
+retired: lavish-1077dc0c297c5781
+
+POST prompts 1077dc0c297c5781 {"status": "queued", "pending_prompts": 1, "chat": [{"role": "user", "kind": "message", "text": "release conflict holder", "at": "2026-11-12T07:58:41.219Z"}], "ack_ids": [], "chat_revision": 1}
+UNRELATED ERROR: real LISTENER_ACTIVE conflict captured and announced without quiet retry.
+$ lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html --no-open
+exit=0
+session:
+  file: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html
+  url: "http://127.0.0.1:56415/session/adbee6f066cf223d"
+  status: opened
+next_step: "Do not respond to the user just yet. Now you must run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html`. This command long-polls until the user sends feedback, ends the session, or leaves every review window disconnected past the reconnect grace period, and it stays silent the whole time - that is normal, never kill it. Layout issues the browser detects do not return this poll; they wait in the user's Layout issues inbox until the user queues them, then arrive as an ordinary tag \"layout-warnings\" prompt. Do not pass --timeout-ms during normal agent use. Keep the poll in the foreground by default and let it return the feedback directly to the agent. A background poll is allowed only through a harness-native tracked background-job facility whose completion result is guaranteed to resume or notify the same agent. Never use `nohup`, shell `&`, `disown`, redirected fire-and-forget processes, or a detached terminal without an explicit verified callback merely to keep polling alive. If the harness has no completion-aware background facility, use the foreground poll or first wire a verified wake callback into the surrounding supervisor. Do not tell the user the artifact is being monitored until that wake path is live. If the poll gets killed or times out before feedback arrives, re-run it - feedback remains queued until delivery. Poll delivery consumes the response, so read it completely. If it returns browser_disconnected, the review window stayed disconnected past its reconnect grace period but the session remains resumable; ask the user whether to reopen or end it, and do neither uninvited. Codex detected: completed background tasks may not resume Codex automatically, so keep the poll attached to the active turn. After applying feedback, run `lavish-axi poll /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html --agent-reply \"<message for the user>\"` without --timeout-ms to show a concise response in Lavish Editor and keep waiting for more feedback. If instead you are handing back a result without starting another long-poll, run `lavish-axi reply /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html --agent-reply \"<message for the user>\"` to get an acceptance receipt. Keep the reply concise. Only when a longer reply is genuinely necessary, use Markdown structure - blank-line paragraphs, `- ` / `1. ` lists, `## ` headings - so it renders scannably instead of a wall of text, and pass that body with `--agent-reply-file <path>` (`-` reads stdin) so newlines survive quoting. The Conversation panel's Markdown subset is in `lavish-axi poll --help` and README. If the user ends the session, stop polling and do not reopen it by re-running `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html` unless the user asks for further review or something genuinely important needs their visual attention - deliver routine updates directly in this conversation instead. When reopening is warranted, run `lavish-axi /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html --reopen`."
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh source-id /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html
+exit=0
+lavish-adbee6f066cf223d
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh arm /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html
+exit=0
+registered: lavish-adbee6f066cf223d (lavish)
+armed: lavish-adbee6f066cf223d
+artifact: /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html
+
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 1 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 2 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 3 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 4 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 5 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 6 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 7 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 8 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 9 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 10 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 11 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 12 completed
+$ lavish-axi stop
+exit=0
+server:
+  status: stopped
+  port: 56415
+
+Real server interruption 13 completed
+RETRY BOUND: interruption 13 published exact vendor bytes once after 21.39 seconds; interruptions 1-12 stayed quiet.
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh handled lavish-adbee6f066cf223d 1
+exit=0
+handled: lavish-adbee6f066cf223d 1
+
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent-lavish.sh retire /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/.test-live/live/exhaustion.html
+exit=0
+retired: lavish-adbee6f066cf223d
+
+ALL LIVE SCENARIOS PASSED
+$ /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M77BS44H6JR41SKP4XGGW42N/bin/fm-procevent.sh sweep-home
+exit=0
+swept: attempted=0
+
+$ lavish-axi stop
+exit=0
+server:
+  status: not-running
+  port: 56415
+
+Isolated state and server cleaned up.
