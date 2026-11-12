@@ -27,6 +27,41 @@ Usage: lavish-axi poll <html-file> [--owner <label>] [--takeover] [--agent-reply
 The adapter uses `lavish-axi reply` under the source lock after arm eligibility and before listener registration on 0.1.80 and newer, and preserves poll-with-reply for older compatible versions.
 Its separate routing lookup reads the board's saved Lavish session; the adapter header owns that contract.
 
+## Interrupted Lavish polls
+
+Verified on 2026-11-12 on macOS against installed `lavish-axi` 0.1.96 and an isolated npm package installation of 0.1.79, both using `axi-sdk-js` 0.1.14.
+Each probe used a scratch HTML artifact, a private `LAVISH_AXI_STATE_DIR`, `LAVISH_AXI_HOST=127.0.0.1`, `LAVISH_AXI_NO_OPEN=1`, and a separate ephemeral `LAVISH_AXI_PORT`; no probe addressed the ordinary server port.
+The CLI commands exercised for each version were:
+
+```sh
+lavish-axi --version
+lavish-axi server --port "$probe_port" --verbose
+lavish-axi "$artifact" --no-open
+lavish-axi poll "$artifact"
+lavish-axi stop
+```
+
+The 0.1.79 commands used `node <isolated-package>/dist/cli.mjs` in place of `lavish-axi`.
+A loopback HTTP proxy separately truncated a real poll after its first heartbeat byte while the underlying server stayed healthy.
+Both that transient transport interruption and the deliberate stop returned exit status 1 and identical stdout bytes on both versions:
+
+```text
+error: Lavish Editor poll response was interrupted
+code: SERVER_ERROR
+help[2]: Run `lavish-axi server --verbose` or inspect `~/.lavish-axi/server.log` (`LAVISH_AXI_STATE_DIR/server.log` when set) for server startup or crash diagnostics,Re-run the last `lavish-axi poll <html-file>` command after the server is healthy
+```
+
+The response ends with one newline; the normal long-poll notice is separate stderr output.
+The saved session remained `open` after the stop in both versions.
+The adapter's `poll` command on 0.1.96 restarted the isolated server using the production retry delay and returned only subsequently submitted feedback.
+This supports retrying a server stop as a transport interruption, without interpreting it as a request to end a review; the adapter [header](../../bin/fm-procevent-lavish.sh) owns the accepted byte sequences and retry bounds.
+It does not establish recovery of feedback already consumed before a transport interruption; the loss limitation below still applies.
+
+Refresh the portable classifier and runner regressions with `bin/fm-test-run.sh tests/fm-procevent.test.sh`.
+The captured response lives in [`tests/fixtures/lavish-poll-interrupted.txt`](../../tests/fixtures/lavish-poll-interrupted.txt).
+The regressions exercise both supported forms before real feedback, byte-exact exhaustion of the help-bearing form, and immediate unchanged delivery of altered help, extra feedback, extra or missing newlines, a partial help line, and CRLF output.
+The retry classifier runs entirely inside the shared adapter before capture, so it changes no primary harness protocol or runtime backend interface.
+
 ## Why an ended Lavish review is terminal
 
 Re-verified on 2026-08-01 against the same installed build.

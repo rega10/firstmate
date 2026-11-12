@@ -114,11 +114,17 @@
 # legacy poll-with-reply path, without the synchronous handoff guarantee.
 #
 # BOUNDED QUIET RETRY, owned here and nowhere else. A live listener can be cut
-# short by the server with exactly this two-line response while the session's
-# marks remain available:
+# short by the server with exactly this response while the session remains open:
 #
 #   error: Lavish Editor poll response was interrupted
 #   code: SERVER_ERROR
+#   help[2]: Run `lavish-axi server --verbose` or inspect `~/.lavish-axi/server.log` (`LAVISH_AXI_STATE_DIR/server.log` when set) for server startup or crash diagnostics,Re-run the last `lavish-axi poll <html-file>` command after the server is healthy
+#
+# The legacy two-line form without help is also accepted. Both forms require
+# exact bytes, including the final newline, with no additional output. A server
+# stop interrupts the transport without ending the review; the next published
+# poll starts or reconnects to the server, so stops and restarts use this same
+# bounded retry rather than announcing an interruption as review feedback.
 #
 # That is an internal retry, not news, so registering the raw poll made the
 # generic runner capture it and wake the whole fleet. `poll` therefore re-runs
@@ -311,16 +317,19 @@ POLL_RETRY_DELAY_DEFAULT=5
 POLL_RETRY_DELAY_MIN=1
 POLL_RETRY_DELAY_MAX=60
 
-# Exit 0 only for the exact two-line interruption, and nothing else. The whole
-# response must be those two lines with those exact bytes: whitespace variants,
-# a longer response that merely opens with them, and any other SERVER_ERROR are
-# genuine errors this adapter must never swallow.
+# Exit 10 only for either exact interruption response, and nothing else.
+# Whitespace variants, changed help, additional output, and other SERVER_ERROR
+# responses pass through. Staging is bounded by the longest accepted form plus
+# one byte, after which nonmatches stream without further staging.
 poll_response_filter() {  # <response-file>
   perl -e '
     use strict;
     use warnings;
     my ($stage) = @ARGV;
-    my $expected = "error: Lavish Editor poll response was interrupted\ncode: SERVER_ERROR\n";
+    my $legacy = "error: Lavish Editor poll response was interrupted\ncode: SERVER_ERROR\n";
+    my @expected = ($legacy, $legacy
+      . "help[2]: Run `lavish-axi server --verbose` or inspect `~/.lavish-axi/server.log` (`LAVISH_AXI_STATE_DIR/server.log` when set) for server startup or crash diagnostics,Re-run the last `lavish-axi poll <html-file>` command after the server is healthy\n");
+    my $max_length = length($expected[-1]);
     open my $staged, ">", $stage or exit 2;
     binmode STDIN;
     binmode STDOUT;
@@ -343,20 +352,20 @@ poll_response_filter() {  # <response-file>
         write_all(*STDOUT, $chunk);
         next;
       }
-      my $room = length($expected) + 1 - length($candidate);
+      my $room = $max_length + 1 - length($candidate);
       my $take = length($chunk) < $room ? length($chunk) : $room;
       my $prefix = substr($chunk, 0, $take);
       $candidate .= $prefix;
       write_all($staged, $prefix);
-      my $matches_prefix = length($candidate) <= length($expected)
-        && substr($expected, 0, length($candidate)) eq $candidate;
+      my $matches_prefix = grep { length($candidate) <= length($_)
+        && substr($_, 0, length($candidate)) eq $candidate } @expected;
       if (!$matches_prefix) {
         write_all(*STDOUT, $candidate);
         write_all(*STDOUT, substr($chunk, $take));
         $streaming = 1;
       }
     }
-    exit 10 if !$streaming && $candidate eq $expected;
+    exit 10 if !$streaming && grep { $candidate eq $_ } @expected;
     write_all(*STDOUT, $candidate) unless $streaming;
   ' "$1"
 }

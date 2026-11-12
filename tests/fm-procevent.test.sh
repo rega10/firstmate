@@ -1399,12 +1399,15 @@ pass "a board close carrying the captain's real answer is still announced"
 # The dogfood defect: a live board listener can answer with exactly
 #     error: Lavish Editor poll response was interrupted
 #     code: SERVER_ERROR
+# or the same error with the exact help line captured from 0.1.79 and 0.1.96,
 # while the board's marks remain available. Firstmate registered raw poll output,
 # so the generic runner captured that transient response and woke the whole fleet
-# over what is really an internal retry. Every scenario below runs through the
-# adapter's own arm command and the real runner, so registration, capture, and
-# publication are exercised for real.
+# over what is really an internal retry. Lifecycle scenarios below run through
+# the adapter's own arm command and the real runner; byte-level counterexamples
+# also exercise the adapter's public poll command directly.
 LAVISH_SCRIPTED_BIN=$(fm_fakebin "$TMP_ROOT/lavish-scripted-stub")
+LAVISH_INTERRUPT_CAPTURE="$ROOT/tests/fixtures/lavish-poll-interrupted.txt"
+export LAVISH_INTERRUPT_CAPTURE
 cat > "$LAVISH_SCRIPTED_BIN/lavish-axi" <<'SH'
 #!/usr/bin/env bash
 # Stand-in for `lavish-axi poll <file>`, scripted per scenario: LAVISH_SCRIPT
@@ -1433,6 +1436,14 @@ i=$((n - 1))
 case "${plan[$i]}" in
   interrupt)
     printf 'error: Lavish Editor poll response was interrupted\ncode: SERVER_ERROR\n'; exit 1 ;;
+  interrupt-help)
+    cat "$LAVISH_INTERRUPT_CAPTURE"; exit 1 ;;
+  interrupt-help-split)
+    head -n 2 "$LAVISH_INTERRUPT_CAPTURE"
+    sleep 0.1
+    tail -n +3 "$LAVISH_INTERRUPT_CAPTURE"; exit 1 ;;
+  capture)
+    cat "$LAVISH_CAPTURE"; exit 1 ;;
   near-interrupt)
     printf 'error: Lavish Editor poll response was interrupted \ncode: SERVER_ERROR\n'; exit 1 ;;
   other-server-error)
@@ -1479,7 +1490,7 @@ printf '<h1>retry</h1>\n' > "$RETRY_ART"
 lavish_session "$RETRY_ART"
 retry_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$RETRY_ART")
 fm_test_track_procevent_home "$HRETRY"
-LAVISH_COUNT="$TMP_ROOT/retry-count"; LAVISH_SCRIPT="interrupt interrupt feedback"
+LAVISH_COUNT="$TMP_ROOT/retry-count"; LAVISH_SCRIPT="interrupt-help-split interrupt feedback"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HRETRY" \
   "$ROOT/bin/fm-procevent-lavish.sh" arm "$RETRY_ART" >/dev/null
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" pe "$HRETRY" reconcile >/dev/null
@@ -1593,7 +1604,7 @@ printf '<h1>exhaust</h1>\n' > "$EXH_ART"
 lavish_session "$EXH_ART"
 exh_id=$("$ROOT/bin/fm-procevent-lavish.sh" source-id "$EXH_ART")
 fm_test_track_procevent_home "$HEXH"
-LAVISH_COUNT="$TMP_ROOT/exhaust-count"; LAVISH_SCRIPT="interrupt"
+LAVISH_COUNT="$TMP_ROOT/exhaust-count"; LAVISH_SCRIPT="interrupt-help"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HEXH" \
   "$ROOT/bin/fm-procevent-lavish.sh" arm "$EXH_ART" >/dev/null
 wait_capture "$HEXH" "$exh_id" 200 \
@@ -1608,6 +1619,8 @@ assert_contains "$(wake_payloads "$HEXH")" "procevent lavish $exh_id 1" \
   "the interruption that survives the bound is announced normally"
 assert_grep 'poll response was interrupted' "$(first_result "$HEXH" "$exh_id")" \
   "the announced result is the exact interruption the server returned"
+cmp -s "$LAVISH_INTERRUPT_CAPTURE" "$(first_result "$HEXH" "$exh_id")" \
+  || fail "retry exhaustion changed the captured vendor interruption bytes"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HEXH" \
   "$ROOT/bin/fm-procevent-lavish.sh" retire "$EXH_ART" >/dev/null
 pass "an interruption that outlives the bounded retries is captured and announced"
@@ -1653,7 +1666,35 @@ assert_contains "$(wake_payloads "$HNEAR")" "procevent lavish $near_id 1" \
   "a whitespace variant of the interruption is captured and announced immediately"
 PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HNEAR" \
   "$ROOT/bin/fm-procevent-lavish.sh" retire "$NEAR_ART" >/dev/null
-pass "only the literal two-line interruption enters the quiet retry policy"
+pass "a whitespace variant of the interruption does not enter the quiet retry policy"
+
+# Exact matching applies to the help line and the entire response, not just the
+# opening error. Any feedback or unknown diagnostic must reach the caller intact.
+for variant in changed-help changed-help-count extra-feedback extra-newline missing-newline partial-help crlf; do
+  LAVISH_CAPTURE="$TMP_ROOT/near-$variant.txt"
+  case "$variant" in
+    changed-help) sed 's/server is healthy/server is unhealthy/' "$LAVISH_INTERRUPT_CAPTURE" > "$LAVISH_CAPTURE" ;;
+    changed-help-count) sed 's/help\[2\]/help[3]/' "$LAVISH_INTERRUPT_CAPTURE" > "$LAVISH_CAPTURE" ;;
+    extra-feedback)
+      cat "$LAVISH_INTERRUPT_CAPTURE" > "$LAVISH_CAPTURE"
+      printf 'feedback[1]{text}:\n  keep this answer\n' >> "$LAVISH_CAPTURE" ;;
+    extra-newline)
+      cat "$LAVISH_INTERRUPT_CAPTURE" > "$LAVISH_CAPTURE"
+      printf '\n' >> "$LAVISH_CAPTURE" ;;
+    missing-newline) perl -0777 -pe 's/\n\z//' "$LAVISH_INTERRUPT_CAPTURE" > "$LAVISH_CAPTURE" ;;
+    partial-help) head -c 100 "$LAVISH_INTERRUPT_CAPTURE" > "$LAVISH_CAPTURE" ;;
+    crlf) perl -pe 's/\n/\r\n/g' "$LAVISH_INTERRUPT_CAPTURE" > "$LAVISH_CAPTURE" ;;
+  esac
+  near_status=0
+  PATH="$LAVISH_SCRIPTED_BIN:$PATH" LAVISH_COUNT="$TMP_ROOT/near-$variant-count" \
+    LAVISH_SCRIPT=capture LAVISH_CAPTURE="$LAVISH_CAPTURE" FM_LAVISH_POLL_RETRY_DELAY=1 \
+    "$ROOT/bin/fm-procevent-lavish.sh" poll "$NEAR_ART" > "$TMP_ROOT/near-$variant.out" \
+    || near_status=$?
+  [ "$near_status" = 1 ] || fail "$variant changed the poll exit status"
+  [ "$(cat "$TMP_ROOT/near-$variant-count")" = 1 ] || fail "$variant was retried"
+  cmp -s "$LAVISH_CAPTURE" "$TMP_ROOT/near-$variant.out" || fail "$variant output changed"
+done
+pass "changed help, additional feedback, and incomplete interruption responses pass through byte-for-byte"
 
 # The public arm boundary refuses invalid retry intervals before it publishes a
 # source registration, rather than arming a listener that can only fail later.
@@ -1705,7 +1746,8 @@ PATH="$LAVISH_SCRIPTED_BIN:$PATH" FM_HOME="$HSTREAM" TMPDIR="$STREAM_TMPDIR" \
 wait_for "$LAVISH_STREAM_READY" || fail "streaming poll did not start"
 stream_staged=("$STREAM_TMPDIR"/fm-lavish-poll.*)
 [ -e "${stream_staged[0]}" ] || fail "streaming poll created no classifier staging file"
-[ "$(wc -c < "${stream_staged[0]}" | tr -d ' ')" -le 100 ] \
+classifier_bound=$(( $(wc -c < "$LAVISH_INTERRUPT_CAPTURE") + 1 ))
+[ "$(wc -c < "${stream_staged[0]}" | tr -d ' ')" -le "$classifier_bound" ] \
   || fail "streaming poll exceeded its bounded classifier staging"
 : > "$LAVISH_STREAM_RELEASE"
 wait_for "$HSTREAM/state/.wake-queue" || fail "streaming poll produced no wake"
