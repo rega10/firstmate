@@ -1753,7 +1753,7 @@ EOF
 # Recorded 2026-10-05 on Claude Code 2.1.289: /exit while a background shell
 # is still running opens this picker, and its selected row is Exit and stop tasks.
 fm_composer_blocking_dialog() {  # <screen> -> dialog name
-  local screen=${1-}
+  local screen=${1-} plain menu_row
   [ -n "$screen" ] || return 1
   if printf '%s\n' "$screen" | fm_composer_strip_ansi | LC_ALL=C awk '
     /^[ \t]*Background work is running[ \t\r]*$/ { heading = 1 }
@@ -1764,11 +1764,8 @@ fm_composer_blocking_dialog() {  # <screen> -> dialog name
     printf '%s' 'Claude background-task exit picker'
     return 0
   fi
-  # Grok's usage-limit picker consumes Enter for a purchase or retry. Match
-  # the ordered option rows and a selection marker, never labels quoted in
-  # prose. A later composer glyph resets the match so transcript text cannot
-  # block a normal composer below it.
-  if printf '%s\n' "$screen" | fm_composer_strip_ansi | LC_ALL=C awk '
+  plain=$(printf '%s\n' "$screen" | fm_composer_strip_ansi)
+  if menu_row=$(printf '%s\n' "$plain" | LC_ALL=C awk '
     {
       line = $0
       sub(/^[ \t]*│[ \t]*/, "", line)
@@ -1776,14 +1773,17 @@ fm_composer_blocking_dialog() {  # <screen> -> dialog name
       sub(/^[ \t]*/, "", line)
       sub(/[ \t\r]*$/, "", line)
       marked = sub(/^❯([ \t]+|$)/, "", line)
-      sub(/^[123]\.[ \t]+/, "", line)
       if (line == "Upgrade tier") { stage = 1; selected = marked; next }
       if (stage == 1 && line == "Buy more credits") { stage = 2; selected += marked; next }
-      if (stage == 2 && line == "Try Again") { stage = 3; selected += marked; next }
-      if (marked) { stage = 0; selected = 0 }
+      if (stage == 2 && line == "Try Again") { stage = 3; selected += marked; last = NR - 1; next }
     }
-    END { exit !(stage == 3 && selected == 1) }
-  '; then
+    END { if (stage == 3 && selected == 1) print last; else exit 1 }
+  '); then
+    _fm_composer_scan_screen "$plain" ''
+    if _fm_composer_select_cursorless "$plain" \
+       && [ "$FM_COMPOSER_SELECTED_FIRST" -gt "$menu_row" ]; then
+      return 1
+    fi
     printf '%s' 'Grok usage-limit picker'
     return 0
   fi

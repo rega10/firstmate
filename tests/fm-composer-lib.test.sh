@@ -777,7 +777,7 @@ test_matrix_opencode_leftbar_signals() {
 }
 
 # Grok 1.0.77 viewport tails, captured through Herdr after interrupt or idle.
-# Only private transcript rows were cropped; scrollbar, ANSI, box, and hints
+# Private transcript text was blanked; scrollbar, ANSI, box, and hints
 # remain byte-for-byte captures. Pending variants replace equal-width spaces.
 test_matrix_grok_1077_footer_cells() {
   local fixture screen typed caps styled cy bottom name
@@ -807,7 +807,7 @@ test_matrix_grok_1077_footer_cells() {
 # Synthetic menu built from the observed three choices, with descriptions
 # confirmed in Grok 1.0.77. This is not a captured live dialog.
 test_grok_usage_limit_dialog_blocks_enter() (
-  local screen selected out sink enter_log
+  local screen selected out sink enter_log menu composer name style caps wanted identity=''
   screen=$(cat "$ROOT/tests/fixtures/composer/grok-1.0.77/usage-limit-menu.txt")
   fm_composer_dialog_sink_prepare || fail "Grok dialog sink unavailable"
   sink=$FM_COMPOSER_DIALOG_SINK
@@ -815,11 +815,19 @@ test_grok_usage_limit_dialog_blocks_enter() (
     out=$(printf '%s\n' "$screen" | sed 's/^❯ /  /' | sed "s/^  $selected$/❯ $selected/")
     [ "$(fm_composer_blocking_dialog "$out")" = 'Grok usage-limit picker' ] \
       || fail "Grok selected option '$selected' should block Enter"
+    [ "$(fm_composer_blocking_dialog $'› \n\n'"$out")" = 'Grok usage-limit picker' ] \
+      || fail "Grok selected option '$selected' below a composer should block Enter"
     fm_composer_classify_screen "$CAPS_STYLED" "$out" >/dev/null
     [ "$(cat "$sink")" = 'Grok usage-limit picker' ] || fail "Grok dialog was not recorded"
   done
   if fm_composer_blocking_dialog "${screen/Buy more credits/Other option}" >/dev/null; then
     fail "an incomplete Grok menu must not match"
+  fi
+  out=${screen/Upgrade tier/1. Upgrade tier}
+  out=${out/Buy more credits/2. Buy more credits}
+  out=${out/Try Again/3. Try Again}
+  if fm_composer_blocking_dialog "$out" >/dev/null; then
+    fail "numbered Grok labels must not match"
   fi
   if fm_composer_blocking_dialog "$screen"$'\n╭────────────────────────╮\n│ ❯                      │\n╰────────────────────────╯' >/dev/null; then
     fail "a quoted Grok menu above a composer must not match"
@@ -846,10 +854,49 @@ test_grok_usage_limit_dialog_blocks_enter() (
   # shellcheck disable=SC2329 # Called by the production Enter retry loop.
   grok_menu_enter() { printf 'Enter\n' >> "$enter_log"; }
   # shellcheck disable=SC2329 # Called by the production Enter retry loop.
-  grok_menu_state() { fm_composer_classify_screen "$CAPS_STYLED" "$screen"; }
+  grok_menu_state() { fm_composer_classify_screen "$CAPS_STYLED" "$screen" '' "$identity"; }
   out=$(fm_composer_submit_retry_core grok_menu_enter grok_menu_state replay:pane 3 0)
   [ "$out" = unknown ] || fail "a newly opened Grok picker should refuse retry"
   [ "$(wc -l < "$enter_log" | tr -d ' ')" = 1 ] || fail "Grok picker received a confirming Enter"
+  menu=$screen
+  fm_backend_herdr_send_text_submit() { printf 'submitted'; }
+  # shellcheck disable=SC2329
+  fm_backend_herdr_composer_identity() { printf '%s' "$identity"; }
+  for name in codex claude muse cursor devin opencode pi grok; do
+    identity="$name"$'\tidle'
+    case "$name" in
+      codex) composer='› ' ;;
+      claude) composer=$'────────────────────────\n❯'"$NBSP"$'\n────────────────────────' ;;
+      muse) composer='⟩ ' ;;
+      cursor) composer='→ ' ;;
+      devin) composer='❭ ' ;;
+      opencode) composer=$'┃\n┃  Ask anything...\n┃\n┃  Build · model\n╹▀▀▀▀▀▀▀▀▀▀' ;;
+      pi) composer=$'────────────────────────\n\n────────────────────────' ;;
+      grok) composer=$'╭────────────────────────╮\n│ ❯                      │\n╰────────────────────────╯' ;;
+    esac
+    for style in plain ansi; do
+      screen="$menu"$'\n\n'"$composer"
+      if [ "$style" = ansi ]; then screen="${ESC}[0m$screen${ESC}[0m"; fi
+      if fm_composer_blocking_dialog "$screen" >/dev/null \
+         || LC_ALL=C fm_composer_blocking_dialog "$screen" >/dev/null; then
+        fail "a quoted Grok menu above $name ($style) must not match"
+      fi
+      out=$(fm_composer_blocking_dialog "$screen"$'\n\n'"$menu")
+      [ "$out" = 'Grok usage-limit picker' ] || fail "a Grok menu below $name must block Enter"
+      for caps in "$CAPS_STYLED" "$CAPS_STYLED_NOID" "$CAPS_PLAIN"; do
+        wanted=empty
+        if [ "$name" = pi ] && [ "$caps" != "$CAPS_STYLED" ]; then wanted=unknown; fi
+        assert_screen "quoted menu above $name ($style)" "$wanted" "$caps" "$screen" '' "$identity"
+        [ ! -s "$sink" ] || fail "a quoted menu above $name left a dialog refusal"
+      done
+      out=$(fm_backend_send_text_submit herdr replay:pane /exit 3 0 0)
+      [ "$out" = submitted ] || fail "a quoted menu above $name blocked submission"
+      : > "$enter_log"
+      out=$(fm_composer_submit_retry_core grok_menu_enter grok_menu_state replay:pane 3 0)
+      [ "$out" = empty ] || fail "a quoted menu above $name blocked Enter verification"
+      [ "$(wc -l < "$enter_log" | tr -d ' ')" = 1 ] || fail "$name received extra Enter retries"
+    done
+  done
   fm_composer_dialog_sink_release
   rm -f "$sink" "$enter_log"
   pass "Grok usage-limit choices block submission and receive no confirming Enter"

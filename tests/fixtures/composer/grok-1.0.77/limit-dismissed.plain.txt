@@ -1,18 +1,18 @@
-     Worked for 29s
+                   
 
-     ◆ Task failed in 8m1s: Approve the lint gate and continue the pipeline (exit 1)
-     ◈ Explored call-fa45452a-8ac6-46c0-849b-64dbec653b73-122.log, ran 3 commands
+                                                                                    
+                                                                                 
 
-     The push and the pull request are complete. Continuous integration is still running for https://     9:46 PM
-     github.com/rega10-lab/alesis-wallet/pull/19.
+                                                                                                                 
+                                                 
 
-     The 8 minute hold ended while those checks were still running. I attached to the same run again. I
-     am waiting for the checks to pass or for the next gate.
+                                                                                                       
+                                                            
 
-     Worked for 36s
+                   
 
-     ◆ Task failed in 8m1s: Reattach while CI checks are running (exit 1)
-     ◈ Explored call-bb072c4d-32ac-420e-ad58-8587aff78baf-127.log, ran 3 commands
+                                                                         
+                                                                                 
                                                           ▼
   ╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
   │ ❯                                                                                                             │

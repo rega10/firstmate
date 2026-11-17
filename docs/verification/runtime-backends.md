@@ -875,13 +875,13 @@ ok - Grok (grok 1.0.88 (2fe3608f7398) [stable]): Herdr idle=empty, unsubmitted d
 # tmux absent: live tmux composer unverified; portable adapter replay covers its capture path
 ```
 
-The Grok 1.0.77 viewport tails in `tests/fixtures/composer/grok-1.0.77/` retain ANSI styling, scrollbar cells, aligned box edges, and the idle shortcut row while excluding private transcript content.
+The Grok 1.0.77 viewport tails in `tests/fixtures/composer/grok-1.0.77/` blank private transcript text while retaining its column widths, ANSI styling, scrollbar cells, aligned box edges, and the idle shortcut row.
 Their bottom borders include middle-dot-separated model and permission cells, sometimes preceded by a weekly-limit cell.
 Only the middle dot in that border title is normalized to one column; the same glyph in input remains content, and unknown glyphs or incorrect widths still refuse an empty verdict.
 Portable regressions exercise the saved captures through Herdr and tmux backend dispatch, including typed text, bottom-border cursor placement, cursorless profiles, and both ambient and C locales.
 Tmux was unavailable for this live verification; its live branch remains in the same guard for hosts where tmux is installed.
 The usage-limit menu fixture is synthetic, using the reported choices and descriptions from the installed Grok binary, rather than claiming a live capture of that dialog.
-Its regression verifies the named blocking-dialog refusal before typing or Enter, and excludes menu text quoted above a normal composer.
+Its regression verifies the named blocking-dialog refusal before typing or Enter, and excludes menu text quoted above Grok, Codex, Claude, Muse, Cursor, Devin, OpenCode, and Pi composers through the shared composer selector.
 
 ### 2026-10-11 Claude arrow shared with zsh
 
