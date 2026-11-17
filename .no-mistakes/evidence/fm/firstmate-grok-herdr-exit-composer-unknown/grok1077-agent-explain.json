@@ -1,0 +1,5 @@
+agent: grok
+state: idle
+manifest: remote:/Users/rega1011/.local/state/herdr/agent-detection/remote/grok.toml 2026.10.05.1
+rule: osc_title_idle (region=osc_title priority=1100)
+evidence: "grok"

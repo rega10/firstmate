@@ -1,0 +1,3 @@
+ok - Grok (grok 1.0.77 (50ca579fa996) [stable]): Herdr idle=empty, unsubmitted draft=pending
+tests/fm-composer-grok-live-e2e.test.sh: line 77: 65625 Segmentation fault: 11     tmux new-session -d -s grok-composer -x 120 -y 40 -c "$ROOT" "$LAUNCH"
+tests/fm-composer-grok-live-e2e.test.sh: line 21: 65628 Segmentation fault: 11     tmux new-session -d -s grok-composer -x 120 -y 40 -c "$ROOT" "$LAUNCH"

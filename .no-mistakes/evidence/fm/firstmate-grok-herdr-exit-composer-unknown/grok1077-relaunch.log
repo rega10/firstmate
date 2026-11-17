@@ -1,0 +1,11 @@
+viewer attached to fm-lab-grok-switch-85473-17250 (pid 85627)
+Before relaunch: composer=empty agent=alive endpoint=fm-lab-grok-switch-85473-17250:w1:p1
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/relaunch/home
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/relaunch/home
+WARNING: watcher still down (same stale episode; last beat: never, grace 300s) - full banner already printed this episode.
+notice: grok-switch ships mode=local-only while the standing posture for project is no-mistakes - less rigor than the captain's standing posture; proceed only on a current explicit captain instruction or an intake judgment you can state
+relaunched grok-switch harness=codex from=grok model=default effort=default backend=herdr endpoint=fm-lab-grok-switch-85473-17250:w1:p1 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/relaunch/wt
+After relaunch agent: alive
+Codex registered alive. Its first-use directory-trust dialog remains for the operator.
+Replacement uses the same endpoint and worktree. The local draft file survived.
+Isolated Herdr relaunch lab removed.

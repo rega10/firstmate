@@ -1,0 +1,14 @@
+Grok version: grok 1.0.77 (50ca579fa996) [stable]
+Idle composer: empty
+Base classifier on this live idle capture: unknown
+Agent state before viewer: unreadable
+viewer attached to fm-lab-grok-live-manual-16239-8770 (pid 91922)
+Agent state with viewer: unreadable
+Draft composer: pending
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/manual/fmhome
+error: task grok-live's composer visibly holds pending text; refusing to type the /exit exit command because it would concatenate onto that text. Clear or submit the pending text, then retry 'exit'
+After clearing draft: empty
+fm-gate-refuse: gate agent lifecycle permitted only against lab home /Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/manual/fmhome
+stopped grok-live harness=grok backend=herdr endpoint=fm-lab-grok-live-manual-16239-8770:w1:p1 worktree=/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/manual/project
+After exit agent state: dead
+Herdr lab teardown status: 0

@@ -1,0 +1,1 @@
+{"id":"cli:pane:process_info","result":{"process_info":{"foreground_process_group_id":3758,"foreground_processes":[{"argv0":"grok","cwd":"/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/manual/project","name":"grok-native","pid":3758}],"pane_id":"w1:p1","shell_pid":2948},"type":"pane_process_info"}}

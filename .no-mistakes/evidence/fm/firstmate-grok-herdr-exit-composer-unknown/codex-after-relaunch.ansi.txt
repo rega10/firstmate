@@ -1,0 +1,39 @@
+ 
+[0m[1m  Folder access[0m
+  [0m[2m/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/r[0m
+  [0m[2melaunch/wt                                                                                [0m
+ 
+  Note: You’re in a subdirectory of a Git project. Trusting will apply to the repository
+  root:
+  [0m[2m/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/r[0m
+  [0m[2melaunch/project                                                                           [0m
+ 
+  Trust this folder? Codex can read, edit, and run files here, subject to your permission
+  settings. Folder settings can run code automatically, even without a model request.
+  Continue only if you trust these files. Your trust decision will be saved.
+ 
+[0m[1m[7m› 1. Trust and continue                                                                       [0m
+  2. Quit
+ 
+  [0m[1menter[0m[2m continue · [0m[1mesc[0m[2m quit[0m
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

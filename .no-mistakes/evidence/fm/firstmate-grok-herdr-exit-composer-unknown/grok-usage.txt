@@ -1,0 +1,1 @@
+Error: `grok usage` can't show your plan's usage here yet. Run /usage inside grok instead.

@@ -1,0 +1,20 @@
+env -u NO_MISTAKES_GATE -u FM_GATE_REFUSE_BYPASS -u FM_ROOT_OVERRIDE -u FM_STATE_OVERRIDE -u
+FM_DATA_OVERRIDE -u FM_CONFIG_OVERRIDE -u FM_PROJECTS_OVERRIDE FM_HOME='/Users/rega1011/.no-m
+istakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/manual/fmhome' GROK_HOME=
+'/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/man
+ual/grok-home' grok --always-approve --no-subagents --tools '' --leader-socket '/Users/rega10
+11/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/manual/leader.soc
+k'
+project on  master
+❯ env -u NO_MISTAKES_GATE -u FM_GATE_REFUSE_BYPASS -u FM_ROOT_OVERRIDE -u FM_STATE_OVERRIDE -
+u FM_DATA_OVERRIDE -u FM_CONFIG_OVERRIDE -u FM_PROJECTS_OVERRIDE FM_HOME='/Users/rega1011/.no
+-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/manual/fmhome' GROK_HOM
+E='/Users/rega1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/m
+anual/grok-home' grok --always-approve --no-subagents --tools '' --leader-socket '/Users/rega
+1011/.no-mistakes/worktrees/422718388d14/01M7M5824TC6WV3KTE7Z09BQWQ/.test-tmp/manual/leader.s
+ock'
+
+Resume this session with:
+  grok --resume 01a1e874-df61-7252-ad66-4df1ac56e29f
+project on  master 7s
+❯
