@@ -1752,10 +1752,14 @@ EOF
 # and prints nothing.
 # Recorded 2026-10-05 on Claude Code 2.1.289: /exit while a background shell
 # is still running opens this picker, and its selected row is Exit and stop tasks.
+# Grok requires Upgrade tier, Buy more credits, and Try Again as substrings
+# on three consecutive rows, in that order, without a selection-glyph requirement.
+# A later composer identified by the shared selector makes those rows transcript text.
 fm_composer_blocking_dialog() {  # <screen> -> dialog name
   local screen=${1-} plain menu_row
   [ -n "$screen" ] || return 1
-  if printf '%s\n' "$screen" | fm_composer_strip_ansi | LC_ALL=C awk '
+  plain=$(printf '%s\n' "$screen" | fm_composer_strip_ansi)
+  if printf '%s\n' "$plain" | LC_ALL=C awk '
     /^[ \t]*Background work is running[ \t\r]*$/ { heading = 1 }
     heading && /^[ \t]*❯ 1\. Exit and stop tasks[ \t\r]*$/ { selected = 1 }
     /[^ \t\r]/ { last = $0 }
@@ -1764,20 +1768,12 @@ fm_composer_blocking_dialog() {  # <screen> -> dialog name
     printf '%s' 'Claude background-task exit picker'
     return 0
   fi
-  plain=$(printf '%s\n' "$screen" | fm_composer_strip_ansi)
   if menu_row=$(printf '%s\n' "$plain" | LC_ALL=C awk '
-    {
-      line = $0
-      sub(/^[ \t]*│[ \t]*/, "", line)
-      sub(/[ \t]*│[ \t\r]*$/, "", line)
-      sub(/^[ \t]*/, "", line)
-      sub(/[ \t\r]*$/, "", line)
-      marked = sub(/^❯([ \t]+|$)/, "", line)
-      if (line == "Upgrade tier") { stage = 1; selected = marked; next }
-      if (stage == 1 && line == "Buy more credits") { stage = 2; selected += marked; next }
-      if (stage == 2 && line == "Try Again") { stage = 3; selected += marked; last = NR - 1; next }
+    index(older, "Upgrade tier") && index(previous, "Buy more credits") && index($0, "Try Again") {
+      last = NR - 1
     }
-    END { if (stage == 3 && selected == 1) print last; else exit 1 }
+    { older = previous; previous = $0 }
+    END { if (last) print last; else exit 1 }
   '); then
     _fm_composer_scan_screen "$plain" ''
     if _fm_composer_select_cursorless "$plain" \

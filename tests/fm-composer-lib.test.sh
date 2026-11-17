@@ -804,31 +804,39 @@ test_matrix_grok_1077_footer_cells() {
   pass "matrix: Grok 1.0.77 footer cells retain width proof and pending drafts on every backend profile"
 }
 
-# Synthetic menu built from the observed three choices, with descriptions
-# confirmed in Grok 1.0.77. This is not a captured live dialog.
+# Partial live capture of the Grok 1.0.77 usage-limit dialog: option rows and footer only.
 test_grok_usage_limit_dialog_blocks_enter() (
-  local screen selected out sink enter_log menu composer name style caps wanted identity=''
+  local screen out sink enter_log menu composer name style caps wanted label identity=''
   screen=$(cat "$ROOT/tests/fixtures/composer/grok-1.0.77/usage-limit-menu.txt")
   fm_composer_dialog_sink_prepare || fail "Grok dialog sink unavailable"
   sink=$FM_COMPOSER_DIALOG_SINK
-  for selected in 'Upgrade tier' 'Buy more credits' 'Try Again'; do
-    out=$(printf '%s\n' "$screen" | sed 's/^❯ /  /' | sed "s/^  $selected$/❯ $selected/")
+  for style in plain ansi; do
+    out=$screen
+    if [ "$style" = ansi ]; then out="${ESC}[0m$out${ESC}[0m"; fi
     [ "$(fm_composer_blocking_dialog "$out")" = 'Grok usage-limit picker' ] \
-      || fail "Grok selected option '$selected' should block Enter"
+      || fail "the real Grok dialog ($style) should block Enter"
+    [ "$(LC_ALL=C fm_composer_blocking_dialog "$out")" = 'Grok usage-limit picker' ] \
+      || fail "the real Grok dialog ($style) under LC_ALL=C should block Enter"
     [ "$(fm_composer_blocking_dialog $'› \n\n'"$out")" = 'Grok usage-limit picker' ] \
-      || fail "Grok selected option '$selected' below a composer should block Enter"
+      || fail "the real Grok dialog ($style) below a composer should block Enter"
     fm_composer_classify_screen "$CAPS_STYLED" "$out" >/dev/null
     [ "$(cat "$sink")" = 'Grok usage-limit picker' ] || fail "Grok dialog was not recorded"
   done
-  if fm_composer_blocking_dialog "${screen/Buy more credits/Other option}" >/dev/null; then
-    fail "an incomplete Grok menu must not match"
-  fi
-  out=${screen/Upgrade tier/1. Upgrade tier}
-  out=${out/Buy more credits/2. Buy more credits}
-  out=${out/Try Again/3. Try Again}
-  if fm_composer_blocking_dialog "$out" >/dev/null; then
-    fail "numbered Grok labels must not match"
-  fi
+  for label in 'Upgrade tier' 'Buy more credits' 'Try Again'; do
+    if fm_composer_blocking_dialog "${screen/$label/Other option}" >/dev/null; then
+      fail "a Grok menu missing $label must not match"
+    fi
+  done
+  for out in \
+    'The agent mentions Upgrade tier in prose.' \
+    $'The agent mentions Upgrade tier.\nIt also mentions Buy more credits.' \
+    $'Upgrade tier\nUnrelated row\nBuy more credits\nTry Again' \
+    $'Upgrade tier\nBuy more credits\nUnrelated row\nTry Again' \
+    $'Buy more credits\nUpgrade tier\nTry Again'; do
+    if fm_composer_blocking_dialog "$out" >/dev/null; then
+      fail "incomplete, separated, or reordered Grok labels must not match"
+    fi
+  done
   if fm_composer_blocking_dialog "$screen"$'\n╭────────────────────────╮\n│ ❯                      │\n╰────────────────────────╯' >/dev/null; then
     fail "a quoted Grok menu above a composer must not match"
   fi

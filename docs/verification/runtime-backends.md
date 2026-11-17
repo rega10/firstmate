@@ -880,7 +880,8 @@ Their bottom borders include middle-dot-separated model and permission cells, so
 Only the middle dot in that border title is normalized to one column; the same glyph in input remains content, and unknown glyphs or incorrect widths still refuse an empty verdict.
 Portable regressions exercise the saved captures through Herdr and tmux backend dispatch, including typed text, bottom-border cursor placement, cursorless profiles, and both ambient and C locales.
 Tmux was unavailable for this live verification; its live branch remains in the same guard for hosts where tmux is installed.
-The usage-limit menu fixture is synthetic, using the reported choices and descriptions from the installed Grok binary, rather than claiming a live capture of that dialog.
+The usage-limit menu fixture is a partial live capture from Grok 1.0.77 containing only the option rows and footer.
+The guard matches `Upgrade tier`, `Buy more credits`, and `Try Again` as substrings on three consecutive rows in that order, without requiring a selection glyph.
 Its regression verifies the named blocking-dialog refusal before typing or Enter, and excludes menu text quoted above Grok, Codex, Claude, Muse, Cursor, Devin, OpenCode, and Pi composers through the shared composer selector.
 
 ### 2026-10-11 Claude arrow shared with zsh
