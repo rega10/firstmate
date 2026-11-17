@@ -851,11 +851,38 @@ This guard is the refresh command after an upgrade to any matrix-covered harness
 The 2026-08-23 steering-inbox doorbell run observed grok 1.0.5's idle composer classifying `unknown` (and sometimes pending-family), never `empty`.
 Issue #3436's recorded idle capture reproduced the cause on 2026-09-14: Grok 1.0.5 renders the titled bottom border three columns wider than its aligned top and content rows, so the cursorless Herdr profile rejected the otherwise complete box as ambiguous.
 The classifier now accepts only that exact three-column overhang (`FM_COMPOSER_GROK_TITLE_OVERHANG` in `bin/fm-composer-lib.sh`) carrying a typed `Grok <model> (<effort>)` title; the portable regressions feed the real capture through both the shared Herdr capability profile and `fm_backend_herdr_composer_state`, and prove idle is `empty`, typed content is `pending`, and an unrecognized oversized title remains `unknown`.
-Grok was not installed on the verification machine for this 2026-09-14 change, so the live guard still owes a refresh against the current release rather than treating the portable capture as current live evidence; the three-column width is not live-verified and may need adjustment if Grok's title rendering changes or scales with title length.
+Grok was not installed on the verification machine for this 2026-09-14 change; [the current live refresh](#2026-11-17-grok-footer-cells) verifies newer releases with aligned borders, so the older three-column overhang remains covered only by portable replay.
 This closes only #3436's idle-composer-misclassification symptom (Grok/Herdr composer read `unknown` instead of `empty`, blocking away-mode injection). The issue's second symptom - a leftover watcher never yielding and never being taken over or refused at AFK start - is unrelated to composer classification and is tracked separately in #2270, where #3436's reproduction serves as corroborating evidence.
 Cursor is deliberately outside this cursor-anchored empty-composer matrix because its terminal cursor is parked outside the composer; tmux's Cursor-specific, process-identity-gated cursorless fallback is covered by the [Cursor Agent CLI](#cursor-agent-cli) section's separate live evidence and drift guard.
 
 `zellij action dump-screen --pane-id <id> --ansi` was verified at zellij 0.44.0 to preserve ANSI styling (real Claude Code rendered inside a zellij pane dumped `ESC[m` `❯` U+00A0 for its idle composer row), which is the capability the zellij composer classifier reads.
+
+### 2026-11-17 Grok footer cells
+
+Verified with Grok `1.0.77 (50ca579fa996) [stable]` and `1.0.88 (2fe3608f7398) [stable]` in named isolated Herdr sessions, without submitting a model prompt.
+The token-free guard launches the installed Grok and verifies both an empty composer and an unsubmitted draft through production backend dispatch.
+`FM_COMPOSER_GROK_BINARY` can select an explicit Grok binary for a version-specific rerun.
+
+```sh
+bin/fm-test-run.sh tests/fm-composer-grok-live-e2e.test.sh tests/fm-composer-lib.test.sh
+```
+
+Observed live output for each version:
+
+```text
+ok - Grok (grok 1.0.77 (50ca579fa996) [stable]): Herdr idle=empty, unsubmitted draft=pending
+ok - Grok (grok 1.0.88 (2fe3608f7398) [stable]): Herdr idle=empty, unsubmitted draft=pending
+# tmux absent: live tmux composer unverified; portable adapter replay covers its capture path
+```
+
+The Grok 1.0.77 viewport tails in `tests/fixtures/composer/grok-1.0.77/` blank private transcript text while retaining its column widths, ANSI styling, scrollbar cells, aligned box edges, and the idle shortcut row.
+Their bottom borders include middle-dot-separated model and permission cells, sometimes preceded by a weekly-limit cell.
+Only the middle dot in that border title is normalized to one column; the same glyph in input remains content, and unknown glyphs or incorrect widths still refuse an empty verdict.
+Portable regressions exercise the saved captures through Herdr and tmux backend dispatch, including typed text, bottom-border cursor placement, cursorless profiles, and both ambient and C locales.
+Tmux was unavailable for this live verification; its live branch remains in the same guard for hosts where tmux is installed.
+The usage-limit menu fixture is a partial live capture from Grok 1.0.77 containing only the option rows and footer.
+The guard matches `Upgrade tier`, `Buy more credits`, and `Try Again` as substrings on three consecutive rows in that order, without requiring a selection glyph.
+Its regression verifies the named blocking-dialog refusal before typing or Enter, and excludes menu text quoted above Grok, Codex, Claude, Muse, Cursor, Devin, OpenCode, and Pi composers through the shared composer selector.
 
 ### 2026-10-11 Claude arrow shared with zsh
 

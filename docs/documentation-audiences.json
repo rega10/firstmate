@@ -569,6 +569,34 @@
       "audience": "maintainer-verification"
     },
     {
+      "path": "tests/fixtures/composer/grok-1.0.77/idle.ansi.txt",
+      "audience": "maintainer-verification"
+    },
+    {
+      "path": "tests/fixtures/composer/grok-1.0.77/idle.plain.txt",
+      "audience": "maintainer-verification"
+    },
+    {
+      "path": "tests/fixtures/composer/grok-1.0.77/limit-dismissed-no-quota.ansi.txt",
+      "audience": "maintainer-verification"
+    },
+    {
+      "path": "tests/fixtures/composer/grok-1.0.77/limit-dismissed-no-quota.plain.txt",
+      "audience": "maintainer-verification"
+    },
+    {
+      "path": "tests/fixtures/composer/grok-1.0.77/limit-dismissed.ansi.txt",
+      "audience": "maintainer-verification"
+    },
+    {
+      "path": "tests/fixtures/composer/grok-1.0.77/limit-dismissed.plain.txt",
+      "audience": "maintainer-verification"
+    },
+    {
+      "path": "tests/fixtures/composer/grok-1.0.77/usage-limit-menu.txt",
+      "audience": "maintainer-verification"
+    },
+    {
       "path": "tests/fixtures/lavish-poll-interrupted.txt",
       "audience": "maintainer-verification"
     },

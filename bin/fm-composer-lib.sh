@@ -1128,6 +1128,9 @@ _fm_composer_titled_bottom_ok() {  # <family> <bottom-inner> <top-spaces>
     *) return 1 ;;
   esac
   spaces=${inner//"$dash"/ }
+  # Grok 1.0.77 separates footer cells with a one-column middle dot.
+  # Normalize it only in the border title, never in composer content.
+  spaces=${spaces//·/ }
   spaces=$(printf '%s' "$spaces" | LC_ALL=C sed 's/[!-~]/ /g')
   case "$spaces" in
     *[![:space:]]*) return 1 ;;
@@ -1739,7 +1742,8 @@ EOF
 }
 
 # fm_composer_blocking_dialog: name a screen whose next Enter would answer it.
-# Prints the name and returns 0 only for the recorded structure of one dialog:
+# Prints the name and returns 0 only for a recognized dialog structure.
+# Claude requires:
 # the heading on its own line, then its selected row alone on a row, with the
 # recorded footer as the last non-blank row. A heading buried in a sentence,
 # or a last line that only starts with the same words, is not that dialog.
@@ -1748,16 +1752,35 @@ EOF
 # and prints nothing.
 # Recorded 2026-10-05 on Claude Code 2.1.289: /exit while a background shell
 # is still running opens this picker, and its selected row is Exit and stop tasks.
+# Grok requires Upgrade tier, Buy more credits, and Try Again as substrings
+# on three consecutive rows, in that order, without a selection-glyph requirement.
+# A later composer identified by the shared selector makes those rows transcript text.
 fm_composer_blocking_dialog() {  # <screen> -> dialog name
-  local screen=${1-}
+  local screen=${1-} plain menu_row
   [ -n "$screen" ] || return 1
-  if printf '%s\n' "$screen" | fm_composer_strip_ansi | LC_ALL=C awk '
+  plain=$(printf '%s\n' "$screen" | fm_composer_strip_ansi)
+  if printf '%s\n' "$plain" | LC_ALL=C awk '
     /^[ \t]*Background work is running[ \t\r]*$/ { heading = 1 }
     heading && /^[ \t]*❯ 1\. Exit and stop tasks[ \t\r]*$/ { selected = 1 }
     /[^ \t\r]/ { last = $0 }
     END { exit !(selected && last ~ /^[ \t]*Enter to confirm · Esc to cancel[ \t\r]*$/) }
   '; then
     printf '%s' 'Claude background-task exit picker'
+    return 0
+  fi
+  if menu_row=$(printf '%s\n' "$plain" | LC_ALL=C awk '
+    index(older, "Upgrade tier") && index(previous, "Buy more credits") && index($0, "Try Again") {
+      last = NR - 1
+    }
+    { older = previous; previous = $0 }
+    END { if (last) print last; else exit 1 }
+  '); then
+    _fm_composer_scan_screen "$plain" ''
+    if _fm_composer_select_cursorless "$plain" \
+       && [ "$FM_COMPOSER_SELECTED_FIRST" -gt "$menu_row" ]; then
+      return 1
+    fi
+    printf '%s' 'Grok usage-limit picker'
     return 0
   fi
   return 1

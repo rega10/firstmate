@@ -776,6 +776,177 @@ test_matrix_opencode_leftbar_signals() {
   pass "matrix: opencode's left-bar composer reads empty everywhere and scans the full active run"
 }
 
+# Grok 1.0.77 viewport tails, captured through Herdr after interrupt or idle.
+# Private transcript text was blanked; scrollbar, ANSI, box, and hints
+# remain byte-for-byte captures. Pending variants replace equal-width spaces.
+test_matrix_grok_1077_footer_cells() {
+  local fixture screen typed caps styled cy bottom name
+  for fixture in "$ROOT"/tests/fixtures/composer/grok-1.0.77/*.{ansi,plain}.txt; do
+    screen=$(cat "$fixture")
+    name=${fixture##*/}
+    cy=$(printf '%s\n' "$screen" | fm_composer_strip_ansi | awk '/│ ❯/ {print NR-1}')
+    bottom=$((cy + 1))
+    case "$fixture" in *.ansi.txt) styled=1 ;; *) styled=0 ;; esac
+    # The first sixteen spaces following the prompt are the replacement site
+    # on both captures; ANSI resets before that run preserve its bright style.
+    typed=$(printf '%s\n' "$screen" | sed '/❯/s/                /unsubmitted text/')
+    for caps in "styled=$styled" "$CAPS_TMUX" "$CAPS_STYLED_NOID" "$CAPS_PLAIN"; do
+      assert_screen "$name idle footer" empty "$caps" "$screen" "$cy" $'grok\tidle'
+      assert_screen "$name bottom cursor" empty "$caps" "$screen" "$bottom" $'grok\tdone'
+      assert_screen "$name pending footer" pending "$caps" "$typed" "$cy" $'grok\tidle'
+    done
+    typed=$(printf '%s\n' "$screen" | sed '/❯/s/                /draft · pending /')
+    assert_screen "$name middle dot in typed input" pending-unproven "styled=$styled" "$typed"
+    # Preserve the strict width and non-ASCII uncertainty boundaries.
+    assert_screen "$name wide footer" unknown "styled=$styled" "${screen/always-approve/always-approveX}"
+    assert_screen "$name unverified footer glyph" unknown "styled=$styled" "${screen/·/界}"
+  done
+  pass "matrix: Grok 1.0.77 footer cells retain width proof and pending drafts on every backend profile"
+}
+
+# Partial live capture of the Grok 1.0.77 usage-limit dialog: option rows and footer only.
+test_grok_usage_limit_dialog_blocks_enter() (
+  local screen out sink enter_log menu composer name style caps wanted label identity=''
+  screen=$(cat "$ROOT/tests/fixtures/composer/grok-1.0.77/usage-limit-menu.txt")
+  fm_composer_dialog_sink_prepare || fail "Grok dialog sink unavailable"
+  sink=$FM_COMPOSER_DIALOG_SINK
+  for style in plain ansi; do
+    out=$screen
+    if [ "$style" = ansi ]; then out="${ESC}[0m$out${ESC}[0m"; fi
+    [ "$(fm_composer_blocking_dialog "$out")" = 'Grok usage-limit picker' ] \
+      || fail "the real Grok dialog ($style) should block Enter"
+    [ "$(LC_ALL=C fm_composer_blocking_dialog "$out")" = 'Grok usage-limit picker' ] \
+      || fail "the real Grok dialog ($style) under LC_ALL=C should block Enter"
+    [ "$(fm_composer_blocking_dialog $'› \n\n'"$out")" = 'Grok usage-limit picker' ] \
+      || fail "the real Grok dialog ($style) below a composer should block Enter"
+    fm_composer_classify_screen "$CAPS_STYLED" "$out" >/dev/null
+    [ "$(cat "$sink")" = 'Grok usage-limit picker' ] || fail "Grok dialog was not recorded"
+  done
+  for label in 'Upgrade tier' 'Buy more credits' 'Try Again'; do
+    if fm_composer_blocking_dialog "${screen/$label/Other option}" >/dev/null; then
+      fail "a Grok menu missing $label must not match"
+    fi
+  done
+  for out in \
+    'The agent mentions Upgrade tier in prose.' \
+    $'The agent mentions Upgrade tier.\nIt also mentions Buy more credits.' \
+    $'Upgrade tier\nUnrelated row\nBuy more credits\nTry Again' \
+    $'Upgrade tier\nBuy more credits\nUnrelated row\nTry Again' \
+    $'Buy more credits\nUpgrade tier\nTry Again'; do
+    if fm_composer_blocking_dialog "$out" >/dev/null; then
+      fail "incomplete, separated, or reordered Grok labels must not match"
+    fi
+  done
+  if fm_composer_blocking_dialog "$screen"$'\n╭────────────────────────╮\n│ ❯                      │\n╰────────────────────────╯' >/dev/null; then
+    fail "a quoted Grok menu above a composer must not match"
+  fi
+  if fm_composer_blocking_dialog 'The options are Upgrade tier, Buy more credits, and Try Again.' >/dev/null; then
+    fail "Grok labels in prose must not match"
+  fi
+  # The production submission wrapper must refuse before it writes text or
+  # presses Enter, independent of the picker content verdict.
+  # shellcheck source=bin/fm-backend.sh
+  . "$ROOT/bin/fm-backend.sh"
+  fm_backend_source herdr
+  # shellcheck disable=SC2329 # Adapter capture seam, called by backend dispatch.
+  fm_backend_herdr_visible_capture_ansi() { printf '%s' "$screen"; }
+  # shellcheck disable=SC2329 # A call here means the pre-submit guard failed.
+  fm_backend_herdr_send_text_submit() { fail "Grok picker reached the typing adapter"; }
+  if fm_backend_send_text_submit herdr replay:pane /exit 3 0 0 2>"$sink.err"; then
+    fail "Grok usage picker allowed submission"
+  fi
+  grep -q 'blocked on a prompt: Grok usage-limit picker' "$sink.err" || fail "missing named refusal"
+  rm -f "$sink.err"
+  enter_log="$sink.enters"
+  : > "$enter_log"
+  # shellcheck disable=SC2329 # Called by the production Enter retry loop.
+  grok_menu_enter() { printf 'Enter\n' >> "$enter_log"; }
+  # shellcheck disable=SC2329 # Called by the production Enter retry loop.
+  grok_menu_state() { fm_composer_classify_screen "$CAPS_STYLED" "$screen" '' "$identity"; }
+  out=$(fm_composer_submit_retry_core grok_menu_enter grok_menu_state replay:pane 3 0)
+  [ "$out" = unknown ] || fail "a newly opened Grok picker should refuse retry"
+  [ "$(wc -l < "$enter_log" | tr -d ' ')" = 1 ] || fail "Grok picker received a confirming Enter"
+  menu=$screen
+  fm_backend_herdr_send_text_submit() { printf 'submitted'; }
+  # shellcheck disable=SC2329
+  fm_backend_herdr_composer_identity() { printf '%s' "$identity"; }
+  for name in codex claude muse cursor devin opencode pi grok; do
+    identity="$name"$'\tidle'
+    case "$name" in
+      codex) composer='› ' ;;
+      claude) composer=$'────────────────────────\n❯'"$NBSP"$'\n────────────────────────' ;;
+      muse) composer='⟩ ' ;;
+      cursor) composer='→ ' ;;
+      devin) composer='❭ ' ;;
+      opencode) composer=$'┃\n┃  Ask anything...\n┃\n┃  Build · model\n╹▀▀▀▀▀▀▀▀▀▀' ;;
+      pi) composer=$'────────────────────────\n\n────────────────────────' ;;
+      grok) composer=$'╭────────────────────────╮\n│ ❯                      │\n╰────────────────────────╯' ;;
+    esac
+    for style in plain ansi; do
+      screen="$menu"$'\n\n'"$composer"
+      if [ "$style" = ansi ]; then screen="${ESC}[0m$screen${ESC}[0m"; fi
+      if fm_composer_blocking_dialog "$screen" >/dev/null \
+         || LC_ALL=C fm_composer_blocking_dialog "$screen" >/dev/null; then
+        fail "a quoted Grok menu above $name ($style) must not match"
+      fi
+      out=$(fm_composer_blocking_dialog "$screen"$'\n\n'"$menu")
+      [ "$out" = 'Grok usage-limit picker' ] || fail "a Grok menu below $name must block Enter"
+      for caps in "$CAPS_STYLED" "$CAPS_STYLED_NOID" "$CAPS_PLAIN"; do
+        wanted=empty
+        if [ "$name" = pi ] && [ "$caps" != "$CAPS_STYLED" ]; then wanted=unknown; fi
+        assert_screen "quoted menu above $name ($style)" "$wanted" "$caps" "$screen" '' "$identity"
+        [ ! -s "$sink" ] || fail "a quoted menu above $name left a dialog refusal"
+      done
+      out=$(fm_backend_send_text_submit herdr replay:pane /exit 3 0 0)
+      [ "$out" = submitted ] || fail "a quoted menu above $name blocked submission"
+      : > "$enter_log"
+      out=$(fm_composer_submit_retry_core grok_menu_enter grok_menu_state replay:pane 3 0)
+      [ "$out" = empty ] || fail "a quoted menu above $name blocked Enter verification"
+      [ "$(wc -l < "$enter_log" | tr -d ' ')" = 1 ] || fail "$name received extra Enter retries"
+    done
+  done
+  fm_composer_dialog_sink_release
+  rm -f "$sink" "$enter_log"
+  pass "Grok usage-limit choices block submission and receive no confirming Enter"
+)
+
+test_grok_1077_backend_capture_replay() (
+  local fixture GROK_REPLAY_SCREEN GROK_REPLAY_CURSOR GROK_REPLAY_STYLED out wanted mode
+  # shellcheck source=bin/fm-backend.sh
+  . "$ROOT/bin/fm-backend.sh"
+  fm_backend_source herdr
+  fm_backend_source tmux
+  # Replace transport primitives only. Production dispatch and adapters run.
+  # shellcheck disable=SC2329 # Called through backend dispatch.
+  fm_backend_herdr_visible_capture_ansi() {
+    [ "$GROK_REPLAY_STYLED" = 1 ] || return 1
+    printf '%s' "$GROK_REPLAY_SCREEN"
+  }
+  # shellcheck disable=SC2329 # Called for the production plain-capture fallback.
+  fm_backend_herdr_visible_capture() { printf '%s' "$GROK_REPLAY_SCREEN"; }
+  # shellcheck disable=SC2329 # Called through backend dispatch.
+  fm_tmux_composer_capture() { printf '%s' "$GROK_REPLAY_SCREEN"; }
+  # shellcheck disable=SC2329 # Called through backend dispatch.
+  fm_tmux_composer_cursor_row() { printf '%s' "$GROK_REPLAY_CURSOR"; }
+  for fixture in "$ROOT"/tests/fixtures/composer/grok-1.0.77/*.{ansi,plain}.txt; do
+    case "$fixture" in *.ansi.txt) GROK_REPLAY_STYLED=1 ;; *) GROK_REPLAY_STYLED=0 ;; esac
+    for mode in idle typed; do
+      GROK_REPLAY_SCREEN=$(cat "$fixture")
+      wanted=empty
+      if [ "$mode" = typed ]; then
+        GROK_REPLAY_SCREEN=$(printf '%s\n' "$GROK_REPLAY_SCREEN" | sed '/❯/s/                /unsubmitted text/')
+        wanted=pending
+      fi
+      GROK_REPLAY_CURSOR=$(printf '%s\n' "$GROK_REPLAY_SCREEN" | fm_composer_strip_ansi | awk '/│ ❯/ {print NR-1}')
+      out=$(fm_backend_composer_state herdr replay:pane)
+      [ "$out" = "$wanted" ] || fail "Herdr $fixture $mode read $out, expected $wanted"
+      out=$(fm_backend_composer_state tmux replay:pane)
+      [ "$out" = "$wanted" ] || fail "tmux $fixture $mode read $out, expected $wanted"
+    done
+  done
+  pass "Grok 1.0.77 saved captures pass backend dispatch through Herdr and tmux adapters"
+)
+
 test_matrix_grok_titled_bottom_border() {
   # Grok 1.0.5 widened its titled BOTTOM border three columns past the top and
   # content rows. This is the idle capture from issue #3436; Herdr has no
@@ -1110,6 +1281,9 @@ test_matrix_pi_separated_needs_identity
 test_matrix_pi_dollar_status_footer_is_empty
 test_matrix_opencode_leftbar_signals
 test_matrix_grok_titled_bottom_border
+test_matrix_grok_1077_footer_cells || exit 1
+test_grok_usage_limit_dialog_blocks_enter || exit 1
+test_grok_1077_backend_capture_replay || exit 1
 test_matrix_claude_titled_top_rule
 test_matrix_kimi_bordered_shell_glyph_box
 test_matrix_claude_inside_zellij_ansi_dump
