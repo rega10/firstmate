@@ -857,6 +857,32 @@ Cursor is deliberately outside this cursor-anchored empty-composer matrix becaus
 
 `zellij action dump-screen --pane-id <id> --ansi` was verified at zellij 0.44.0 to preserve ANSI styling (real Claude Code rendered inside a zellij pane dumped `ESC[m` `❯` U+00A0 for its idle composer row), which is the capability the zellij composer classifier reads.
 
+### 2026-11-17 Grok footer cells
+
+Verified with Grok `1.0.77 (50ca579fa996) [stable]` and `1.0.88 (2fe3608f7398) [stable]` in named isolated Herdr sessions, without submitting a model prompt.
+The token-free guard launches the installed Grok and verifies both an empty composer and an unsubmitted draft through production backend dispatch.
+`FM_COMPOSER_GROK_BINARY` can select an explicit Grok binary for a version-specific rerun.
+
+```sh
+bin/fm-test-run.sh tests/fm-composer-grok-live-e2e.test.sh tests/fm-composer-lib.test.sh
+```
+
+Observed live output for each version:
+
+```text
+ok - Grok (grok 1.0.77 (50ca579fa996) [stable]): Herdr idle=empty, unsubmitted draft=pending
+ok - Grok (grok 1.0.88 (2fe3608f7398) [stable]): Herdr idle=empty, unsubmitted draft=pending
+# tmux absent: live tmux composer unverified; portable adapter replay covers its capture path
+```
+
+The Grok 1.0.77 viewport tails in `tests/fixtures/composer/grok-1.0.77/` retain ANSI styling, scrollbar cells, aligned box edges, and the idle shortcut row while excluding private transcript content.
+Their bottom borders include middle-dot-separated model and permission cells, sometimes preceded by a weekly-limit cell.
+Only the middle dot in that border title is normalized to one column; the same glyph in input remains content, and unknown glyphs or incorrect widths still refuse an empty verdict.
+Portable regressions exercise the saved captures through Herdr and tmux backend dispatch, including typed text, bottom-border cursor placement, cursorless profiles, and both ambient and C locales.
+Tmux was unavailable for this live verification; its live branch remains in the same guard for hosts where tmux is installed.
+The usage-limit menu fixture is synthetic, using the reported choices and descriptions from the installed Grok binary, rather than claiming a live capture of that dialog.
+Its regression verifies the named blocking-dialog refusal before typing or Enter, and excludes menu text quoted above a normal composer.
+
 ### 2026-10-11 Claude arrow shared with zsh
 
 Verified against Claude Code 2.1.284 in an isolated Herdr lab and throwaway `FM_HOME`.

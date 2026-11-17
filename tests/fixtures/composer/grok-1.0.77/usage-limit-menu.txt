@@ -1,0 +1,7 @@
+You hit your weekly limit.
+❯ Upgrade tier
+  Upgrade to a higher tier for more usage
+  Buy more credits
+  Purchase credits to keep using Grok Build
+  Try Again
+  Resubmit the last prompt once you have usage again

@@ -1128,6 +1128,9 @@ _fm_composer_titled_bottom_ok() {  # <family> <bottom-inner> <top-spaces>
     *) return 1 ;;
   esac
   spaces=${inner//"$dash"/ }
+  # Grok 1.0.77 separates footer cells with a one-column middle dot.
+  # Normalize it only in the border title, never in composer content.
+  spaces=${spaces//·/ }
   spaces=$(printf '%s' "$spaces" | LC_ALL=C sed 's/[!-~]/ /g')
   case "$spaces" in
     *[![:space:]]*) return 1 ;;
@@ -1739,7 +1742,8 @@ EOF
 }
 
 # fm_composer_blocking_dialog: name a screen whose next Enter would answer it.
-# Prints the name and returns 0 only for the recorded structure of one dialog:
+# Prints the name and returns 0 only for a recognized dialog structure.
+# Claude requires:
 # the heading on its own line, then its selected row alone on a row, with the
 # recorded footer as the last non-blank row. A heading buried in a sentence,
 # or a last line that only starts with the same words, is not that dialog.
@@ -1758,6 +1762,29 @@ fm_composer_blocking_dialog() {  # <screen> -> dialog name
     END { exit !(selected && last ~ /^[ \t]*Enter to confirm · Esc to cancel[ \t\r]*$/) }
   '; then
     printf '%s' 'Claude background-task exit picker'
+    return 0
+  fi
+  # Grok's usage-limit picker consumes Enter for a purchase or retry. Match
+  # the ordered option rows and a selection marker, never labels quoted in
+  # prose. A later composer glyph resets the match so transcript text cannot
+  # block a normal composer below it.
+  if printf '%s\n' "$screen" | fm_composer_strip_ansi | LC_ALL=C awk '
+    {
+      line = $0
+      sub(/^[ \t]*│[ \t]*/, "", line)
+      sub(/[ \t]*│[ \t\r]*$/, "", line)
+      sub(/^[ \t]*/, "", line)
+      sub(/[ \t\r]*$/, "", line)
+      marked = sub(/^❯([ \t]+|$)/, "", line)
+      sub(/^[123]\.[ \t]+/, "", line)
+      if (line == "Upgrade tier") { stage = 1; selected = marked; next }
+      if (stage == 1 && line == "Buy more credits") { stage = 2; selected += marked; next }
+      if (stage == 2 && line == "Try Again") { stage = 3; selected += marked; next }
+      if (marked) { stage = 0; selected = 0 }
+    }
+    END { exit !(stage == 3 && selected == 1) }
+  '; then
+    printf '%s' 'Grok usage-limit picker'
     return 0
   fi
   return 1
