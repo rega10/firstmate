@@ -1,3 +1,0 @@
-WARNING: watcher still down (same stale episode; last beat: 58s ago, grace 300s) - full banner already printed this episode.
-/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-remote-secondmate-e2e.EGRjiO/remote-root/bin/fm-remote-job-worker.sh: child setpgid (70430 to 70430): Operation not permitted
-spawned ios harness=codex kind=secondmate mode=secondmate yolo=off window=remote:ios worktree=/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-remote-secondmate-e2e.EGRjiO/remote-home remote=remote-mac backend=herdr
