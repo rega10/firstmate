@@ -1,0 +1,19 @@
+WARNING: watcher still down (same stale episode; last beat: 31s ago, grace 300s) - full banner already printed this episode.
+config-push: /private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-remote-secondmate-e2e.EGRjiO/parent -> live secondmate homes
+secondmate ios (remote-mac:/private/var/folders/sk/xl7tlrjx6q14__gt0mvk89mc0000gn/T/fm-remote-secondmate-e2e.EGRjiO/remote-home):
+  unchanged: config/claude-automic-vault
+  unchanged: config/crew-dispatch.json
+  unchanged: config/dispatch-never-send
+  unchanged: config/crew-harness
+  unchanged: config/backlog-backend
+  unchanged: config/backend
+  unchanged: config/herdr-presentation-spaces
+  unchanged: config/startup-memory-budget
+  unchanged: config/trace-context
+  unchanged: config/launch-env-allowlist
+  unchanged: config/claude-permission-mode
+  unchanged: config/lavish-axi-host
+  unchanged: config/keep-ai-trailers
+  unchanged: config/supervision-host-off
+  pushed: data/captain-shared.md
+  config-reread: sent
