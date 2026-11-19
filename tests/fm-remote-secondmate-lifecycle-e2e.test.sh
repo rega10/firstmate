@@ -20,8 +20,6 @@ REMOTE_HOME="$TMP_ROOT/remote-home"
 LOCAL_HOME="$TMP_ROOT/local-home"
 FAKEBIN=$(fm_fakebin "$TMP_ROOT/fake")
 SSH_COUNT="$TMP_ROOT/ssh.count"
-# One line per fake-SSH round trip, tagged with its FM_FAKE_SSH_MODE, so a wait
-# on one blocked caller can observe that caller's own remote progress.
 SSH_CALLS="$TMP_ROOT/ssh.calls"
 DOCTOR_LOG="$TMP_ROOT/doctor.log"
 HERDR_STATE="$TMP_ROOT/remote-herdr.state"
@@ -158,8 +156,11 @@ command_fields=$(perl -MMIME::Base64=decode_base64 -e '
 IFS=$'\t' read -r command_name _command_action command_rel <<EOF
 $command_fields
 EOF
-[ -z "${FM_FAKE_SSH_CALLS:-}" ] \
-  || printf '%s %s %s\n' "${FM_FAKE_SSH_MODE:-normal}" "$command_name" "$_command_action" >> "$FM_FAKE_SSH_CALLS"
+case "${FM_FAKE_SSH_MODE:-}" in
+  inherit-block|launch-block)
+    printf '%s\n' "$FM_FAKE_SSH_MODE" >> "$FM_FAKE_SSH_CALLS"
+    ;;
+esac
 case "${FM_FAKE_SSH_MODE:-normal}:$command_name:$command_rel" in
   inherit-partial:fm-remote-inherit.sh:config/crew-harness) exit 255 ;;
   inherit-block:fm-remote-inherit.sh:data/captain-shared.md)
@@ -321,7 +322,7 @@ await_remote_hold() { # <pid> <marker> <fake-ssh-mode> <exited-message> <stalled
   local pid=$1 marker=$2 mode=$3 calls seen=-1 idle_since=$SECONDS
   while [ ! -f "$marker" ]; do
     kill -0 "$pid" 2>/dev/null || fail "$4"
-    calls=$(grep -c "^$mode " "$SSH_CALLS" 2>/dev/null || true)
+    calls=$(grep -Fxc -- "$mode" "$SSH_CALLS" 2>/dev/null || true)
     if [ "$calls" != "$seen" ]; then
       seen=$calls
       idle_since=$SECONDS
