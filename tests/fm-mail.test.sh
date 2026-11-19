@@ -228,8 +228,10 @@ with open(sys.argv[1], 'rb') as source:
     message = email.message_from_binary_file(source, policy=email.policy.default)
 identifiers = message.get_all('Message-ID', [])
 assert len(identifiers) == 1, identifiers
-assert re.fullmatch(r'<[^<>\s@]+@[^<>\s@]+>', str(identifiers[0])), identifiers
-print(identifiers[0])
+# RFC 5322 permits folding whitespace around the identifier.
+identifier = str(identifiers[0]).strip(' \t')
+assert re.fullmatch(r'<[^<>\s@]+@[^<>\s@]+>', identifier), identifiers
+print(identifier)
 PYID
   ) || fail "the sent message must contain one valid Message-ID"
   assert_contains "$out" "message-id: $message_id" "the sent line reports the transmitted Message-ID"
