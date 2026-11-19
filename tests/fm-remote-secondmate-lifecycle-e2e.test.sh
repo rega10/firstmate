@@ -20,6 +20,7 @@ REMOTE_HOME="$TMP_ROOT/remote-home"
 LOCAL_HOME="$TMP_ROOT/local-home"
 FAKEBIN=$(fm_fakebin "$TMP_ROOT/fake")
 SSH_COUNT="$TMP_ROOT/ssh.count"
+SSH_CALLS="$TMP_ROOT/ssh.calls"
 DOCTOR_LOG="$TMP_ROOT/doctor.log"
 HERDR_STATE="$TMP_ROOT/remote-herdr.state"
 HERDR_LOG="$TMP_ROOT/remote-herdr.log"
@@ -155,6 +156,11 @@ command_fields=$(perl -MMIME::Base64=decode_base64 -e '
 IFS=$'\t' read -r command_name _command_action command_rel <<EOF
 $command_fields
 EOF
+case "${FM_FAKE_SSH_MODE:-}" in
+  inherit-block|launch-block)
+    printf '%s\n' "$FM_FAKE_SSH_MODE" >> "$FM_FAKE_SSH_CALLS"
+    ;;
+esac
 case "${FM_FAKE_SSH_MODE:-normal}:$command_name:$command_rel" in
   inherit-partial:fm-remote-inherit.sh:config/crew-harness) exit 255 ;;
   inherit-block:fm-remote-inherit.sh:data/captain-shared.md)
@@ -270,6 +276,7 @@ remote_env() {
   FM_PROCEVENT_CLAIM_ROOT="$CLAIMS" \
   FM_SSH_BIN="$FAKEBIN/fake-ssh" \
   FM_FAKE_SSH_COUNT="$SSH_COUNT" \
+  FM_FAKE_SSH_CALLS="$SSH_CALLS" \
   FM_FAKE_REMOTE_ENTRYPOINT="$REMOTE_ROOT/bin/fm-remote-entrypoint.sh" \
   FM_REMOTE_JOB_PLATFORM_OVERRIDE=Linux \
   FM_REMOTE_JOB_STATE_ROOT="$TMP_ROOT/remote-jobs" \
@@ -303,6 +310,26 @@ await_reply_result() { # <result-path>
     sleep 0.05
   done
   return 1
+}
+
+# Wait for <marker> while <pid> stays alive. A remote spawn or inheritance
+# push makes one serial worker round trip for readiness, sync, and every
+# declared inherited item before its deliberately held step, so its total time
+# grows with that declared list and with runner load. Bound the gap between
+# that caller's own round trips instead of the total, so a slow but advancing
+# caller passes and a caller stuck in one round trip still fails.
+await_remote_hold() { # <pid> <marker> <fake-ssh-mode> <exited-message> <stalled-message>
+  local pid=$1 marker=$2 mode=$3 calls seen=-1 idle_since=$SECONDS
+  while [ ! -f "$marker" ]; do
+    kill -0 "$pid" 2>/dev/null || fail "$4"
+    calls=$(grep -Fxc -- "$mode" "$SSH_CALLS" 2>/dev/null || true)
+    if [ "$calls" != "$seen" ]; then
+      seen=$calls
+      idle_since=$SECONDS
+    fi
+    [ $((SECONDS - idle_since)) -le 30 ] || fail "$5 (no new remote round trip for 30 seconds)"
+    sleep 0.05
+  done
 }
 
 sha256_file() {
@@ -983,15 +1010,9 @@ EOF
 FM_FAKE_SSH_MODE=inherit-block remote_env "$ROOT/bin/fm-spawn.sh" ios --secondmate \
   > "$TMP_ROOT/spawn-concurrent.out" 2>&1 &
 spawn_concurrent=$!
-spawn_inherit_wait=0
-# Earlier inherited files traverse the worker before captain-shared.md, so give
-# a loaded portable runner 30 seconds to reach this deliberately blocked write.
-while [ ! -f "$TMP_ROOT/inherit.entered" ]; do
-  kill -0 "$spawn_concurrent" 2>/dev/null || fail "remote spawn exited before its blocked inheritance write"
-  spawn_inherit_wait=$((spawn_inherit_wait + 1))
-  [ "$spawn_inherit_wait" -le 1500 ] || fail "remote spawn never reached its blocked inheritance write"
-  sleep 0.02
-done
+await_remote_hold "$spawn_concurrent" "$TMP_ROOT/inherit.entered" inherit-block \
+  "remote spawn exited before its blocked inheritance write" \
+  "remote spawn never reached its blocked inheritance write"
 cat > "$PARENT/data/captain-shared.md" <<'EOF'
 # Shared captain preferences
 This file is main-authoritative and maintained by the main firstmate.
@@ -1094,15 +1115,9 @@ EOF
 FM_FAKE_SSH_MODE=inherit-block remote_env "$ROOT/bin/fm-config-push.sh" \
   > "$TMP_ROOT/config-concurrent-first.out" 2>&1 &
 config_first=$!
-inherit_wait=0
-while [ ! -f "$TMP_ROOT/inherit.entered" ]; do
-  kill -0 "$config_first" 2>/dev/null || fail "first inheritance transaction exited before its blocked write"
-  inherit_wait=$((inherit_wait + 1))
-  # Match the earlier spawn/inheritance wait: a loaded portable runner can
-  # spend several seconds in the remote entrypoint before reaching this write.
-  [ "$inherit_wait" -le 1500 ] || fail "first inheritance transaction never reached its blocked write"
-  sleep 0.02
-done
+await_remote_hold "$config_first" "$TMP_ROOT/inherit.entered" inherit-block \
+  "first inheritance transaction exited before its blocked write" \
+  "first inheritance transaction never reached its blocked write"
 cat > "$PARENT/data/captain-shared.md" <<'EOF'
 # Shared captain preferences
 This file is main-authoritative and maintained by the main firstmate.
@@ -1574,15 +1589,9 @@ rm -f "$TMUX_STATE" "$TMP_ROOT/launch.entered" "$TMP_ROOT/launch.release"
 FM_FAKE_SSH_MODE=launch-block remote_env "$ROOT/bin/fm-spawn.sh" ios --secondmate \
   > "$TMP_ROOT/spawn-retirement.out" 2>&1 &
 spawn_retirement_pid=$!
-launch_wait=0
-# The respawn performs readiness and inheritance jobs before launch, so allow
-# the same 30-second loaded-runner bound as the earlier blocked worker path.
-while [ ! -f "$TMP_ROOT/launch.entered" ]; do
-  kill -0 "$spawn_retirement_pid" 2>/dev/null || fail "remote respawn exited before its blocked launch"
-  launch_wait=$((launch_wait + 1))
-  [ "$launch_wait" -le 1500 ] || fail "remote respawn never reached its blocked launch"
-  sleep 0.02
-done
+await_remote_hold "$spawn_retirement_pid" "$TMP_ROOT/launch.entered" launch-block \
+  "remote respawn exited before its blocked launch" \
+  "remote respawn never reached its blocked launch"
 remote_env "$ROOT/bin/fm-teardown.sh" ios > "$TMP_ROOT/teardown-serialized.out" 2>&1 &
 teardown_pid=$!
 sleep 0.2
