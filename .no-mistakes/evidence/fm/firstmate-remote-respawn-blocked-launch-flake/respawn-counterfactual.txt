@@ -1,0 +1,39 @@
+Base 9d5ee1e9, 4-second delay per respawn SSH call.
+Start 2026-11-19T04:20:47Z
+Validation: respawn reached the held launch after 111s.
+ok - remote retirement refuses child work, then removes only its own endpoint while a shared-session sibling survives
+ALL TESTS PASSED
+Validation: 18 delayed respawn calls started over 106s.
+Finish 2026-11-19T04:39:55Z, exit 0
+
+Target 5fc11386, same 4-second delay per respawn SSH call.
+Start 2026-11-19T04:20:47Z
+Validation: respawn reached the held launch after 115s.
+ok - remote retirement refuses child work, then removes only its own endpoint while a shared-session sibling survives
+ALL TESTS PASSED
+Validation: 18 delayed respawn calls started over 110s.
+Finish 2026-11-19T04:39:56Z, exit 0
+
+Target 5fc11386, one stalled launch SSH call with unrelated read-only remote calls.
+Start 2026-11-19T04:20:47Z
+not ok - remote respawn never reached its blocked launch (no new remote round trip for 30 seconds)
+Validation: held launch for 31s before the test exited.
+Validation: unrelated read-only remote calls completed during stall: 7.
+Validation: unrelated calls added no entries to the blocked-mode log.
+Finish 2026-11-19T04:39:16Z, exit 1
+
+
+Focused rerun with a fresh synthetic secondmate and a 12-second delay per respawn SSH call.
+
+base-slow - FM_VALIDATION_CASE=slow bash tests/focused-respawn-validation.sh
+not ok - remote respawn never reached its blocked launch
+Validation: respawn check exited after 206s.
+Validation: 15 delayed respawn calls started over 200s.
+Exit 1
+
+target-slow - FM_VALIDATION_CASE=slow bash tests/focused-respawn-validation.sh
+Validation: respawn reached the held launch after 257s.
+ok - the released respawn restored an alive remote endpoint
+Validation: respawn check exited after 266s.
+Validation: 18 delayed respawn calls started over 244s.
+Exit 0

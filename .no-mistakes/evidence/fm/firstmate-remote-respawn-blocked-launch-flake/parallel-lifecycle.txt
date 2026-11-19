@@ -1,0 +1,35 @@
+Parallel run 1 - bash tests/fm-remote-secondmate-lifecycle-e2e.test.sh
+Start 2026-11-19T04:20:21Z
+ok - remote spawn serializes inheritance through launch publication
+ok - config push and bootstrap serialize remote inheritance convergence
+ok - remote retirement refuses child work, then removes only its own endpoint while a shared-session sibling survives
+Finish 2026-11-19T04:38:26Z, exit 0
+
+Parallel run 2 - bash tests/fm-remote-secondmate-lifecycle-e2e.test.sh
+Start 2026-11-19T04:20:21Z
+ok - remote spawn serializes inheritance through launch publication
+ok - config push and bootstrap serialize remote inheritance convergence
+ok - remote retirement refuses child work, then removes only its own endpoint while a shared-session sibling survives
+Finish 2026-11-19T04:38:15Z, exit 0
+
+Parallel run 3 - bash tests/fm-remote-secondmate-lifecycle-e2e.test.sh
+Start 2026-11-19T04:20:21Z
+ok - remote spawn serializes inheritance through launch publication
+ok - config push and bootstrap serialize remote inheritance convergence
+ok - remote retirement refuses child work, then removes only its own endpoint while a shared-session sibling survives
+Finish 2026-11-19T04:38:34Z, exit 0
+
+Parallel run 4 - bash tests/fm-remote-secondmate-lifecycle-e2e.test.sh
+Start 2026-11-19T04:20:21Z
+ok - remote spawn serializes inheritance through launch publication
+ok - config push and bootstrap serialize remote inheritance convergence
+ok - remote retirement refuses child work, then removes only its own endpoint while a shared-session sibling survives
+Finish 2026-11-19T04:38:27Z, exit 0
+
+Parallel run 5 - bash tests/fm-remote-secondmate-lifecycle-e2e.test.sh
+Start 2026-11-19T04:20:21Z
+ok - remote spawn serializes inheritance through launch publication
+ok - config push and bootstrap serialize remote inheritance convergence
+ok - remote retirement refuses child work, then removes only its own endpoint while a shared-session sibling survives
+Finish 2026-11-19T04:38:32Z, exit 0
+
